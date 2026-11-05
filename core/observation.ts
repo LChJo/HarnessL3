@@ -159,7 +159,7 @@ function literal(node: ts.Expression): unknown {
   if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
   if (node.kind === ts.SyntaxKind.NullKeyword) return null;
   if (ts.isObjectLiteralExpression(node)) {
-    const object: Record<string, unknown> = {};
+    const object: Record<string, unknown> = Object.create(null);
     for (const property of node.properties) {
       if (!ts.isPropertyAssignment(property) || ts.isComputedPropertyName(property.name)) throw new Error('nonliteral');
       const key = ts.isIdentifier(property.name) || ts.isStringLiteral(property.name) ? property.name.text : null;

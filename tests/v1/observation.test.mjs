@@ -439,6 +439,8 @@ test('code-mode poll: compound dynamic unpublished and nonempty polls remain uns
     "const r = await tools.write_stdin({session_id:session,chars:''}); text(r);",
     "const r = await tools.write_stdin({session_id:999,chars:''}); text(r);",
     "const r = await tools.write_stdin({session_id:'__proto__',chars:''}); text(r);",
+    "const r = await tools.write_stdin({__proto__:{session_id:42},chars:''}); text(r);",
+    "const r = await tools.write_stdin({session_id:42,__proto__:{chars:'x'}}); text(r);",
     "const r = tools.write_stdin({session_id:42,chars:''}); text(r);",
     "let r = await tools.write_stdin({session_id:42,chars:''}); text(r);",
     "const r = await tools.write_stdin({session_id:42,chars:''}); const s = await tools.write_stdin({session_id:42,chars:''}); text(r);",
