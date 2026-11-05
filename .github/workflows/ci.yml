@@ -32,6 +32,9 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run build
       - run: npm test
+      - name: Report test diagnostics
+        if: always()
+        run: node scripts/v1/ci-report.mjs
       - run: npx playwright install --with-deps chromium
       - run: node scripts/v1/browser-smoke.mjs
       - run: node scripts/v1/package-smoke.mjs

@@ -1,14 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, mkdir, writeFile, readFile, access, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, access, rm, realpath } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { digest } from '../../build/core/json.js'
 
-const nativePosix = { skip: process.platform === 'win32' ? 'Windows Ctrl+C is verified through the native ConPTY cancel-probe, not process.kill emulation.' : false }
+const nativePosix = { timeout: 20_000, skip: process.platform === 'win32' ? 'Windows Ctrl+C is verified through the native ConPTY cancel-probe, not process.kill emulation.' : false }
 async function run(t, args, directory) {
   const moduleUrl = new URL('../../build/cli/main.js', import.meta.url).href
   const child = spawn(process.execPath, ['--input-type=module', '-e', `const {runCli}=await import(${JSON.stringify(moduleUrl)}); const running=runCli(${JSON.stringify(args)});process.send('ready');await running;process.disconnect();`], { cwd: directory, stdio: ['pipe', 'pipe', 'pipe', 'ipc'], env: { ...process.env, HARNESSL3_HOME: '', HARNESS_SKILLS_ROOT: '' } })
@@ -20,7 +20,7 @@ async function run(t, args, directory) {
   return { child, exit }
 }
 async function temporary(t) {
-  const root = await mkdtemp(path.join(tmpdir(), 'harness-v1-cancellation-'))
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harness-v1-cancellation-')))
   t.after(async () => { if (!path.isAbsolute(root) || !path.basename(root).startsWith('harness-v1-cancellation-')) throw new Error('Unsafe cancellation cleanup'); await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }) })
   return root
 }
@@ -58,7 +58,7 @@ test('TC22 POSIX cancellation after dispatch preserves accepted work and request
   await writeFile(path.join(dataRoot, 'service.json'), JSON.stringify({ schemaVersion: 1, protocolVersion: 1, pid: process.pid, instanceId, startedAt: new Date().toISOString(), dataRootHash: digest('data-root', dataRoot), url: `http://127.0.0.1:${server.address().port}`, token }))
   const requestId = randomUUID()
   const { child, exit } = await run(t, ['project', 'list', '--data-dir', dataRoot, '--request-id', requestId, '--json'], root)
-  await accepted
+  await Promise.race([accepted, exit.then(result => { throw new Error('CLI exited before the fake service accepted the request: ' + JSON.stringify(result)) })])
   child.kill('SIGINT')
   const result = await exit
   assert.equal(result.code, 130, result.stderr)
