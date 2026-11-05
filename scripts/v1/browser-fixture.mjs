@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -33,7 +33,7 @@ view transfer { include app.download.*, app.network.client }
 }\n`
 const hash = bytes => createHash('sha256').update(bytes).digest('hex')
 
-export async function createBrowserFixture() {
+export async function createBrowserFixture({ crlfSeed = process.env.HARNESS_TEST_BROWSER_CRLF_SEED === '1' } = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'harnessl3-browser-'))
   const dataRoot = path.join(directory, 'machine data')
   const root = path.join(directory, '中文 project')
@@ -62,6 +62,29 @@ export async function createBrowserFixture() {
     await mkdir(path.join(root, 'src'))
     await writeFile(path.join(root, 'src', 'network.ts'), 'export const networkState = "fixture"\n')
     const initialized = await cli(['init', '--name', 'Canvas fixture'])
+    if (crlfSeed) {
+      // Only this newly generated machine copy is changed. Its entry may be a
+      // junction; compare canonical boundaries before touching any seed bytes.
+      const canonicalFixture = await realpath(directory), canonicalData = await realpath(dataRoot)
+      const canonicalSkills = await realpath(path.join(dataRoot, 'skills'))
+      const inside = (parent, file) => { const local = path.relative(parent, file); return local && !path.isAbsolute(local) && local !== '..' && !local.startsWith('..' + path.sep) }
+      if (!inside(canonicalFixture, canonicalData) || !inside(canonicalData, canonicalSkills)) throw new Error('CRLF browser seed is outside its owned fixture data root')
+      const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
+      const convert = async folder => {
+        for (const entry of await readdir(folder, { withFileTypes: true })) {
+          const file = path.join(folder, entry.name)
+          if (entry.isSymbolicLink() || !inside(canonicalSkills, await realpath(file))) throw new Error('CRLF browser seed contains an unexpected link or escaped path')
+          if (entry.isDirectory()) await convert(file)
+          else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+            const original = await readFile(file)
+            const converted = Buffer.from(decoder.decode(original).replace(/\r\n/g, '\n').replace(/\n/g, '\r\n'), 'utf8')
+            if (!original.equals(converted)) await writeFile(file, converted)
+          }
+        }
+      }
+      await convert(canonicalSkills)
+      await cli(['skills', 'refresh'])
+    }
     await writeFile(path.join(root, '.harness', 'model', 'main.c4'), model)
     const evidence = [
       { id: evidenceIds['network-source'], kind: 'source-code', claim: 'The fixture exports a state constant', location: { path: 'src/network.ts' }, hash: hash(await readFile(path.join(root, 'src', 'network.ts'))), observedAt: new Date().toISOString(), range: { startLine: 1, endLine: 1 } },
@@ -92,7 +115,7 @@ export async function createBrowserFixture() {
       if (!path.isAbsolute(directory) || !path.basename(directory).startsWith('harnessl3-browser-')) throw new Error('Unsafe browser fixture cleanup target')
       await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
     }
-    return { directory, dataRoot, root, target: initialized.target, linked: linked.target, other: other.target, entry, selected: selected.data, expanded: expanded.data, current, legacy: legacy.task, cli, json, url, stop, origin: service.url }
+    return { directory, dataRoot, root, crlfSeed, target: initialized.target, linked: linked.target, other: other.target, entry, selected: selected.data, expanded: expanded.data, current, legacy: legacy.task, cli, json, url, stop, origin: service.url }
   } catch (error) {
     await cli(['serve', 'stop'], directory).catch(() => {})
     if (path.isAbsolute(directory) && path.basename(directory).startsWith('harnessl3-browser-')) await rm(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })

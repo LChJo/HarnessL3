@@ -1,7 +1,7 @@
 # 只读日志观测与源码同步
 
 - 状态：正式CLI实现契约，实际双适配器样本、合成负例和同步/平台范围见[实施状态](../implementation/STATUS.md)；v0.16有限演示不代替正式证据。
-- 规格版本：1；核对日期：2026-11-05。
+- 规格版本：1；核对日期：2026-11-06。
 - 约束：D01–D09、D11–D13；验收：A02、A03、A05–A09。
 - 关联：[运行架构](architecture.md)、[CLI 契约](cli-contract.md)、[模型与读取契约](model-context.md)、[存储恢复](storage.md)、[验收矩阵](acceptance.md)。
 
@@ -45,9 +45,9 @@ harnessl3 agent unbind <binding-id>
 ### Codex 适配器
 
 - 对 JSONL 的 session 元数据、工具调用和结果采用固定版本解码，按 call ID 配对；跨记录保存未完成调用，结束/重启后仍未找到结果则保留 unknown。
-- 支持明确文件读取/搜索及 `apply_patch` 的字面量输入；`functions.exec` / `exec` 包装只用 TypeScript AST 提取字面量 `tools.exec_command`、`tools.apply_patch` 参数，不求值、不调用 JS、不插值模板、不展开变量或函数返回值。
+- 支持明确文件读取/搜索及 `apply_patch` 的字面量输入；`functions.exec` / `exec` 包装只用 TypeScript AST 提取字面量 `tools.exec_command`、`tools.apply_patch` 参数，不求值、不调用 JS、不插值模板、不展开变量或函数返回值。会话轮询只识别单一字面量 `tools.write_stdin` 的空输入、同一const结果直接交给text的严格形状，绑定内匹配原运行会话；动态ID、多调用、非空输入或打印其它值不据此更新原读取。
 - 对 `Get-Content`、`cat`、`type`、`rg` 等仅识别 fixture 覆盖的独立字面量语法及有效路径。动态 PowerShell、shell 替换、管道多阶段、脚本调用和无法定位各子结果的组合命令保留 unsupported/unknown；不因命令文本包含路径就生成已读事件。
-- unified exec 返回运行会话时，只有适配器可确认后续轮询与原调用的关联且获得结束结果才更新结果状态；轮询本身不生成第二次文件读取。无法展开的嵌套工具只记覆盖缺口。
+- unified exec 返回运行会话时，只有适配器可确认后续轮询与原调用的关联且获得结束结果才更新结果状态；轮询本身不生成第二次文件读取。截断标记跨各帧累积，最后一帧未截断且退出0不能抹去此前的部分输出。无法展开的嵌套工具只记覆盖缺口。
 
 ### Claude Code 适配器
 

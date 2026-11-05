@@ -283,3 +283,253 @@ test('real Codex standalone failed read preserves exit1 without claiming returne
   assert.equal(status.events[0].returnedRange, null);
   assert.equal(status.bindings[0].coverage.hostVersionVerified, true);
 });
+
+test('isolated real Claude tools preserve failed Read, Glob and exact partial Read ranges', async t => {
+  const { log, root, create } = await fixture(t);
+  const manager = create({ validatedHostVersions: { codex: ['0.162.1'], 'claude-code': ['2.1.212'] } });
+  await writeFile(join(root, 'sample.md'), 'synthetic one\nsynthetic two\nsynthetic three\nsynthetic four\n');
+  const real = await readFile(new URL('./fixtures/observation/claude-real-tools-2.1.212.jsonl', import.meta.url), 'utf8');
+  await writeFile(log, real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')));
+  await manager.bind({ agent: 'claude-code', sessionId: 'real-tools-claude', logFile: log, requestId: randomUUID() });
+  const status = await manager.status();
+  assert.deepEqual(status.events.map(event => [event.tool, event.status]), [['Read', 'failed'], ['Glob', 'succeeded'], ['Read', 'succeeded']]);
+  assert.ok(status.events.every(event => event.resultMatched && event.contentHash === null));
+  assert.equal(status.events[0].returnedRange, null);
+  assert.equal(status.events[1].operation, 'search');
+  assert.deepEqual(status.events[2].requestedRange, { startLine: 2, endLine: 3 });
+  assert.deepEqual(status.events[2].returnedRange, { startLine: 2, endLine: 3 });
+  assert.equal(status.bindings[0].coverage.hostVersionVerified, true);
+});
+
+test('real tool boundary: Codex running read and nested Ctrl-C do not fabricate completion', async t => {
+  const { manager, log, root } = await fixture(t);
+  await writeFile(join(root, 'sample.md'), 'synthetic one\nsynthetic two\n');
+  const real = await readFile(new URL('./fixtures/observation/codex-real-tool-boundaries-0.162.1.jsonl', import.meta.url), 'utf8');
+  await writeFile(log, real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')));
+  await manager.bind({ agent: 'codex', sessionId: 'real-boundaries-codex', logFile: log, requestId: randomUUID() });
+  const status = await manager.status();
+  assert.equal(status.events.length, 4);
+  const byCall = new Map(status.events.map(event => [event.callId, event]));
+  const running = byCall.get('fixture-running-read');
+  assert.equal(running.status, 'unknown');
+  assert.equal(running.resultMatched, true);
+  assert.equal(running.exitCategory, 'running');
+  assert.equal(running.truncated, true);
+  const partial = byCall.get('fixture-partial-read');
+  assert.equal(partial.status, 'succeeded');
+  assert.deepEqual(partial.requestedRange, { startLine: 1, endLine: 2 });
+  assert.equal(partial.returnedRange, null);
+  const files = byCall.get('fixture-files-only');
+  assert.equal(files.operation, 'search');
+  assert.equal(files.status, 'succeeded');
+  const noMatches = byCall.get('fixture-no-matches');
+  assert.equal(noMatches.operation, 'search');
+  assert.equal(noMatches.status, 'succeeded');
+  assert.equal(noMatches.exitCategory, 'no-matches');
+  assert.ok(status.events.every(event => event.contentHash === null && event.ownership === 'matched'));
+  assert.ok(status.bindings[0].coverage.unsupportedRecords > 0);
+  assert.equal(status.bindings[0].coverage.state, 'partial');
+});
+
+test('real tool boundary: controlled Codex prefix stays unknown until its actual result is delivered', async t => {
+  const { manager, log, root } = await fixture(t);
+  const real = await readFile(new URL('./fixtures/observation/codex-real-tool-boundaries-0.162.1.jsonl', import.meta.url), 'utf8');
+  const rows = real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')).trim().split('\n').map(JSON.parse);
+  const callRow = rows.find(row => row.payload?.type === 'custom_tool_call' && row.payload.call_id === 'fixture-partial-read');
+  const resultRow = rows.find(row => row.payload?.type === 'custom_tool_call_output' && row.payload.call_id === 'fixture-partial-read');
+  // A controlled delivery prefix of a real pair, not evidence of a host log-loss incident.
+  await writeFile(log, line(rows[0]) + line(callRow));
+  await manager.bind({ agent: 'codex', sessionId: 'real-boundaries-codex', logFile: log, requestId: randomUUID() });
+  const before = (await manager.status()).events[0];
+  assert.equal(before.status, 'unknown');
+  assert.equal(before.resultMatched, false);
+  await appendFile(log, line(resultRow));
+  await manager.poll();
+  const after = (await manager.status()).events;
+  assert.equal(after.length, 1);
+  assert.equal(after[0].eventId, before.eventId);
+  assert.equal(after[0].status, 'succeeded');
+  assert.equal(after[0].resultMatched, true);
+});
+
+test('real tool boundary: acknowledged Claude interrupt has an ambiguous failure marker', async t => {
+  const { log, root, create } = await fixture(t);
+  const manager = create({ validatedHostVersions: { codex: ['0.162.1'], 'claude-code': ['2.1.212'] } });
+  const real = await readFile(new URL('./fixtures/observation/claude-real-interrupt-ambiguous-2.1.212.jsonl', import.meta.url), 'utf8');
+  await writeFile(log, real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')));
+  await manager.bind({ agent: 'claude-code', sessionId: 'real-interrupt-claude', logFile: log, requestId: randomUUID() });
+  const { events } = await manager.status();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].tool, 'Grep');
+  assert.equal(events[0].operation, 'search');
+  assert.equal(events[0].status, 'failed');
+  assert.equal(events[0].resultMatched, true);
+  // The host acknowledged interrupt, but this log marker also describes ordinary rejection.
+  assert.equal(events[0].exitCategory, null);
+  assert.equal(events[0].contentHash, null);
+  assert.equal(events[0].ownership, 'matched');
+});
+
+test('real tool boundary: controlled Claude prefix stays unknown until the actual failed Read result', async t => {
+  const { log, root, create } = await fixture(t);
+  const manager = create({ validatedHostVersions: { codex: ['0.162.1'], 'claude-code': ['2.1.212'] } });
+  const real = await readFile(new URL('./fixtures/observation/claude-real-tools-2.1.212.jsonl', import.meta.url), 'utf8');
+  const rows = real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')).trim().split('\n').map(JSON.parse);
+  // Withhold a genuine result from fixture delivery; the original host log contains the pair.
+  await writeFile(log, line(rows[0]));
+  await manager.bind({ agent: 'claude-code', sessionId: 'real-tools-claude', logFile: log, requestId: randomUUID() });
+  const before = (await manager.status()).events[0];
+  assert.equal(before.status, 'unknown');
+  assert.equal(before.resultMatched, false);
+  await appendFile(log, line(rows[1]));
+  await manager.poll();
+  const after = (await manager.status()).events;
+  assert.equal(after.length, 1);
+  assert.equal(after[0].eventId, before.eventId);
+  assert.equal(after[0].status, 'failed');
+  assert.equal(after[0].resultMatched, true);
+  assert.equal(after[0].exitCategory, null);
+});
+
+test('real tool boundary: Claude literal Bash preserves independent read/search/failure', async t => {
+  const { log, root, create } = await fixture(t);
+  const manager = create({ validatedHostVersions: { codex: ['0.162.1'], 'claude-code': ['2.1.212'] } });
+  await writeFile(join(root, 'sample.md'), 'synthetic one\nsynthetic two\n');
+  const real = await readFile(new URL('./fixtures/observation/claude-real-literal-bash-2.1.212.jsonl', import.meta.url), 'utf8');
+  await writeFile(log, real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')));
+  await manager.bind({ agent: 'claude-code', sessionId: 'real-bash-claude', logFile: log, requestId: randomUUID() });
+  const { events } = await manager.status();
+  assert.deepEqual(events.map(event => [event.tool, event.operation, event.status]), [
+    ['Bash', 'read', 'succeeded'], ['Bash', 'search', 'succeeded'], ['Bash', 'read', 'failed']
+  ]);
+  assert.ok(events.every(event => event.resultMatched && event.ownership === 'matched' && event.contentHash === null));
+  assert.equal(events[2].exitCategory, null);
+});
+
+test('code-mode poll: one literal awaited empty poll updates the original read after restart', async t => {
+  const { manager, create, log, root } = await fixture(t);
+  const header = (await readFile(log, 'utf8')).split('\n')[0] + '\n';
+  const running = { type: 'response_item', payload: { type: 'function_call_output', call_id: 'nested-async', output: JSON.stringify({ session_id: 42, output: '' }) } };
+  await writeFile(log, header + line(call('nested-async', 'cat src/example.ts', root)) + line(running));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-codex', logFile: log, requestId: randomUUID() });
+  const before = (await manager.status()).events[0];
+  await manager.close();
+  const resumed = create();
+  await resumed.ready();
+  const poll = { type: 'response_item', payload: { type: 'custom_tool_call', call_id: 'nested-poll', name: 'exec', input: "const r = await tools.write_stdin({session_id:42,chars:'',yield_time_ms:1000,max_output_tokens:40}); text(r);" } };
+  await appendFile(log, line(poll) + line(result('nested-poll')));
+  await resumed.poll();
+  const after = (await resumed.status()).events;
+  assert.equal(after.length, 1);
+  assert.equal(after[0].eventId, before.eventId);
+  assert.equal(after[0].status, 'succeeded');
+  assert.equal(after[0].exitCategory, 'zero');
+  assert.equal(after[0].resultMatched, true);
+});
+
+test('code-mode poll: compound dynamic unpublished and nonempty polls remain unsupported', async t => {
+  const { manager, log, root } = await fixture(t);
+  const header = (await readFile(log, 'utf8')).split('\n')[0] + '\n';
+  const running = { type: 'response_item', payload: { type: 'function_call_output', call_id: 'guarded-async', output: JSON.stringify({ session_id: 42, output: '' }) } };
+  await writeFile(log, header + line(call('guarded-async', 'cat src/example.ts', root)) + line(running));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-codex', logFile: log, requestId: randomUUID() });
+  const invalid = [
+    "const r = await tools.write_stdin({session_id:42,chars:'x'}); text(r);",
+    "const r = await tools.write_stdin({session_id:42,chars:empty}); text(r);",
+    "const r = await tools.write_stdin({session_id:session,chars:''}); text(r);",
+    "const r = await tools.write_stdin({session_id:999,chars:''}); text(r);",
+    "const r = await tools.write_stdin({session_id:'__proto__',chars:''}); text(r);",
+    "const r = tools.write_stdin({session_id:42,chars:''}); text(r);",
+    "let r = await tools.write_stdin({session_id:42,chars:''}); text(r);",
+    "const r = await tools.write_stdin({session_id:42,chars:''}); const s = await tools.write_stdin({session_id:42,chars:''}); text(r);",
+    `const r = await tools.exec_command({cmd:'cat src/example.ts',workdir:${JSON.stringify(root)}}); const p = await tools.write_stdin({session_id:42,chars:''}); text(r);`,
+    "const r = await tools.write_stdin({session_id:42,chars:''}); text(r); text({});",
+    "const r = await tools.write_stdin({session_id:42,chars:''});",
+    "const r = await tools.write_stdin({session_id:42,chars:''}); text(other);"
+  ];
+  for (let i = 0; i < invalid.length; i++) {
+    const callId = `unsupported-poll-${i}`;
+    await appendFile(log, line({ type: 'response_item', payload: { type: 'custom_tool_call', call_id: callId, name: 'exec', input: invalid[i] } }) + line(result(callId)));
+    await manager.poll();
+    const { events } = await manager.status();
+    assert.equal(events.length, 1);
+    assert.equal(events[0].status, 'unknown');
+    assert.equal(events[0].exitCategory, 'running');
+  }
+  assert.ok((await manager.status()).bindings[0].coverage.unsupportedRecords >= invalid.length);
+});
+
+test('code-mode poll: session IDs from another binding cannot resolve its read', async t => {
+  const { manager, log, root, base } = await fixture(t);
+  const header = (await readFile(log, 'utf8')).split('\n')[0] + '\n';
+  const running = { type: 'response_item', payload: { type: 'function_call_output', call_id: 'owned-async', output: JSON.stringify({ session_id: 42, output: '' }) } };
+  await writeFile(log, header + line(call('owned-async', 'cat src/example.ts', root)) + line(running));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-codex', logFile: log, requestId: randomUUID() });
+  const otherLog = join(base, 'other-session.jsonl');
+  const poll = { type: 'response_item', payload: { type: 'custom_tool_call', call_id: 'wrong-binding-poll', name: 'exec', input: "const r = await tools.write_stdin({session_id:42,chars:''}); text(r);" } };
+  await writeFile(otherLog, line({ type: 'session_meta', payload: { id: 'synthetic-other-codex', cwd: root, cli_version: '0.162.1' } }) + line(poll) + line(result('wrong-binding-poll')));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-other-codex', logFile: otherLog, requestId: randomUUID() });
+  const { events, bindings } = await manager.status();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].status, 'unknown');
+  assert.equal(events[0].exitCategory, 'running');
+  assert.ok(bindings.find(binding => binding.sessionId === 'synthetic-other-codex').coverage.unsupportedRecords > 0);
+});
+
+test('code-mode poll: a single literal poll may omit empty chars', async t => {
+  const { manager, log, root } = await fixture(t);
+  const header = (await readFile(log, 'utf8')).split('\n')[0] + '\n';
+  const running = { type: 'response_item', payload: { type: 'function_call_output', call_id: 'implicit-empty-async', output: JSON.stringify({ session_id: 42, output: '' }) } };
+  const poll = { type: 'response_item', payload: { type: 'custom_tool_call', call_id: 'implicit-empty-poll', name: 'exec', input: "/* literal read-only poll */ const r = await tools.write_stdin({session_id:42}); ; text(r);" } };
+  await writeFile(log, header + line(call('implicit-empty-async', 'cat src/example.ts', root)) + line(running) + line(poll) + line(result('implicit-empty-poll')));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-codex', logFile: log, requestId: randomUUID() });
+  const { events } = await manager.status();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].status, 'succeeded');
+  assert.equal(events[0].exitCategory, 'zero');
+});
+
+test('code-mode poll: truncation remains sticky when the final direct poll is small and successful', async t => {
+  const { manager, create, log, root } = await fixture(t);
+  const header = (await readFile(log, 'utf8')).split('\n')[0] + '\n';
+  const running = { type: 'response_item', payload: { type: 'function_call_output', call_id: 'truncated-async', output: JSON.stringify({ session_id: 42, output: 'Warning: truncated output', truncated: true }) } };
+  await writeFile(log, header + line(call('truncated-async', 'cat src/example.ts', root)) + line(running));
+  await manager.bind({ agent: 'codex', sessionId: 'synthetic-codex', logFile: log, requestId: randomUUID() });
+  await manager.close();
+  const resumed = create();
+  await resumed.ready();
+  const poll = { type: 'response_item', payload: { type: 'function_call', call_id: 'small-final-poll', name: 'write_stdin', arguments: JSON.stringify({ session_id: 42, chars: '' }) } };
+  await appendFile(log, line(poll) + line(result('small-final-poll')));
+  await resumed.poll();
+  const { events } = await resumed.status();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].exitCategory, 'zero');
+  assert.equal(events[0].truncated, true);
+  assert.equal(events[0].partial, true);
+  assert.equal(events[0].status, 'unknown');
+});
+
+test('code-mode poll: real Codex natural completion is matched while truncated context stays unknown', async t => {
+  const { manager, log, root } = await fixture(t);
+  const real = await readFile(new URL('./fixtures/observation/codex-real-empty-poll-0.162.1.jsonl', import.meta.url), 'utf8');
+  const rows = real.replaceAll('__WORKTREE__', root.replaceAll('\\', '/')).trim().split('\n').map(JSON.parse);
+  await writeFile(log, rows.slice(0, 3).map(line).join(''));
+  await manager.bind({ agent: 'codex', sessionId: 'real-empty-poll-codex', logFile: log, requestId: randomUUID() });
+  const before = (await manager.status()).events[0];
+  assert.equal(before.exitCategory, 'running');
+  assert.equal(before.truncated, true);
+  for (let index = 3; index < rows.length; index += 2) {
+    await appendFile(log, line(rows[index]) + line(rows[index + 1]));
+    await manager.poll();
+  }
+  const { events, bindings } = await manager.status();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].eventId, before.eventId);
+  assert.equal(events[0].exitCategory, 'zero');
+  assert.equal(events[0].resultMatched, true);
+  assert.equal(events[0].truncated, true);
+  assert.equal(events[0].partial, true);
+  assert.equal(events[0].status, 'unknown');
+  assert.equal(events[0].contentHash, null);
+  assert.equal(bindings[0].coverage.unsupportedRecords, 0);
+});

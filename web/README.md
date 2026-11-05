@@ -54,3 +54,42 @@ Final complete browse result after the builds:
 ```
 
 Screenshots: `validation/formal-overview.png`, `validation/mobile-overview.png`, `validation/legacy-c4.png`. Phone checks used touch emulation; they do not claim a physical-device or Safari run. Offline checks cover the already loaded canvas and local-only resources, not a service-worker cold load. Native macOS/Linux results are tracked by the main implementation verification separately.
+
+## Windows temporary-path alias reproduction
+
+`node web/verify-temp-alias.mjs` creates an owned Windows temporary directory and a junction alias, runs the unchanged `scripts/v1/browser-smoke.mjs` with both `TEMP` and `TMP` pointing through that alias, then removes the alias and its verified owned target. It saves redacted output to `validation/temp-alias-browser-win32.json`; use `BROWSER_CHANNEL=chromium` when the Playwright browser is installed.
+
+Actual 2026-11-06 result on Node 24.12.0 and Edge 156.0.4314.58:
+
+```json
+{"platform":"win32","node":"v24.12.0","browserChannel":"msedge","tempIsAlias":true,"exitCode":0,"stdout":"{\"platform\":\"win32\",\"browser\":\"156.0.4314.58\",\"gates\":3,\"eventDisplaySamples\":3,\"p50\":1397,\"p95\":1701}\n","stderr":""}
+```
+
+The child descriptor retained the raw junction path while directory guards compared canonical paths. The existing fixture and all three browser gates passed without modification. This did not reproduce the Windows CI Chromium failure, and does not establish that CI passed. Production Web/backend code stayed frozen.
+
+## CRLF archive verification regression
+
+The locked Playwright 1.64.0 browser was installed into the absolute cache `I:\AI\HarnessL3\.harness-local\tools\playwright` with `npx --no-install playwright install chromium`. It downloaded Chromium/headless-shell 156.0.8078.4 revision 1248, FFmpeg 1013 and the Winldd 1007 helper; no system dependency installation or browser-setting change was performed.
+
+The original LF seed also passed the complete junction-alias smoke using Chromium 156.0.8078.4. An explicit CRLF seed then reproduced the Windows failure: the old directory assertion compared a textarea's LF display value with raw CRLF bytes. The failed assertion was `old plan returns its original bytes despite directory rename/edit`; this was a display-comparison error, not evidence of archive corruption.
+
+`createBrowserFixture({crlfSeed:true})`, or `HARNESS_TEST_BROWSER_CRLF_SEED=1`, now prepares that regression case. After CLI init and before any task starts, it resolves and checks the owned fixture/data/skill boundaries, rejects child links, converts only the generated skill copy's Markdown files to CRLF, and refreshes the catalog. Repository skills and user libraries are never converted.
+
+The corrected gate checks two distinct boundaries. The textarea is compared using HTML newline normalization. The actual `task read` API response is independently compared byte-for-byte with the original CRLF fixture, checked against the fixed task's original SHA-256 reference, and checked for both reported and actual byte length. Normalizing the visual value cannot hide changed archive bytes.
+
+Actual Windows regression command, 2026-11-06:
+
+```powershell
+$env:PLAYWRIGHT_BROWSERS_PATH = 'I:\AI\HarnessL3\.harness-local\tools\playwright'
+$env:BROWSER_CHANNEL = 'chromium'
+$env:HARNESS_TEST_BROWSER_CRLF_SEED = '1'
+node web/verify-temp-alias.mjs
+```
+
+The original assertion exited 1. After the verification-only fix, the same configuration exited 0 with empty stderr, all three browser gates and three commit/display samples (P50 1156 ms, P95 1361 ms). The directory result was:
+
+```json
+{"canonicalCopyInsideFixture":true,"directory":["automatic-add","automatic-body-edit","automatic-category-rename","automatic-delete","invalid-clears-candidates","manual-invalid-refresh","manual-recovery"],"oldPlan":"original-group-and-bytes","originalArchivedBytesExact":true,"archivedLineEndings":"crlf","sourceEpoch":{"before":0,"after":0},"restoredCatalogRevision":true,"pageErrors":[]}
+```
+
+All three gates reported no page errors; owned temporary junctions and targets were removed. Redacted RED/GREEN reports are `validation/temp-alias-browser-win32-chromium-crlf-red.json` and `validation/temp-alias-browser-win32-chromium-crlf-green.json`; the complete successful smoke report is `.harness-local/validation/browser-win32.json`. This local result does not substitute for a subsequent CI run.

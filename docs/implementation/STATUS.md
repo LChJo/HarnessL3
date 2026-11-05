@@ -31,12 +31,23 @@
 | 原生Linux最终完整程序 | 修复后241/241通过、0跳过；随后新增的真实Codex失败样本连同日志/alias在独立19/19中通过。两次报告分开，不拼称一次242项报告；freshness/source32/32的RED→GREEN另存 |
 | 原生Linux浏览器/包 | Chromium156的三组browser-smoke通过、0 page errors；中文/空格消费者安装、实际npm bin shim及归档任务链通过。128文件、20技能、2资产及sha512核验 |
 | TC26原生FS专项 | 后补2项：Windows真实FileShare.None外部持锁下原子替换拒绝/旧字节不变，释放后成功；Linux同目录大小写文件的Git路径/哈希/变更分离。两平台各1通过/1明确能力跳过，无sleep；不拼入先前完整轮次数字 |
-| macOS | 未执行；用户已授权新审阅分支及原生三平台CI，待首次推送触发。不能把工作流文件或授权当通过证据 |
-| 性能 | 最终四规模采样中；此前smoke、优化对照及中断样本独立保存，不混入最终P50/P95，不声明SLA |
+| 原生三平台CI程序 | 第三轮每平台244项（199正式+45原型回归）：Windows240通过/4平台跳过，Linux243通过/1跳过，macOS241通过/3能力跳过，全部0失败；跳过原因和前两轮失败独立保留 |
+| 原生CI浏览/安装 | 第三轮Linux和macOS构建、浏览、安装全部成功；Windows在browser-smoke失败、安装因此跳过，本机Edge/安装通过不能替代该失败。第四轮补充步骤诊断后继续 |
+| 性能 | 四规模112冷热组、336/336样本成功，28文件指纹全程一致。10000对象完整CLI混合读冷/热P50为99.59s/102.51s，最高RSS 2.73GiB；[完整方法、表格及限制](PERFORMANCE.md)，不声明SLA |
 
 Windows使用Node24.12.0/npm11.6.2/Git2.51、Edge156；Linux使用WSL Ubuntu内原生Node24.12.0/Git2.43/Chromium，非Windows可执行文件透传。手机是390×844触摸仿真，不代表全部物理设备。原生Linux早期139项核心通过仅有命令输出，首次JUnit因临时目录清空未保留；后续脚本均退出前回存报告，不编造缺失报告。
 
 JUnit/浏览报告在本机`.harness-local/validation/`；阶段RED/GREEN、保护清单及性能原始样本在`.harness-local/implementation-20261105/`；最终包与安装报告在`.harness-local/artifacts/`。上述本机产物不随Git提交。
+
+## 原生CI运行记录
+
+源代码、规格与测试已推至`codex/harnessl3-v1-20261106`，独立审阅worktree为`I:/AI/HarnessL3-review-v1-20261106`；原工作区main未切换，本机任务/日志/缓存未上传，未合并或发布npm。
+
+- [首轮42066774412](https://github.com/LChJo/HarnessL3/actions/runs/42066774412)，`9f020fb`：Ubuntu全部成功；Windows在npm test失败，浏览和安装因此未执行；macOS停留于测试等待。实际失败保留，不能用本机通过掩盖。
+- macOS路径前提已在Linux原生symlink TMPDIR下复现：取消测试用字面临时路径生成fake服务身份，而CLI使用canonical路径，导致等待服务接受无限挂起。原测试8秒超时RED；仅修夹具canonicalization、提前退出检测及20秒有界超时，同一前提2/2 GREEN，产品代码未改。
+- [第二轮42069264423](https://github.com/LChJo/HarnessL3/actions/runs/42069264423)，`a389e40`：Ubuntu全通过；Windows237通过/3失败/4跳过，macOS238通过/4失败/2跳过。失败是fixture把Windows 8.3或macOS `/var`别名与canonical路径直接比较，另有Darwin不允许创建非法UTF-8文件名。新增JUnit摘要取得了准确断言；macOS上传报告另遇网络超时，未隐藏。
+- foundation与maintenance夹具统一真实路径后，同样alias前提在Linux和Windows回归。Darwin只在创建非法文件名报`EILSEQ`时明确能力跳过；Linux仍真实执行编码诊断断言，未跳过扫描错误或放宽GC竞态断言。
+- [第三轮42070719498](https://github.com/LChJo/HarnessL3/actions/runs/42070719498)，`2904010`：三平台程序全通过；Linux/macOS所有步骤成功，Windows browser-smoke失败。第四轮`73fb8ee`增加浏览/安装步骤的脱敏失败注释，继续定位，不把通用exit1猜成某个产品问题。
 
 ## 验收证据导航
 
@@ -61,4 +72,4 @@ JUnit/浏览报告在本机`.harness-local/validation/`；阶段RED/GREEN、保�
 
 当前Windows事件到可见输出三样本P50/P95为1668/1668ms，Linux为976/1236ms；定义是journal提交时间到准确输出数可见后的双requestAnimationFrame，含刷新/绘制调度、同机壁钟且仅三样本，不是稳定长尾SLA。
 
-第二个独立里程碑summary cda7ceb7-5c04-4d99-904b-8fd9896f05cf已写并读回。剩余：四规模性能、最终文档/保护核验、原生macOS结果，以及TC10真实负例样本未覆盖部分。T14及完整用户目标保持进行中。
+第二个独立里程碑summary cda7ceb7-5c04-4d99-904b-8fd9896f05cf已写并读回。剩余：原生CI失败收敛、最终文档/保护核验，以及TC10真实负例样本未覆盖部分；四规模性能已完成。T14及完整用户目标保持进行中。

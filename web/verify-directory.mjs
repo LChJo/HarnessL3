@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { lstat, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { createHash } from 'node:crypto'
 import { chromium } from 'playwright'
 
 if (!process.argv[2]) throw new Error('Usage: node web/verify-directory.mjs <isolated-browser-fixture.json>')
@@ -37,6 +38,10 @@ try {
   assert.ok(inside(library, quality)); assert.ok(inside(library, qualityTarget))
   assert.equal((await lstat(quality)).isSymbolicLink(), false)
   qualityBytes = await readFile(path.join(quality, 'tdd', 'SKILL.md'))
+  if (fixture.crlfSeed) {
+    assert.ok(qualityBytes.includes(Buffer.from('\r\n')), 'explicit CRLF fixture must retain CRLF bytes')
+    assert.equal(qualityBytes.toString('utf8').replaceAll('\r\n', '').includes('\n'), false, 'explicit CRLF seed has no bare LF')
+  }
   const waitFolder = (group, exists = true) => page.waitForFunction(({ group, exists }) => !!document.querySelector(`[data-skill-folder="${group}"]`) === exists, { group, exists }, { timeout: 20000 })
   const fit = () => page.getByRole('button', { name: '概览全部内容', exact: true }).click()
   const refresh = async () => {
@@ -78,6 +83,10 @@ try {
   archived.on('pageerror', error => errors.push(error.message))
   await archived.goto(service.url + '/?' + new URLSearchParams({ worktree: fixture.target.worktreeId, task: fixture.entry.taskId, history: '1' }))
   await archived.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-task-id') && !document.querySelector('.view-loading'))
+  const archivedSnapshot = await archived.evaluate(async args => await fetch('/view?' + new URLSearchParams(args)).then(response => response.json()), { worktree: fixture.target.worktreeId, task: fixture.entry.taskId })
+  const originalReference = archivedSnapshot.task.skillPlan.skills.find(skill => skill.id === 'quality/tdd').files.find(file => file.path === 'SKILL.md')
+  assert.equal(originalReference.hash, createHash('sha256').update(qualityBytes).digest('hex'))
+  assert.equal(originalReference.bytes, qualityBytes.length)
   await archived.locator('[data-skill-selector]').click()
   assert.equal(await archived.locator('[data-skill-folder="quality"]').count(), 1)
   await writeFile(path.join(quality, 'tdd', 'SKILL.md'), Buffer.concat([qualityBytes, Buffer.from('\nUI_DIRECTORY_MUTATION_MARKER\n')]))
@@ -91,10 +100,22 @@ try {
   await archived.locator('[data-skill-id="quality/tdd"] .skill-lane-main').click()
   await archived.getByRole('button', { name: '概览全部内容', exact: true }).click()
   await archived.locator('[data-skill-file-owner="quality/tdd"][data-skill-file="SKILL.md"]').click()
+  const originalFileResponse = archived.waitForResponse(response => response.url().endsWith('/rpc') && response.request().postDataJSON()?.operation === 'task read')
   await archived.getByRole('button', { name: '网页预览归档文件SKILL.md', exact: true }).click()
+  const originalFileEnvelope = await (await originalFileResponse).json()
+  assert.equal(originalFileEnvelope.ok, true)
+  assert.deepEqual(originalFileEnvelope.data.errors, [])
+  const originalFile = originalFileEnvelope.data.files.find(item => item.skillId === 'quality/tdd' && item.file.path === 'SKILL.md').file
+  assert.equal(originalFile.encoding, 'utf8')
+  const returnedBytes = Buffer.from(originalFile.content, 'utf8')
+  assert.deepEqual(returnedBytes, qualityBytes, 'API retains the exact archived bytes including CRLF')
+  assert.equal(originalFile.hash, originalReference.hash, 'returned reference retains the original archive hash')
+  assert.equal(createHash('sha256').update(returnedBytes).digest('hex'), originalReference.hash, 'actual returned bytes match the independent original reference')
+  assert.equal(originalFile.bytes, originalReference.bytes)
+  assert.equal(returnedBytes.length, originalReference.bytes)
   const oldText = archived.getByRole('textbox', { name: '技能归档文件原文', exact: true })
   await oldText.waitFor()
-  assert.equal(await oldText.inputValue(), qualityBytes.toString('utf8'), 'old plan returns its original bytes despite directory rename/edit')
+  assert.equal(await oldText.inputValue(), qualityBytes.toString('utf8').replace(/\r\n?/g, '\n'), 'textarea displays the original archive text with HTML newline normalization')
   await rename(qualityTarget, quality); qualityMoved = false
   await writeFile(path.join(quality, 'tdd', 'SKILL.md'), qualityBytes)
   await waitFolder('quality'); await waitFolder(renamedQuality, false)
@@ -108,7 +129,7 @@ try {
   const final = await refresh()
   assert.equal(final.revision, initial.revision, 'fixture skill bytes and directory restored exactly')
   assert.deepEqual(errors, [])
-  console.log(JSON.stringify({ canonicalCopyInsideFixture: true, directory: ['automatic-add', 'automatic-body-edit', 'automatic-category-rename', 'automatic-delete', 'invalid-clears-candidates', 'manual-invalid-refresh', 'manual-recovery'], oldPlan: 'original-group-and-bytes', sourceEpoch: { before: before.sourceEpoch, after: after.sourceEpoch }, restoredCatalogRevision: true, pageErrors: errors }))
+  console.log(JSON.stringify({ canonicalCopyInsideFixture: true, directory: ['automatic-add', 'automatic-body-edit', 'automatic-category-rename', 'automatic-delete', 'invalid-clears-candidates', 'manual-invalid-refresh', 'manual-recovery'], oldPlan: 'original-group-and-bytes', originalArchivedBytesExact: true, archivedLineEndings: qualityBytes.includes(Buffer.from('\r\n')) ? 'crlf' : 'lf', sourceEpoch: { before: before.sourceEpoch, after: after.sourceEpoch }, restoredCatalogRevision: true, pageErrors: errors }))
 } finally {
   // Only known fixture paths are restored/deleted; never touch repo skills.
   if (library && qualityBytes) {

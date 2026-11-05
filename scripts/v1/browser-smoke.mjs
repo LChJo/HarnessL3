@@ -14,7 +14,7 @@ const fixture = await createBrowserFixture()
 let browser
 try {
   const descriptor = path.join(fixture.directory, 'browser-fixture.json')
-  await writeFile(descriptor, JSON.stringify({ directory: fixture.directory, dataRoot: fixture.dataRoot, root: fixture.root, target: fixture.target, linked: fixture.linked, other: fixture.other, entry: fixture.entry, current: fixture.current, legacy: fixture.legacy, origin: fixture.origin, firstBatch: fixture.selected.result.batchId }))
+  await writeFile(descriptor, JSON.stringify({ directory: fixture.directory, dataRoot: fixture.dataRoot, root: fixture.root, crlfSeed: fixture.crlfSeed, target: fixture.target, linked: fixture.linked, other: fixture.other, entry: fixture.entry, current: fixture.current, legacy: fixture.legacy, origin: fixture.origin, firstBatch: fixture.selected.result.batchId }))
   const checked = await execFile(process.execPath, [path.join(root, 'web/verify-all.mjs'), descriptor], { cwd: root, windowsHide: true, maxBuffer: 32 * 1024 * 1024 })
   const gates = JSON.parse(checked.stdout)
   browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
@@ -35,9 +35,9 @@ try {
     samples.push({ requestId, committedAt: commit.committedAt, paintedAt: new Date(paintedAt).toISOString(), milliseconds: paintedAt - Date.parse(commit.committedAt) })
   }
   const times = samples.map(sample => sample.milliseconds).sort((a, b) => a - b)
-  const report = { platform: process.platform, node: process.version, browser: await browser.version(), gates, eventDisplay: { definition: 'journal committedAt to two requestAnimationFrame callbacks after exact output count is visible; same machine wall clock, includes refresh and paint scheduling', samples, p50: times[Math.ceil(times.length * .5) - 1], p95: times[Math.ceil(times.length * .95) - 1] } }
+  const report = { platform: process.platform, node: process.version, browser: await browser.version(), crlfSeed: fixture.crlfSeed, gates, eventDisplay: { definition: 'journal committedAt to two requestAnimationFrame callbacks after exact output count is visible; same machine wall clock, includes refresh and paint scheduling', samples, p50: times[Math.ceil(times.length * .5) - 1], p95: times[Math.ceil(times.length * .95) - 1] } }
   const reports = path.join(root, '.harness-local', 'validation')
   await mkdir(reports, { recursive: true })
   await writeFile(path.join(reports, `browser-${process.platform}.json`), JSON.stringify(report, null, 2) + '\n')
-  console.log(JSON.stringify({ platform: process.platform, browser: report.browser, gates: gates.results.length, eventDisplaySamples: times.length, p50: report.eventDisplay.p50, p95: report.eventDisplay.p95 }))
+  console.log(JSON.stringify({ platform: process.platform, browser: report.browser, crlfSeed: fixture.crlfSeed, gates: gates.results.length, eventDisplaySamples: times.length, p50: report.eventDisplay.p50, p95: report.eventDisplay.p95 }))
 } finally { await browser?.close(); await fixture.stop() }

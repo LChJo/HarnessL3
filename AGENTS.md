@@ -2,7 +2,7 @@
 
 ## 首先读取
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.19。
+1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.20。
 2. [工作规格](docs/spec/README.md)：正式CLI v1.0契约、验收与实施顺序；产品编码前必须读相关子规格。
 3. [README](README.md)：项目导航；需要设计/历史时读[冻结原型](docs/prototype/README.md)。
 

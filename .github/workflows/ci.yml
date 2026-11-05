@@ -37,6 +37,8 @@ jobs:
         run: node scripts/v1/ci-report.mjs
       - run: npx playwright install --with-deps chromium
       - run: node scripts/v1/ci-step.mjs browser-smoke
+        env:
+          HARNESS_TEST_BROWSER_CRLF_SEED: '1'
       - run: node scripts/v1/ci-step.mjs package-smoke
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

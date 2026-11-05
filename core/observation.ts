@@ -170,10 +170,47 @@ function literal(node: ts.Expression): unknown {
   }
   throw new Error('nonliteral');
 }
-function nested(code: unknown, fallbackCwd: string | null): { operations: Operation[]; unsupported: number } {
-  if (typeof code !== 'string') return { operations: [], unsupported: 1 };
+/** A poll result is attributable only for the exact single-result wrapper shape. */
+function nestedPoll(source: ts.SourceFile): string | null {
+  const statements = source.statements.filter(statement => !ts.isEmptyStatement(statement));
+  if (statements.length !== 2 || !ts.isVariableStatement(statements[0]) || statements[0].modifiers?.length || !ts.isExpressionStatement(statements[1])) return null;
+  const declarations = statements[0].declarationList;
+  if (!(declarations.flags & ts.NodeFlags.Const) || declarations.declarations.length !== 1) return null;
+  const declaration = declarations.declarations[0];
+  if (!ts.isIdentifier(declaration.name) || declaration.type || !declaration.initializer || !ts.isAwaitExpression(declaration.initializer)) return null;
+  const call = declaration.initializer.expression;
+  if (!ts.isCallExpression(call) || call.questionDotToken || call.typeArguments?.length || call.arguments.length !== 1) return null;
+  const callee = call.expression;
+  if (!ts.isPropertyAccessExpression(callee) || callee.questionDotToken || !ts.isIdentifier(callee.expression) || callee.expression.text !== 'tools' || callee.name.text !== 'write_stdin') return null;
+  const output = statements[1].expression;
+  if (!ts.isCallExpression(output) || output.questionDotToken || output.typeArguments?.length || !ts.isIdentifier(output.expression) || output.expression.text !== 'text' || output.arguments.length !== 1 || !ts.isIdentifier(output.arguments[0]) || output.arguments[0].text !== declaration.name.text) return null;
+  try {
+    const args = literal(call.arguments[0]);
+    if (!args || typeof args !== 'object') return null;
+    const object = args as Record<string, unknown>;
+    if (Object.keys(object).some(key => !['session_id', 'chars', 'yield_time_ms', 'max_output_tokens'].includes(key))) return null;
+    if (Object.hasOwn(object, 'chars') && object.chars !== '') return null;
+    for (const key of ['yield_time_ms', 'max_output_tokens']) if (Object.hasOwn(object, key) && (!Number.isSafeInteger(object[key]) || Number(object[key]) < 0)) return null;
+    const session = object.session_id;
+    if (typeof session === 'number') return Number.isSafeInteger(session) && session > 0 ? String(session) : null;
+    return typeof session === 'string' ? id(session) : null;
+  } catch { return null; }
+}
+function nested(code: unknown, fallbackCwd: string | null): { operations: Operation[]; unsupported: number; pollSession: string | null } {
+  if (typeof code !== 'string') return { operations: [], unsupported: 1, pollSession: null };
   const source = ts.createSourceFile('observed-tool.ts', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  if ((source as any).parseDiagnostics?.length) return { operations: [], unsupported: 1 };
+  if ((source as any).parseDiagnostics?.length) return { operations: [], unsupported: 1, pollSession: null };
+  const pollSession = nestedPoll(source);
+  if (pollSession !== null) return { operations: [], unsupported: 0, pollSession };
+  // Compound/dynamic poll wrappers cannot borrow a result from a different child.
+  let hasPoll = false;
+  const findPoll = (node: ts.Node): void => {
+    if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'tools' && node.name.text === 'write_stdin') hasPoll = true;
+    if (ts.isElementAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'tools' && ts.isStringLiteral(node.argumentExpression) && node.argumentExpression.text === 'write_stdin') hasPoll = true;
+    ts.forEachChild(node, findPoll);
+  };
+  findPoll(source);
+  if (hasPoll) return { operations: [], unsupported: 1, pollSession: null };
   const operations: Operation[] = [];
   let unsupported = 0;
   let directVariable: string | null = null, printsVariable = false;
@@ -214,7 +251,7 @@ function nested(code: unknown, fallbackCwd: string | null): { operations: Operat
     } else if (!ts.isEmptyStatement(statement)) unsupported++;
   }
   if (operations.length !== 1 || !printsVariable) for (const operation of operations) operation.directResult = false;
-  return { operations, unsupported: unsupported || (operations.length ? 0 : 1) };
+  return { operations, unsupported: unsupported || (operations.length ? 0 : 1), pollSession: null };
 }
 
 export class ObservationManager {
@@ -504,11 +541,11 @@ export class ObservationManager {
         const previous = changed.get(eventId) ?? this.events.get(eventId);
         if (!previous) continue;
         const event = structuredClone(previous);
-        event.resultMatched = true; event.resultRange = position; event.truncated = decoded.truncated; event.partial = decoded.truncated ? true : null;
+        event.resultMatched = true; event.resultRange = position; event.truncated = previous.truncated === true || decoded.truncated; event.partial = event.truncated ? true : null;
         event.exitCategory = decoded.cancelled ? 'cancelled' : decoded.denied ? 'permission-denied' : decoded.runningSession ? 'running' : pending.engine === 'rg' && decoded.code === 1 ? 'no-matches' : decoded.code === 0 || decoded.explicitSuccess ? 'zero' : decoded.code !== null ? 'nonzero' : null;
         if (pending.nested && !pending.directResult) event.status = 'unknown';
         else if (decoded.cancelled || decoded.denied || decoded.failed && !(pending.engine === 'rg' && decoded.code === 1)) event.status = 'failed';
-        else if (decoded.runningSession || decoded.truncated || !verified || !binding.sessionVerified || event.ownership === 'unknown') event.status = 'unknown';
+        else if (decoded.runningSession || event.truncated || !verified || !binding.sessionVerified || event.ownership === 'unknown') event.status = 'unknown';
         else if (decoded.explicitSuccess || pending.engine === 'rg' && decoded.code === 1) event.status = 'succeeded';
         else event.status = 'unknown';
         if (event.operation === 'read') event.returnedRange = decoded.range;
@@ -536,6 +573,11 @@ export class ObservationManager {
         else if (name === 'exec') {
           const decoded = nested(payload.input ?? args?.code ?? payload.arguments, binding.cwd);
           if (decoded.unsupported) { binding.coverage.unsupportedRecords += decoded.unsupported; this.diagnostic(binding, 'UNSUPPORTED_EXEC_AST', position); }
+          if (decoded.pollSession !== null) {
+            const original = Object.hasOwn(binding.processes, decoded.pollSession) ? binding.processes[decoded.pollSession] : undefined;
+            if (original) binding.polls[callId] = original;
+            else { binding.coverage.unsupportedRecords++; this.diagnostic(binding, 'UNSUPPORTED_SESSION_POLL', position); }
+          }
           if (decoded.operations.length) await install(callId, decoded.operations);
         } else { binding.coverage.unsupportedRecords++; this.diagnostic(binding, 'UNSUPPORTED_TOOL', position); }
       } else if (['function_call_output', 'custom_tool_call_output'].includes(payload?.type)) complete(callId, payload.output);
