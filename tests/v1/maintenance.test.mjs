@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, readdir, rm, stat, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, readdir, realpath, rm, stat, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
@@ -12,7 +12,8 @@ const rawHash = bytes => createHash('sha256').update(bytes).digest('hex');
 const oldHash = value => rawHash(JSON.stringify(value));
 const time = '2026-11-05T12:00:00.000Z';
 async function fixture(t) {
-  const base = await mkdtemp(join(tmpdir(), 'harnessl3-maintenance-'));
+  // Match GC's canonical identity when TMPDIR uses a symlink or Windows 8.3 alias.
+  const base = await realpath(await mkdtemp(join(tmpdir(), 'harnessl3-maintenance-')));
   const source = join(base, 'synthetic-prototype');
   const dataRoot = join(base, 'formal-data');
   const worktree = { id: randomUUID(), projectId: randomUUID(), root: join(base, 'worktree'), gitCommonDir: join(base, 'worktree', '.git'), branch: 'fixture', active: true, available: true };

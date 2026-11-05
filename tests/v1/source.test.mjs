@@ -232,7 +232,11 @@ test('TC07 gitlinks and unresolved index stages are explicit unknown unless thei
 
 test('TC07 invalid UTF-8 filesystem paths are unknown rather than replacement-character hashes', { skip: process.platform === 'win32' ? 'Windows cannot create raw non-Unicode filename bytes; native POSIX CI fixture.' : false }, async (t) => {
   const f = await fixture(t);
-  await writeFile(Buffer.concat([Buffer.from(f.checkout + path.sep + 'invalid-'), Buffer.from([255])]), 'bytes\n');
+  try { await writeFile(Buffer.concat([Buffer.from(f.checkout + path.sep + 'invalid-'), Buffer.from([255])]), 'bytes\n'); }
+  catch (error) {
+    if (process.platform === 'darwin' && error.code === 'EILSEQ') return t.skip('The native Darwin volume rejects invalid UTF-8 filename bytes (EILSEQ).');
+    throw error;
+  }
   const result = await f.scan();
   assert.equal(result.sourceVersion.status, 'unknown');
   assert.equal(result.sourceVersion.treeHash, null);

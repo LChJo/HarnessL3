@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, mkdir, symlink, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, mkdir, symlink, rm, realpath } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { canonicalJson, parseJsonStrict, digest, sha256 } from '../../build/core/json.js'
@@ -35,7 +35,7 @@ test('Draft 2020-12 validates normalized requests deeply and reports unknown sch
 })
 
 test('atomic replace preserves current file when the new write fails and preserves exact bytes', async t => {
-  const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-io-'))
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harnessl3-io-')))
   t.after(() => rm(root, { recursive: true, force: true }))
   const file = path.join(root, 'state.json')
   await writeJson(file, { value: 1 })
@@ -47,7 +47,7 @@ test('atomic replace preserves current file when the new write fails and preserv
 })
 
 test('path boundaries resolve existing ancestors and reject traversal and linked escapes', async t => {
-  const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-path-'))
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harnessl3-path-')))
   t.after(() => rm(root, { recursive: true, force: true }))
   const inside = path.join(root, 'project')
   const outside = path.join(root, 'outside')
