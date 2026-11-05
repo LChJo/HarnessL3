@@ -36,8 +36,8 @@ jobs:
         if: always()
         run: node scripts/v1/ci-report.mjs
       - run: npx playwright install --with-deps chromium
-      - run: node scripts/v1/browser-smoke.mjs
-      - run: node scripts/v1/package-smoke.mjs
+      - run: node scripts/v1/ci-step.mjs browser-smoke
+      - run: node scripts/v1/ci-step.mjs package-smoke
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

@@ -14,7 +14,8 @@ const decode = value => value.replace(/&(?:quot|apos|lt|gt|amp|#\d+|#x[\da-f]+);
 const attribute = (text, name) => decode(new RegExp(`\\b${name}="([^"]*)"`).exec(text)?.[1] ?? '')
 const safe = value => value
   .replace(/Bearer\s+[^\s'"<>]+/gi, 'Bearer [redacted]')
-  .replace(/((?:token|nonce|authorization)\s*[=:]\s*['"]?)[^\s'",}<>]+/gi, '$1[redacted]')
+  .replace(/((?:token|nonce|authorization|cookie)["'\s]*[:=]["'\s]*)[^\s'",;}<>]+/gi, '$1[redacted]')
+  .replace(/([#?&](?:code|nonce|token)=)[^&\s'"<>]+/gi, '$1[redacted]')
   .replaceAll(process.cwd(), '[checkout]')
   .slice(0, 6000)
 const totals = Object.fromEntries([...xml.matchAll(/<!-- (tests|pass|fail|cancelled|skipped|todo) (\d+) -->/g)].map(match => [match[1], Number(match[2])]))
