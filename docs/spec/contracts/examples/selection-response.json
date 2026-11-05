@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000401",
+  "target": {
+    "projectId": "10000000-0000-4000-8000-000000000200",
+    "worktreeId": "10000000-0000-4000-8000-000000000300"
+  },
+  "replayed": false,
+  "ok": true,
+  "data": {
+    "kind": "selection",
+    "status": "complete",
+    "taskId": "10000000-0000-4000-8000-000000000100",
+    "binding": {
+      "projectId": "10000000-0000-4000-8000-000000000200",
+      "worktreeId": "10000000-0000-4000-8000-000000000300",
+      "modelRevision": "2880b11a32b2cca1bedf764f829eb6bfa38541d88f8876274da7a1840ca3696c",
+      "catalogRevision": "5dbeb8e9a496c525106b049ebce09785caa5e51cf79d1d7d5967a9020a8e42cc",
+      "sourceVersion": {
+        "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+        "status": "clean"
+      },
+      "sourceScanRevision": "6f3d695e98b115831225b9f1cf7371d22ffd2b1b08d6d4c0bc3db0e4f70b88d2"
+    },
+    "result": {
+      "batchId": "10000000-0000-4000-8000-000000000600",
+      "directories": [
+        {
+          "parentId": "10000000-0000-4000-8000-000000000001",
+          "items": [
+            {
+              "id": "10000000-0000-4000-8000-000000000002",
+              "locator": "app.worker",
+              "entityType": "object",
+              "title": "Worker",
+              "kind": "component",
+              "brief": "Declares the cancellation entry point for a worker.",
+              "parentId": "10000000-0000-4000-8000-000000000001",
+              "children": 0
+            }
+          ]
+        }
+      ],
+      "contexts": [
+        {
+          "entity": {
+            "id": "10000000-0000-4000-8000-000000000002",
+            "locator": "app.worker",
+            "entityType": "object",
+            "title": "Worker",
+            "kind": "component",
+            "brief": "Declares the cancellation entry point for a worker.",
+            "description": "Declares a cancellation entry point.",
+            "source": "fact",
+            "status": "verified",
+            "evidenceIds": [
+              "10000000-0000-4000-8000-000000000500"
+            ],
+            "version": "1",
+            "parentId": "10000000-0000-4000-8000-000000000001"
+          },
+          "ancestors": [
+            {
+              "id": "10000000-0000-4000-8000-000000000001",
+              "locator": "app",
+              "entityType": "object",
+              "title": "Example SDK",
+              "kind": "system",
+              "brief": "Public boundary and background task execution.",
+              "parentId": null,
+              "children": 1
+            }
+          ],
+          "relationships": [],
+          "evidenceIds": [
+            "10000000-0000-4000-8000-000000000500"
+          ],
+          "modelRevision": "2880b11a32b2cca1bedf764f829eb6bfa38541d88f8876274da7a1840ca3696c",
+          "sourceVersion": {
+            "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+            "status": "clean"
+          },
+          "scope": "exact-entity",
+          "contentHash": "57579031b97d5cda6b7f20214a734de50a2010f320c25818edf9000f79e27a24"
+        }
+      ],
+      "unchanged": [],
+      "errors": [],
+      "observation": "reader-response-produced"
+    },
+    "skillPlan": {
+      "id": "10000000-0000-4000-8000-000000000700",
+      "batchId": "10000000-0000-4000-8000-000000000600",
+      "routerVersion": "skill-hub/v1",
+      "catalogRevision": "5dbeb8e9a496c525106b049ebce09785caa5e51cf79d1d7d5967a9020a8e42cc",
+      "skills": [
+        {
+          "id": "quality/tdd",
+          "name": "tdd",
+          "group": "quality",
+          "description": "Define a failing behavior check before changing code.",
+          "reason": "Use behavior checks to prevent a cancellation regression.",
+          "contentHash": "999141f379141d80db0025b294a0b20e9d41bdaf2608774b3fda40b4b6150eb8",
+          "files": [
+            {
+              "path": "SKILL.md",
+              "hash": "a877f27a7584d7eb0420a17dd1fd66c1ea8c0d09862c111991c3a2e0a100fc15",
+              "bytes": 131,
+              "encoding": "utf8"
+            },
+            {
+              "path": "references/cancellation.md",
+              "hash": "33c13797c6bd3c1d017a25d75f0e0b4ec651b1d511d69f3544da745095f613b8",
+              "bytes": 50,
+              "encoding": "utf8"
+            }
+          ]
+        }
+      ],
+      "observation": "selection-recorded; execution-unknown"
+    },
+    "packet": {
+      "scope": "returned-entities-only",
+      "contexts": [
+        {
+          "entity": {
+            "id": "10000000-0000-4000-8000-000000000002",
+            "locator": "app.worker",
+            "entityType": "object",
+            "title": "Worker",
+            "kind": "component",
+            "brief": "Declares the cancellation entry point for a worker.",
+            "description": "Declares a cancellation entry point.",
+            "source": "fact",
+            "status": "verified",
+            "evidenceIds": [
+              "10000000-0000-4000-8000-000000000500"
+            ],
+            "version": "1",
+            "parentId": "10000000-0000-4000-8000-000000000001"
+          },
+          "ancestors": [
+            {
+              "id": "10000000-0000-4000-8000-000000000001",
+              "locator": "app",
+              "entityType": "object",
+              "title": "Example SDK",
+              "kind": "system",
+              "brief": "Public boundary and background task execution.",
+              "parentId": null,
+              "children": 1
+            }
+          ],
+          "relationships": [],
+          "evidenceIds": [
+            "10000000-0000-4000-8000-000000000500"
+          ],
+          "modelRevision": "2880b11a32b2cca1bedf764f829eb6bfa38541d88f8876274da7a1840ca3696c",
+          "sourceVersion": {
+            "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+            "status": "clean"
+          },
+          "scope": "exact-entity",
+          "contentHash": "57579031b97d5cda6b7f20214a734de50a2010f320c25818edf9000f79e27a24"
+        }
+      ],
+      "evidence": [
+        {
+          "id": "10000000-0000-4000-8000-000000000500",
+          "kind": "source-code",
+          "claim": "Cancellation entry point is declared in the source fixture.",
+          "location": {
+            "path": "src/cancel.ts"
+          },
+          "hash": "e778be71fbec125b0f24c882f23707c58870c65c1a7cea203749988313c607bc",
+          "observedAt": "2026-11-05T12:00:00.000Z",
+          "range": {
+            "startLine": 1,
+            "endLine": 1
+          },
+          "sourceVersion": {
+            "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+            "status": "clean"
+          }
+        }
+      ]
+    }
+  }
+}

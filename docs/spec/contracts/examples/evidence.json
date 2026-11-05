@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "evidence": [
+    {
+      "id": "10000000-0000-4000-8000-000000000500",
+      "kind": "source-code",
+      "claim": "Cancellation entry point is declared in the source fixture.",
+      "location": {
+        "path": "src/cancel.ts"
+      },
+      "hash": "e778be71fbec125b0f24c882f23707c58870c65c1a7cea203749988313c607bc",
+      "observedAt": "2026-11-05T12:00:00.000Z",
+      "range": {
+        "startLine": 1,
+        "endLine": 1
+      },
+      "sourceVersion": {
+        "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+        "status": "clean"
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+views {
+  view index {
+    title "项目总览"
+    description "MGRP 的逻辑职责分层；边来自细粒度关系聚合，不表示独立部署服务。"
+    include mgrp.*
+    style * { size xs textSize xl }
+    autoLayout LeftRight 30 40
+  }
+  view download {
+    title "下载执行路径"
+    description "从跨语言入口到业务、调度、网络和资源产物。静态源码审查，不是运行时追踪。"
+    include mgrp.clients.unity, mgrp.api.capi, mgrp.business.download, mgrp.business.resource, mgrp.business.patch, mgrp.execution.task, mgrp.execution.scheduler, mgrp.execution.transfer, mgrp.execution.artifact, mgrp.network.manager, mgrp.network.factory, mgrp.network.backend, mgrp.base.fileio
+    style * { size xs textSize xl }
+    autoLayout LeftRight 30 40
+  }
+  view platforms {
+    title "跨平台网络后端"
+    description "平台接入与网络后端分开呈现；统一接口和编译条件工厂连接具体实现。"
+    include mgrp.clients.*, mgrp.api, mgrp.network.*
+    style * { size xs textSize xl }
+    autoLayout TopBottom 30 40
+  }
+  view dependencies {
+    title "核心模块依赖"
+    description "聚合静态 include / 链接依赖；根 CMake 实际构建单 SDK target。"
+    include mgrp.api, mgrp.business, mgrp.execution, mgrp.network, mgrp.common, mgrp.base, mgrp.vendor
+    style * { size xs textSize xl }
+    autoLayout TopBottom 30 40
+  }
+  view quality {
+    title "证据与质量"
+    description "测试和文档与业务对象的关系；不代表本次运行过这些 SDK 测试。"
+    include mgrp.quality.*, mgrp.knowledge, mgrp.business.download, mgrp.base, mgrp.tooling.*
+    style * { size xs textSize xl }
+    autoLayout LeftRight 30 40
+  }
+}
+
+// harnessl3-agent-example: 2026-11-04T13:21:39.495Z · 只演示文本写入，无架构语义变化。

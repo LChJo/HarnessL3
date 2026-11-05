@@ -1,0 +1,41 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.business {
+    download = component "DownloadManager" {
+      description "下载批次的业务入口。决定下载对象和优先级，委托 TaskManager 执行；候选筛选委托 ResourceManager。"
+      technology "C++ / batch lifecycle"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-business-download"
+        status "source-inspected"
+        path "src/mgrp/business/download_manager.h"
+        stable_id "mgrp.business.download"
+      }
+
+    }
+    resource = component "ResourceManager" {
+      description "资源元数据、查询、本地校验及下载候选计算。"
+      technology "C++ / resource catalog"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-business-resource"
+        status "source-inspected"
+        path "src/mgrp/business/resource_manager.h"
+        stable_id "mgrp.business.resource"
+      }
+
+    }
+    patch = component "PatchManager" {
+      description "差分包应用与路由，参与下载批次的 patch 预处理。"
+      technology "C++ / patch"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-business-patch"
+        status "source-inspected"
+        path "src/mgrp/business/patch_manager.h"
+        stable_id "mgrp.business.patch"
+      }
+
+    }
+  }
+}

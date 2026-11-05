@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000405",
+  "target": {
+    "projectId": "10000000-0000-4000-8000-000000000200",
+    "worktreeId": "10000000-0000-4000-8000-000000000300"
+  },
+  "replayed": false,
+  "ok": false,
+  "error": {
+    "code": "CATALOG_CHANGED",
+    "message": "The actual skill directory changed; obtain a new prompt before selection.",
+    "retryable": false,
+    "details": {
+      "taskId": "10000000-0000-4000-8000-000000000100",
+      "expectedCatalogRevision": "5dbeb8e9a496c525106b049ebce09785caa5e51cf79d1d7d5967a9020a8e42cc",
+      "currentCatalogRevision": "3ab9d73d2a67a1293d5dc0380a7710cf3327740d03886db51acf533c663274f2"
+    }
+  }
+}

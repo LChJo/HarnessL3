@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-11-05T10:11:17.146Z",
+  "checks": [
+    "root starts with five information categories and connects input/output inside the same world",
+    "pan and zoom transform input, categories and output together",
+    "new real task remains collapsed and only exposes top briefs",
+    "object branch reveals one layer at a time without generating read requests",
+    "one mixed batch returns selected body and two directories without auto expanding categories",
+    "batch of three exact bodies projects actual returned information into all five roots",
+    "collapse hides descendants and retains category aggregates across an external SSE result",
+    "relation projection preserves inferred and unverified scope",
+    "evidence projection says reference returned and separately previews actual source",
+    "sources and versions disclose real groups through clicks",
+    "packet and copy preserve exact bodies, source version and unverified inference",
+    "failed HTTP keeps selection and cached retry does not duplicate the packet",
+    "preset uses real requests and leaves the initial five categories collapsed",
+    "mobile supports native pinch on the same world and a readable output drawer",
+    "normal-motion real response lights collapsed category routes without auto-opening children",
+    "model revision is unchanged and the browser has no unexpected errors"
+  ],
+  "errors": [],
+  "screenshots": [
+    ".harness-local/mindmap-browser/01-five-roots.png",
+    ".harness-local/mindmap-browser/02-object-layers.png",
+    ".harness-local/mindmap-browser/03-returned-context.png",
+    ".harness-local/mindmap-browser/04-relation-scope.png",
+    ".harness-local/mindmap-browser/05-evidence.png",
+    ".harness-local/mindmap-browser/06-five-information-branches.png",
+    ".harness-local/mindmap-browser/07-packet.png",
+    ".harness-local/mindmap-browser/08-connected-overview.png",
+    ".harness-local/mindmap-browser/09-mobile.png",
+    ".harness-local/mindmap-browser/10-mobile-packet.png",
+    ".harness-local/mindmap-browser/11-real-lighting.png"
+  ],
+  "modelRevision": "75709765b1f4feff0d4975b493390cb09350dd334f8166881da7def18d91be02",
+  "status": "passed",
+  "completedAt": "2026-11-05T10:11:21.847Z"
+}

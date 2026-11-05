@@ -1,0 +1,105 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdir, writeFile, readFile, rm } from 'node:fs/promises'
+import path from 'node:path'
+import { randomUUID } from 'node:crypto'
+import { fixture } from './helpers.mjs'
+
+const rootId = '20000000-0000-4000-8000-000000000001'
+const leafId = '20000000-0000-4000-8000-000000000002'
+const metadata = id => `metadata { harness_id "${id}"; brief "A bounded module"; source "human"; status "unknown"; evidence "none"; version "1" }`
+const model = `specification {\n element system\n element component\n}\nmodel { app = system "Application" { ${metadata(rootId)}\n worker = component "Worker" { description "EXACT WORKER CONTEXT" ${metadata(leafId)} } } }\nviews { view overview { include * } }\n`
+
+async function setup(t) {
+  const f = await fixture(t, 'harness-v1-task-cli-')
+  const root = await f.repository()
+  const skills = path.join(f.directory, 'methods')
+  await mkdir(path.join(skills, 'quality', 'check'), { recursive: true })
+  await writeFile(path.join(skills, 'quality', 'check', 'SKILL.md'), '---\nname: check\ndescription: Check a bounded change\n---\nORIGINAL METHOD\n')
+  const call = (args, options = {}) => f.cli(args, { cwd: root, env: { HARNESS_SKILLS_ROOT: skills }, ...options })
+  const initialized = await call(['init'])
+  assert.equal(initialized.code, 0, initialized.stdout)
+  await writeFile(path.join(root, '.harness', 'model', 'main.c4'), model)
+  const modelFiles = await import('node:fs/promises').then(fs => fs.readdir(path.join(root, '.harness', 'model')))
+  for (const file of modelFiles) if (file !== 'main.c4') await rm(path.join(root, '.harness', 'model', file))
+  const target = initialized.body.target
+  const start = async (requestId = randomUUID()) => call(['task', 'start', '--title', 'Inspect exact worker', '--request-id', requestId])
+  const json = (operation, taskId, input) => call([...operation.split(' '), taskId, '--file', '-'], { input: JSON.stringify(input) })
+  return { ...f, root, skills, call, target, start, json }
+}
+
+test('TC06 CLI selects context and file references, reads archived bytes, and restores after restart', async t => {
+  const f = await setup(t)
+  const requestId = randomUUID()
+  const started = await f.start(requestId)
+  assert.equal(started.code, 0, started.stdout)
+  const entry = started.body.data
+  assert.equal(entry.kind, 'task-entry')
+  assert.equal(entry.directory.items[0].id, rootId)
+  assert.equal(entry.catalog[0].id, 'quality/check')
+  assert.ok(!started.stdout.includes('ORIGINAL METHOD'))
+  const selected = await f.json('task select', entry.taskId, { schemaVersion: 1, requestId: randomUUID(), binding: entry.binding, context: { expand: [rootId], read: [leafId], known: {} }, skills: [{ id: 'quality/check', reason: 'Check the requested module' }] })
+  assert.equal(selected.code, 0, selected.stdout)
+  assert.equal(selected.body.data.packet.contexts[0].entity.description, 'EXACT WORKER CONTEXT')
+  assert.ok(!selected.stdout.includes('ORIGINAL METHOD'))
+  const file = selected.body.data.skillPlan.skills[0].files.find(file => file.path === 'SKILL.md')
+  const shown = await f.call(['task', 'show', entry.taskId])
+  const retention = shown.body.data.result.task.retentionBasisAt
+  await writeFile(path.join(f.skills, 'quality', 'check', 'SKILL.md'), '---\nname: check\ndescription: Changed method\n---\nNEW METHOD\n')
+  const replay = await f.start(requestId)
+  assert.equal(replay.body.replayed, true)
+  assert.equal(replay.body.data.taskId, entry.taskId)
+  await f.call(['serve', 'stop'])
+  const files = await f.json('task read', entry.taskId, { schemaVersion: 1, requestId: randomUUID(), files: [{ skillId: 'quality/check', path: file.path, expectedHash: file.hash }] })
+  assert.equal(files.code, 0, files.stdout)
+  assert.ok(files.body.data.files[0].file.content.includes('ORIGINAL METHOD'))
+  const after = await f.call(['history', 'show', entry.taskId])
+  assert.equal(after.body.data.result.task.retentionBasisAt, retention)
+  const handoff = await f.call(['task', 'handoff', entry.taskId])
+  assert.equal(handoff.body.data.throughBatchId, selected.body.data.result.batchId)
+  const listed = await f.call(['history', 'list', '--query', 'worker'])
+  assert.equal(listed.code, 0, listed.stdout)
+  assert.equal(listed.body.data.result.items[0].id, entry.taskId)
+  const journal = await readFile(path.join(f.dataRoot, 'worktrees', f.target.worktreeId, 'journal.jsonl'), 'utf8')
+  // Archive references, rather than live files, must support every later read.
+  assert.ok(handoff.body.data.packet.contexts.length === 1)
+  assert.ok(!journal.includes('NEW METHOD'))
+})
+
+test('TC02 two worktrees keep task identity, source versions and reads isolated', async t => {
+  const f = await setup(t)
+  const second = path.join(f.directory, 'second worktree')
+  await f.git(f.root, 'worktree', 'add', '-b', 'parallel', second)
+  const initialized = await f.call(['init'], { cwd: second })
+  assert.equal(initialized.code, 0, initialized.stdout)
+  assert.equal(initialized.body.target.projectId, f.target.projectId)
+  assert.notEqual(initialized.body.target.worktreeId, f.target.worktreeId)
+  const entry = (await f.start()).body.data
+  const wrong = await f.call(['task', 'show', entry.taskId], { cwd: second })
+  assert.equal(wrong.body.ok, false)
+  assert.equal(wrong.body.error.code, 'NOT_FOUND')
+  const conflict = await f.call(['task', 'show', entry.taskId, '--worktree', f.target.worktreeId], { cwd: second })
+  assert.equal(conflict.body.error.code, 'TARGET_CONFLICT')
+  await writeFile(path.join(f.root, 'README.md'), 'Source changed\n')
+  const changed = await f.json('context query', entry.taskId, { schemaVersion: 1, requestId: randomUUID(), expectedModelRevision: entry.binding.modelRevision, expand: [], read: [leafId], known: {} })
+  assert.equal(changed.body.error.code, 'SOURCE_CHANGED')
+  const before = await f.call(['task', 'handoff', entry.taskId])
+  assert.equal(before.code, 0, before.stdout)
+  assert.deepEqual(before.body.data.packet.contexts, [])
+})
+
+test('TC09 explicit archived task remains readable after unregister and checkout removal', async t => {
+  const f = await setup(t)
+  const started = await f.start()
+  assert.equal(started.code, 0, started.stdout)
+  const taskId = started.body.data.taskId
+  const removed = await f.call(['worktree', 'unregister', f.target.worktreeId])
+  assert.equal(removed.code, 0, removed.stdout)
+  await rm(path.join(f.root, '.harness'), { recursive: true })
+  const shown = await f.call(['history', 'show', taskId, '--worktree', f.target.worktreeId], { cwd: f.directory })
+  assert.equal(shown.code, 0, shown.stdout)
+  assert.equal(shown.body.data.result.task.id, taskId)
+  const live = await f.call(['task', 'start', '--title', 'Disallowed live task', '--worktree', f.target.worktreeId], { cwd: f.directory })
+  assert.equal(live.body.ok, false)
+  assert.equal(live.body.error.code, 'TARGET_CONFLICT')
+})

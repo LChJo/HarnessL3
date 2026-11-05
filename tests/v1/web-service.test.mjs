@@ -1,0 +1,62 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { randomUUID } from 'node:crypto'
+import { fixture } from './helpers.mjs'
+
+test('TC20 Web projects committed task snapshots without renewing reads, and streams only its target', async t => {
+  const f = await fixture(t, 'harness-v1-web-service-')
+  const root = await f.repository()
+  const initialized = await f.cli(['init'], { cwd: root })
+  assert.equal(initialized.code, 0, initialized.stdout)
+  const target = initialized.body.target
+  const started = await f.cli(['task', 'start', '--title', 'Web snapshot'], { cwd: root })
+  assert.equal(started.code, 0, started.stdout)
+  const taskId = started.body.data.taskId
+  const service = JSON.parse(await readFile(path.join(f.dataRoot, 'service.json'), 'utf8'))
+  const origin = service.url
+  const nonce = await fetch(origin + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
+  const authenticated = await fetch(origin + '/session', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify(nonce) })
+  assert.equal(authenticated.status, 200)
+  const cookie = authenticated.headers.get('set-cookie').split(';')[0]
+  const reused = await fetch(origin + '/session', { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify(nonce) })
+  assert.equal(reused.status, 401)
+  const projects = await fetch(origin + '/rpc', { method: 'POST', headers: { cookie, origin, 'x-harness-web': '1', 'content-type': 'application/json' }, body: JSON.stringify({ operation: 'project list', positionals: [], flags: {}, requestId: randomUUID() }) }).then(response => response.json())
+  assert.equal(projects.ok, true, JSON.stringify(projects))
+  assert.equal(projects.data.result.items[0].id, target.projectId)
+  const endpoint = origin + '/view?' + new URLSearchParams({ worktree: target.worktreeId, task: taskId })
+  assert.equal((await fetch(endpoint)).status, 401)
+  const preview = await fetch(endpoint, { headers: { cookie } })
+  assert.equal(preview.status, 200)
+  const view = await preview.json()
+  assert.equal(view.task.id, taskId)
+  assert.equal(view.historical, true)
+  assert.equal(view.model.revision, started.body.data.binding.modelRevision)
+  assert.ok(view.model.views.length)
+  assert.equal(view.task.lastReadAt, null)
+  const repeated = await fetch(endpoint, { headers: { cookie } }).then(response => response.json())
+  assert.equal(repeated.task.retentionBasisAt, view.task.retentionBasisAt)
+  assert.equal(repeated.task.batches.length, 0)
+  const command = { operation: 'task start', positionals: [], flags: { title: 'Web manual task', worktree: target.worktreeId }, requestId: randomUUID(), cwd: root }
+  assert.equal((await fetch(origin + '/rpc', { method: 'POST', headers: { cookie, origin, 'content-type': 'application/json' }, body: JSON.stringify(command) })).status, 401)
+  const controller = new AbortController()
+  t.after(() => controller.abort())
+  const stream = await fetch(origin + '/events?' + new URLSearchParams({ worktree: target.worktreeId, after: String(view.seq) }), { headers: { cookie }, signal: controller.signal })
+  assert.equal(stream.status, 200)
+  assert.match(stream.headers.get('content-type'), /text\/event-stream/)
+  const reader = stream.body.getReader()
+  const first = new TextDecoder().decode((await reader.read()).value)
+  assert.match(first, /event: (ready|reset)/)
+  const response = await fetch(origin + '/rpc', { method: 'POST', headers: { cookie, origin, 'x-harness-web': '1', 'content-type': 'application/json' }, body: JSON.stringify(command) }).then(response => response.json())
+  assert.equal(response.ok, true, JSON.stringify(response))
+  const chunk = new TextDecoder().decode((await reader.read()).value)
+  assert.match(chunk, /event: commit/)
+  assert.ok(chunk.includes(target.worktreeId))
+  await reader.cancel()
+  const shown = await f.cli(['task', 'show', response.data.taskId], { cwd: root })
+  assert.equal(shown.body.data.result.task.source, 'web')
+  const frozen = await fetch(endpoint, { headers: { cookie } }).then(response => response.json())
+  assert.equal(frozen.task.id, taskId)
+  assert.equal(frozen.task.batches.length, 0)
+})

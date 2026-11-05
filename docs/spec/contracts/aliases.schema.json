@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/aliases.schema.json",
+  "title": "Explicit historic object locator to persistent UUID mappings",
+  "type": "object", "additionalProperties": false, "required": ["schemaVersion", "aliases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "aliases": { "type": "object", "propertyNames": { "type": "string", "minLength": 1 }, "additionalProperties": { "$ref": "common.schema.json#/$defs/uuid" } }
+  }
+}

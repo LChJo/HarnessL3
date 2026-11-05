@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/project-config.schema.json",
+  "title": "Tracked .harness/project.json; paths and secrets stay local",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "projectId", "name", "source"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "projectId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "name": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["excludePatterns"],
+      "properties": { "excludePatterns": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!!).+$" } } }
+    },
+    "skills": {
+      "type": "object", "additionalProperties": false, "required": ["root"],
+      "properties": { "root": { "$ref": "common.schema.json#/$defs/relativePath" } }
+    }
+  }
+}

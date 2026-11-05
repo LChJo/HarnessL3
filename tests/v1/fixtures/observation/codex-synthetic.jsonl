@@ -1,0 +1,8 @@
+{"type":"session_meta","timestamp":"2026-11-05T12:00:00.000Z","payload":{"id":"synthetic-codex","cwd":"__WORKTREE__","cli_version":"0.162.1"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:01.000Z","payload":{"type":"message","role":"user","content":[{"text":"SECRET_PROMPT_TEXT"}]}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:02.000Z","payload":{"type":"function_call","name":"exec_command","call_id":"read-one","arguments":"{\"cmd\":\"Get-Content -Raw src/example.ts\",\"workdir\":\"__WORKTREE__\"}"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:03.000Z","payload":{"type":"function_call_output","call_id":"read-one","output":"{\"exit_code\":0,\"output\":\"SECRET_FILE_CONTENT\"}"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:04.000Z","payload":{"type":"function_call","name":"exec_command","call_id":"search-one","arguments":"{\"cmd\":\"rg -n SECRET_SEARCH_PATTERN src\",\"workdir\":\"__WORKTREE__\"}"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:05.000Z","payload":{"type":"function_call_output","call_id":"search-one","output":"{\"exit_code\":1,\"output\":\"\"}"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:06.000Z","payload":{"type":"custom_tool_call","name":"apply_patch","call_id":"patch-one","input":"*** Begin Patch\n*** Update File: src/example.ts\n@@\n-SECRET_OLD_BODY\n+SECRET_NEW_BODY\n*** End Patch"}}
+{"type":"response_item","timestamp":"2026-11-05T12:00:07.000Z","payload":{"type":"custom_tool_call_output","call_id":"patch-one","output":"Success. Updated the following files:\nM src/example.ts"}}

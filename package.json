@@ -1,0 +1,56 @@
+{
+  "name": "harnessl3",
+  "version": "0.1.0",
+  "private": true,
+  "bin": { "harnessl3": "bin/harnessl3.mjs" },
+  "type": "module",
+  "description": "Project context and skill files for existing agents, with a local visual workbench",
+  "files": ["bin/", "build/", "skills/", "docs/USAGE.md", "docs/spec/contracts/", "README.md", "LICENSE"],
+  "engines": {
+    "node": ">=24.12.0 <25"
+  },
+  "scripts": {
+    "dev": "node server/index.mjs",
+    "build": "npm run build:cli && npm run build:web",
+    "build:cli": "tsc -p tsconfig.cli.json",
+    "build:web": "tsc -p tsconfig.web.json && vite build --config vite.cli.config.ts",
+    "build:prototype": "tsc --noEmit && vite build",
+    "start": "node bin/harnessl3.mjs serve start --foreground",
+    "start:prototype": "node server/index.mjs --production",
+    "test": "npm run build:cli && node scripts/v1/test-runner.mjs",
+    "test:v1": "npm run build:cli && node scripts/v1/test-runner.mjs --formal",
+    "test:prototype": "node --test tests/*.test.mjs",
+    "cli": "node bin/harnessl3.mjs",
+    "prepack": "npm run build",
+    "test:runtime": "node scripts/check-runtime.mjs",
+    "test:context": "node scripts/check-context.mjs",
+    "test:history": "node scripts/check-history.mjs",
+    "test:skills": "node scripts/check-skills.mjs",
+    "test:browser": "node scripts/check-browser.mjs",
+    "context": "node scripts/context.mjs",
+    "harness": "node scripts/harness.mjs",
+    "model:validate": "node scripts/validate-model.mjs",
+    "model:generate": "node scripts/generate-mgrp.mjs",
+    "evidence:verify": "node scripts/verify-evidence.mjs",
+    "demo:agent": "node scripts/agent-example.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "@likec4/core": "1.60.0",
+    "@phosphor-icons/react": "2.1.10",
+    "likec4": "1.60.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "playwright": "1.64.0",
+    "vite": "8.3.5"
+  }
+}

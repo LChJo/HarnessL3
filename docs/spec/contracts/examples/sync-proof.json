@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000408",
+  "target": {
+    "projectId": "10000000-0000-4000-8000-000000000200",
+    "worktreeId": "10000000-0000-4000-8000-000000000300"
+  },
+  "phaseId": "10000000-0000-4000-8000-000000000800",
+  "sourceEpoch": 7,
+  "expectedSourceVersion": {
+    "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "treeHash": "9dfbede9ed7d63ae2924af8224082ae0804f6b0b61f859df7eab2bbf07c36a48",
+    "status": "clean"
+  },
+  "expectedModelRevision": "2880b11a32b2cca1bedf764f829eb6bfa38541d88f8876274da7a1840ca3696c",
+  "scope": {
+    "paths": [
+      "src/cancel.ts"
+    ],
+    "entities": [
+      "10000000-0000-4000-8000-000000000002"
+    ]
+  },
+  "disposition": "no-semantic-change",
+  "reason": "The observed edit does not change the documented cancellation boundary.",
+  "checks": [
+    {
+      "name": "manual-boundary-review",
+      "status": "passed",
+      "evidence": [
+        "Reviewed src/cancel.ts against app.worker."
+      ]
+    }
+  ]
+}

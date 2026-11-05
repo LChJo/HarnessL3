@@ -1,0 +1,1213 @@
+{
+  "schemaVersion": 1,
+  "status": "completed",
+  "completedAt": "2026-11-05T12:38:37.641198+00:00",
+  "scope": "Prototype temporary outputs only; no task or history purge",
+  "deletionMethod": "Individually reviewed literal absolute paths; files then verified empty directories; no recursive deletion",
+  "removedTopLevelEntries": 50,
+  "removedFiles": 213,
+  "removedEmptyDirectories": 37,
+  "removedOriginalBytes": 15139352,
+  "retainedArtifactBytes": 808832,
+  "sizeMeaning": "Raw removed file bytes, not net workspace size change or physical disk blocks",
+  "deletedFiles": [
+    {
+      "path": ".harness-local/browser/agent-traces.png",
+      "sha256": "8e35586bfe2dc9f69da7044c965acb421de9e57e24980d0b77685c3f8285d134",
+      "bytes": 113752
+    },
+    {
+      "path": ".harness-local/browser/failure.png",
+      "sha256": "605cfb619243371122461bd574def6914c64cb0d4b8db9c5897903d7cd1c9fc1",
+      "bytes": 77195
+    },
+    {
+      "path": ".harness-local/browser/initial-overview.png",
+      "sha256": "917f82acc0c65df67b28b4159209e7b59f742bac01115b9de74c0336016c8ca2",
+      "bytes": 152002
+    },
+    {
+      "path": ".harness-local/browser/invalid-model-last-valid-diagram.png",
+      "sha256": "f8ad4164239303b48ac72b1d857a3308be049668a2b721b312a682bd6288fa49",
+      "bytes": 223419
+    },
+    {
+      "path": ".harness-local/browser/model-review.png",
+      "sha256": "ea9c35c1ce5656e1b025c8065f477571b81cfcf26a863abc1f0689a659587c00",
+      "bytes": 130759
+    },
+    {
+      "path": ".harness-local/browser/model-source.png",
+      "sha256": "58b59ef853b861ac314f47dd567b6932884b267a9865936b62e5fbd0122fdc49",
+      "bytes": 148081
+    },
+    {
+      "path": ".harness-local/browser/overview.png",
+      "sha256": "05dca2831144a3ccae2a501454dfbb81695fcfaedcdc383870479669ff5f3abd",
+      "bytes": 171247
+    },
+    {
+      "path": ".harness-local/browser/probe.json",
+      "sha256": "2bc6ea8c2538051216228eecff7f477d6bca202fc69251521618d247cf47d6bc",
+      "bytes": 2302
+    },
+    {
+      "path": ".harness-local/browser/report.json",
+      "sha256": "b817efe9233c8edf1fe421318e3e8e6e484f73ffa8fccee64e5097674f8bf14f",
+      "bytes": 1733
+    },
+    {
+      "path": ".harness-local/browser/responsive-390.png",
+      "sha256": "b13b22c1c14759f1cadfee48d37da946eb7a942f7170f882e0f5941d2240c230",
+      "bytes": 76539
+    },
+    {
+      "path": ".harness-local/browser/responsive-900.png",
+      "sha256": "98a7f346c7a4b33b420df148b58be0024f1271242b2a1c32db6056c4a589f7f7",
+      "bytes": 152903
+    },
+    {
+      "path": ".harness-local/browser/responsive-mobile-map.png",
+      "sha256": "5cbc8a60a8a53e1d9f2db9a55d01cc6e9bfb6c56114f125972de8191a6a53ba8",
+      "bytes": 63171
+    },
+    {
+      "path": ".harness-local/browser/source-evidence.png",
+      "sha256": "4f6ba709325ae468d909818a40a3abb4a18e158266501695a4b342330442da1c",
+      "bytes": 195902
+    },
+    {
+      "path": ".harness-local/browser/view-dependencies.png",
+      "sha256": "01faeabd0a141ddc4887b5afc9d1340d76e2dd5c2f9737434e78213364ba2818",
+      "bytes": 158269
+    },
+    {
+      "path": ".harness-local/browser/view-download.png",
+      "sha256": "6343deab3c91de3988dcc3e81fd55352d547e1d4d5700c347a71fab58d89eea9",
+      "bytes": 183963
+    },
+    {
+      "path": ".harness-local/browser/view-index.png",
+      "sha256": "05dca2831144a3ccae2a501454dfbb81695fcfaedcdc383870479669ff5f3abd",
+      "bytes": 171247
+    },
+    {
+      "path": ".harness-local/browser/view-platforms.png",
+      "sha256": "1aa10e9eb0acf1f814861bdffdc7c8c8b9e15eb55d0b9666c15486eac474f86a",
+      "bytes": 174377
+    },
+    {
+      "path": ".harness-local/browser/view-quality.png",
+      "sha256": "55dcea52ea5e8a701ecb63f8ff793b50b18b65f2aa473aab67c5186f298ee9eb",
+      "bytes": 186901
+    },
+    {
+      "path": ".harness-local/browser-probe.mjs",
+      "sha256": "af004e9ee3bd906ab127384371b392022cc2da81364779e452423d63127e2a5b",
+      "bytes": 1571
+    },
+    {
+      "path": ".harness-local/check-context-home.mjs",
+      "sha256": "e27db5ad3d90ef1d3b23ecccec0e579e9ae17a5af84d2d97aeede84ac152fc83",
+      "bytes": 7577
+    },
+    {
+      "path": ".harness-local/compact-variants.mjs",
+      "sha256": "1b34d54d39eb5663eb833cbb135b0db4b169bd7dbe7ad02319f9500cd9d6062c",
+      "bytes": 1029
+    },
+    {
+      "path": ".harness-local/context-browser/01-current-context.png",
+      "sha256": "cf2c90a72273e5164a42f0b5e22f2f1001b298223a117d9fbcc9c73c4890e086",
+      "bytes": 223992
+    },
+    {
+      "path": ".harness-local/context-browser/02-briefs.png",
+      "sha256": "3ab3278f13ce9ee91a8bcd6454a86e5c920adb6d396c1f72c0d40d6c946475cd",
+      "bytes": 112628
+    },
+    {
+      "path": ".harness-local/context-browser/03-browsing.png",
+      "sha256": "03c64cc6f75d2ae042553485136eb056df066496187eef0658d7b204f64cdfcd",
+      "bytes": 172980
+    },
+    {
+      "path": ".harness-local/context-browser/04-mixed-batch.png",
+      "sha256": "6a8750d43a41a8e894ba182d5546f5037e74eaf2a9296b9245383699280ff625",
+      "bytes": 177174
+    },
+    {
+      "path": ".harness-local/context-browser/05-context-returned.png",
+      "sha256": "e2ecae04c3c87094530678cfb6ad39e69b5e308178367f62d757c50181513710",
+      "bytes": 183953
+    },
+    {
+      "path": ".harness-local/context-browser/06-packet.png",
+      "sha256": "fb0e01ce98473970583b62b5c8cb8319ed4208ad1fd84f1bc69553549e87ac4c",
+      "bytes": 183918
+    },
+    {
+      "path": ".harness-local/context-browser/07-evidence.png",
+      "sha256": "a9c0fda2eb29141259be6e4a315c84c26f112df0244625165f917ae9da7173cd",
+      "bytes": 204248
+    },
+    {
+      "path": ".harness-local/context-browser/08-partial-result.png",
+      "sha256": "f9499d4da1b73dcc9ffc3c955d8192a60788979fdef56fd8f01e810bbc249709",
+      "bytes": 197569
+    },
+    {
+      "path": ".harness-local/context-browser/09-mobile-input.png",
+      "sha256": "541cb06a72780ffe240b1e68cca0632296ebcdfcf8c43e8a7d108fe28a82efca",
+      "bytes": 39072
+    },
+    {
+      "path": ".harness-local/context-browser/10-mobile-packet.png",
+      "sha256": "fd429e33fe3e4fb9dc83ed7281c5bef3811d1aeb1dd1c8c19df07c5928854459",
+      "bytes": 64482
+    },
+    {
+      "path": ".harness-local/context-browser/11-real-lighting.png",
+      "sha256": "02a8358f1fa706d78cdcdb7a5f145cd217e14fbf366ceb1baa96edf11865e812",
+      "bytes": 272482
+    },
+    {
+      "path": ".harness-local/context-browser/report.json",
+      "sha256": "f585aea0af851889204fb9e0f636b7df99ed9a237a94c27a0b909966bb11d7f4",
+      "bytes": 2193
+    },
+    {
+      "path": ".harness-local/context-check.json",
+      "sha256": "606fbd655eddce6d9c6cad1f5ba9a1fe131f37f5933488ecca79dfb7319a4339",
+      "bytes": 829
+    },
+    {
+      "path": ".harness-local/context-home-design/01-overview.png",
+      "sha256": "f700c85f8abed74eca39915c45d48a8210bf370cdea5c4c1e5a83cdc8b4a3e5f",
+      "bytes": 92911
+    },
+    {
+      "path": ".harness-local/context-home-design/02-execution-expanded.png",
+      "sha256": "e2c3aab21e3fa8712d0393aeb5be9b18da2ff114a93b86809413e96f16eb064e",
+      "bytes": 70681
+    },
+    {
+      "path": ".harness-local/context-home-design/03-failed.png",
+      "sha256": "9b971e322cb8faf082d83e424080ee1c487b6323324eae74543665176b7e634b",
+      "bytes": 96415
+    },
+    {
+      "path": ".harness-local/context-home-design/04-packet.png",
+      "sha256": "665dba31d9d2e795ebf8f1722777251e2f2caa046b7c988d82d6c3414bd5564c",
+      "bytes": 150265
+    },
+    {
+      "path": ".harness-local/context-home-design/05-detail.png",
+      "sha256": "fe84c1b9a5212a0a7f4a7fc0773be65b9e52d9165f8d5be5fd48c089bb238da7",
+      "bytes": 93348
+    },
+    {
+      "path": ".harness-local/context-home-design/06-tablet.png",
+      "sha256": "46bd9bac88a9202651ad459627f387663452d5862ba8ba8c76ff62ac4f62d2f6",
+      "bytes": 84585
+    },
+    {
+      "path": ".harness-local/context-home-design/07-mobile.png",
+      "sha256": "4442a86fa5f78771ff3119cfe50af74cecdfa76005024cad3c7300c0ad5382df",
+      "bytes": 56765
+    },
+    {
+      "path": ".harness-local/context-home-design/08-mobile-expanded.png",
+      "sha256": "31cbf0bff63392482ed637e675d758399d29b0d662262de04edcdbaa24e3d2bd",
+      "bytes": 46609
+    },
+    {
+      "path": ".harness-local/context-home-design/09-mobile-detail.png",
+      "sha256": "3cf9a359e07969a09b56f788c236c62d47e56b8fea35e067ae77451dfeb15c96",
+      "bytes": 33834
+    },
+    {
+      "path": ".harness-local/context-home-design/report.json",
+      "sha256": "fb8bb1fc19bc7fe1679f041b15c05b07d75f494b93ccbacdbc4e343067517ee5",
+      "bytes": 1460
+    },
+    {
+      "path": ".harness-local/context-initial.png",
+      "sha256": "e20ee430800227368dcc20a306234b5cbd9dee70a536896e8f6449e361d034be",
+      "bytes": 209718
+    },
+    {
+      "path": ".harness-local/context-layout.png",
+      "sha256": "94814f6b72611b286ea9eebb75d13fcfae015674585a8c525bb5f004fb912d4a",
+      "bytes": 223962
+    },
+    {
+      "path": ".harness-local/context-live.png",
+      "sha256": "89138117e8d18640d3935d15bdbb33849203f0a1c0a1960e91ffcb64ad1c9dd6",
+      "bytes": 223961
+    },
+    {
+      "path": ".harness-local/current-agent-entrance.json",
+      "sha256": "c8e25831c426c5d5b548548bf6404e5ea76d956cd2ed3bd13f3e870dd1e8c5c6",
+      "bytes": 34925
+    },
+    {
+      "path": ".harness-local/current-agent-handoff.md",
+      "sha256": "5eff074ee7c287820992891a4a130ce4ea5f1666ad3358d6a16277dee7527925",
+      "bytes": 37763
+    },
+    {
+      "path": ".harness-local/current-agent-joint-expanded.png",
+      "sha256": "92036d5c285a92f71e6784885a55d0f86e2a5867884725d97c19eda0d4083c0c",
+      "bytes": 105829
+    },
+    {
+      "path": ".harness-local/current-agent-joint-overview.png",
+      "sha256": "8ddcea4c968e0c223db9efd0de6fb6ac7e1a53a4c276412aa68179475fe27da4",
+      "bytes": 151037
+    },
+    {
+      "path": ".harness-local/current-agent-selection.json",
+      "sha256": "1c898bd0d47ac2ce4a21c008adaa58923157c7879f9278367269a2f0f1487fe6",
+      "bytes": 942
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-check.json",
+      "sha256": "565d83a5663edb62138aaeb687d36864529a7227ff24724620a074597a0ede38",
+      "bytes": 406
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-entrance.json",
+      "sha256": "16ffa4ec71f226db3fcb55179617360e79e875dfa8e320de17b76088fc7c2c28",
+      "bytes": 89102
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-files.json",
+      "sha256": "249edaa1dcccd267b4c2fba6a63493745b72058a4e7897b0172c00addaf96555",
+      "bytes": 186
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-files.png",
+      "sha256": "3010f7585d0a3705902cc743d7c5592864644f3cc93e0181237846f362bc756a",
+      "bytes": 133788
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-handoff.md",
+      "sha256": "3ca36a7d08c322948296522125069acc55f0c31daf1181ffd34b11117726aac5",
+      "bytes": 15888
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-mindmap.png",
+      "sha256": "ce00de9d91de970f0ab1353a365d6af2181247a7102d2ad04bc918e48d19bb6b",
+      "bytes": 120579
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-overview.png",
+      "sha256": "cc9ea04c03c3f411a79c7d074284442d5b5a753e95ed10c1d817e4781bfeeb25",
+      "bytes": 148392
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-read.json",
+      "sha256": "bc25a015e5e335883275d7d52f641ca578f62aab84b57ab820bea59bbd79d47b",
+      "bytes": 23215
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-result.json",
+      "sha256": "6ce9e0ad5301a6c6b90b8f70b8295bc331070ecf158d717fc6b10fd09adc021c",
+      "bytes": 243364
+    },
+    {
+      "path": ".harness-local/current-agent-skill-hub-selection.json",
+      "sha256": "2921f8f3c6999412e82992fc4a77dab7750b59e4240e64fdba0f89080da509bb",
+      "bytes": 888
+    },
+    {
+      "path": ".harness-local/design-agent/a-expanded.png",
+      "sha256": "a18ae7dccd335150b9481826b631cfca8516d1c44ab7d575195e8b0da61362c1",
+      "bytes": 96341
+    },
+    {
+      "path": ".harness-local/design-agent/a-initial.png",
+      "sha256": "6add0b9e6f96618eafea2065fcab6abc8b5f214965ce237fea12a9caf86d2ddc",
+      "bytes": 90274
+    },
+    {
+      "path": ".harness-local/design-agent/b-expanded.png",
+      "sha256": "95e79bcc1b6bc5fe3595226f31ec32a4135dee9d5c92ce4add1fe13934b4028d",
+      "bytes": 93816
+    },
+    {
+      "path": ".harness-local/design-agent/b-initial.png",
+      "sha256": "883ef8406785a0af5a5b86fd9277800f0911fd7391cb70f533002178c2ec61c6",
+      "bytes": 101920
+    },
+    {
+      "path": ".harness-local/design-agent/c-expanded.png",
+      "sha256": "c1b167e86a607c43b541b1d689005f6ea1b01ca4799eb6b77bb6304daf8469c3",
+      "bytes": 110653
+    },
+    {
+      "path": ".harness-local/design-agent/c-initial.png",
+      "sha256": "07546ecf6bf70d4cc03d5a4635a985046ccf6b882376204b256345029f8e4d7c",
+      "bytes": 96308
+    },
+    {
+      "path": ".harness-local/design-agent/d-expanded.png",
+      "sha256": "05a53163c692030225c96a212aaac5a8ca7e6df2ad71493140b078d5e88a1846",
+      "bytes": 92230
+    },
+    {
+      "path": ".harness-local/design-agent/d-initial.png",
+      "sha256": "188321a5ea4cecff5d48ee12f57bab549c47985879770cd544c4a34581ee8919",
+      "bytes": 94818
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-a-expanded.png",
+      "sha256": "955b35c32bff8a7b928de3afaa7dcc7079de66aad90849ceba3642c90df9571f",
+      "bytes": 52743
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-a.png",
+      "sha256": "d5408d3b738419791b1944ef17b5d98bc6e4810546a8bc821a338bd34497a593",
+      "bytes": 54479
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-b-expanded.png",
+      "sha256": "e7d89aefcf40deb299c54578ad635a540d23b0d9936f2c0cf4ba41fd19eedeb5",
+      "bytes": 34102
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-b.png",
+      "sha256": "df1e8edb663f880eb8cfe3745bf6f8c382a347848e0fe7a7c380a21a457e8dd7",
+      "bytes": 52525
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-c-expanded.png",
+      "sha256": "1d8087f49786f476edfa9347d2355337f850c14ed3515577ac16fe5d3e240297",
+      "bytes": 47011
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-c.png",
+      "sha256": "66d166c847a55d933e31d56861f9ad974b9404a3a8df3b6a1cf644106a2dcdcf",
+      "bytes": 55531
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-d-expanded.png",
+      "sha256": "206bc3620a6d5dd72e7edad6f4977ece0a4cb60132972e469e08653f56934532",
+      "bytes": 43337
+    },
+    {
+      "path": ".harness-local/design-agent/mobile-d.png",
+      "sha256": "e80cbc8d7eb4aa2d0281765dbefb0887e61b15991b09836b5e1c500c3ce666be",
+      "bytes": 45838
+    },
+    {
+      "path": ".harness-local/design-review-production-before.json",
+      "sha256": "b5025686d54bf9f867ca2c385363fa1c9d9caa805cc7cceee1c33cce92a256cb",
+      "bytes": 3993
+    },
+    {
+      "path": ".harness-local/design-review-server.mjs",
+      "sha256": "0b285c9c1cb2362d9c525e0489ce1915e639803770bc3067a5c42cc55b2d64dd",
+      "bytes": 1212
+    },
+    {
+      "path": ".harness-local/edit_ui.py",
+      "sha256": "bcd3c735c9abcb9c58c46353d4780c89d4922beb12cf90341e89e40662c59e6d",
+      "bytes": 2545
+    },
+    {
+      "path": ".harness-local/final-audit.json",
+      "sha256": "d374eec8fc547c980a505c925f1abed4a8f393b6fd3174c3ddbfccc32df9191e",
+      "bytes": 387
+    },
+    {
+      "path": ".harness-local/five-information-design/a-expanded.png",
+      "sha256": "46e8bbfdcb49cad8ffc8111d3524d71c02ccc91014654f138f0fb0ecad10910f",
+      "bytes": 98892
+    },
+    {
+      "path": ".harness-local/five-information-design/a-initial.png",
+      "sha256": "0491b005cebc6a18ba4c2b91b16ef60abfded51d4a1b7b01464526503d9bac15",
+      "bytes": 90710
+    },
+    {
+      "path": ".harness-local/five-information-design/a-mobile.png",
+      "sha256": "d5408d3b738419791b1944ef17b5d98bc6e4810546a8bc821a338bd34497a593",
+      "bytes": 54479
+    },
+    {
+      "path": ".harness-local/five-information-design/b-expanded.png",
+      "sha256": "e50325121d6d94d3d46eb05f553a58c08908cca0ffdfd06fa3da93efef54bf60",
+      "bytes": 98120
+    },
+    {
+      "path": ".harness-local/five-information-design/b-initial.png",
+      "sha256": "61598f086b5749bf540f9d68b0ebb9527d4a6eba43d697c1bfad9f5001c49a5e",
+      "bytes": 106703
+    },
+    {
+      "path": ".harness-local/five-information-design/b-mobile.png",
+      "sha256": "df1e8edb663f880eb8cfe3745bf6f8c382a347848e0fe7a7c380a21a457e8dd7",
+      "bytes": 52525
+    },
+    {
+      "path": ".harness-local/five-information-design/c-expanded.png",
+      "sha256": "7f77bcb72c1f73c72cba81ef2c2f48f2a446cad34cace391fbec7a87828d96e2",
+      "bytes": 108370
+    },
+    {
+      "path": ".harness-local/five-information-design/c-initial.png",
+      "sha256": "a97d4ffc3c2b03b9f65719377585633777f85a584c83dc444153f7e6c2929f1c",
+      "bytes": 96493
+    },
+    {
+      "path": ".harness-local/five-information-design/c-mobile.png",
+      "sha256": "66d166c847a55d933e31d56861f9ad974b9404a3a8df3b6a1cf644106a2dcdcf",
+      "bytes": 55531
+    },
+    {
+      "path": ".harness-local/five-information-design/compare.png",
+      "sha256": "66a1253da48938a7ba0d55bbf717a695337c5d5cfe61d7269430733d82407b86",
+      "bytes": 197592
+    },
+    {
+      "path": ".harness-local/five-information-design/d-expanded.png",
+      "sha256": "86eabd7cf423707d473c9b559c64efaf52930afdb9d4b4e9df782c5e3572ef3f",
+      "bytes": 92729
+    },
+    {
+      "path": ".harness-local/five-information-design/d-initial.png",
+      "sha256": "a4bccaaa62259b05beeb96c0291c3f95f934b38502215a656437e42e270667ef",
+      "bytes": 94921
+    },
+    {
+      "path": ".harness-local/five-information-design/d-mobile.png",
+      "sha256": "e80cbc8d7eb4aa2d0281765dbefb0887e61b15991b09836b5e1c500c3ce666be",
+      "bytes": 45838
+    },
+    {
+      "path": ".harness-local/five-information-design/report.json",
+      "sha256": "e44efe7c2973f4b1b13b776df75f0dc847445e3d605c1b4538feb6f9ed3f8e21",
+      "bytes": 2200
+    },
+    {
+      "path": ".harness-local/fix-browser-ui.py",
+      "sha256": "4a948e0707bdb81b14106690c41020933a645a15bddbafca772d5890507e71ff",
+      "bytes": 756
+    },
+    {
+      "path": ".harness-local/fix-mobile-search.py",
+      "sha256": "12e17c1555834d7042fb6507799edb77124895a51b577403e6d9109854c4b9ee",
+      "bytes": 1099
+    },
+    {
+      "path": ".harness-local/history-browser/01-history-search.png",
+      "sha256": "5bef21c66e9e9b74735f69bdc4db98d0894f2296371092dd854bb48188e52073",
+      "bytes": 135153
+    },
+    {
+      "path": ".harness-local/history-browser/02-history-organization.png",
+      "sha256": "f46f967e7ad82a9bb548b9f0d37d13724baeaa8a4e46f80199475596e58e84ed",
+      "bytes": 179727
+    },
+    {
+      "path": ".harness-local/history-browser/03-first-batch.png",
+      "sha256": "d0f2db4d43dfc132f97c59114c4581142f9e12fd0cf124ea08d76756381d4d60",
+      "bytes": 150606
+    },
+    {
+      "path": ".harness-local/history-browser/04-historical-output.png",
+      "sha256": "099ee79ecdd276b5968db080a17d5310c71fe0aa8eaf3fe72fd68e15087d7cff",
+      "bytes": 168484
+    },
+    {
+      "path": ".harness-local/history-browser/05-c4-historical.png",
+      "sha256": "2ebd1cab839270180854687850f680fcaca70bb61e810ebebc261d4a27f7361f",
+      "bytes": 115853
+    },
+    {
+      "path": ".harness-local/history-browser/06-c4-current.png",
+      "sha256": "6578256e5a193499d2e2d5e6c11806a8abf3a7cfcec825454ba416c956f0e314",
+      "bytes": 92648
+    },
+    {
+      "path": ".harness-local/history-browser/07-mobile-history.png",
+      "sha256": "2d35cf2ec86096791ad5221e72bae8fa5dcb5eb6e19861f88e0306f6b0bcf05e",
+      "bytes": 50346
+    },
+    {
+      "path": ".harness-local/history-browser/08-mobile-c4.png",
+      "sha256": "2c49b9503cf2666d3452eb78c0f3b84fc685f5759044e23764ea2778d9744fc6",
+      "bytes": 40133
+    },
+    {
+      "path": ".harness-local/history-browser/failure.png",
+      "sha256": "cb9c3b8047859412e8abcaed51ad9ecefb4bd820c8849af4992e593d500d1836",
+      "bytes": 6489
+    },
+    {
+      "path": ".harness-local/history-browser/report.json",
+      "sha256": "728f1522d4204be72d420841619f08d2c0801a49c2c9ec1cd162d37b9d806398",
+      "bytes": 1445
+    },
+    {
+      "path": ".harness-local/journey-browser/01-start.png",
+      "sha256": "c85b4d9bbfdaa8e244cde02f90f91ea69f8ce12c97b99a820c7639c8da27e546",
+      "bytes": 78437
+    },
+    {
+      "path": ".harness-local/journey-browser/02-expanded.png",
+      "sha256": "256d2610fc5c7d11ea810c4b6ed6ddb091ff1d930b30c63a01308c6e3e68e9a5",
+      "bytes": 96089
+    },
+    {
+      "path": ".harness-local/journey-browser/03-scheduler.png",
+      "sha256": "baa897c681bdc027dfc8cb89472f61354b5d7f663387dad18a928b4c9dafbb6e",
+      "bytes": 140735
+    },
+    {
+      "path": ".harness-local/journey-browser/04-evidence.png",
+      "sha256": "f7076198f007a8152c548519bf8bc731c4e3a82296a35f665bbe98792d2d6f30",
+      "bytes": 147221
+    },
+    {
+      "path": ".harness-local/journey-browser/05-output.png",
+      "sha256": "a2cfbe1bd7d81f7ecb36329cfeef0ef4e48d909339d2a3a5e79939c7ba5cfa2b",
+      "bytes": 151992
+    },
+    {
+      "path": ".harness-local/journey-browser/06-complete.png",
+      "sha256": "738a06bff15f8e4091e4087c0a8befe42d23804fc3c6801f170016e3ada269e7",
+      "bytes": 135539
+    },
+    {
+      "path": ".harness-local/journey-browser/07-mobile-start.png",
+      "sha256": "9a0014b6f8e98f1baceda1d8d8cf02f7fcd623a85feb43a0cec2af02160a71e3",
+      "bytes": 41462
+    },
+    {
+      "path": ".harness-local/journey-browser/08-mobile-current.png",
+      "sha256": "0c51b4f1d1604e56f4bca252bf98cd88134d02177a7fac44cd48bbccfacb2e31",
+      "bytes": 47089
+    },
+    {
+      "path": ".harness-local/journey-browser/09-mobile-detail.png",
+      "sha256": "2d071fff752f2e4332a29deedfa84117eb4987d9496eeafc730882dc92a16e2e",
+      "bytes": 41750
+    },
+    {
+      "path": ".harness-local/journey-browser/10-playing.png",
+      "sha256": "95917f21a9fb53e3c8a440f9089f5d634017677ad65fbb0a3d350b830621f600",
+      "bytes": 119740
+    },
+    {
+      "path": ".harness-local/journey-browser/failure.png",
+      "sha256": "b527309ae602284bdd684df7a421f6bbd51b39410dbbbeac0f33ca3a6714fd25",
+      "bytes": 45571
+    },
+    {
+      "path": ".harness-local/journey-browser/report.json",
+      "sha256": "a5abe720e08129b29e00d7d1876ac9dfb55f02e06258e9842ac5fc083328f6e8",
+      "bytes": 1916
+    },
+    {
+      "path": ".harness-local/layout-variants.mjs",
+      "sha256": "4b990340c359374158b5364ce6ed1fe4174d834301c935f096a60e0cfbb9b6b8",
+      "bytes": 1115
+    },
+    {
+      "path": ".harness-local/mindmap-browser/01-five-roots.png",
+      "sha256": "cb1bac0750f2ff58eac5155f335105f23f1f934db378ac049cb56e617d12facd",
+      "bytes": 146908
+    },
+    {
+      "path": ".harness-local/mindmap-browser/02-object-layers.png",
+      "sha256": "e4673f4883e55e08b11a4dc336bd297ea5a24e4bc2a6f52ebc0f55ba16b0ef2a",
+      "bytes": 160096
+    },
+    {
+      "path": ".harness-local/mindmap-browser/03-returned-context.png",
+      "sha256": "61ff601e45d7d835bf3eaaaad872b0389af5910105628b6c2adf77cb5ec76b0b",
+      "bytes": 161508
+    },
+    {
+      "path": ".harness-local/mindmap-browser/04-relation-scope.png",
+      "sha256": "a253094e2aa24a2b37e36349ecd9840a74694137be194e1f450a5402a7f4836a",
+      "bytes": 197180
+    },
+    {
+      "path": ".harness-local/mindmap-browser/05-evidence.png",
+      "sha256": "cfd9f40b7c33d2e861457ff943821f42ead0bf4166fa140f7968e98b3c18eca5",
+      "bytes": 222596
+    },
+    {
+      "path": ".harness-local/mindmap-browser/06-five-information-branches.png",
+      "sha256": "5e4918279989eaf147ac90e32fe1297deda5db4b6e475832eab5cf4470c056e1",
+      "bytes": 128299
+    },
+    {
+      "path": ".harness-local/mindmap-browser/07-packet.png",
+      "sha256": "136b88cf63efd8fce49ce374aaa01aadea5bf156f6fcc1be3456c6dd1f459471",
+      "bytes": 155372
+    },
+    {
+      "path": ".harness-local/mindmap-browser/08-connected-overview.png",
+      "sha256": "2be0a49d1aabb39f28b6804b652653efd5395b95fe4fe7086dfe573729ef6be5",
+      "bytes": 143979
+    },
+    {
+      "path": ".harness-local/mindmap-browser/09-mobile.png",
+      "sha256": "cebb45e01fe7132307c2f5bc2f64c27e369655dcb30ea890b99baf47408e492a",
+      "bytes": 65648
+    },
+    {
+      "path": ".harness-local/mindmap-browser/10-mobile-packet.png",
+      "sha256": "fcfb38d420fbf30800e0a81952b027803d3092050b068f63ab44514f470b6f9f",
+      "bytes": 63715
+    },
+    {
+      "path": ".harness-local/mindmap-browser/11-real-lighting.png",
+      "sha256": "ad430c8ebb129c1cb1ff7b03e0931a25caf76a370f9b1b7a6107f8203049c375",
+      "bytes": 179288
+    },
+    {
+      "path": ".harness-local/mindmap-browser/failure.png",
+      "sha256": "f89b58e85724c680f9f50f0b00c472eb7c58eae6213bc3bdc427367133258e34",
+      "bytes": 172164
+    },
+    {
+      "path": ".harness-local/mindmap-browser/initial.png",
+      "sha256": "629cca3ae2ce1968c367530e4c91c5560b36d96a587388773522df9039c4c79c",
+      "bytes": 114455
+    },
+    {
+      "path": ".harness-local/mindmap-browser/live-expanded-readable.png",
+      "sha256": "6df14fa15c5fcde94124e904c563f9590e17733f25d1b9ca0ad4c7ed06de2daa",
+      "bytes": 239787
+    },
+    {
+      "path": ".harness-local/mindmap-browser/live-five-roots.png",
+      "sha256": "ade11a39754b96e603f182c28148cc852a81f3825571e6f0b23fbe4a1c56eac8",
+      "bytes": 118544
+    },
+    {
+      "path": ".harness-local/mindmap-browser/report.json",
+      "sha256": "0ee9020d1822a32e6100e3e2065ac112b6e820cd6d2cb565ee0dee2e74590e4e",
+      "bytes": 2235
+    },
+    {
+      "path": ".harness-local/mindmap-cli-result.json",
+      "sha256": "6a561f95bfb554a0b4dacdb406c05083227f6fbcfe59bf7a9e2e8b71a4a04b9d",
+      "bytes": 18064
+    },
+    {
+      "path": ".harness-local/refine-trace-copy.py",
+      "sha256": "aac32bd785244a21c14b0f088e161c631ff838627af6cb4ec581fd2f9e034f65",
+      "bytes": 226
+    },
+    {
+      "path": ".harness-local/runtime-check.json",
+      "sha256": "59f7bb9a96f5511596ef01c317c460cfdaa5ebbed65238838b139870e8bbcc81",
+      "bytes": 718
+    },
+    {
+      "path": ".harness-local/runtime-check.mjs",
+      "sha256": "01c89a07231c399ef794d977355249bf0f529a12db6d7ab4b68602eb7697d51e",
+      "bytes": 4464
+    },
+    {
+      "path": ".harness-local/skill-folders/historical-folder.png",
+      "sha256": "0ef4472cd5ce49ed2f5e06e6738925a6f7240eae7d4fec113b056a164875ff91",
+      "bytes": 229066
+    },
+    {
+      "path": ".harness-local/skill-folders/history-verification.json",
+      "sha256": "bcf89ebb83fb3a4423ccbd34df9394ab142a21be0a900ccd4368205fcba68a4b",
+      "bytes": 188
+    },
+    {
+      "path": ".harness-local/skill-taxonomy-check.json",
+      "sha256": "63aeae35d85430c285c4e03eb1ea87863a6b66c1bb1f8539f179c2d3379747a8",
+      "bytes": 571
+    },
+    {
+      "path": ".harness-local/skill-taxonomy-history-check.json",
+      "sha256": "ed03048e8d3cc0e0f5071fc8b958a6a9f57bca16fffc027b21ece87582a6dcf2",
+      "bytes": 421
+    },
+    {
+      "path": ".harness-local/skill-taxonomy-moves.json",
+      "sha256": "60dfe5f7ad9821d00f0abec5dec3f1552e1e4e31d3c79fd5712fc75bc6bdab75",
+      "bytes": 1227
+    },
+    {
+      "path": ".harness-local/skill-taxonomy-rewrites.json",
+      "sha256": "962d8d556306e35403f4584c5badeada0c839ec376b88fe765c40241d9ed8711",
+      "bytes": 861
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/code-review/SKILL.md",
+      "sha256": "4765b0a9c0e101d5105985e3fd3b618726c57de36739f130ca8105d833e407d3",
+      "bytes": 7597
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/codebase-design/DEEPENING.md",
+      "sha256": "b338bd42cc7e32b029349d38c25c0dc73144d2b90d9741bd2b4bd3596977eb95",
+      "bytes": 2748
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "sha256": "77aa3108d6b7b2fd63589871f6179e99c2ead9a081c8f926973790ca8a60bfdd",
+      "bytes": 2874
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/codebase-design/SKILL.md",
+      "sha256": "efa631b27a0084c10b3246a5a27db244e5d4ee0588ec2119acf505bebf583176",
+      "bytes": 6878
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "sha256": "8f3e8f5875855cb6969cc9fde02fea8a66b972ebfd6c5c6fbf33d47f89f9b8a4",
+      "bytes": 1367
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/diagnosing-bugs/SKILL.md",
+      "sha256": "887f76e6a76ef904e86929f2c0ce31e5b06db1bf20e8d80bcb156053cc879cbd",
+      "bytes": 9290
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/domain-modeling/ADR-FORMAT.md",
+      "sha256": "3093e26801c2eb86d042f9f72e7b0788362d0022435ac348a4f6ca032651abb2",
+      "bytes": 2950
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "sha256": "f229cd8485b77ea76428ffb807058ebd1d254a391b9669b10081942d3d6e8dd3",
+      "bytes": 2359
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/domain-modeling/SKILL.md",
+      "sha256": "5048d23a945f58e00848efe8d9d625220282543207d0eb2daed8550a23d7b09c",
+      "bytes": 4168
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/grill-with-docs/SKILL.md",
+      "sha256": "2f094366e1c805612b1b33721e10337c1674bbe00b57d6a82d9e834b433b74b4",
+      "bytes": 1002
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/implement/SKILL.md",
+      "sha256": "0ebe57c44e77420fbb67afa36061d9621f14272b7ae2853ca943986d3f95d52d",
+      "bytes": 1315
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/improve-codebase-architecture/HTML-REPORT.md",
+      "sha256": "554ed6a1e47a931fe8ceccfd4e5f429861383268f8769f0f5a01f90998a4a38a",
+      "bytes": 6800
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/improve-codebase-architecture/SKILL.md",
+      "sha256": "8314726d53c15c36f2b293f6d78fe9e9ea3d9ea40d3af61bd485c2c7fa29e980",
+      "bytes": 6375
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/prototype/LOGIC.md",
+      "sha256": "55709f958a4632051a3b5d756f76a63bc1a30bee745a853c406a439af61d70c7",
+      "bytes": 5672
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/prototype/SKILL.md",
+      "sha256": "62c2e395067171d3d5688f9c389f17616c5b4c22f264c15968bf5beb58d7617b",
+      "bytes": 3198
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/prototype/UI.md",
+      "sha256": "8d7571a9bbc25551f89a0bcce57d4a94fc2ac576a5c4b2c0a531741582d22025",
+      "bytes": 7102
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/research/SKILL.md",
+      "sha256": "6bf0fa15541d14037727b72785c038eb05272d44220151085418554e29d505b7",
+      "bytes": 1328
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/resolving-merge-conflicts/SKILL.md",
+      "sha256": "b54c8620ea6ce2c7a69997019ee10445c20aa80b10fcbd59ff650f6757ee6a82",
+      "bytes": 1629
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/domain.md",
+      "sha256": "3fd5588e06e349fce3eacb26abc33ccf340510a0e43fc758160f57fb60c8e86a",
+      "bytes": 2296
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
+      "sha256": "7baae9b9e73e9c57209d14f1baa0e388bb6fcff3a55c9bab9d7c9e3ca52ab776",
+      "bytes": 4475
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/issue-tracker-gitlab.md",
+      "sha256": "e25f3bfca9fb790aedb701dd570d3c7f436f7072fdac964fb189c98b55d9c470",
+      "bytes": 4462
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
+      "sha256": "88cc0b6fa12f19db82f494374ec1ce698ca89e01cc7e5845c0671bfdf22dd95c",
+      "bytes": 2017
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/SKILL.md",
+      "sha256": "f0526a3ad5b3b0a590fd4e15d2b5264caa15d7523b65c6b33e0d8bbd5e29a248",
+      "bytes": 4578
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/setup-matt-pocock-skills/triage-labels.md",
+      "sha256": "493d08d7a8007d3604cdf64d45717045034a5037c9e9917bae1ad9340fad75b8",
+      "bytes": 1060
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/tdd/mocking.md",
+      "sha256": "73a10b6a26b56197c738a764c1e4205af98c74553f4a713795997f6bc35b917d",
+      "bytes": 1540
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/tdd/SKILL.md",
+      "sha256": "6662e974061f24a5aaf74886c0f01b359d3b6c0c99d9d747d2ea917a4ac00bba",
+      "bytes": 3781
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/tdd/tests.md",
+      "sha256": "0b401f98bd3684d2fea6440d6946afcf8f5f68ac6a65599dd7a2b90dd9f02eb5",
+      "bytes": 2291
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/to-spec/SKILL.md",
+      "sha256": "5894a1e7593481b5950a0a468312113eb089b0fb31466f4bbc2ddcb534db4231",
+      "bytes": 3898
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/to-tickets/SKILL.md",
+      "sha256": "c29a56caaed1952cfe7eb2ffd39c3840de4f97fa39719fe7efe55346ddd8f6aa",
+      "bytes": 6456
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/triage/AGENT-BRIEF.md",
+      "sha256": "7a19875facfb91c9e218dd7babda0de613f4458fd5a075c6076574470f2157a0",
+      "bytes": 7981
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/triage/OUT-OF-SCOPE.md",
+      "sha256": "1920163f79fc894cb461b51f0e387145f60094d9176f5c1a2b2b9462201b806f",
+      "bytes": 4900
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/triage/SKILL.md",
+      "sha256": "c81832a93b317d45e8dfc630d9731a07a34b4a17a513e091f7e242e61801c172",
+      "bytes": 7414
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/engineering/wayfinder/SKILL.md",
+      "sha256": "996da9be8109de74c13b55168e4053d2ceb36d4015b20e5cf97ba15e6c7a2bdb",
+      "bytes": 12910
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/FILE-REFERENCES.md",
+      "sha256": "477ed48c8998a73e44a4b9e96edd3a882119e05c39fbc24c9401677eb357f501",
+      "bytes": 2583
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/LICENSE",
+      "sha256": "4981c5f6a90eb3a969dacabb9350f5a75695ff3910b39b6534952908dfdc5ff7",
+      "bytes": 1089
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/grill-me/SKILL.md",
+      "sha256": "561f1774b05015d04825282caf666abedcbbf0e4d3b62f3f556f5b1bbc5f71ff",
+      "bytes": 729
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/grilling/SKILL.md",
+      "sha256": "9cd0af022eb3ca7b46a17ac9fe9f0ca7888978b44ba3d098ca0146aeda7c6375",
+      "bytes": 1396
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/handoff/SKILL.md",
+      "sha256": "314927ed89778ed725dd77e4aa39ca39a1805e23a9226a12378c87ce860d6b0c",
+      "bytes": 1827
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/teach/GLOSSARY-FORMAT.md",
+      "sha256": "408c96dce06be99b53a6e05b1e3201c900bcbb46ae3cf08ead8aa3e3cb545d8c",
+      "bytes": 2166
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/teach/LEARNING-RECORD-FORMAT.md",
+      "sha256": "7bbbf6e325370633c77ec772cf4d30da19037ff2892c9e751f23e2696cf80888",
+      "bytes": 2823
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/teach/MISSION-FORMAT.md",
+      "sha256": "ba1bc536615a6940414d96a1d87562f8f2684f56649d44ba15abaaf1833d0ce9",
+      "bytes": 1584
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/teach/RESOURCES-FORMAT.md",
+      "sha256": "b5c7f17ce7c7b7f49a3a0007162e5024948c7b5c45c549643cafeb900ed431a6",
+      "bytes": 1958
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/teach/SKILL.md",
+      "sha256": "e90818931752b763603e86be2567954ac0aa5ac90d5ed4ab9ccb9f9b9a9adf73",
+      "bytes": 10213
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/writing-great-skills/GLOSSARY.md",
+      "sha256": "252072b818f4430e948c820d6a844c5e592c2220ba864e96e12e15a7ab39f45d",
+      "bytes": 16611
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/productivity/writing-great-skills/SKILL.md",
+      "sha256": "a0fb751c737432a448965c0938797906a86d77d34b4fd064b57a77cc71d69c81",
+      "bytes": 9709
+    },
+    {
+      "path": ".harness-local/skills-before-taxonomy-20261105-1733/README.md",
+      "sha256": "03f9bdf5dac320bbc1cb80d3d4a8f2a5761c311afbbd8f9156b15856b40345dc",
+      "bytes": 2233
+    },
+    {
+      "path": ".harness-local/skills-browser/01-two-lanes-awaiting.png",
+      "sha256": "fe9707a8122482322fc764497081cdf2afcbc7eae3ba9a6e15cc513559433dee",
+      "bytes": 149197
+    },
+    {
+      "path": ".harness-local/skills-browser/02-two-lanes-selected.png",
+      "sha256": "7135635e935fd49aaacd4a4ec86a38372914b9de5d797afd9e76c2721d5d401c",
+      "bytes": 149276
+    },
+    {
+      "path": ".harness-local/skills-browser/03-selected-skill-set.png",
+      "sha256": "1149c1f3141fcef2633dae93280f6b6f6008f8d81b7fb1fe0d0cc673d13f0273",
+      "bytes": 124517
+    },
+    {
+      "path": ".harness-local/skills-browser/04-frozen-skill-file.png",
+      "sha256": "68c0fcdb1914287b8bb40db3ab06aea67277d42cdaab4663a5d6d1c7eb097927",
+      "bytes": 113060
+    },
+    {
+      "path": ".harness-local/skills-browser/05-history-plan.png",
+      "sha256": "2222125dae07368eead6f8eed2b035721eb53cb5abb3757ba16bd0947ee198ff",
+      "bytes": 154132
+    },
+    {
+      "path": ".harness-local/skills-browser/06-mobile-lane.png",
+      "sha256": "860e55d1b609344311436f183dc3a6070891533d33484843f5f138217db0af4b",
+      "bytes": 86258
+    },
+    {
+      "path": ".harness-local/skills-browser/07-mobile-skill-file.png",
+      "sha256": "1b00240ee7a6ca544929f4b26f597fb661151d31c34ed9d874d146686af3f15e",
+      "bytes": 47382
+    },
+    {
+      "path": ".harness-local/skills-browser/08-skill-file-mindmap.png",
+      "sha256": "fe0d68b5fade68f5d2c9677c156716467d32a2933a76bc9781f94fba503e518e",
+      "bytes": 121794
+    },
+    {
+      "path": ".harness-local/skills-browser/09-live-catalog-refresh.png",
+      "sha256": "f2dd4cf8ad0929c7b6546edcbccbf40ff44531d8894acb959c4b9b51b11771d3",
+      "bytes": 101957
+    },
+    {
+      "path": ".harness-local/skills-browser/10-selected-folders.png",
+      "sha256": "aaf6b1015881a4dfb3f08bacc0383275508cd799e548db89e86f63bc4be91b35",
+      "bytes": 102369
+    },
+    {
+      "path": ".harness-local/skills-browser/failure.png",
+      "sha256": "9fb429a009ecd079128f178ad5170b8daa8de677ec887891bae2cea84a054411",
+      "bytes": 148518
+    },
+    {
+      "path": ".harness-local/skills-browser/invalid.json",
+      "sha256": "da0065e857e60edeadff1ef9422be6ac3ad376851df82b5e88de50e569b04250",
+      "bytes": 286
+    },
+    {
+      "path": ".harness-local/skills-browser/report.json",
+      "sha256": "250fdfb75357ec3659f996004bbb8485337646034994e6670788bffd89abc87e",
+      "bytes": 1949
+    },
+    {
+      "path": ".harness-local/skills-browser/selection.json",
+      "sha256": "b0ebab15b37766b388ba18b0eb563d8fcc6b94286a779c43083302f0f8db1d39",
+      "bytes": 585
+    },
+    {
+      "path": ".harness-local/slate-theme/before/skill-details.css",
+      "sha256": "e17adc757165fb54858e570e6d299531dc310cc5e50017450cc5d695f9634783",
+      "bytes": 1508
+    },
+    {
+      "path": ".harness-local/slate-theme/before/skill-lane.css",
+      "sha256": "76561d4debf2bcf3e727b238c2c72f3c99c25e27ebf77bc846d1dab409287985",
+      "bytes": 6613
+    },
+    {
+      "path": ".harness-local/slate-theme/before/styles.css",
+      "sha256": "ad4205bb5798ac4a077e1391086ec117afa117e38dd02c33c1b644934519a223",
+      "bytes": 22443
+    },
+    {
+      "path": ".harness-local/slate-theme/contrast.json",
+      "sha256": "83e7b4f13c2ca9448b5b8e38654fe1b6849f3e97c2f7225cdfc7584edb8f258d",
+      "bytes": 767
+    },
+    {
+      "path": ".harness-local/slate-theme/replacements.json",
+      "sha256": "ae3df8e864f994181fbe4a256e3da0ac1561c1f5b69a8867c3d717e05caf1cc0",
+      "bytes": 141
+    },
+    {
+      "path": ".harness-local/verify-skill-folders.mjs",
+      "sha256": "008cc0a5fd488c2261e7ace76dd855b4fe3a026b65f5e21fdb2ce8f85da837e0",
+      "bytes": 2550
+    }
+  ],
+  "additionalPreparationCleanup": {
+    "removedFiles": 8,
+    "removedBytes": 95057,
+    "meaning": "New intermediate drafts and one-time relocation scripts; separate from original 213 files",
+    "deletedFiles": [
+      {
+        "path": ".harness-local/preparation-20261105/BASELINE.next.md",
+        "bytes": 9886,
+        "sha256": "1b53f8ade8a4b8f83a26b59c01e109808866063889f727005f6123bd8fcff649"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/README.next.md",
+        "bytes": 2533,
+        "sha256": "f4402e3e46529454dc25aa732442301f1787b83bdbc461fdf83b6da802d0dabb"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/AGENTS.next.md",
+        "bytes": 5886,
+        "sha256": "3fbc5b45e4170b0d114fe7973f131f68801d8b4e14c36173f1d279993f8dffc0"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/baseline-v0.16-original.md",
+        "bytes": 65715,
+        "sha256": "7fd776f0e19ff593e6058d2856c8ccf1a7e1cf57d14182bceb8a86f53c04eea2"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/archive-docs.py",
+        "bytes": 2413,
+        "sha256": "bcbbaf63d27ef18c9a2f748403eed4b06d35cc3dfa6cc7fce42306237f76320b"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/relocate-links.py",
+        "bytes": 2935,
+        "sha256": "3554694e7ec394206126589259a8bb200927b1a5b287dcd88d7fa411f1de86b5"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/inventory.py",
+        "bytes": 2483,
+        "sha256": "53a6ca2ee4add8a4f4761bbf7b813dd2880d8eb138b5fe034b8babd0d2a56e27"
+      },
+      {
+        "path": ".harness-local/preparation-20261105/prepare-gc.py",
+        "bytes": 3206,
+        "sha256": "8c539e26af1b782d054e403d4bdcd90d510776f56fb8c48a7e255c0dc1d70734"
+      }
+    ]
+  },
+  "retainedArtifacts": [
+    {
+      "path": "docs/prototype/assets/01-context-overview.png",
+      "sha256": "cb1bac0750f2ff58eac5155f335105f23f1f934db378ac049cb56e617d12facd",
+      "bytes": 146908
+    },
+    {
+      "path": "docs/prototype/assets/02-skill-folders.png",
+      "sha256": "aaf6b1015881a4dfb3f08bacc0383275508cd799e548db89e86f63bc4be91b35",
+      "bytes": 102369
+    },
+    {
+      "path": "docs/prototype/assets/03-skill-files.png",
+      "sha256": "fe0d68b5fade68f5d2c9677c156716467d32a2933a76bc9781f94fba503e518e",
+      "bytes": 121794
+    },
+    {
+      "path": "docs/prototype/assets/04-mobile-overview.png",
+      "sha256": "860e55d1b609344311436f183dc3a6070891533d33484843f5f138217db0af4b",
+      "bytes": 86258
+    },
+    {
+      "path": "docs/prototype/assets/05-historical-c4.png",
+      "sha256": "2ebd1cab839270180854687850f680fcaca70bb61e810ebebc261d4a27f7361f",
+      "bytes": 115853
+    },
+    {
+      "path": "docs/prototype/assets/06-original-skill-category.png",
+      "sha256": "0ef4472cd5ce49ed2f5e06e6738925a6f7240eae7d4fec113b056a164875ff91",
+      "bytes": 229066
+    },
+    {
+      "path": "docs/prototype/validation/mindmap-report.json",
+      "sha256": "0ee9020d1822a32e6100e3e2065ac112b6e820cd6d2cb565ee0dee2e74590e4e",
+      "bytes": 2235
+    },
+    {
+      "path": "docs/prototype/validation/history-report.json",
+      "sha256": "728f1522d4204be72d420841619f08d2c0801a49c2c9ec1cd162d37b9d806398",
+      "bytes": 1445
+    },
+    {
+      "path": "docs/prototype/validation/skills-report.json",
+      "sha256": "250fdfb75357ec3659f996004bbb8485337646034994e6670788bffd89abc87e",
+      "bytes": 1949
+    },
+    {
+      "path": "docs/prototype/validation/original-category-check.json",
+      "sha256": "bcf89ebb83fb3a4423ccbd34df9394ab142a21be0a900ccd4368205fcba68a4b",
+      "bytes": 188
+    },
+    {
+      "path": "docs/prototype/validation/slate-contrast.json",
+      "sha256": "83e7b4f13c2ca9448b5b8e38654fe1b6849f3e97c2f7225cdfc7584edb8f258d",
+      "bytes": 767
+    }
+  ],
+  "protectedVerification": {
+    "originalFiles": 211,
+    "byteIdenticalFiles": 209,
+    "navigationOnlyChanges": [
+      {
+        "path": "skills/FILE-REFERENCES.md",
+        "beforeSha256": "4a5a8bc3cb69cb3dc060804b8b9db53cff45e9eb7830ac6dc1e069d078dbae7a",
+        "afterSha256": "23cfe372e3b38e489b7656296a4dd987025cff059805f406d5889ce3a84006a7",
+        "reason": "Relative documentation navigation after archive relocation"
+      },
+      {
+        "path": "skills/README.md",
+        "beforeSha256": "00c21c22b66c02e4e338e9097bea47cc384437cbb8458127e3e5444a9808d172",
+        "afterSha256": "4aa8c7401e413bb8487184deb7ae8c64c7422634280d9ef53e420b3f071699a7",
+        "reason": "Relative documentation navigation after archive relocation"
+      }
+    ],
+    "runtimeDirectories": [
+      ".harness-local/bf4937fc8f21d245"
+    ],
+    "byteIdenticalRuntimeFiles": 91,
+    "byteIdenticalTaskFiles": 85,
+    "byteIdenticalSnapshotFiles": 2,
+    "prototypeTasksExpiredAtInventory": 0,
+    "expiryCheckMeaning": "Prototype updatedAt before inventory time minus 60 days; not formal v1 retention acceptance",
+    "newRuntimeFiles": 0,
+    "nodeModules": "Excluded from deletion; dependency files were not modified",
+    "preparationAudit": "Retained locally under .harness-local/preparation-20261105"
+  }
+}

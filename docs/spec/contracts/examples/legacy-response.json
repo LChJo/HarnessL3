@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000407",
+  "target": {
+    "projectId": "10000000-0000-4000-8000-000000000200",
+    "worktreeId": "10000000-0000-4000-8000-000000000300"
+  },
+  "replayed": false,
+  "ok": true,
+  "data": {
+    "kind": "legacy-archive",
+    "status": "complete",
+    "format": "prototype-v0.16",
+    "taskId": "10000000-0000-4000-8000-000000000101",
+    "binding": {
+      "projectId": "10000000-0000-4000-8000-000000000200",
+      "worktreeId": "10000000-0000-4000-8000-000000000300",
+      "modelRevision": "530e61c7d8d894da91c5436fe6070b180cfd155f21e1b15cdfc8ced07040cbdd",
+      "catalogRevision": null,
+      "sourceVersion": null,
+      "sourceScanRevision": null
+    },
+    "throughBatchId": null,
+    "completeness": "partial",
+    "record": {
+      "id": "10000000-0000-4000-8000-000000000101",
+      "title": "Legacy fixture with missing snapshots",
+      "packet": {
+        "contexts": [
+          {
+            "id": "mgrp.execution.task",
+            "title": "Task state"
+          }
+        ]
+      },
+      "skillPlan": null
+    }
+  }
+}

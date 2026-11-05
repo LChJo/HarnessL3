@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/evidence.schema.json",
+  "title": "Tracked evidence references, not a second object store",
+  "type": "object", "additionalProperties": false, "required": ["schemaVersion", "evidence"],
+  "properties": { "schemaVersion": { "const": 1 }, "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } } },
+  "$defs": {
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "claim", "location", "hash", "observedAt"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "kind": { "enum": ["source-code", "document", "manual", "inference"] }, "claim": { "type": "string", "minLength": 1 },
+        "location": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["path"], "properties": { "path": { "$ref": "common.schema.json#/$defs/relativePath" } } },
+            { "type": "object", "additionalProperties": false, "required": ["url"], "properties": { "url": { "type": "string", "format": "uri", "pattern": "^https?://" } } }
+          ]
+        },
+        "hash": { "oneOf": [{ "$ref": "common.schema.json#/$defs/sha256" }, { "type": "null" }] },
+        "observedAt": { "oneOf": [{ "$ref": "common.schema.json#/$defs/timestamp" }, { "type": "null" }] },
+        "range": {
+          "type": "object", "additionalProperties": false, "required": ["startLine", "endLine"],
+          "properties": { "startLine": { "type": "integer", "minimum": 1 }, "endLine": { "type": "integer", "minimum": 1 } }
+        },
+        "sourceVersion": { "$ref": "common.schema.json#/$defs/sourceVersion" }
+      }
+    }
+  }
+}

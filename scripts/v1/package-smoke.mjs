@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict'
+import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile } from 'node:fs/promises'
+import path from 'node:path'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
+import { execFile as callbackExecFile, spawn } from 'node:child_process'
+import { promisify } from 'node:util'
+import { randomUUID, createHash } from 'node:crypto'
+import { npm } from './npm-tool.mjs'
+
+const execFile = promisify(callbackExecFile)
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+export async function packageSmoke() {
+  const temporary = await mkdtemp(path.join(tmpdir(), 'harnessl3-package-'))
+  const dataRoot = path.join(temporary, 'machine data')
+  const consumer = path.join(temporary, '中文 package consumer')
+  const project = path.join(temporary, 'isolated project')
+  let installedBinary
+  const cli = (args, input) => new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [installedBinary, ...args, '--json', '--data-dir', dataRoot], { cwd: project, windowsHide: true, env: { ...process.env, HARNESSL3_HOME: '', HARNESS_SKILLS_ROOT: '' } })
+    let stdout = '', stderr = ''
+    child.stdout.on('data', chunk => { stdout += chunk }); child.stderr.on('data', chunk => { stderr += chunk })
+    child.once('error', reject)
+    child.once('close', code => { if (code) reject(new Error(`Installed CLI failed (${code}): ${args.join(' ')}\n${stdout}\n${stderr}`)); else { try { resolve(JSON.parse(stdout)) } catch (error) { reject(error) } } })
+    child.stdin.end(input ? JSON.stringify(input) : '')
+  })
+  try {
+    const { stdout } = await npm(['pack', '--json', '--ignore-scripts', '--pack-destination', temporary], { cwd: root })
+    const [manifest] = JSON.parse(stdout)
+    const files = manifest.files.map(file => file.path)
+    for (const required of ['bin/harnessl3.mjs', 'build/cli/main.js', 'build/core/index-worker.js', 'build/web/index.html', 'skills/LICENSE', 'docs/USAGE.md', 'docs/spec/contracts/response.schema.json', 'docs/spec/contracts/examples/selection.json']) assert.ok(files.includes(required), `Missing packaged resource: ${required}`)
+    assert.equal(files.filter(file => file.endsWith('/SKILL.md') && file.startsWith('skills/')).length, 20)
+    assert.ok(files.every(file => !/^(?:\.git|\.harness-local|node_modules|src|server|tests|examples|scripts)\//.test(file) && !file.endsWith('.map')), 'Development/private files must stay out of the package')
+    const tarball = path.join(temporary, manifest.filename)
+    const bytes = await readFile(tarball)
+    assert.equal('sha512-' + createHash('sha512').update(bytes).digest('base64'), manifest.integrity)
+    await mkdir(consumer); await mkdir(project)
+    await writeFile(path.join(consumer, 'package.json'), JSON.stringify({ private: true, name: 'harnessl3-package-consumer', version: '1.0.0' }))
+    await npm(['install', tarball, '--prefix', consumer, '--global=false', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: consumer })
+    const shim = await npm(['exec', '--offline', '--', 'harnessl3', '--version'], { cwd: consumer })
+    assert.equal(shim.stdout.trim(), '0.1.0', 'The installed npm bin shim must resolve and run the packaged entry')
+    installedBinary = path.join(consumer, 'node_modules', 'harnessl3', 'bin', 'harnessl3.mjs')
+    const help = await execFile(process.execPath, [installedBinary, '--help'], { cwd: project, windowsHide: true })
+    assert.match(help.stdout, /HarnessL3 0\.1\.0/)
+    const git = (...args) => execFile('git', ['-C', project, ...args], { windowsHide: true })
+    await git('init', '-b', 'main'); await git('config', 'user.name', 'Package fixture'); await git('config', 'user.email', 'fixture@example.invalid')
+    await writeFile(path.join(project, 'README.md'), 'Isolated installed-package fixture\n')
+    await git('add', 'README.md'); await git('commit', '-m', 'Fixture source')
+    const initialized = await cli(['init'])
+    assert.equal(initialized.ok, true)
+    const started = await cli(['task', 'start', '--title', 'Installed package task'])
+    const entry = started.data
+    assert.equal(entry.catalog.length, 20)
+    const skill = entry.catalog[0]
+    const selected = await cli(['task', 'select', entry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), binding: entry.binding, context: { expand: [], read: [entry.directory.items[0].id], known: {} }, skills: [{ id: skill.id, reason: 'Validate packaged file references' }] })
+    assert.equal(selected.data.packet.contexts.length, 1)
+    const file = selected.data.skillPlan.skills[0].files.find(file => file.path === 'SKILL.md')
+    const read = await cli(['task', 'read', entry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), files: [{ skillId: skill.id, path: file.path, expectedHash: file.hash }] })
+    assert.equal(createHash('sha256').update(read.data.files[0].file.content).digest('hex'), file.hash)
+    const descriptor = JSON.parse(await readFile(path.join(dataRoot, 'service.json'), 'utf8'))
+    const html = await fetch(descriptor.url).then(response => response.text())
+    assert.ok(html.includes('type="module"'))
+    assert.ok(!/https?:\/\//.test(html), 'Web entry must use packaged local assets')
+    const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match => match[1])
+    assert.ok(assets.length >= 2)
+    for (const asset of assets) { const response = await fetch(descriptor.url + asset); assert.equal(response.status, 200, asset); assert.ok((await response.arrayBuffer()).byteLength > 0) }
+    const artifacts = path.join(root, '.harness-local', 'artifacts')
+    await mkdir(artifacts, { recursive: true })
+    const output = path.join(artifacts, manifest.filename)
+    await copyFile(tarball, output)
+    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 20, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, tarball: output }
+    await writeFile(path.join(artifacts, 'package-smoke-' + process.platform + '.json'), JSON.stringify(report, null, 2) + '\n')
+    return report
+  } finally {
+    if (installedBinary) await cli(['serve', 'stop']).catch(() => {})
+    if (!path.isAbsolute(temporary) || !path.basename(temporary).startsWith('harnessl3-package-')) throw new Error('Unsafe package fixture cleanup target')
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+  }
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) console.log(JSON.stringify(await packageSmoke()))

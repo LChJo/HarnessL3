@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>任务上下文 · HarnessL3 交互设计稿</title>
+  <style>
+    :root{--paper:#fafbf9;--surface:#fff;--ink:#243c31;--muted:#66766d;--line:#e2e8e1;--green:#2c7852;--green-soft:#eef7f0;--amber:#926322;--amber-soft:#fff6e8;--blue:#667f9b}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}button,select{font:inherit}button,a,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer;color:inherit}button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:4px}button{background:none;border:0}a{color:inherit;text-decoration:none}button:disabled{opacity:.45;cursor:default}[hidden]{display:none!important}
+    .topbar{height:68px;border-bottom:1px solid var(--line);background:var(--surface);display:flex;align-items:center;padding:0 40px;gap:42px}.brand{display:flex;align-items:center;gap:10px;letter-spacing:-.5px;font-size:18px;font-weight:600}.brand-mark{display:grid;grid-template-columns:repeat(2,5px);gap:4px;transform:rotate(-8deg)}.brand-mark i{width:5px;height:5px;background:var(--green);border-radius:1px}.brand-mark i:last-child{opacity:.35}.brand small{font-size:11px;font-weight:500;align-self:flex-start;padding-top:2px;color:var(--muted)}.topnav{display:flex;height:100%;align-items:center;gap:28px;font-size:13px;color:var(--muted)}.topnav .active{color:var(--ink);height:100%;display:flex;align-items:center;position:relative}.topnav .active:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--green)}.concept-tag{margin-left:auto;color:var(--muted);font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:5px;white-space:nowrap}
+    .workspace{max-width:1240px;margin:0 auto;padding:31px 40px 22px}.scope-row{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:12px}.scope-row strong{font-weight:600;color:var(--ink)}.branch{display:flex;align-items:center;gap:5px}.branch svg{width:13px;height:13px}.scope-row .source{margin-left:auto}.task-line{margin-top:18px;display:flex;align-items:flex-start;gap:20px}.task-label{font-size:11px;color:var(--muted);margin-bottom:5px}.task-line h1{font-size:25px;line-height:1.4;font-weight:500;letter-spacing:-.5px;margin:0}.agent{margin-left:auto;display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;padding-top:26px;white-space:nowrap}.agent-icon{display:grid;place-items:center;width:25px;height:25px;background:#edf1eb;border:1px solid var(--line);border-radius:7px;color:var(--ink);font-size:11px}.task-meta{margin-top:10px;display:flex;gap:12px;font-size:12px;color:var(--muted);align-items:center}.task-meta span+span:before{content:'·';margin-right:12px;color:#a0ada4}.task-meta .signal{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:7px}
+    .map-card{margin-top:28px;border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:hidden}.map-top{min-height:62px;padding:17px 25px;display:flex;gap:16px;align-items:center}.map-title{font-size:13px;font-weight:500}.crumb{display:flex;gap:9px;align-items:center;font-size:13px}.crumb button{padding:0;color:var(--muted)}.crumb button:hover{color:var(--green)}.crumb span{color:var(--ink)}.view-hint{margin-left:auto;color:var(--muted);font-size:11px}.text-button{padding:4px 0;color:var(--muted);font-size:12px;display:inline-flex;gap:5px;align-items:center}.text-button:hover{color:var(--green)}.text-button svg{width:14px;height:14px}.map-top .records-button{margin-left:auto}.view-hint+.records-button{margin-left:0}
+    .map-stage{position:relative;height:500px;margin:0 16px}.connections{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.connections path{stroke:var(--line);stroke-width:1.3;fill:none;vector-effect:non-scaling-stroke}.connections path.lit{stroke:#a6c9af;stroke-width:1.6}.connections path.pending{stroke:#b4c2cd;stroke-dasharray:3 4}.root-node{position:absolute;left:42.4%;width:15.2%;top:214px;min-height:72px;border:1px solid var(--line);background:#f7f9f5;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 7px;text-align:center;z-index:1}.root-node strong{font-size:17px;font-weight:500}.root-node small{font-size:11px;color:var(--muted);display:block;margin-top:4px}.root-node .back-label{font-size:10px;color:var(--green);margin-top:5px}.map-node{position:absolute;width:23%;min-height:63px;display:flex;border:1px solid var(--line);border-radius:9px;background:var(--surface);z-index:1;transition:background .16s,border-color .16s,box-shadow .16s}.map-node:hover{border-color:#bdcbbd;box-shadow:0 3px 14px #253d3108}.node-main{padding:11px 13px;width:100%;text-align:left;min-height:63px;border-radius:9px;display:flex;align-items:center;gap:10px}.node-indicator{height:9px;width:9px;border:1.5px solid #bcc8bf;border-radius:50%;flex-shrink:0}.map-node.provided{background:var(--green-soft);border-color:#c4dfcd}.map-node.provided .node-indicator{background:var(--green);border-color:var(--green);box-shadow:0 0 0 3px #2c78520b}.map-node.pending .node-indicator{border-color:var(--blue);border-style:dashed}.node-copy{min-width:0;flex:1}.node-title{display:block;font-size:14px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}.node-note{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.4}.contains .node-note,.provided .node-note{color:var(--green)}.node-arrow{color:#8c9d91;font-size:16px;font-weight:400;margin-left:3px}.node-info{flex-shrink:0;align-self:center;padding:9px 8px 9px 0;color:var(--muted);font-size:12px;opacity:0}.map-node:hover .node-info,.map-node:focus-within .node-info{opacity:1}.map-node.has-info .node-main{padding-right:0}.stale-dot{color:var(--amber);font-size:11px}.map-bottom{min-height:49px;border-top:1px solid #f0f3ef;margin:0 25px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:12px 0;font-size:11px;color:var(--muted)}.legend-item{display:flex;align-items:center;gap:6px}.legend-dot{width:7px;height:7px;border:1px solid #b9c5bc;border-radius:50%}.legend-dot.lit{background:var(--green);border-color:var(--green)}.legend-dot.pending{border-color:var(--blue);border-style:dashed}.map-bottom .map-instruction{margin-left:auto;font-size:11px}.version-notice{color:var(--amber);background:var(--amber-soft);padding:9px 25px;font-size:12px;display:flex;align-items:center;gap:8px}.version-notice button{margin-left:auto;padding:0;font-size:11px;text-decoration:underline}
+    .latest{margin:18px 3px 0;display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;min-height:22px}.latest .time{color:#839086;font-variant-numeric:tabular-nums;font-size:11px}.latest-mark{width:5px;height:5px;background:var(--green);border-radius:50%;margin-right:2px}.latest button{margin-left:auto;padding:0;color:var(--muted);font-size:11px}.demo-controls{margin:30px 0 0;border-top:1px solid var(--line);padding-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--muted)}.demo-controls select{font-size:12px;padding:6px 25px 6px 10px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink);max-width:100%}.demo-controls .demo-next{padding:6px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);font-size:12px}.demo-controls .demo-disclaimer{margin-left:auto;font-size:10px}.loading{padding:100px 25px;text-align:center;color:var(--muted)}
+    .shade{position:fixed;inset:0;background:#243c3126;z-index:10;display:flex;justify-content:flex-end}.drawer{width:400px;max-width:100%;background:var(--surface);height:100%;overflow:auto;padding:26px 28px;box-shadow:-10px 0 40px #243c3110}.drawer-head{display:flex;align-items:center;color:var(--muted);font-size:12px;margin-bottom:25px}.close{margin-left:auto;width:32px;height:32px;font-size:24px;line-height:1;border-radius:5px;color:var(--muted)}.close:hover{background:var(--paper)}.drawer h2{font-size:24px;font-weight:500;margin:0 0 12px;line-height:1.4}.drawer h3{font-size:12px;font-weight:500;color:var(--muted);margin:25px 0 10px}.drawer p{font-size:13px;line-height:1.9;margin:12px 0}.drawer code{font:11px/1.8 Consolas,monospace;overflow-wrap:anywhere}.drawer .status{display:inline-block;font-size:11px;border:1px solid var(--line);padding:4px 8px;border-radius:5px;color:var(--muted)}.drawer .status.lit{color:var(--green);background:var(--green-soft);border-color:#c4dfcd}.drawer .explanation{font-size:12px;color:var(--muted)}.detail-pairs{display:grid;grid-template-columns:68px 1fr;gap:9px 12px;font-size:12px}.detail-pairs dt{color:var(--muted)}.detail-pairs dd{margin:0;min-width:0}.block-button{padding:9px 13px;border:1px solid var(--line);border-radius:6px;font-size:12px;display:block;margin-top:20px;text-align:center;width:100%}.block-button:hover{border-color:#bdcbbd}.record{border-left:1px solid var(--line);padding:0 0 22px 18px;margin-left:4px;position:relative;font-size:12px}.record:before{content:'';position:absolute;left:-4px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--green)}.record small{color:var(--muted);font-size:10px}.record strong{display:block;font-weight:500;margin:4px 0}.record ul{padding-left:15px;margin:5px 0;color:var(--muted);font-size:12px}.empty-records{padding:25px 0;color:var(--muted);font-size:12px}.packet{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:15px;font:11px/1.9 Consolas,"Microsoft YaHei",monospace;overflow-wrap:anywhere}.drawer .boundary{padding:12px;border-radius:6px;background:var(--paper);font-size:12px;color:var(--muted);line-height:1.8;margin-top:25px}.drawer .source-link{font-size:12px;color:var(--green);text-decoration:underline;display:inline-block;margin-top:16px}.model-state{font-size:11px;color:var(--muted)}
+    @media(min-width:1500px){.workspace{padding-top:38px}.demo-controls{margin-top:37px}}
+    @media(max-width:900px){.topbar{padding:0 24px;gap:28px}.workspace{padding:25px 22px}.map-stage{margin:0 6px}.node-main{padding:10px;gap:7px}.node-title{font-size:13px}.map-top{padding:16px 18px}.view-hint{display:none}.map-top .records-button{margin-left:auto}.node-info{display:none}.map-node.has-info .node-main{padding-right:10px}.demo-controls .demo-disclaimer{margin-left:0;width:100%}}
+    @media(max-width:650px){.topbar{height:58px;padding:0 18px;gap:20px}.brand{font-size:16px}.topnav{font-size:12px;gap:16px}.topnav a{display:none}.concept-tag{font-size:9px;padding:3px 5px}.workspace{padding:21px 16px}.scope-row{font-size:11px;gap:9px}.scope-row .source{display:none}.task-line{gap:12px}.task-line h1{font-size:21px;line-height:1.5}.agent{font-size:0;padding-top:29px;gap:0}.agent-icon{font-size:10px}.task-meta{font-size:11px;gap:6px;flex-wrap:wrap}.task-meta span+span:before{margin-right:6px}.map-card{margin-top:22px;border-radius:10px}.map-top{padding:15px 16px;flex-wrap:wrap;gap:6px}.map-title,.crumb{font-size:12px}.map-top .records-button{font-size:10px}.map-stage{height:auto;min-height:120px;margin:0;padding:0 16px 15px;display:flex;flex-direction:column;gap:8px}.connections{display:none}.root-node{position:relative;left:auto;top:auto;width:100%;min-height:55px;flex-direction:row;gap:9px;margin:0 0 7px;padding:11px 13px;justify-content:flex-start;text-align:left}.root-node strong{font-size:14px}.root-node small{margin:0;font-size:10px}.root-node .back-label{margin-left:auto;margin-top:0}.map-node{position:relative;left:auto!important;top:auto!important;width:100%;min-height:54px;margin-left:14px;width:calc(100% - 14px)}.map-node:before{content:'';position:absolute;width:7px;height:1px;left:-13px;top:50%;background:var(--line)}.node-main{min-height:54px;padding:9px 12px;gap:9px}.node-title{font-size:14px}.node-copy{display:flex;align-items:center;gap:8px}.node-title{flex:1;max-width:70%}.node-note{font-size:10px;margin:0;max-width:115px;text-align:right}.node-info{display:block;opacity:1;font-size:11px;padding-right:12px}.map-node.has-info .node-main{padding-right:4px}.map-bottom{margin:0 16px;gap:12px;font-size:9px}.map-bottom .map-instruction{width:100%;margin:0;font-size:10px}.latest{font-size:11px;align-items:flex-start;gap:7px}.latest .time{display:none}.latest button{font-size:10px;white-space:nowrap}.latest-mark{margin-top:6px;flex-shrink:0}.demo-controls{margin-top:24px;gap:8px}.demo-controls .demo-disclaimer{font-size:10px}.demo-controls select{font-size:11px;flex:1;min-width:0}.demo-controls .demo-next{font-size:11px;padding:6px 8px}.version-notice{padding:10px 16px;font-size:11px}.drawer{padding:20px 22px}.drawer h2{font-size:23px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="返回原型"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Harness<small>L3</small></a>
+    <nav class="topnav" aria-label="主导航"><span class="active" aria-current="page">任务上下文</span><a href="/">模型与证据 ↗</a></nav>
+    <span class="concept-tag">交互设计稿 · 模拟任务</span>
+  </header>
+  <main class="workspace">
+    <div class="scope-row"><strong>MGRP</strong><span>/</span><span class="branch"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="4" cy="3" r="1.5"/><circle cx="4" cy="13" r="1.5"/><circle cx="12" cy="3" r="1.5"/><path d="M4 4.5v7M12 4.5v2A4 4 0 0 1 8 10H4"/></svg><span id="branchName">main</span></span><span class="source" id="sourceScope">正在确认模型来源</span></div>
+    <div class="task-line"><div><div class="task-label">当前任务 · 设计示例</div><h1>排查下载取消后仍继续传输</h1></div><div class="agent"><span class="agent-icon">A</span>Agent · 示例会话</div></div>
+    <div class="task-meta" aria-live="polite"><span id="summary"><i class="signal"></i>正在加载项目模块</span><span id="snapshotLabel">上下文快照</span></div>
+    <section class="map-card" aria-label="任务上下文地图">
+      <div class="map-top"><div id="mapHeading" class="map-title">项目模块</div><span class="view-hint">只展开你关心的部分</span><button class="text-button records-button" id="recordsButton"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 4h8M4 8h8M4 12h5"/></svg>提供记录</button></div>
+      <div id="notice" class="version-notice" hidden></div>
+      <div class="map-stage" id="mapStage"><div class="loading">从 LikeC4 主模型读取模块层级…</div></div>
+      <div class="map-bottom"><span class="legend-item"><i class="legend-dot lit"></i>已提供</span><span class="legend-item"><i class="legend-dot pending"></i>候选待提供</span><span class="legend-item"><i class="legend-dot"></i>无提供记录</span><span class="map-instruction">点击模块展开；展开不会提供上下文</span></div>
+    </section>
+    <div class="latest"><span class="latest-mark"></span><span class="time" id="latestTime">示例 14:32</span><span id="latestText">等待模型加载</span><button id="packetButton">返回内容预览 ↗</button></div>
+    <aside class="demo-controls" aria-label="设计演示控制">
+      <label for="scenario">演示状态</label>
+      <select id="scenario"><option value="empty">开始任务 · 尚无记录</option><option value="selected">CLI 选好候选 · 尚未提供</option><option value="provided" selected>CLI 已提供 · 点亮 3 项</option><option value="expanded">按需追加 · 再点亮 1 项</option><option value="failed">提供失败 · 保留候选</option><option value="stale">模型变化 · 旧快照需更新</option></select>
+      <button class="demo-next" id="nextScenario">演示下一步 →</button>
+      <span class="demo-disclaimer">层级来自真实主模型；任务、点亮与提供记录为模拟，不会发送给 agent。</span>
+    </aside>
+  </main>
+  <div class="shade" id="drawerShade" hidden><section class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" tabindex="-1"></section></div>
+  <script>
+    const $=id=>document.getElementById(id);
+    const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const meta=(node,key)=>Array.isArray(node.metadata?.[key])?node.metadata[key].join(', '):node.metadata?.[key]??'';
+    let snapshot, nodes=[], byId=new Map(), focus='mgrp', scenario='provided';
+    const mainIds=['mgrp.business.download','mgrp.execution.task','mgrp.execution.scheduler'];
+    const addedId='mgrp.network.manager';
+    const scenarios=['empty','selected','provided','expanded','failed','stale'];
+    let opener=null;
+    const children=id=>nodes.filter(n=>n.id.substring(0,n.id.lastIndexOf('.'))===id);
+    const candidates=()=>scenario==='empty'?[]:[...mainIds,...(scenario==='expanded'?[addedId]:[])].filter(id=>byId.has(id));
+    const provided=()=>['provided','expanded','stale'].includes(scenario)?candidates():[];
+    const countIn=(ids,id)=>ids.filter(key=>key===id||key.startsWith(id+'.')).length;
+    const areas=()=>new Set(provided().map(id=>id.split('.').slice(0,2).join('.'))).size;
+    const revision=()=>snapshot?.revision?.slice(0,8)??'未知';
+    function statusFor(node){
+      const delivered=provided(), selected=candidates(), exact=delivered.includes(node.id), count=countIn(delivered,node.id), pending=countIn(selected,node.id);
+      if(exact)return {className:'provided',note:scenario==='stale'?'旧快照 · 需更新':'本任务已提供',label:scenario==='stale'?'旧快照已提供，需更新':'本任务已提供'};
+      if(count)return {className:'contains',note:`含 ${count} 项已提供${scenario==='stale'?' · 旧':''}`,label:`含 ${count} 项已提供，非本模块全部内容`};
+      if(pending)return {className:'pending',note:scenario==='failed'?`${pending} 项候选 · 提供失败`:`${pending} 项候选待提供`,label:'候选待提供'};
+      const size=children(node.id).length;
+      return {className:'',note:size?`${size} 个子模块`:'查看上下文',label:'本任务无提供记录'};
+    }
+    function render(){
+      if(!snapshot)return;
+      const num=provided().length;
+      $('summary').innerHTML=`<i class="signal" style="background:${num?'var(--green)':'#a9b5ac'}"></i>${num?`已提供 ${num} 项上下文 · 涉及 ${areas()} 个区域`:scenario==='empty'?'尚无上下文提供记录':`${candidates().length} 项候选 · 尚未成功提供`}`;
+      $('snapshotLabel').textContent=scenario==='stale'?'示例：提供快照较旧':'按需提供';
+      $('snapshotLabel').title=`模型版本 ${snapshot.revision}`;
+      $('mapHeading').innerHTML=focus==='mgrp'?'项目模块':`<div class="crumb"><button id="backToAll">全部模块</button><span aria-hidden="true">/</span><span>${esc(byId.get(focus)?.title)}</span></div>`;
+      $('backToAll')?.addEventListener('click',()=>setFocus('mgrp'));
+      const notice=$('notice');
+      notice.hidden=!['failed','stale'].includes(scenario)||snapshot.modelStatus!=='valid';
+      notice.textContent=scenario==='failed'?'演示：本次提供失败。候选仍保留，没有产生成功点亮记录。':'演示：模型已变化。保留旧提供记录，并提示需要更新上下文。';
+      if(snapshot.modelStatus!=='valid'){notice.hidden=false;notice.textContent='主模型当前不可用；以下为最近有效层级，交互状态仍为设计演示。'}
+      const current=byId.get(focus), peers=children(focus), left=[],right=[];
+      peers.forEach((n,i)=>(i<Math.ceil(peers.length/2)?left:right).push(n));
+      const positions=[];
+      for(const [side,list] of [['left',left],['right',right]])list.forEach((node,i)=>{
+        const gap=peers.length>7?78:100;
+        const top=250-(list.length-1)*gap/2-32;
+        positions.push({node,side,x:side==='left'?6.2:70.8,y:top+i*gap});
+      });
+      let paths='',cards='';
+      positions.forEach(({node,side,x,y})=>{
+        const status=statusFor(node), hasChildren=children(node.id).length>0;
+        const from=side==='left'?466:634,to=side==='left'?321:779,mid=(from+to)/2;
+        paths+=`<path class="${status.className==='provided'||status.className==='contains'?'lit':status.className==='pending'?'pending':''}" d="M ${from} 250 C ${mid} 250 ${mid} ${y+32} ${to} ${y+32}"/>`;
+        cards+=`<div class="map-node ${status.className} ${hasChildren?'has-info':''}" style="left:${x}%;top:${y}px" data-node="${esc(node.id)}"><button class="node-main" data-open="${esc(node.id)}" aria-label="${esc(node.title)}，${esc(status.label)}，${hasChildren?'展开子模块':'查看详情'}"${hasChildren?' aria-expanded="false"':''}><span class="node-indicator" aria-hidden="true"></span><span class="node-copy"><span class="node-title">${esc(node.title)}</span><span class="node-note">${esc(status.note)}</span></span>${hasChildren?'<span class="node-arrow" aria-hidden="true">›</span>':''}</button>${hasChildren?`<button class="node-info" data-detail="${esc(node.id)}" aria-label="${esc(node.title)}详情">ⓘ</button>`:''}</div>`;
+      });
+      const rootCount=countIn(provided(),focus);
+      $('mapStage').innerHTML=`<svg class="connections" viewBox="0 0 1100 500" preserveAspectRatio="none" aria-hidden="true">${paths}</svg><button class="root-node" id="rootNode" aria-label="${focus==='mgrp'?'项目上下文详情':'收起当前分支，返回全部模块'}"><strong>${esc(current?.title??'MGRP')}</strong><small>${rootCount?`含 ${rootCount} 项已提供`:'本次任务上下文'}</small>${focus!=='mgrp'?'<span class="back-label">收起分支 ↑</span>':''}</button>${cards}`;
+      document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>{
+        const id=button.dataset.open;
+        if(children(id).length)setFocus(id);else openDetail(id);
+      }));
+      document.querySelectorAll('[data-detail]').forEach(button=>button.addEventListener('click',()=>openDetail(button.dataset.detail)));
+      $('rootNode').addEventListener('click',()=>focus==='mgrp'?openDetail('mgrp'):setFocus('mgrp'));
+      const texts={empty:'新任务已建立，等待 CLI 选择所需上下文。',selected:'CLI 已选好 3 项候选；返回成功后才会点亮。',provided:'CLI 已提供下载编排、任务门面与调度状态的上下文。',expanded:'发现网络边界，CLI 按需追加了网络管理上下文。',failed:'CLI 返回失败，保留候选，等待重试。',stale:'原有提供记录保留；当前模型变化后需要重新提供。'};
+      $('latestText').textContent=texts[scenario];
+      $('latestTime').textContent=scenario==='expanded'?'示例 14:35':'示例 14:32';
+      $('nextScenario').disabled=scenario==='stale';
+    }
+    function setFocus(id){focus=id;render();$('rootNode')?.focus({preventScroll:true});}
+    function showDrawer(title,html){
+      if($('drawerShade').hidden)opener=document.activeElement;
+      $('drawer').innerHTML=`<div class="drawer-head"><span>设计演示</span><button class="close" id="closeDrawer" aria-label="关闭详情">×</button></div><h2 id="drawerTitle">${esc(title)}</h2>${html}`;
+      $('drawerShade').hidden=false;
+      document.body.style.overflow='hidden';
+      $('closeDrawer').addEventListener('click',closeDrawer);
+      $('drawer').focus();
+    }
+    function closeDrawer(){ $('drawerShade').hidden=true;document.body.style.overflow='';opener?.isConnected&&opener.focus({preventScroll:true}); }
+    function openDetail(id){
+      const n=byId.get(id),s=statusFor(n),exact=provided().includes(id),count=countIn(provided(),id);
+      const statement=exact?'此模块的上下文出现在模拟 CLI 成功返回记录中。':count?'只有所列子项有提供记录，不能将整个父模块视为已提供。':'当前任务没有这项上下文的成功提供记录；其他工具是否读取仍需日志证据。';
+      showDrawer(n.title,`<span class="status ${exact?'lit':''}">${esc(s.label)}</span><p class="explanation">${statement}</p><h3>模块职责 · 来自主模型</h3><p>${esc(n.description)}</p><h3>可追溯信息</h3><dl class="detail-pairs"><dt>对象</dt><dd><code>${esc(n.id)}</code></dd><dt>来源</dt><dd>${esc(meta(n,'source'))}</dd><dt>证据引用</dt><dd><code>${esc(meta(n,'evidence'))}</code></dd><dt>源码位置</dt><dd><code>${esc(meta(n,'path'))}</code></dd><dt>模型版本</dt><dd><code>${revision()}${scenario==='stale'?' · 演示旧快照状态':''}</code></dd><dt>读取轨迹</dt><dd>未接入此设计稿 · 未知</dd></dl>${count?`<h3>本分支已提供项</h3><p>${provided().filter(key=>key===id||key.startsWith(id+'.')).map(key=>esc(byId.get(key).title)).join('、')}</p>`:''}<button class="block-button" id="detailPacket">查看返回内容预览（演示）</button><div class="boundary">展开只是浏览。已提供说明有成功返回记录，不能证明模型已经理解，也不覆盖未采集的其他读取。</div>`);
+      $('detailPacket').addEventListener('click',openPacket);
+    }
+    function packetText(){
+      const list=provided();
+      if(!list.length)return '本次没有成功提供的上下文。\n候选选择不会产生成功返回记录。';
+      return `# 任务上下文包（演示，无真实发送）\n任务: demo-cancel-download\n来源 worktree: ${snapshot.runtime?.sourceRoot??'未知'}\n模型版本: ${snapshot.revision}\n快照状态: ${scenario==='stale'?'模拟旧快照，需更新':'当前模型的设计预览'}\n选择口径: 仅精确对象，不自动包含子树\n\n`+list.map(id=>{
+        const n=byId.get(id),parent=byId.get(id.substring(0,id.lastIndexOf('.')));
+        const boundary=(snapshot.relationships??[]).filter(r=>(r.source===id||r.target===id)&&!(list.includes(r.source)&&list.includes(r.target))).map(r=>`${r.kind}: ${r.source} → ${r.target}`);
+        return `## ${n.title}\n对象: ${n.id}\n位置: ${parent?.title??''} / ${n.title}\n职责: ${n.description}\n来源: ${meta(n,'source')}\n状态: ${meta(n,'status')}\n证据引用: ${meta(n,'evidence')}\n源码引用: ${meta(n,'path')}\n跨边界关系（仅引用，不含邻居正文）:\n${boundary.map(x=>'- '+x).join('\n')||'- 无'}\n`;
+      }).join('\n')+'\n证据正文和额外模块没有自动展开；需要时再按需获取。\n这里只预览模型片段，正式 CLI 尚未实现。';
+    }
+    function openPacket(){showDrawer('本次返回内容',`<span class="status">仅预览模拟成功返回项</span><p class="explanation">候选清单和未选模块正文不会进入这份预览。祖先只保留定位标题，跨模块关系只列边界引用。</p><pre class="packet">${esc(packetText())}</pre>`);}
+    function openRecords(){
+      const list=provided(), groups=[];
+      if(list.length){groups.push({time:'示例 14:32',title:'模拟 CLI 成功返回 3 项',ids:mainIds.filter(id=>byId.has(id))});if(scenario==='expanded')groups.push({time:'示例 14:35',title:'按需追加 1 项',ids:[addedId].filter(id=>byId.has(id))});}
+      showDrawer('上下文提供记录',`<span class="status">任务 demo-cancel-download · 模拟会话</span><p class="explanation">这些是交互设计示例，不是实际 agent 日志。</p><h3>成功提供</h3>${groups.length?groups.map(g=>`<div class="record"><small>${g.time}</small><strong>${g.title}</strong><ul>${g.ids.map(id=>`<li>${esc(byId.get(id).title)}</li>`).join('')}</ul><small>模型 ${revision()}${scenario==='stale'?' · 演示旧快照':''}</small></div>`).join(''):'<p class="empty-records">暂无成功记录。候选和失败请求不会计入已提供。</p>'}<h3>其他读取操作</h3><p class="explanation">此设计稿未接入真实工具日志，覆盖未知。正式产品将单独列出受支持的读取证据，不将其补算成 CLI 提供记录。</p><button class="block-button" id="recordsPacket">查看返回内容预览</button><a class="source-link" href="/">查看现有原型的实际工具日志 ↗</a>`);
+      $('recordsPacket').addEventListener('click',openPacket);
+    }
+    $('recordsButton').addEventListener('click',()=>snapshot&&openRecords());
+    $('packetButton').addEventListener('click',()=>snapshot&&openPacket());
+    $('scenario').addEventListener('change',event=>{scenario=event.target.value;render();});
+    $('nextScenario').addEventListener('click',()=>{scenario=scenarios[Math.min(scenarios.length-1,scenarios.indexOf(scenario)+1)];$('scenario').value=scenario;render();});
+    $('drawerShade').addEventListener('click',event=>{if(event.target===$('drawerShade'))closeDrawer();});
+    document.addEventListener('keydown',event=>{
+      if($('drawerShade').hidden)return;
+      if(event.key==='Escape'){event.preventDefault();closeDrawer();}
+      if(event.key==='Tab'){
+        const all=[...$('drawer').querySelectorAll('button,a[href],select,[tabindex="0"]')].filter(el=>!el.disabled),first=all[0],last=all.at(-1);
+        if(event.shiftKey&&(document.activeElement===first||document.activeElement===$('drawer'))){event.preventDefault();last?.focus();}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+      }
+    });
+    async function init(){
+      try{
+        const response=await fetch('/api/snapshot');if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        snapshot=await response.json();nodes=snapshot.elements??[];byId=new Map(nodes.map(n=>[n.id,n]));
+        if(!byId.has('mgrp'))throw new Error('当前模型没有 MGRP 根对象');
+        $('branchName').textContent=snapshot.sourceVersion?.branch??'main';
+        $('sourceScope').textContent='已绑定来源工作区';
+        $('sourceScope').title=snapshot.runtime?.sourceRoot??'未知';
+        render();
+      }catch(error){$('mapStage').innerHTML='<div class="loading">无法读取主模型。请确认本机原型服务正在运行。</div>';$('summary').textContent='模型未加载';$('sourceScope').textContent=error.message;}
+    }
+    init();
+  </script>
+</body>
+</html>

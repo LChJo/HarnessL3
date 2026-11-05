@@ -1,0 +1,117 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { chromium } from 'playwright'
+
+// Intentionally creates one task in an explicitly generated fixture. Never run
+// against product task archives or a descriptor from the user's source project.
+if (!process.argv[2]) throw new Error('Usage: node web/verify-manual.mjs <isolated-browser-fixture.json>')
+const fixture = JSON.parse(await readFile(process.argv[2], 'utf8'))
+assert.ok(path.basename(fixture.directory).startsWith('harnessl3-browser-'))
+const service = JSON.parse(await readFile(path.join(fixture.dataRoot, 'service.json'), 'utf8'))
+const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
+const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
+const errors = []
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto(service.url + '/#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId }))
+  await page.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-route-worktree') && !document.querySelector('.view-loading'))
+  await page.getByRole('textbox', { name: '任务目的', exact: true }).fill('Web UI verification ' + new Date().toISOString())
+  await page.getByRole('button', { name: '开始检索', exact: true }).click()
+  await page.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-task-id') && !document.querySelector('.view-loading'))
+  const taskId = await page.getByTestId('app-shell').getAttribute('data-task-id')
+  const taskView = () => page.evaluate(async args => await fetch('/view?' + new URLSearchParams(args)).then(response => response.json()), { worktree: fixture.target.worktreeId, task: taskId })
+  let current = await taskView()
+  assert.equal(current.task.source, 'web')
+  assert.equal(current.task.lastReadAt, null)
+  const root = current.model.entities.find(entity => entity.entityType === 'object' && entity.parentId === null)
+  const children = current.model.entities.filter(entity => entity.entityType === 'object' && entity.parentId === root.id)
+  assert.ok(children.length >= 2)
+  const fit = () => page.getByRole('button', { name: '概览全部内容', exact: true }).click()
+  await page.locator('[data-category-root="objects"] .map-main').click()
+  await fit()
+  await page.locator(`[data-node-id="object:${root.id}"] .map-main`).click()
+  await fit()
+  await page.getByRole('button', { name: `选择${root.title}目录`, exact: true }).click()
+  await page.getByRole('button', { name: `选择${children[0].title}正文`, exact: true }).click()
+  await page.getByRole('button', { name: `选择${children[1].title}正文`, exact: true }).click()
+  await page.locator('.selection-dock').getByRole('button', { name: '技能方案', exact: true }).click()
+  const methods = ['quality/tdd', 'quality/diagnosing-bugs', 'quality/code-review']
+  for (const id of methods) {
+    const method = page.locator(`[data-skill-detail="${id}"]`)
+    await method.getByRole('checkbox').check()
+    await method.getByRole('textbox').fill('Verify the explicit task selection and retain this method as versioned file references.')
+  }
+  await page.getByRole('button', { name: '关闭详情', exact: true }).click()
+  await page.getByRole('button', { name: '联合选择', exact: true }).click()
+  await page.waitForFunction(() => document.querySelector('[data-output-count]')?.getAttribute('data-output-count') === '2' && !document.querySelector('.view-loading'))
+  current = await taskView()
+  assert.equal(current.task.batches.length, 1)
+  assert.equal(current.task.batches[0].source, 'web')
+  assert.deepEqual(current.task.skillPlan.skills.map(skill => skill.id), methods)
+  assert.equal(current.task.batches[0].result.directories[0].parentId, root.id)
+  assert.deepEqual(current.task.packet.contexts.map(body => body.entity.id), [children[0].id, children[1].id])
+  const retainedBody = current.task.packet.contexts.find(body => body.entity.id === children[0].id)
+
+  await page.getByRole('button', { name: `选择${children[0].title}正文`, exact: true }).click()
+  await page.getByRole('button', { name: `选择${root.title}正文`, exact: true }).click()
+  await page.getByRole('button', { name: '批量获取', exact: true }).click()
+  await page.waitForFunction(() => document.querySelector('[data-output-count]')?.getAttribute('data-output-count') === '3' && !document.querySelector('.view-loading'))
+  current = await taskView()
+  assert.equal(current.task.batches.length, 2)
+  assert.equal(current.task.batches[1].source, 'web')
+  assert.deepEqual(current.task.batches[1].result.contexts.map(body => body.entity.id), [root.id])
+  assert.deepEqual(current.task.batches[1].result.unchanged.map(body => body.id), [children[0].id])
+  assert.equal(current.task.skillPlan.skills.length, 3)
+  assert.deepEqual(current.task.packet.contexts.find(body => body.entity.id === children[0].id), retainedBody)
+
+  // Lose only the HTTP response after a real committed query. A manual retry
+  // must replay the original request ID once, with no duplicate batch.
+  const attempts = []
+  let lost = false
+  await page.route('**/rpc', async route => {
+    const body = route.request().postDataJSON()
+    if (body?.operation !== 'context query') return await route.continue()
+    attempts.push(body.requestId)
+    if (!lost) {
+      lost = true
+      const response = await route.fetch()
+      assert.equal((await response.json()).ok, true)
+      await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { code: 'CONNECTION_ERROR', message: 'Fixture response lost after commit' } }) })
+    } else await route.continue()
+  })
+  await page.getByRole('button', { name: `选择${children[1].title}正文`, exact: true }).click()
+  await page.getByRole('button', { name: '批量获取', exact: true }).click()
+  await page.getByRole('alert').filter({ hasText: 'Fixture response lost after commit' }).waitFor()
+  await page.waitForFunction(() => !document.querySelector('.view-loading'))
+  assert.match(await page.getByRole('alert').innerText(), /Fixture response lost after commit/, 'background view refresh keeps the action error')
+  await page.waitForTimeout(400)
+  assert.equal(attempts.length, 1, 'no automatic retry loop')
+  await page.getByRole('button', { name: '重试原请求', exact: true }).click()
+  await page.locator('.selection-count').waitFor({ state: 'hidden' })
+  await page.waitForFunction(() => !document.querySelector('.error-banner') && !document.querySelector('.view-loading'))
+  assert.equal(attempts.length, 2)
+  assert.equal(attempts[0], attempts[1], 'manual retry retains the original requestId')
+  assert.equal(await page.locator('.selection-count').count(), 0, 'acknowledged retry clears successful candidates')
+  current = await taskView()
+  assert.equal(current.task.batches.length, 3, 'lost-response replay creates no fourth batch')
+  assert.deepEqual(current.task.packet.contexts.find(body => body.entity.id === children[0].id), retainedBody)
+  await page.unroute('**/rpc')
+
+  await page.locator('.input-card').getByRole('button', { name: '新建任务', exact: true }).click()
+  await page.getByRole('textbox', { name: '任务目的', exact: true }).fill('Web explicit empty selection ' + new Date().toISOString())
+  await page.getByRole('button', { name: '开始检索', exact: true }).click()
+  await page.getByRole('button', { name: '保存空集合', exact: true }).waitFor()
+  const emptyTaskId = await page.getByTestId('app-shell').getAttribute('data-task-id')
+  await page.getByRole('button', { name: '保存空集合', exact: true }).click()
+  await page.waitForFunction(() => document.querySelector('[data-skill-plan]')?.getAttribute('data-skill-plan') !== 'unselected' && !document.querySelector('.view-loading'))
+  const empty = await page.evaluate(async args => await fetch('/view?' + new URLSearchParams(args)).then(response => response.json()), { worktree: fixture.target.worktreeId, task: emptyTaskId })
+  assert.deepEqual(empty.task.skillPlan.skills, [])
+  assert.deepEqual(empty.task.packet.contexts, [])
+  assert.equal(empty.task.lastReadAt, null)
+  assert.equal(await page.locator('[data-output-count]').getAttribute('data-output-count'), '0')
+  assert.equal(await page.locator('[data-category-root="objects"]').getAttribute('data-hit-count'), '0')
+  assert.deepEqual(errors, [])
+  console.log(JSON.stringify({ taskId, emptyTaskId, createdBy: 'web', selection: 'directory+two-bodies+three-explicit-skill-reasons', nextQuery: 'two-targets-with-retained-known', retry: 'same-id-after-committed-response-loss', batches: 3, emptySelection: 'zero-body-no-false-object-return', pageErrors: errors }))
+} finally { await browser.close() }

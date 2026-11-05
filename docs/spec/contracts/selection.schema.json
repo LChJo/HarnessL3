@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/selection.schema.json",
+  "title": "One joint context and skill selection",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "binding", "context", "skills"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "binding": { "$ref": "common.schema.json#/$defs/binding" }, "context": { "$ref": "common.schema.json#/$defs/queryFields" },
+    "skills": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "reason"],
+        "properties": { "id": { "$ref": "common.schema.json#/$defs/skillId" }, "reason": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

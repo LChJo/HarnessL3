@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/common.schema.json",
+  "title": "HarnessL3 v1 shared definitions (planned contract)",
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "relativePath": {
+      "type": "string", "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)(?!.*:)(?!.*//)(?!.*[\\u0000-\\u001f])(?!.*\/$).+$"
+    },
+    "skillId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$" },
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["projectId", "worktreeId"],
+      "properties": { "projectId": { "$ref": "#/$defs/uuid" }, "worktreeId": { "$ref": "#/$defs/uuid" } }
+    },
+    "sourceVersion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["head", "treeHash", "status"],
+      "properties": {
+        "head": { "type": ["string", "null"], "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
+        "treeHash": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "status": { "enum": ["clean", "dirty", "unknown"] }
+      },
+      "allOf": [{
+        "if": { "properties": { "status": { "const": "unknown" } } },
+        "then": { "properties": { "treeHash": { "type": "null" } } },
+        "else": { "properties": { "treeHash": { "$ref": "#/$defs/sha256" } } }
+      }]
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["projectId", "worktreeId", "modelRevision", "catalogRevision", "sourceVersion", "sourceScanRevision"],
+      "properties": {
+        "projectId": { "$ref": "#/$defs/uuid" }, "worktreeId": { "$ref": "#/$defs/uuid" },
+        "modelRevision": { "$ref": "#/$defs/sha256" }, "catalogRevision": { "$ref": "#/$defs/sha256" },
+        "sourceVersion": { "$ref": "#/$defs/sourceVersion" }, "sourceScanRevision": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/uuid" } },
+    "known": { "type": "object", "propertyNames": { "$ref": "#/$defs/uuid" }, "additionalProperties": { "$ref": "#/$defs/sha256" } },
+    "queryFields": {
+      "type": "object", "additionalProperties": false,
+      "required": ["expand", "read", "known"],
+      "properties": { "expand": { "$ref": "#/$defs/ids" }, "read": { "$ref": "#/$defs/ids" }, "known": { "$ref": "#/$defs/known" } }
+    },
+    "fileRef": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "hash", "bytes", "encoding"],
+      "properties": {
+        "path": { "$ref": "#/$defs/relativePath" }, "hash": { "$ref": "#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 0 }, "encoding": { "enum": ["utf8", "base64"] }
+      }
+    },
+    "skillBrief": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "group", "description", "contentHash", "files", "related", "diagnostics"],
+      "properties": {
+        "id": { "$ref": "#/$defs/skillId" }, "name": { "type": "string", "minLength": 1 },
+        "group": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "description": { "type": "string", "minLength": 1 }, "contentHash": { "$ref": "#/$defs/sha256" },
+        "files": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/fileRef" } },
+        "related": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/skillId" } },
+        "diagnostics": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "brief": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "locator", "entityType", "title", "kind", "brief", "parentId", "children"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" }, "locator": { "type": "string", "minLength": 1 },
+        "entityType": { "enum": ["object", "relation"] }, "title": { "type": "string" },
+        "kind": { "type": "string", "minLength": 1 }, "brief": { "type": "string", "minLength": 1 },
+        "parentId": { "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
+        "children": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "directory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parentId", "items"],
+      "properties": {
+        "parentId": { "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/brief" } }
+      }
+    },
+    "boundaryRelation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "sourceId", "targetId", "kind", "brief", "scope"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" }, "sourceId": { "$ref": "#/$defs/uuid" }, "targetId": { "$ref": "#/$defs/uuid" },
+        "kind": { "type": "string", "minLength": 1 }, "brief": { "type": "string" }, "scope": { "const": "boundary-reference" }
+      }
+    },
+    "entity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "locator", "entityType", "title", "kind", "brief", "description", "source", "status", "evidenceIds", "version", "parentId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" }, "locator": { "type": "string", "minLength": 1 },
+        "entityType": { "enum": ["object", "relation"] }, "title": { "type": "string" }, "kind": { "type": "string", "minLength": 1 },
+        "brief": { "type": "string", "minLength": 1 }, "description": { "type": "string" },
+        "source": { "enum": ["fact", "human", "inference"] }, "status": { "enum": ["verified", "needs-review", "unknown"] },
+        "evidenceIds": { "$ref": "#/$defs/ids" }, "version": { "type": "string", "minLength": 1 },
+        "parentId": { "oneOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
+        "sourceId": { "$ref": "#/$defs/uuid" }, "targetId": { "$ref": "#/$defs/uuid" }
+      },
+      "allOf": [{
+        "if": { "properties": { "entityType": { "const": "relation" } } },
+        "then": { "required": ["sourceId", "targetId"], "properties": { "parentId": { "type": "null" } } },
+        "else": { "not": { "anyOf": [{ "required": ["sourceId"] }, { "required": ["targetId"] }] } }
+      }, {
+        "if": { "properties": { "source": { "const": "inference" } } },
+        "then": { "properties": { "status": { "enum": ["needs-review", "unknown"] } } }
+      }, {
+        "if": { "properties": { "status": { "const": "verified" } } },
+        "then": { "properties": { "evidenceIds": { "minItems": 1 } } }
+      }]
+    },
+    "contextBody": {
+      "type": "object", "additionalProperties": false,
+      "required": ["entity", "ancestors", "relationships", "evidenceIds", "modelRevision", "sourceVersion", "contentHash", "scope"],
+      "properties": {
+        "entity": { "$ref": "#/$defs/entity" },
+        "ancestors": { "type": "array", "items": { "$ref": "#/$defs/brief" } },
+        "relationships": { "type": "array", "items": { "$ref": "#/$defs/boundaryRelation" } },
+        "evidenceIds": { "$ref": "#/$defs/ids" }, "modelRevision": { "$ref": "#/$defs/sha256" },
+        "sourceVersion": { "$ref": "#/$defs/sourceVersion" }, "contentHash": { "$ref": "#/$defs/sha256" },
+        "scope": { "const": "exact-entity" }
+      }
+    },
+    "itemError": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation", "id", "code", "message"],
+      "properties": {
+        "operation": { "enum": ["expand", "read", "skill-file"] }, "id": { "type": "string", "minLength": 1 },
+        "path": { "$ref": "#/$defs/relativePath" }, "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "batchResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["batchId", "directories", "contexts", "unchanged", "errors", "observation"],
+      "properties": {
+        "batchId": { "$ref": "#/$defs/uuid" }, "directories": { "type": "array", "items": { "$ref": "#/$defs/directory" } },
+        "contexts": { "type": "array", "items": { "$ref": "#/$defs/contextBody" } },
+        "unchanged": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "contentHash", "reason"],
+            "properties": { "id": { "$ref": "#/$defs/uuid" }, "contentHash": { "$ref": "#/$defs/sha256" }, "reason": { "const": "retained-in-this-task" } }
+          }
+        },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/itemError" } },
+        "observation": { "const": "reader-response-produced" }
+      }
+    }
+  }
+}

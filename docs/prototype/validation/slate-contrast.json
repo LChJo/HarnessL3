@@ -1,0 +1,42 @@
+[
+  {
+    "foreground": "--ink",
+    "background": "--paper",
+    "contrast": 8.39
+  },
+  {
+    "foreground": "--ink",
+    "background": "--surface",
+    "contrast": 11.35
+  },
+  {
+    "foreground": "--muted",
+    "background": "--paper",
+    "contrast": 5.5
+  },
+  {
+    "foreground": "--subtle",
+    "background": "--paper",
+    "contrast": 4.99
+  },
+  {
+    "foreground": "--accent-text",
+    "background": "--surface",
+    "contrast": 9.67
+  },
+  {
+    "foreground": "--on-accent",
+    "background": "--accent",
+    "contrast": 5.78
+  },
+  {
+    "foreground": "--rose",
+    "background": "--danger-bg",
+    "contrast": 5.32
+  },
+  {
+    "foreground": "--amber",
+    "background": "--warning-bg",
+    "contrast": 6.44
+  }
+]

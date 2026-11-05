@@ -1,0 +1,50 @@
+/* Slate palette sampled from the approved reference. Colors are shared by both
+   mindmaps, drawers and the C4 projection; state meanings remain unchanged. */
+:root {
+  color-scheme: dark;
+  --paper: #35404d;
+  --surface: #252b33;
+  --surface-raised: #2c3540;
+  --surface-hover: #303c4a;
+  --surface-field: #20262e;
+  --region: #303c4a66;
+  --panel-glass: #252b33f5;
+  --paper-glass: #35404df5;
+  --paper-fade: #35404d00;
+  --shade: #141b2599;
+  --ink: #e0e6ed;
+  --secondary: #c0cbd8;
+  --muted: #adbdcf;
+  --subtle: #a4b4c8;
+  --line: #4a5a6c;
+  --line-strong: #6f849b;
+  --edge: #7d91a8;
+  --green: #10b981;
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-text: #91e5c7;
+  --accent-border: #10b981aa;
+  --selected: #253238;
+  --accent-wash: #294a42;
+  --on-accent: #142d25;
+  --blue: #8fb5e7;
+  --lime: #a3cd92;
+  --rose: #ef8a92;
+  --amber: #e2c27f;
+  --purple: #c3a1dc;
+  --cyan: #80c8cd;
+  --danger-bg: #442b33;
+  --danger-border: #80505c;
+  --warning-bg: #433b2e;
+  --warning-border: #7e6c48;
+  --grid: #91a7bf18;
+  --glow: #10b98130;
+  --glow-fade: #10b98100;
+  --candidate-glow: #8fb5e72b;
+  --shadow: #11192324;
+  --c4-edge: #8fb5e7;
+  color: var(--ink);
+  background: var(--paper);
+  accent-color: var(--accent);
+  scrollbar-color: var(--line-strong) var(--surface);
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "projectId": "10000000-0000-4000-8000-000000000200",
+  "name": "Example SDK",
+  "source": {
+    "excludePatterns": [
+      "generated/**"
+    ]
+  },
+  "skills": {
+    "root": "project-skills"
+  }
+}

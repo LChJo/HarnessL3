@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000403",
+  "throughBatchId": "10000000-0000-4000-8000-000000000600",
+  "files": [
+    {
+      "skillId": "quality/tdd",
+      "path": "SKILL.md",
+      "expectedHash": "a877f27a7584d7eb0420a17dd1fd66c1ea8c0d09862c111991c3a2e0a100fc15"
+    },
+    {
+      "skillId": "quality/tdd",
+      "path": "references/cancellation.md",
+      "expectedHash": "33c13797c6bd3c1d017a25d75f0e0b4ec651b1d511d69f3544da745095f613b8"
+    }
+  ]
+}

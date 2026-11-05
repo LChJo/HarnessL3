@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>四种展开方式 · HarnessL3 设计评审</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;color:#233e32;background:#f3f5f1;font-family:"Segoe UI","Microsoft YaHei",sans-serif}header{max-width:1640px;margin:auto;padding:34px 34px 24px}header small{letter-spacing:.13em;color:#789185;font-size:11px}h1{font-size:27px;letter-spacing:-.04em;font-weight:550;margin:8px 0}header p{margin:10px 0 0;font-size:13px;color:#6e8074;line-height:1.8}header a{float:right;color:#38694b;font-size:13px}main{max-width:1640px;margin:0 auto;padding:0 34px 34px;display:grid;grid-template-columns:1fr 1fr;gap:20px}article{overflow:hidden;background:white;border:1px solid #dbe3d8;border-radius:12px}.caption{display:flex;gap:14px;align-items:center;padding:18px 20px;border-bottom:1px solid #e8eee5}.letter{font-size:17px;width:34px;height:34px;display:grid;place-items:center;color:#467457;background:#eff4ea;border-radius:8px}.caption h2{font-weight:550;margin:0;font-size:16px}.caption p{font-size:11px;color:#859181;margin:5px 0 0}.caption a{margin-left:auto;font-size:12px;color:#4a7052;text-decoration:none;white-space:nowrap}.preview{position:relative;overflow:hidden;width:100%;aspect-ratio:1480/950;pointer-events:none}.preview iframe{width:1480px;height:950px;border:0;transform-origin:top left;display:block}footer{max-width:1640px;margin:auto;padding:0 34px 25px;color:#7e8f7f;font-size:12px}@media(max-width:850px){main{grid-template-columns:1fr;padding:0 15px 20px;gap:15px}header{padding:24px 18px}h1{font-size:24px}header a{float:none;display:block;margin-bottom:16px}.caption{padding:15px}.caption p{line-height:1.5}footer{padding:0 18px 25px}}
+  </style>
+</head>
+<body>
+  <header><a href="/">打开完整交互评审 →</a><small>HARNESS L3 / 设计评审</small><h1>同一个上下文，四种展开方式</h1><p>此页适配展示展开后的样例全貌。进入任一完整方案，首屏均只显示对象、关系、来源、证据、版本五类入口，可自行逐层展开。</p></header>
+  <main>
+    <article><div class="caption"><span class="letter">A</span><div><h2>五区折叠板</h2><p>各类内部展开，五类状态一起看。</p></div><a href="/?variant=a">打开 A →</a></div><div class="preview"><iframe title="A 五区折叠板展开样例" src="/?variant=a&amp;state=expanded" loading="eager"></iframe></div></article>
+    <article><div class="caption"><span class="letter">B</span><div><h2>五根脑图</h2><p>从五个分类根向外长出分支。</p></div><a href="/?variant=b">打开 B →</a></div><div class="preview"><iframe title="B 五根脑图展开样例" src="/?variant=b&amp;state=expanded" loading="eager"></iframe></div></article>
+    <article><div class="caption"><span class="letter">C</span><div><h2>嵌套空间块</h2><p>分类包含模块，模块包含条目。</p></div><a href="/?variant=c">打开 C →</a></div><div class="preview"><iframe title="C 嵌套空间块展开样例" src="/?variant=c&amp;state=expanded" loading="eager"></iframe></div></article>
+    <article><div class="caption"><span class="letter">D</span><div><h2>逐层聚焦</h2><p>每次只看当前层，用面包屑返回。</p></div><a href="/?variant=d">打开 D →</a></div><div class="preview"><iframe title="D 逐层聚焦展开样例" src="/?variant=d&amp;state=expanded" loading="eager"></iframe></div></article>
+  </main>
+  <footer>固定输入输出 · 中央统一画布 · 点击逐层显示 · 点亮仅为设计样例</footer>
+  <script>const observer=new ResizeObserver(entries=>{for(const {target,contentRect} of entries)target.querySelector('iframe').style.transform=`scale(${contentRect.width/1480})`});document.querySelectorAll('.preview').forEach(el=>observer.observe(el));document.querySelectorAll('iframe').forEach(frame=>frame.addEventListener('load',()=>frame.contentWindow.requestAnimationFrame(()=>frame.contentWindow.requestAnimationFrame(()=>frame.contentDocument.getElementById('fit')?.click()))));</script>
+</body>
+</html>

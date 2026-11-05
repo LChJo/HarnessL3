@@ -1,0 +1,89 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.network {
+    manager = component "NetworkManager" {
+      description "请求生命周期、多来源与网络管理；通过工厂获得 INetworkBackend。"
+      technology "C++ / transport"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-manager"
+        status "source-inspected"
+        path "src/mgrp/impl/network_manager.cpp"
+        stable_id "mgrp.network.manager"
+      }
+
+    }
+    backend = component "INetworkBackend" {
+      description "统一创建、启动、暂停和销毁网络请求的接口，隔离平台差异。"
+      technology "C++ / interface"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-backend"
+        status "source-inspected"
+        path "src/mgrp/foundation/i_network_backend.h"
+        stable_id "mgrp.network.backend"
+      }
+
+    }
+    factory = component "平台后端工厂" {
+      description "编译条件选择 WinHTTP、OkHttp、NSURLSession 或 OHRcp。"
+      technology "C++ / factory"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-factory"
+        status "source-inspected"
+        path "src/mgrp/foundation/platform_backend.cpp"
+        stable_id "mgrp.network.factory"
+      }
+
+    }
+    winhttp = component "WinHTTP" {
+      description "Windows 网络后端，实现统一接口。"
+      technology "Windows / WinHTTP"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-winhttp"
+        status "source-inspected"
+        path "src/mgrp/foundation/winhttp_backend.h"
+        stable_id "mgrp.network.winhttp"
+      }
+
+    }
+    okhttp = component "OkHttp" {
+      description "Android 网络后端，实现统一接口。"
+      technology "Android / OkHttp"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-okhttp"
+        status "source-inspected"
+        path "src/mgrp/foundation/okhttp_backend.h"
+        stable_id "mgrp.network.okhttp"
+      }
+
+    }
+    nsurlsession = component "NSURLSession" {
+      description "iOS 前台网络后端，实现统一接口。后台机制另有实现，本原型不展开。"
+      technology "iOS / NSURLSession"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-nsurlsession"
+        status "source-inspected"
+        path "src/mgrp/foundation/nsurlsession_backend.h"
+        stable_id "mgrp.network.nsurlsession"
+      }
+
+    }
+    ohrcp = component "OHRcp" {
+      description "HarmonyOS RCP 网络后端，实现统一接口。"
+      technology "HarmonyOS / RCP"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network-ohrcp"
+        status "source-inspected"
+        path "src/mgrp/foundation/ohrcp_backend.h"
+        stable_id "mgrp.network.ohrcp"
+      }
+
+    }
+  }
+}

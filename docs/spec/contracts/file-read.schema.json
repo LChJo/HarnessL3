@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/file-read.schema.json",
+  "title": "Read selected archived skill files without execution",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "files"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "throughBatchId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "files": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["skillId", "path", "expectedHash"],
+        "properties": {
+          "skillId": { "$ref": "common.schema.json#/$defs/skillId" }, "path": { "$ref": "common.schema.json#/$defs/relativePath" },
+          "expectedHash": { "$ref": "common.schema.json#/$defs/sha256" }
+        }
+      }
+    }
+  }
+}

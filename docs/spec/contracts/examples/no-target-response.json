@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "requestId": "10000000-0000-4000-8000-000000000406",
+  "target": null,
+  "replayed": false,
+  "ok": true,
+  "data": {
+    "kind": "command-result",
+    "status": "complete",
+    "operation": "serve status",
+    "result": {
+      "state": "stopped",
+      "url": null,
+      "instanceId": null,
+      "protocolVersion": 1
+    }
+  }
+}

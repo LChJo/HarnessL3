@@ -1,0 +1,32 @@
+{
+  "startedAt": "2026-11-05T10:12:10.232Z",
+  "checks": [
+    "CLI entrance supplies built-in routing and the current light catalog without unselected bodies",
+    "the second lane shares the world and input, stays collapsed and never invents skill choices",
+    "one CLI selection returns exact contexts and versioned references for three chosen skills",
+    "selected mindmap branches reveal reasons without adding reads and move with the same canvas transform",
+    "skill detail displays the frozen editable body and attachments, not a claim of execution",
+    "skill mindmap progressively reveals connected file references with independent detail controls",
+    "historical batch views preserve absence before selection and the exact skill plan afterwards",
+    "unknown skills and a second selection are rejected without altering the archived task",
+    "directory edits update the live mindmap automatically, expose errors, refresh manually and preserve old selections",
+    "mobile can navigate to the skill lane and inspect archived files without overflow or page errors"
+  ],
+  "errors": [],
+  "screenshots": [
+    ".harness-local/skills-browser/01-two-lanes-awaiting.png",
+    ".harness-local/skills-browser/02-two-lanes-selected.png",
+    ".harness-local/skills-browser/10-selected-folders.png",
+    ".harness-local/skills-browser/03-selected-skill-set.png",
+    ".harness-local/skills-browser/04-frozen-skill-file.png",
+    ".harness-local/skills-browser/08-skill-file-mindmap.png",
+    ".harness-local/skills-browser/05-history-plan.png",
+    ".harness-local/skills-browser/09-live-catalog-refresh.png",
+    ".harness-local/skills-browser/06-mobile-lane.png",
+    ".harness-local/skills-browser/07-mobile-skill-file.png"
+  ],
+  "status": "passed",
+  "taskId": "88982092-7fcf-463c-b109-6026db25623e",
+  "catalogRevision": "dac180e82f1d7fb6f821f798ac0c77e407d305efb95e15bd1c6f0aaf3bf3ede5",
+  "completedAt": "2026-11-05T10:12:15.572Z"
+}

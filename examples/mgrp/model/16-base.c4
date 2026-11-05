@@ -1,0 +1,29 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.base {
+    fileio = component "RawFile" {
+      description "跨平台文件读写接口及错误语义。"
+      technology "C++ / file IO"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-base-fileio"
+        status "source-inspected"
+        path "src/base/raw_file.h"
+        stable_id "mgrp.base.fileio"
+      }
+
+    }
+    hash = component "Hash" {
+      description "XXH3 等哈希封装。"
+      technology "C++ / XXH3"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-base-hash"
+        status "source-inspected"
+        path "src/base/hash.h"
+        stable_id "mgrp.base.hash"
+      }
+
+    }
+  }
+}

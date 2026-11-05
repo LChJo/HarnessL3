@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/query.schema.json",
+  "title": "One mixed progressive disclosure batch",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "expectedModelRevision", "expand", "read", "known"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "expectedModelRevision": { "$ref": "common.schema.json#/$defs/sha256" },
+    "expand": { "$ref": "common.schema.json#/$defs/ids" }, "read": { "$ref": "common.schema.json#/$defs/ids" },
+    "known": { "$ref": "common.schema.json#/$defs/known" }
+  },
+  "anyOf": [{ "properties": { "expand": { "minItems": 1 } } }, { "properties": { "read": { "minItems": 1 } } }]
+}
