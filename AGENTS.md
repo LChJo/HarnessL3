@@ -2,11 +2,11 @@
 
 ## 首先读取
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.20。
+1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.21。
 2. [工作规格](docs/spec/README.md)：正式CLI v1.0契约、验收与实施顺序；产品编码前必须读相关子规格。
 3. [README](README.md)：项目导航；需要设计/历史时读[冻结原型](docs/prototype/README.md)。
 
-当前冻结的v0.16原型与正式实现并存；正式代码在core/cli/service/web，按M1–M4推进，实际验证范围见[实施状态](docs/implementation/STATUS.md)。旧研究“未选型”、固定输入输出及四版待选均为历史；最终已确认Slate连线脑图和Skill Hub文件夹层。不要把计划、原型报告、GC或部分平台结果描述成完整产品已发布/三平台通过。
+当前冻结的v0.16原型与正式实现并存；正式代码在core/cli/service/web，M1–M4首版本地候选已有实现和三平台验证，实际范围见[实施状态](docs/implementation/STATUS.md)。旧研究“未选型”、固定输入输出及四版待选均为历史；最终已确认Slate连线脑图和Skill Hub文件夹层。不要把计划、原型报告、GC或部分平台结果描述成完整产品已发布/三平台通过。
 
 ## 必须保留的约束
 

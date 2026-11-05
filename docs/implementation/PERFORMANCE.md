@@ -5,7 +5,7 @@
 ## 本轮结果
 
 <!-- PERFORMANCE_RESULTS -->
-本轮最终 Windows 测量于 **2026/11/6 00:12:59—2026/11/6 00:49:10（Asia/Shanghai）**执行，耗时 36.19 分钟。四规模共 **112 个冷热组 / 336 个样本，0 失败**；28 个 backend/入口/lock/运行器文件在全局和每个族群前后均保持同一指纹。运行进程正常退出，自有服务已停止，临时夹具目录核查为空。
+Windows 全量基线于 **2026/11/6 00:12:59—2026/11/6 00:49:10（Asia/Shanghai）**执行，耗时 36.19 分钟。四规模共 **112 个冷热组 / 336 个样本，0 失败**；28 个 backend/入口/lock/运行器文件在该轮全局和每个族群前后均保持同一指纹。运行进程正常退出，自有服务已停止，临时夹具目录核查为空。此轮早于后续的空输入日志轮询修复，受影响场景的复测单独列在下方，不与这 336 个样本合并。
 
 10000 对象的完整 CLI 混合读取冷/热 P50 为 **99.59s / 102.51s**，P95 为 106.90s / 105.78s。热态没有呈现加速；这段实际长延迟保留在结果中。所有场景的最高进程 lifetime RSS 为 **2.73GiB**。这是本机共享负载下的测量，不是性能达标声明。
 
@@ -115,6 +115,36 @@
 | 1000 | 2.1 | 0.7 | 0.5 | 3.0 | 59.8 | 64.9 |
 | 10000 | 21.6 | 6.3 | 5.2 | 17.1 | 346.4 | 385.1 |
 <!-- /PERFORMANCE_RESULTS -->
+
+## 轮询修复后的影响范围复测
+
+2026/11/6 **01:45:02—01:46:35（Asia/Shanghai）**，在 backend/build 再次冻结后，仅重测 `log-backlog`：四规模、8 个冷热组、**24/24 样本成功**。原始证据为本机 `.harness-local/implementation-20261105/performance-windows-post-poll.json`。与全量基线相比，28 个指纹中只有 `build/core/observation.js` 改变；本次全局及各组前后指纹均一致。其余场景沿用前述基线，不声称已在新指纹下全量重跑。
+
+| 对象 / 积压事件 | 冷 P50 / P95 ms | 热 P50 / P95 ms | 峰 RSS 冷 / 热 MiB | scratch 冷 / 热 MiB | 失败 / 样本 |
+| --- | --- | --- | --- | --- | --- |
+| 40 / 80 | 109.8 / 191.4 | 86.5 / 101.5 | 116.9 / 124.6 | 0.2 / 0.9 | 0 / 6 |
+| 100 / 200 | 256.4 / 261.8 | 223.8 / 262.3 | 124.6 / 139.4 | 0.5 / 2.2 | 0 / 6 |
+| 1000 / 2000 | 1872.5 / 2163.1 | 1615.6 / 1682.4 | 208.3 / 314.7 | 5.5 / 21.8 | 0 / 6 |
+| 10000 / 10000 | 7502.5 / 8528.7 | 7550.0 / 7829.5 | 602.5 / 703.5 | 27.4 / 109.5 | 0 / 6 |
+
+环境和计时口径同下文。运行参数明确记录与最终 Windows/Linux 日志回归及浏览器验证共享机器；不是隔离负载的前后性能对比，不能把不同组的波动归因于修复。此积压夹具仍为固定合成日志，不是空轮询专用压力测试；轮询正确性由独立真实脱敏夹具及行为回归验证。
+
+```sh
+node scripts/v1/benchmark.mjs --scales 40,100,1000,10000 --samples 3 --only log-backlog --label post-poll-fix --load-note "Shared machine with final Windows/Linux observation and browser validation" --output .harness-local/implementation-20261105/performance-windows-post-poll.json
+```
+
+随后字面量继承字段的负例实际误报成功，修复对象解码后于 **01:52:52—01:54:32** 再次独立测量同一影响范围，**8 组 / 24 样本，0 失败**。28 个文件指纹在该轮及各组前后均一致，较上一轮仍只有 `build/core/observation.js` 改变。证据为 `.harness-local/implementation-20261105/performance-windows-post-literal-guard.json`，不与前一轮或全量基线合并。最终观测模块采用这一轮指纹。
+
+| 对象 / 积压事件 | 冷 P50 / P95 ms | 热 P50 / P95 ms | 峰 RSS 冷 / 热 MiB | scratch 冷 / 热 MiB | 失败 / 样本 |
+| --- | --- | --- | --- | --- | --- |
+| 40 / 80 | 135.2 / 155.6 | 105.4 / 107.3 | 119.5 / 127.4 | 0.2 / 0.9 | 0 / 6 |
+| 100 / 200 | 252.7 / 342.6 | 208.2 / 227.6 | 126.9 / 143.2 | 0.5 / 2.2 | 0 / 6 |
+| 1000 / 2000 | 1543.8 / 1663.9 | 1409.3 / 1446.3 | 212.6 / 331.6 | 5.5 / 21.8 | 0 / 6 |
+| 10000 / 10000 | 8205.8 / 10688.5 | 8224.7 / 8684.5 | 601.0 / 738.6 | 27.4 / 109.5 | 0 / 6 |
+
+```sh
+node scripts/v1/benchmark.mjs --scales 40,100,1000,10000 --samples 3 --only log-backlog --label post-literal-guard --load-note "Shared machine with final Windows/Linux observation validation" --output .harness-local/implementation-20261105/performance-windows-post-literal-guard.json
+```
 
 ## 输入与隔离
 

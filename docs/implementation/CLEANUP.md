@@ -14,7 +14,7 @@
 
 保留原型src/server/scripts/tests、examples、20项技能/附件/MIT/来源、原机器来源配置与全部历史。保护清单`.harness-local/implementation-20261105/protected-before.json`的202项SHA-256已全部一致，原运行目录含85条任务与2个上下文快照，不作新产品的恢复测试。
 
-阶段RED、最终GREEN、真实脱敏日志的形状审计、性能原始样本、保护/回收收据及本地候选包保留于忽略目录。首次139项Linux运行丢失的JUnit没有补造。仓库外隔离Node/Chromium验证工具缓存保留以便重跑；它们不是用户技能库或产品历史。
+阶段RED、最终GREEN、真实脱敏日志的形状审计、性能原始样本、保护/回收收据及本地候选包保留于忽略目录。首次139项Linux运行丢失的JUnit没有补造。隔离的Node/Chromium验证工具缓存保留以便重跑，Windows Chromium位于本机忽略目录`.harness-local/tools/playwright`；它们不是用户技能库或产品历史。
 
 默认用户技能入口指向的`.skills-library-<UUID>`是持久内容，不能因名称含点或UUID而当临时文件。本轮只回收已停止的独占测试根及其内部合成技能副本，不清理用户活动技能根。
 
