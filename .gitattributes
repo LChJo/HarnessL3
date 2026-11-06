@@ -1,0 +1,10 @@
+# Keep the captured prototype bytes stable across platform checkouts.
+src/** -text
+server/** -text
+scripts/** -text
+tests/** -text
+examples/** -text
+skills/** -text
+index.html -text
+tsconfig.json -text
+vite.config.ts -text

@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-11-06T03:44:04.935Z",
+  "branch": "archive/prototype-v0.16",
+  "sourceCommit": "bfa3dd719c016a561388a04d9a557e683ad9b1c8",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.12.0",
+    "browser": "Microsoft Edge 156.0.4314.58"
+  },
+  "build": {
+    "passed": true,
+    "assets": [
+      "index-eB4FgD22.js",
+      "index-nEETqxrW.css"
+    ]
+  },
+  "program": {
+    "tests": 45,
+    "passed": 45,
+    "failed": 0
+  },
+  "integration": {
+    "passed": true,
+    "checks": [
+      {
+        "script": "check-context.mjs",
+        "passed": 6
+      },
+      {
+        "script": "check-browser.mjs",
+        "passed": 16
+      },
+      {
+        "script": "check-history.mjs",
+        "passed": 8
+      },
+      {
+        "script": "check-skills.mjs",
+        "passed": 10
+      }
+    ],
+    "browserPageErrors": [
+      [],
+      [],
+      []
+    ]
+  },
+  "model": {
+    "revision": "75709765b1f4feff0d4975b493390cb09350dd334f8166881da7def18d91be02",
+    "objects": 40,
+    "relationships": 32,
+    "views": 5,
+    "evidence": 74,
+    "evidenceFiles": 42,
+    "evidenceStatus": "matched"
+  },
+  "integrity": {
+    "capturedFiles": 113,
+    "changedCapturedFiles": [],
+    "sourceCommitEquivalence": "Exact source content after CRLF/LF normalization; captured original worktree bytes retained using .gitattributes.",
+    "lineEndingOnlyDifferences": [
+      "src/HistoryPanel.tsx",
+      "src/main.tsx",
+      "src/skill-details.css",
+      "src/skill-lane.css",
+      "src/SkillDetails.tsx",
+      "src/StructurePanel.tsx",
+      "src/styles.css",
+      "server/context-reader.mjs",
+      "skills/architecture/codebase-design/DEEPENING.md",
+      "skills/architecture/domain-modeling/CONTEXT-FORMAT.md",
+      "skills/FILE-REFERENCES.md",
+      "skills/knowledge/teach/GLOSSARY-FORMAT.md",
+      "skills/knowledge/teach/LEARNING-RECORD-FORMAT.md",
+      "skills/knowledge/teach/MISSION-FORMAT.md",
+      "skills/knowledge/teach/RESOURCES-FORMAT.md",
+      "skills/LICENSE",
+      "skills/meta/setup-matt-pocock-skills/triage-labels.md",
+      "skills/planning/triage/OUT-OF-SCOPE.md",
+      "skills/quality/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "skills/quality/tdd/mocking.md",
+      "skills/quality/tdd/tests.md",
+      "skills/README.md",
+      "scripts/check-skills.mjs",
+      "scripts/generate-mgrp.mjs",
+      "index.html"
+    ]
+  },
+  "traceScope": "Explicit owned empty log; no real host transcript was read; legacy check-runtime intentionally not run.",
+  "service": "Owned temporary service stopped after verification; no original task data copied."
+}

@@ -1,0 +1,29 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.quality {
+    download = component "下载管理测试" {
+      description "DownloadManager 单元测试，表达批次行为契约。存在测试不代表本次运行通过。"
+      technology "C++ / unit test"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-quality-download"
+        status "source-inspected"
+        path "tests/unit_test/test_download_manager.cpp"
+        stable_id "mgrp.quality.download"
+      }
+
+    }
+    architecture = component "架构分层检查" {
+      description "以 Python 规则检查源代码分层边界。"
+      technology "Python / architecture guard"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-quality-architecture"
+        status "source-inspected"
+        path "tests/unit_test/test_arch_layering.py"
+        stable_id "mgrp.quality.architecture"
+      }
+
+    }
+  }
+}

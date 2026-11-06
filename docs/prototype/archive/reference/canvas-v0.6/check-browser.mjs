@@ -1,0 +1,161 @@
+import assert from 'node:assert/strict'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { chromium } from 'playwright'
+import { expect } from 'playwright/test'
+import { totalDuration, stepStart } from '../src/canvas-model.ts'
+
+const base=`http://127.0.0.1:${Number(process.env.PORT??4317)}`, output='.harness-local/journey-browser'
+await mkdir(output,{recursive:true})
+const report={startedAt:new Date().toISOString(),checks:[],errors:[],screenshots:[],measurements:{}}
+const browser=await chromium.launch({channel:process.env.BROWSER_CHANNEL??'msedge',headless:true})
+const context=await browser.newContext({viewport:{width:1440,height:900},deviceScaleFactor:1,reducedMotion:'reduce'})
+await context.route('**/*',route=>route.request().url().startsWith(base+'/')?route.continue():route.abort())
+const page=await context.newPage()
+page.on('pageerror',error=>report.errors.push(String(error)))
+page.on('console',message=>{if(message.type()==='error')report.errors.push(message.text())})
+const initial=await (await context.request.get(base+'/api/snapshot')).json()
+const slider=()=>page.getByRole('slider',{name:'任务路径回放进度'})
+async function seek(time){await slider().fill(String(time))}
+async function check(name,fn){await fn();report.checks.push(name);console.log('PASS '+name)}
+async function shot(name){const path=`${output}/${name}.png`;await page.screenshot({path});report.screenshots.push(path)}
+async function camera(){return page.locator('.world').evaluate(el=>({x:Number(el.dataset.cameraX),y:Number(el.dataset.cameraY),scale:Number(el.dataset.cameraScale)}))}
+try{
+  await page.goto(base)
+  await check('root is the new infinite canvas with 11 authoritative modules, no old-version navigation',async()=>{
+    await expect(page).toHaveTitle(/上下文旅程/)
+    await expect(page.locator('.model-node:not(.child-node)')).toHaveCount(11)
+    await expect(page.locator('.journey-station')).toHaveCount(6)
+    await expect(page.locator('.demo-badge')).toContainText('模拟任务路径')
+    assert.deepEqual((await page.locator('.model-node').evaluateAll(ns=>ns.map(n=>n.dataset.modelId))).sort(),initial.elements.filter(n=>n.id.split('.').length===2).map(n=>n.id).sort())
+    await expect(page.locator('a')).toHaveCount(0)
+    await expect(page.locator('.sidebar,.inspector,.react-flow')).toHaveCount(0)
+  })
+  await check('reduced-motion starts paused, keeps readable scale and all six initial stations visible',async()=>{
+    await expect(page.getByRole('button',{name:'播放路径',exact:true})).toBeVisible()
+    assert.equal(await slider().inputValue(),'0')
+    const boxes=await page.locator('.journey-station').evaluateAll(ns=>ns.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,right:r.right,y:r.y,bottom:r.bottom}}))
+    assert.ok(boxes.every(r=>r.x>=0&&r.right<=1440&&r.y>=160&&r.bottom<810),JSON.stringify(boxes))
+    await shot('01-start')
+  })
+  await check('expand a module in place without moving other modules or changing time',async()=>{
+    const before=await page.locator('[data-model-id="mgrp.business"]').boundingBox()
+    const value=await slider().inputValue()
+    await page.getByRole('button',{name:'展开任务执行',exact:true}).click()
+    await expect(page.locator('.child-node')).toHaveCount(4)
+    assert.equal(await slider().inputValue(),value)
+    assert.deepEqual(await page.locator('[data-model-id="mgrp.business"]').boundingBox(),before)
+    await expect(page.locator('.follow-button')).toHaveAttribute('aria-pressed','false')
+    await shot('02-expanded')
+  })
+  await check('drag pans the unbounded world and exits following',async()=>{
+    await page.getByRole('button',{name:'定位当前步骤',exact:true}).click()
+    const before=await camera()
+    await page.mouse.move(50,550);await page.mouse.down();await page.mouse.move(330,490,{steps:8});await page.mouse.up()
+    const after=await camera();assert.ok(after.x-before.x>250);assert.ok(after.y<before.y-40)
+    await expect(page.locator('.follow-button')).toHaveAttribute('aria-pressed','false')
+  })
+  await check('wheel zoom anchors at pointer and manual zoom remains after events advance',async()=>{
+    const before=await camera(),point={x:600,y:420-64},world={x:(600-before.x)/before.scale,y:(420-64-before.y)/before.scale}
+    await page.mouse.move(600,420);await page.mouse.wheel(0,-170)
+    await expect.poll(async()=>(await camera()).scale).toBeGreaterThan(before.scale)
+    const after=await camera();assert.ok(Math.abs((point.x-after.x)/after.scale-world.x)<1);assert.ok(Math.abs((point.y-after.y)/after.scale-world.y)<1)
+    await seek(stepStart(3)+1000)
+    assert.deepEqual(await camera(),after)
+  })
+  await check('scrubbing lights only earlier returned contexts and distinguishes active from future',async()=>{
+    await page.getByRole('button',{name:'概览全部内容'}).click()
+    await seek(stepStart(3)+1300)
+    await expect(page.locator('.journey-station.complete')).toHaveCount(3)
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','scheduler')
+    await expect(page.locator('.canvas-summary')).toContainText('2 处上下文已返回')
+    await expect(page.locator('[data-step-id="output"]')).toHaveClass(/future/)
+    await shot('03-scheduler')
+  })
+  await check('resume following focuses current station at readable scale, step controls seek history',async()=>{
+    await page.locator('.follow-button').click()
+    await expect(page.locator('.follow-button')).toHaveAttribute('aria-pressed','true')
+    assert.equal((await camera()).scale,1)
+    await page.getByRole('button',{name:'上一步',exact:true}).click()
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','task')
+    await page.getByRole('button',{name:'下一步',exact:true}).click()
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','scheduler')
+    await expect(page.locator('.child-node')).toHaveCount(4)
+  })
+  await check('context detail retains provenance and retrieves actual source evidence',async()=>{
+    await page.getByRole('button',{name:'TaskScheduler详情',exact:true}).click()
+    await expect(page.getByRole('dialog')).toContainText('来源与依据')
+    await expect(page.getByRole('dialog')).toContainText('模拟路径')
+    await page.getByRole('button',{name:'读取源码证据',exact:true}).click()
+    await expect(page.locator('.evidence-excerpt pre')).toContainText('TaskScheduler')
+    await shot('04-evidence')
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+  await check('end of journey lights the output and opens an explicitly illustrative result',async()=>{
+    await seek(totalDuration())
+    await page.getByRole('button',{name:'概览全部内容'}).click()
+    await expect(page.locator('.journey-station.complete')).toHaveCount(6)
+    await expect(page.locator('.canvas-summary')).toContainText('4 处上下文已返回')
+    await page.getByRole('button',{name:'查看输出',exact:true}).click()
+    await expect(page.getByRole('dialog')).toContainText('演示输出')
+    await expect(page.getByRole('dialog')).toContainText('未诊断真实故障')
+    await shot('05-output')
+    await page.keyboard.press('Escape');await shot('06-complete')
+  })
+  await check('record drawer seeks events and replay resets to task start',async()=>{
+    await page.getByRole('button',{name:'路径记录',exact:true}).click()
+    await expect(page.locator('.record-item')).toHaveCount(6)
+    await page.locator('.record-item').nth(1).click()
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','download')
+    await seek(totalDuration());await page.getByRole('button',{name:'重新播放',exact:true}).click()
+    assert.equal(await slider().inputValue(),'0')
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','start')
+  })
+  await check('mobile keeps readable canvas and pinch/pan gestures, with current-step navigation',async()=>{
+    await page.setViewportSize({width:390,height:844})
+    await page.reload();await expect(page.locator('.journey-station')).toHaveCount(6)
+    await expect(page.getByRole('button',{name:'任务路径',exact:true})).toBeVisible()
+    assert.ok((await camera()).scale>=.9)
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
+    await shot('07-mobile-start')
+    const before=await camera()
+    const cdp=await context.newCDPSession(page)
+    await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:2})
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:120,y:320,id:1},{x:260,y:320,id:2}]})
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:80,y:320,id:1},{x:300,y:320,id:2}]})
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})
+    await cdp.detach()
+    assert.ok((await camera()).scale>before.scale*1.3)
+    await expect(page.locator('.follow-button')).toHaveAttribute('aria-pressed','false')
+    await seek(stepStart(3)+1200)
+    await page.getByRole('button',{name:'任务路径',exact:true}).click()
+    await shot('08-mobile-current')
+    await expect(page.locator('.journey-station.active')).toHaveAttribute('data-step-id','scheduler')
+    await page.getByRole('button',{name:'TaskScheduler上下文详情',exact:true}).click()
+    await expect(page.getByRole('dialog')).toBeVisible();await shot('09-mobile-detail');await page.keyboard.press('Escape')
+  })
+  await check('normal-motion playback animates along context path and pauses at the exact cursor',async()=>{
+    await page.setViewportSize({width:1440,height:900})
+    await page.emulateMedia({reducedMotion:'no-preference'})
+    await page.reload();await expect(page.getByRole('button',{name:'暂停回放',exact:true})).toBeVisible()
+    await seek(stepStart(2)+200)
+    await page.getByRole('button',{name:'播放路径',exact:true}).click()
+    await expect(page.locator('.context-particle')).toHaveCount(1)
+    const first=await slider().inputValue()
+    await page.waitForTimeout(550)
+    assert.ok(Number(await slider().inputValue())>Number(first)+300)
+    await shot('10-playing')
+    await page.getByRole('button',{name:'暂停回放',exact:true}).click()
+    const paused=await slider().inputValue();await page.waitForTimeout(180);assert.equal(await slider().inputValue(),paused)
+  })
+  await check('no page errors, legacy artifact removed, model and source references stay intact',async()=>{
+    const after=await (await context.request.get(base+'/api/snapshot')).json()
+    assert.equal(after.revision,initial.revision)
+    assert.equal(after.modelStatus,'valid')
+    assert.equal((await context.request.get(base+'/context-home-concept.html')).status(),404)
+    assert.deepEqual(report.errors,[])
+    report.modelRevision=initial.revision
+  })
+  report.status='passed'
+}catch(error){report.status='failed';report.failure=String(error);console.error(error);await shot('failure').catch(()=>{});process.exitCode=1}
+finally{report.completedAt=new Date().toISOString();await writeFile(output+'/report.json',JSON.stringify(report,null,2));await browser.close()}

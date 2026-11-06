@@ -1,0 +1,14 @@
+// LikeC4 主模型：由实际 mgrp 源码创建；生成后直接维护这些文本。
+specification {
+  element system { style { color slate } }
+  element module { style { color blue } }
+  element component { style { color gray } }
+  element document { style { color amber shape document } }
+  relationship depends_on
+  relationship calls
+  relationship wraps
+  relationship implements
+  relationship validates { color green line dashed }
+  relationship documents { color amber line dashed }
+  relationship inferred { color amber line dotted }
+}

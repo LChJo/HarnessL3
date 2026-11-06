@@ -1,0 +1,99 @@
+// calls 是已核对源码调用点；depends_on 仅表示静态引用；inferred 明示推断。
+model {
+  mgrp.clients.unity -[wraps]-> mgrp.api "P/Invoke 原生 ABI" {
+    metadata { evidence "r-01" source "source-code" status "source-inspected" stable_id "r-01" }
+  }
+  mgrp.clients.android -[wraps]-> mgrp.api "JNI → 内部 ABI" {
+    metadata { evidence "r-02" source "source-code" status "source-inspected" stable_id "r-02" }
+  }
+  mgrp.api.capi -[depends_on]-> mgrp.business.download "导出层引用下载业务" {
+    metadata { evidence "r-03" source "source-code" status "source-inspected" stable_id "r-03" }
+  }
+  mgrp.api.capi -[depends_on]-> mgrp.business.resource "导出层引用资源管理" {
+    metadata { evidence "r-04" source "source-code" status "source-inspected" stable_id "r-04" }
+  }
+  mgrp.business.download -[calls]-> mgrp.business.resource "查询下载候选" {
+    metadata { evidence "r-05" source "source-code" status "source-inspected" stable_id "r-05" }
+  }
+  mgrp.business.download -[depends_on]-> mgrp.execution.task "委托任务执行" {
+    metadata { evidence "r-06" source "source-code" status "source-inspected" stable_id "r-06" }
+  }
+  mgrp.business.download -[depends_on]-> mgrp.business.patch "patch 路由与预处理" {
+    metadata { evidence "r-07" source "source-code" status "source-inspected" stable_id "r-07" }
+  }
+  mgrp.business.download -[depends_on]-> mgrp.execution.transfer "资源传输协调" {
+    metadata { evidence "r-08" source "source-code" status "source-inspected" stable_id "r-08" }
+  }
+  mgrp.execution.task -[calls]-> mgrp.execution.scheduler "持有并驱动调度器" {
+    metadata { evidence "r-09" source "source-code" status "source-inspected" stable_id "r-09" }
+  }
+  mgrp.execution.task -[calls]-> mgrp.network.manager "创建网络请求" {
+    metadata { evidence "r-10" source "source-code" status "source-inspected" stable_id "r-10" }
+  }
+  mgrp.business.resource -[depends_on]-> mgrp.execution.artifact "引用资源完成证据" {
+    metadata { evidence "r-11" source "source-code" status "source-inspected" stable_id "r-11" }
+  }
+  mgrp.execution.transfer -[inferred]-> mgrp.base.fileio "传输最终落盘（概念路径）" {
+    metadata { evidence "r-12" source "inference" status "unverified" stable_id "r-12" }
+  }
+  mgrp.network.manager -[calls]-> mgrp.network.factory "获得平台后端" {
+    metadata { evidence "r-13" source "source-code" status "source-inspected" stable_id "r-13" }
+  }
+  mgrp.network.manager -[depends_on]-> mgrp.network.backend "统一网络接口" {
+    metadata { evidence "r-14" source "source-code" status "source-inspected" stable_id "r-14" }
+  }
+  mgrp.network.winhttp -[implements]-> mgrp.network.backend "实现接口" {
+    metadata { evidence "r-15" source "source-code" status "source-inspected" stable_id "r-15" }
+  }
+  mgrp.network.okhttp -[implements]-> mgrp.network.backend "实现接口" {
+    metadata { evidence "r-16" source "source-code" status "source-inspected" stable_id "r-16" }
+  }
+  mgrp.network.nsurlsession -[implements]-> mgrp.network.backend "实现接口" {
+    metadata { evidence "r-17" source "source-code" status "source-inspected" stable_id "r-17" }
+  }
+  mgrp.network.ohrcp -[implements]-> mgrp.network.backend "实现接口" {
+    metadata { evidence "r-18" source "source-code" status "source-inspected" stable_id "r-18" }
+  }
+  mgrp.network.factory -[calls]-> mgrp.network.winhttp "_WIN32" {
+    metadata { evidence "r-19" source "source-code" status "source-inspected" stable_id "r-19" }
+  }
+  mgrp.network.factory -[calls]-> mgrp.network.okhttp "__ANDROID__" {
+    metadata { evidence "r-20" source "source-code" status "source-inspected" stable_id "r-20" }
+  }
+  mgrp.network.factory -[calls]-> mgrp.network.nsurlsession "__APPLE__" {
+    metadata { evidence "r-21" source "source-code" status "source-inspected" stable_id "r-21" }
+  }
+  mgrp.network.factory -[calls]-> mgrp.network.ohrcp "__OHOS__" {
+    metadata { evidence "r-22" source "source-code" status "source-inspected" stable_id "r-22" }
+  }
+  mgrp.business.download -[depends_on]-> mgrp.common.config "读取下载配置" {
+    metadata { evidence "r-23" source "source-code" status "source-inspected" stable_id "r-23" }
+  }
+  mgrp.network.manager -[depends_on]-> mgrp.common.telemetry "网络观测" {
+    metadata { evidence "r-24" source "source-code" status "source-inspected" stable_id "r-24" }
+  }
+  mgrp.execution.task -[depends_on]-> mgrp.base.fileio "文件 IO" {
+    metadata { evidence "r-25" source "source-code" status "source-inspected" stable_id "r-25" }
+  }
+  mgrp.business.resource -[depends_on]-> mgrp.base.hash "资源哈希" {
+    metadata { evidence "r-26" source "source-code" status "source-inspected" stable_id "r-26" }
+  }
+  mgrp.common -[depends_on]-> mgrp.base "基础封装" {
+    metadata { evidence "r-27" source "source-code" status "source-inspected" stable_id "r-27" }
+  }
+  mgrp.base -[depends_on]-> mgrp.vendor "封装第三方库" {
+    metadata { evidence "r-28" source "source-code" status "source-inspected" stable_id "r-28" }
+  }
+  mgrp.quality.download -[validates]-> mgrp.business.download "验证业务行为（未执行）" {
+    metadata { evidence "r-29" source "source-code" status "source-inspected" stable_id "r-29" }
+  }
+  mgrp.quality.architecture -[validates]-> mgrp.base "检查分层约束（未执行）" {
+    metadata { evidence "r-30" source "source-code" status "source-inspected" stable_id "r-30" }
+  }
+  mgrp.knowledge -[documents]-> mgrp.business "历史说明，需对照源码" {
+    metadata { evidence "r-31" source "documentation" status "source-inspected" stable_id "r-31" }
+  }
+  mgrp.tooling.pack -[inferred]-> mgrp.business.resource "资源包格式连接（概念）" {
+    metadata { evidence "r-32" source "inference" status "unverified" stable_id "r-32" }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "startedAt": "2026-11-05T10:11:03.519Z",
+  "checks": [
+    "CLI archives a real task and history search reaches its input and exact context output",
+    "HTTP serves immutable snapshot and all five LikeC4 views with explicit invalid query errors",
+    "history panel searches the 60-day archive and opens the saved five-category organization read-only",
+    "later SSE results cannot rewrite an already opened historical organization",
+    "batch inspection restores input-to-output state before any body was returned",
+    "C4 is available on demand from the archived model and all five structural views render",
+    "current project C4 entry does not create a context read or alter the five-root home",
+    "mobile history and structure panels stay usable without page overflow or JavaScript errors"
+  ],
+  "errors": [],
+  "screenshots": [
+    ".harness-local/history-browser/01-history-search.png",
+    ".harness-local/history-browser/02-history-organization.png",
+    ".harness-local/history-browser/03-first-batch.png",
+    ".harness-local/history-browser/04-historical-output.png",
+    ".harness-local/history-browser/05-c4-historical.png",
+    ".harness-local/history-browser/06-c4-current.png",
+    ".harness-local/history-browser/07-mobile-history.png",
+    ".harness-local/history-browser/08-mobile-c4.png"
+  ],
+  "status": "passed",
+  "taskId": "41e8006e-c2df-4c1e-89dd-d38afb5f9c51",
+  "completedAt": "2026-11-05T10:11:06.929Z"
+}

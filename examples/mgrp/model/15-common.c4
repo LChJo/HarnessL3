@@ -1,0 +1,41 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.common {
+    config = component "ConfigStore" {
+      description "维护下载设置等本地配置。"
+      technology "C++ / settings"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-common-config"
+        status "source-inspected"
+        path "src/mgrp/common/config_store.h"
+        stable_id "mgrp.common.config"
+      }
+
+    }
+    progress = component "FileProgressStore" {
+      description "维护文件下载进度与恢复相关状态。"
+      technology "C++ / resume"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-common-progress"
+        status "source-inspected"
+        path "src/mgrp/common/file_progress_store.h"
+        stable_id "mgrp.common.progress"
+      }
+
+    }
+    telemetry = component "TelemetryCenter" {
+      description "统一收集下载过程统计事件。"
+      technology "C++ / telemetry"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-common-telemetry"
+        status "source-inspected"
+        path "src/mgrp/common/telemetry_center.h"
+        stable_id "mgrp.common.telemetry"
+      }
+
+    }
+  }
+}

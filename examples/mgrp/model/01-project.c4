@@ -1,0 +1,145 @@
+model {
+  mgrp = system "MGRP" {
+    description "跨平台游戏资源下载与更新 SDK。以当前工作区源码为依据，表达入口、业务编排、任务执行、网络后端与本地持久化。"
+    technology "project"
+    metadata {
+      source "documentation"
+      evidence "e-mgrp"
+      status "needs-source-review"
+      path "README.md"
+      stable_id "mgrp"
+    }
+    clients = module "平台接入" {
+      description "Unity C#、Android JNI、iOS 与 HarmonyOS 的宿主接入。平台封装与核心网络后端是两个不同边界。"
+      technology "platforms"
+      metadata {
+        source "documentation"
+        evidence "e-mgrp-clients"
+        status "needs-source-review"
+        path "src/platforms/README.md"
+        stable_id "mgrp.clients"
+      }
+
+    }
+    api = module "C ABI 导出" {
+      description "稳定公共接口与平台内部接口。参数、回调与错误码在此跨语言桥接。"
+      technology "C ABI"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-api"
+        status "source-inspected"
+        path "src/mgrp/export/mgrp_capi.h"
+        stable_id "mgrp.api"
+      }
+
+    }
+    business = module "业务编排" {
+      description "决定下载什么、资源差异和批次优先级，维护资源包语义。"
+      technology "src/mgrp/business"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-business"
+        status "source-inspected"
+        path "src/mgrp/business/download_manager.h"
+        stable_id "mgrp.business"
+      }
+
+    }
+    execution = module "任务执行" {
+      description "任务门面、唯一可变调度状态、资源传输协调与持久化发布。旧文档的 DataManager 不再作为当前对象。"
+      technology "src/mgrp/impl"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-execution"
+        status "source-inspected"
+        path "src/mgrp/impl/task_manager.h"
+        stable_id "mgrp.execution"
+      }
+
+    }
+    network = module "网络与平台后端" {
+      description "网络管理使用统一接口，工厂根据编译平台选择具体后端。"
+      technology "impl + foundation"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-network"
+        status "source-inspected"
+        path "src/mgrp/foundation/platform_backend.cpp"
+        stable_id "mgrp.network"
+      }
+
+    }
+    common = module "业务公共支持" {
+      description "配置、下载进度与观测公共能力。"
+      technology "src/mgrp/common"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-common"
+        status "source-inspected"
+        path "src/mgrp/common/CMakeLists.txt"
+        stable_id "mgrp.common"
+      }
+
+    }
+    base = module "公共基础库" {
+      description "文件 IO、哈希、JSON、日志、内存等基础封装。根 CMake 采用单 SDK target 构建，不等同于此逻辑分层。"
+      technology "src/base"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-base"
+        status "source-inspected"
+        path "src/base/CMakeLists.txt"
+        stable_id "mgrp.base"
+      }
+
+    }
+    vendor = module "第三方源码" {
+      description "fmt/fmtlog、yyjson、xxhash、HDiffPatch；主要由基础层封装，具体 include 以代码为准。"
+      technology "vendored C / C++"
+      metadata {
+        source "documentation"
+        evidence "e-mgrp-vendor"
+        status "needs-source-review"
+        path "src/vendor/README.md"
+        stable_id "mgrp.vendor"
+      }
+
+    }
+    tooling = module "资源打包工具" {
+      description "Python 打包与差分工具。与运行时 SDK 是不同执行入口。"
+      technology "Python"
+      metadata {
+        source "documentation"
+        evidence "e-mgrp-tooling"
+        status "needs-source-review"
+        path "tools/mgrp_pack_scripts/README.md"
+        stable_id "mgrp.tooling"
+      }
+
+    }
+    quality = module "测试与质量" {
+      description "下载行为、ABI 与架构约束测试的入口；本次未运行 MGRP SDK 测试。"
+      technology "tests/unit_test"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-quality"
+        status "source-inspected"
+        path "tests/unit_test/CMakeLists.txt"
+        stable_id "mgrp.quality"
+      }
+
+    }
+    knowledge = document "项目约定与现状" {
+      description "项目说明是知识来源之一。AGENTS 的 DataManager 和里程碑描述与源码/状态文件存在偏差，需保留待核验。"
+      technology "documentation"
+      metadata {
+        source "documentation"
+        evidence "e-mgrp-knowledge"
+        status "needs-source-review"
+        path "AGENTS.md"
+        stable_id "mgrp.knowledge"
+      }
+
+    }
+  }
+}

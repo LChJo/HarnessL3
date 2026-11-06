@@ -1,0 +1,53 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.execution {
+    task = component "TaskManager" {
+      description "进程级执行门面；DTask 是业务查询投影，TaskScheduler 持有可变执行状态。"
+      technology "C++ / execution facade"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-execution-task"
+        status "source-inspected"
+        path "src/mgrp/impl/task_manager.h"
+        stable_id "mgrp.execution.task"
+      }
+
+    }
+    scheduler = component "TaskScheduler" {
+      description "消费调度事件、执行计划与任务优先级变更。"
+      technology "C++ / state machine"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-execution-scheduler"
+        status "source-inspected"
+        path "src/mgrp/impl/task_scheduler.h"
+        stable_id "mgrp.execution.scheduler"
+      }
+
+    }
+    transfer = component "ResourceTransferCoordinator" {
+      description "以资源身份、存储域和 generation 协调传输与发布。"
+      technology "C++ / resource identity"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-execution-transfer"
+        status "source-inspected"
+        path "src/mgrp/impl/resource_transfer_coordinator.h"
+        stable_id "mgrp.execution.transfer"
+      }
+
+    }
+    artifact = component "ResourceArtifactStore" {
+      description "资源产物与完成证据的持久化接口。"
+      technology "C++ / durable artifacts"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-execution-artifact"
+        status "source-inspected"
+        path "src/mgrp/impl/resource_artifact_store.h"
+        stable_id "mgrp.execution.artifact"
+      }
+
+    }
+  }
+}

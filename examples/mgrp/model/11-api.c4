@@ -1,0 +1,17 @@
+// 局部维护入口；与 01-project.c4 共享同一稳定对象身份。
+model {
+  extend mgrp.api {
+    capi = component "mgrp_capi" {
+      description "公共导出入口，连接 DownloadManager、ResourceManager 等业务能力。"
+      technology "C / C++"
+      metadata {
+        source "source-code"
+        evidence "e-mgrp-api-capi"
+        status "source-inspected"
+        path "src/mgrp/export/mgrp_capi.cpp"
+        stable_id "mgrp.api.capi"
+      }
+
+    }
+  }
+}
