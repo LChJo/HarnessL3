@@ -6,6 +6,12 @@
 
 在仓库开发时执行`npm ci`、`npm run build`，通过`node bin/harnessl3.mjs --help`查看命令。本地安装包使用`npm install -g <harnessl3-0.1.0.tgz>`；构建安装包不等于已向npm发布。
 
+从GitHub安装/更新及复制宿主skill见根目录[安装指南](../INSTALL.md)。包内另有`agent-skills/harnessl3/SKILL.md`：用于Codex/Claude Code运行时调用本CLI，与下文Skill Hub的21项方法分开。安装指南在程序安装后显式运行`node <安装包绝对路径>/scripts/install-agent-skills.mjs`，将整个skill目录（含安装更新、项目初始化、运行细节、subagent接入四份按需参考MD）复制到Codex的`~/.agents/skills/harnessl3`和Claude Code的`~/.claude/skills/harnessl3`（支持自定义目录）；不装Hooks，不启动宿主。主入口聚焦全任务触发/子任务分支、返回含义及使用判断，参考正文不预读。新会话可分别用`$harnessl3`与`/harnessl3`调用。
+
+安装后所有任务默认先经L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发；不因轻量/只读跳过。有效的连续任务可复用，完全不需材料时用明确空选择。已有父交接的subagent核对并复用，不再联合选技能或关闭父任务；独立范围新建自己的任务。安装/初始化等入口恢复不递归，缺有效已有worktree或工具能力时如实说明。此为文件型宿主约定，真实触发情况另按TC27验证，不改变CLI的目标隔离、宿主名单或无Hook边界。
+
+接口发现从`harnessl3 --help`开始；`harnessl3 task --help`列该组命令，`harnessl3 task select --help`给出具体用法、必需/可选参数、请求Schema/示例路径及返回含义。路径指向当前安装包，可用现有文件工具按需读取；嵌套字段由Schema及本地引用定义。帮助/版本仍为静态文本，即使带`--json`也不启动服务或返回业务封套。业务命令只返回当次实际数据，不重复附带完整接口手册。
+
 在一个已经存在的Git工作区执行：
 
 ```text
@@ -29,6 +35,8 @@ harnessl3 task read <task-id> --file <files.json> --json
 
 task start返回本次绑定、顶层简述、实际技能轻目录和内置Skill Hub路由提示。agent一次选出所需的多个expand/read目标及技能集合；可以跨层直接请求稳定UUID。expand只返回直接子层简述，read只返回精确对象/关系正文与边界引用。祖先、端点或文件引用出现，不表示它们的正文已被读取。
 
+路由提示仅保留筛选规则，指向响应中的结构化taskId/binding/directory/catalog，不再把这些数据嵌入提示文本。旧幂等回执/历史仍保留当时原文；去重不改任务目的、上下文或技能档案。
+
 selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。
 
 handoff返回累计实际上下文和版本化技能文件引用。文件正文/附件随后以task read和expectedHash按需读取，见[file-read Schema](spec/contracts/file-read.schema.json)。选择与读取技能都不表示已执行。独立的后续上下文可用context query批量请求，见[query Schema](spec/contracts/query.schema.json)。
@@ -51,7 +59,7 @@ proof使用当前status返回的目标、sourceEpoch、sourceVersion和modelRevi
 
 ## 技能与只读观测
 
-只有Skill Hub路由原则内置。普通技能及附件是可编辑文件，首批7类20项方法随包提供。有效根优先级：HARNESS_SKILLS_ROOT绝对路径、项目配置的skills.root相对路径、默认机器技能库。已有库包括空目录都不补写或覆盖；升级不重置用户内容。默认skills入口通过symlink/junction指向同级持久实体，以免并发创建的空目录被覆盖；编辑入口内文件即可，`.skills-library-<UUID>`是活动内容，不能当临时文件删除。
+只有Skill Hub路由原则内置。普通技能及附件是可编辑文件，当前7类21项方法随包提供。有效根优先级：HARNESS_SKILLS_ROOT绝对路径、项目配置的skills.root相对路径、默认机器技能库。已有库包括空目录都不补写或覆盖；升级不重置用户内容。默认skills入口通过symlink/junction指向同级持久实体，以免并发创建的空目录被覆盖；编辑入口内文件即可，`.skills-library-<UUID>`是活动内容，不能当临时文件删除。
 
 ```text
 harnessl3 skills list --json

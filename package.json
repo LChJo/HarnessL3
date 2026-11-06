@@ -5,7 +5,7 @@
   "bin": { "harnessl3": "bin/harnessl3.mjs" },
   "type": "module",
   "description": "Project context and skill files for existing agents, with a local visual workbench",
-  "files": ["bin/", "build/", "skills/", "docs/USAGE.md", "docs/spec/contracts/", "README.md", "LICENSE"],
+  "files": ["bin/", "build/", "skills/", "agent-skills/", "scripts/install-agent-skills.mjs", "docs/USAGE.md", "docs/spec/contracts/", "INSTALL.md", "README.md", "LICENSE"],
   "engines": {
     "node": ">=24.12.0 <25"
   },

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdir, writeFile, readFile, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { fixture } from './helpers.mjs'
+import { fixture, execFile, binary } from './helpers.mjs'
 
 const rootId = '20000000-0000-4000-8000-000000000001'
 const leafId = '20000000-0000-4000-8000-000000000002'
@@ -27,6 +27,19 @@ async function setup(t) {
   const json = (operation, taskId, input) => call([...operation.split(' '), taskId, '--file', '-'], { input: JSON.stringify(input) })
   return { ...f, root, skills, call, target, start, json }
 }
+
+test('TC22 text routing is displayed once while structured entry data remains available', async t => {
+  const f = await setup(t)
+  const started = await f.start()
+  const entry = started.body.data
+  const { stdout } = await execFile(process.execPath, [binary, 'task', 'prompt', entry.taskId], { cwd: f.root, env: { ...process.env, HARNESSL3_HOME: f.dataRoot, HARNESS_SKILLS_ROOT: f.skills }, windowsHide: true })
+  const marker = stdout.indexOf('\n{\n')
+  assert.ok(marker > 0)
+  assert.equal(stdout.slice(0, marker), entry.routingPrompt)
+  const displayed = JSON.parse(stdout.slice(marker + 1))
+  assert.equal(Object.hasOwn(displayed, 'routingPrompt'), false, 'The rules are already displayed above the structured data')
+  for (const field of ['taskId', 'binding', 'directory', 'catalog']) assert.deepEqual(displayed[field], entry[field])
+})
 
 test('TC06 CLI selects context and file references, reads archived bytes, and restores after restart', async t => {
   const f = await setup(t)

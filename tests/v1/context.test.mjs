@@ -81,6 +81,58 @@ test('TC06 task entry provides bounded routing material and freezes actual model
   assert.equal(materialized.contentHash, digest('task-projection', { lastAppliedSeq: materialized.lastAppliedSeq, task: materialized.task }))
 })
 
+test('TC06/19 routing rules do not duplicate entry payloads; prompt refresh and archived replay keep their data', async t => {
+  const f = await fixture(t)
+  const requestId = randomUUID()
+  const purpose = 'ROUTING_PAYLOAD_SENTINEL_PURPOSE'
+  const entry = await f.start(purpose, requestId)
+  const { routingPrompt, taskId, binding, directory, catalog } = entry.data
+  t.diagnostic(JSON.stringify({ promptBytes: Buffer.byteLength(routingPrompt), entryBytes: Buffer.byteLength(JSON.stringify(entry)) }))
+  for (const value of [purpose, taskId, binding.modelRevision, binding.catalogRevision, directory.items[0].brief, catalog[0].description, JSON.stringify(binding), JSON.stringify(directory), JSON.stringify(catalog)]) {
+    assert.ok(!routingPrompt.includes(value), 'Routing rules must refer to structured entry data instead of embedding it')
+  }
+  assert.equal((await f.call('task show', taskId)).data.result.task.title, purpose)
+  await writeFile(path.join(f.skillsRoot, 'quality', 'debug', 'SKILL.md'), '---\nname: debug\ndescription: UPDATED CATALOG SENTINEL\n---\nUpdated method body\n')
+  const refreshed = await f.call('task prompt', taskId)
+  assert.equal(refreshed.ok, true)
+  assert.equal(refreshed.data.catalog[0].description, 'UPDATED CATALOG SENTINEL')
+  assert.notEqual(refreshed.data.binding.catalogRevision, binding.catalogRevision)
+  assert.equal(refreshed.data.routingPrompt, routingPrompt)
+  const different = await f.start('Another purpose')
+  assert.notEqual(different.data.taskId, taskId)
+  assert.equal(different.data.routingPrompt, routingPrompt)
+  await f.restart()
+  const replay = await f.start(purpose, requestId)
+  assert.equal(replay.replayed, true)
+  assert.deepEqual(replay.data, entry.data)
+})
+
+test('TC19/27 API slice: inherited handoff uses one selection; an independent child does not close its parent', async t => {
+  const f = await fixture(t)
+  const parent = await f.start('Parent task')
+  const selected = await f.call('task select', parent.data.taskId, f.selection(parent, { expand: [], read: [ids.one], known: {} }, [{ id: 'quality/debug', reason: 'Shared method for this delegated scope' }]))
+  assert.equal(selected.ok, true)
+  const inherited = await f.call('task handoff', parent.data.taskId)
+  const skill = inherited.data.skillPlan.skills[0]
+  const file = skill.files.find(file => file.path === 'SKILL.md')
+  const read = await f.call('task read', parent.data.taskId, { schemaVersion: 1, requestId: randomUUID(), files: [{ skillId: skill.id, path: file.path, expectedHash: file.hash }] })
+  assert.equal(read.ok, true)
+  assert.ok(read.data.files[0].file.content.includes('ORIGINAL METHOD BODY'))
+  assert.equal(f.service.tasks().length, 1)
+  const parentAfterRead = (await f.call('task show', parent.data.taskId)).data.result.task
+  assert.equal(parentAfterRead.closedAt, null)
+  assert.equal(parentAfterRead.skillPlan.id, selected.data.skillPlan.id)
+  const independent = await f.start('Independent child scope')
+  assert.notEqual(independent.data.taskId, parent.data.taskId)
+  const emptySelection = await f.call('task select', independent.data.taskId, f.selection(independent))
+  assert.equal(emptySelection.ok, true)
+  assert.deepEqual(emptySelection.data.skillPlan.skills, [])
+  assert.equal((await f.call('task close', independent.data.taskId)).ok, true)
+  const parentAfterChild = (await f.call('task show', parent.data.taskId)).data.result.task
+  assert.equal(parentAfterChild.closedAt, null)
+  assert.equal(parentAfterChild.skillPlan.id, parentAfterRead.skillPlan.id)
+})
+
 test('TC06 mixed targets disclose exact bodies, direct children and explicit files in one selection', async t => {
   const f = await fixture(t)
   const entry = await f.start()

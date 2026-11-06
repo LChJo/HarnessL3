@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { parseArgs, flag, validateUuid, type CommandRequest } from './args.js'
+import { renderHelp } from './help.js'
 import { canonicalJson, parseJsonStrict } from '../core/json.js'
 import { HarnessError, asHarnessError } from '../core/errors.js'
 import { resolveDataRoot } from '../core/environment.js'
@@ -11,28 +12,6 @@ import { validateContract } from '../core/contract.js'
 import { descriptor, ensureService, serviceStatus, stopService, rpc, type ServiceDescriptor } from '../service/controller.js'
 import type { Envelope } from '../core/types.js'
 
-const help = `HarnessL3 ${PACKAGE_VERSION}
-Usage: harnessl3 <command> [arguments] [--json]
-
-  init [--name <name>]
-  project register|list|show|unregister
-  worktree register|list|show|unregister
-  task start --title <purpose>
-  task prompt|select|show|list|handoff|read|close
-  context query <task-id> --file <query.json|->
-  history list|show
-  skills list|refresh
-  agent bind|unbind|status
-  sync status|verify
-  model validate
-  serve start|status|stop
-  web open [--task <task-id>]
-  gc [--dry-run|--apply]
-  migrate prototype --from <directory> --worktree <UUID> [--dry-run|--apply]
-
-Global: --project <UUID> --worktree <UUID> --data-dir <absolute-path> --request-id <UUID>
-The current agent calls HarnessL3. It does not start agents, run skills, or install Hooks.
-`
 function serviceResult(operation: string, record: ServiceDescriptor | null) {
   return { kind: 'command-result', status: 'complete', operation, result: { state: record ? 'running' : 'stopped', url: record?.url ?? null, instanceId: record?.instanceId ?? null, protocolVersion: 1 } }
 }
@@ -43,8 +22,9 @@ function output(response: Envelope, jsonMode: boolean): void {
   else if (!response.ok) process.stderr.write(`${response.error.code}: ${response.error.message}\n${Object.keys(response.error.details).length ? JSON.stringify(response.error.details, null, 2) + '\n' : ''}`)
   else {
     const data = response.data as Record<string, unknown>
-    if (typeof data.routingPrompt === 'string') process.stdout.write(data.routingPrompt + '\n')
-    process.stdout.write(JSON.stringify(data, null, 2) + '\n')
+    const display = { ...data }
+    if (typeof data.routingPrompt === 'string') { process.stdout.write(data.routingPrompt + '\n'); delete display.routingPrompt }
+    process.stdout.write(JSON.stringify(display, null, 2) + '\n')
   }
   const legacyRead = response.ok && (response.data as { kind?: string }).kind === 'legacy-archive' ? (response.data as { record?: { legacyRead?: { files: unknown[]; errors: unknown[] } } }).record?.legacyRead : undefined
   process.exitCode = response.ok ? ((typeof response.data === 'object' && response.data !== null && 'status' in response.data && response.data.status === 'partial') || (legacyRead?.files.length && legacyRead.errors.length) ? 4 : 0)
@@ -93,7 +73,7 @@ export async function runCli(args: string[]): Promise<void> {
   process.once('SIGINT', cancel)
   try {
     request = parseArgs(args)
-    if (request.operation === 'help') { process.stdout.write(help); return }
+    if (request.operation === 'help') { process.stdout.write(renderHelp(request.positionals)); return }
     if (request.operation === 'version') { process.stdout.write(PACKAGE_VERSION + '\n'); return }
     const dataRoot = await resolveDataRoot(flag(request, 'data-dir'))
     if (process.env.HARNESS_SKILLS_ROOT) {

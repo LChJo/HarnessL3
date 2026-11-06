@@ -1,6 +1,24 @@
 # 正式首版实施状态
 
-2026-11-06，M1–M4首版本地候选0.1.0已实现并完成本页所列验收；功能提交`f8eb2a4`的最终三平台CI全部成功。本页记录代码与实际范围；[基准](../PROJECT_BASELINE.md)、[规格](../spec/README.md)及[完整验收目标](../spec/acceptance.md)保持一致，宿主工具子集、平台能力跳过与性能限制继续明确保留。
+2026-11-06，基准0.21的M1–M4首版本地候选0.1.0已实现并完成下述既有范围验收；功能提交`f8eb2a4`的最终三平台CI全部成功。当前[基准](../PROJECT_BASELINE.md)已增至0.22，新增全任务入口/子任务约定的TC27仍待真实宿主验收。本页记录代码与实际范围；[规格](../spec/README.md)及[完整验收目标](../spec/acceptance.md)中的宿主工具子集、平台能力跳过与性能限制继续明确保留。
+
+## 普通方法增量：quick
+
+新增 [development/quick](../../skills/development/quick/SKILL.md)，用于简单询问及目标、位置、改法已明确的小范围代码或文档修改。L3 入口与技能筛选后直接完成，不额外创建过程记录、不安排测试或其它验证；已有入口记录和宿主日志保留。方法不改变 CLI 持久化、同步机制或宿主启动边界。当前库为7类21项方法，导航、当前分发说明及既有数量断言同步；本次仅维护方法文件及引用，未运行测试、构建或安装包验证。下列20方法的包与三平台结果保留为此前实际证据，不覆盖此增量。
+
+## v0.22增量：全任务入口与路由去重
+
+用户确认D15/FR15：安装运行时skill后所有任务先经L3组织上下文/筛选技能，参考本机harnesslite的1%门槛；问答、研究、规划、实施、审查、继续、交接等均覆盖，不因轻量/只读绕过。连续有效任务复用，空选择合法；已有父L3交接的subagent继承范围与选择，无可用交接的独立子任务单独建档。新增`references/subagent.md`，父任务关闭/重选限制为工作约定，CLI未实现专属权限隔离或父子字段。不增Hook/agent启动/自动worktree；入口恢复不递归，缺有效目标/能力真实报告。主skill、基准0.22、AGENTS、FR15与TC27已同步；真实Codex/Claude Code的触发和委派行为尚未运行，不能标TC27完整passed。
+
+`routingPrompt`已去掉任务身份/目的/绑定/目录/catalog的内嵌副本，只保留规则并指向结构化返回；任务目的在档案中保留，旧幂等回执不重写。非JSON模式展示规则后不在数据中重复打印同一规则，JSON封套及字段保持。隔离单夹具实测提示2574→1043字节、序列化入口JSON（不含末尾换行）4363→2700字节；不外推数值SLA或模型效果。新增提示去重及文本去重均有实际RED；当前API支持的父交接读取/一次选择、独立子任务与父任务生命周期分开也有程序切片检查。本轮Windows回归47项全部通过，CLI编译、skill校验、9Schema/15示例/32拒绝反例及跨字段核对通过；17份改动Markdown的128个本地链接目标核查通过。最新包消费者137文件、20项Hub方法，两宿主各5文件（主入口+4参考）字节匹配且重复安装不重写；已安装CLI的去重入口、帮助定位、init/start/select/handoff/read/close及离线资源通过，证据为`.harness-local/artifacts/package-smoke-win32.json`。TC27完整宿主行为仍待验收，不借旧三平台CI背书。
+
+## 后续增量：宿主运行时 skill（2026-11-06）
+
+新增独立文件型 [harnessl3 skill](../../agent-skills/harnessl3/SKILL.md)，主入口负责何时调用、返回含义与后续使用，保留少量启动示例；安装更新、项目初始化、复杂运行细节放在按需参考中，v0.22另加子任务参考。首次[职责核对](CLI_SKILL_REVIEW.md)移出接口字段与参数教学时，主文件不含换行字符由3801降为1176（约69%，为该轮记录，不是当前长度/token/模型效果指标）。现有CLI的 `--help` 支持总览/组/具体命令，参数及必需项复用解析器，具体请求契约及示例路径指向当前安装包，未改变业务命令和JSON封套。包内显式[复制程序](../../scripts/install-agent-skills.mjs)由根目录[安装指南](../../INSTALL.md)在程序安装/更新后调用，复制整个skill及附件，默认目标为 Codex 的 `~/.agents/skills/harnessl3` 和 Claude Code 的 `~/.claude/skills/harnessl3`。原有 Hub 仍为7类20项方法；D01–D14的权威/接入边界不变，当前基准0.22另增D15。
+
+该阶段仅有本机 Windows/Node24.12.0 的实际结果：初版6项复制测试通过，附件扩展后7项目录复制/重装/逐文件备份/嵌套链接预检/部分失败/参数校验测试通过；缺模块、继承属性参数、附件目录复制缺失的失败到修复通过均实际运行。skill-creator 校验、构建与包消费者安装通过。初轮附件包为133文件/每宿主3文件，帮助修补及运行参考后的上一阶段包为136文件，仍含原20项 Hub 方法；两宿主各4个文件（主入口与3份参考）字节匹配、重复复制不重写，已安装 CLI 的子命令帮助给出的请求Schema路径确认属于安装包，init/start/select/handoff/read/close 与离线资源检查通过。当前0.22最新包与回归另列于上方；测试始终只使用隔离前缀、数据根、仓库和宿主技能目录。
+
+本轮帮助修补另有3项真实RED→GREEN；与CLI服务/任务/源码同步及技能复制合并回归18项全部通过，`build:cli`通过。9个Schema、15个示例、32个预期拒绝反例及跨字段检查、skill校验与文档本地链接核对通过。Windows PowerShell/Bash安装代码块语法此前已核对；Bash为 Git Bash 语法检查。本增量未在原生 macOS/Linux运行，未启动真实 Codex/Claude Code验证其加载或模型选择行为，不能借下文 `f8eb2a4` 的三平台结果替此增量背书。当前改动尚未提交/推送或发布，只有上传后的源码才可经 GitHub 安装取得新 skill。
 
 ## 已有实现
 
@@ -13,7 +31,7 @@
 | 源码同步 | 原始字节/忽略规则/策略、watcher epoch及扫描、模型与来源两轴、局部proof/CAS及真实失败 | core/source.ts、freshness.ts；source、freshness、sync-cli |
 | 只读日志 | 显式绑定两宿主已核验子集；结果匹配、检查点、轮转/缺口/未知；不保存聊天正文或执行日志命令 | core/observation.ts；observation、observation-replay、agent-cli |
 | 正式Web | Slate统一脑图、五类/Hub文件夹、真实批量选择、项目/worktree、历史/C4、SSE、锚点/触摸/离线 | web/；verify-fixture、verify-manual、verify-directory |
-| 维护与包 | legacy复制导入/dry-run/幂等/冲突；保守GC；本地tgz安装、20项技能及离线资源 | core/maintenance.ts；maintenance、maintenance-cli、package-smoke |
+| 维护与包 | legacy复制导入/dry-run/幂等/冲突；保守GC；此前本地tgz的20项技能及离线资源已验，当前seed新增quick为21项，包未重验 | core/maintenance.ts；maintenance、maintenance-cli、package-smoke |
 
 调用顺序见[使用说明](../USAGE.md)。现有agent主动调用；CLI不启动agent、不执行技能、不管理Git worktree生命周期。当前本地候选版本0.1.0，未向npm发布。
 
@@ -83,4 +101,4 @@ JUnit/浏览报告在本机`.harness-local/validation/`；阶段RED/GREEN、保�
 
 早期Windows Edge事件到可见输出三样本P50/P95为1668/1668ms，Linux Chromium为976/1236ms；最终Windows Chromium在显式CRLF与临时目录别名下为1156/1361ms。各轮不合并：定义是journal提交时间到准确输出数可见后的双requestAnimationFrame，含刷新/绘制调度、同机壁钟且每轮仅三样本，不是稳定长尾SLA。
 
-第二个独立里程碑summary cda7ceb7-5c04-4d99-904b-8fd9896f05cf已写并读回。正式首版范围的实现、原生CI、安装和测量均有实际结果；当前基准v0.21。日志兼容范围已经逐项注明，未能归因的真实行为保留unknown，不能扩称完整宿主覆盖。数值SLA、更多宿主格式、公共npm发布及物理设备兼容属于后续范围；部分自建合成文件因自动审批拒绝删除而保留，见[清理记录](CLEANUP.md)。最终留痕在完成文档/保护复核后写入终端summary，不修改共享notes。
+第二个独立里程碑summary cda7ceb7-5c04-4d99-904b-8fd9896f05cf已写并读回。该里程碑正式首版范围的实现、原生CI、安装和测量均有实际结果，交付时基准v0.21；当前0.22增量另列于上方。日志兼容范围已经逐项注明，未能归因的真实行为保留unknown，不能扩称完整宿主覆盖。数值SLA、更多宿主格式、公共npm发布及物理设备兼容属于后续范围；部分自建合成文件因自动审批拒绝删除而保留，见[清理记录](CLEANUP.md)。最终留痕在完成文档/保护复核后写入终端summary，不修改共享notes。

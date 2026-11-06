@@ -4,7 +4,7 @@ import { HarnessError } from '../core/errors.js'
 
 export interface CommandRequest { operation: string; positionals: string[]; flags: Record<string, string | boolean>; requestId: string; cwd: string; input?: unknown; skillsRoot?: string; source?: 'cli' | 'web' }
 interface CommandDefinition { count: number; flags?: string[]; required?: string[] }
-const commands: Record<string, CommandDefinition> = {
+export const commands: Record<string, CommandDefinition> = {
   init: { count: 0, flags: ['name'] },
   'project register': { count: 1 }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
   'worktree register': { count: 1 }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
@@ -21,8 +21,8 @@ const commands: Record<string, CommandDefinition> = {
   'web open': { count: 0, flags: ['task'] }, 'model validate': { count: 0 },
   gc: { count: 0, flags: ['dry-run', 'apply'] }, 'migrate prototype': { count: 0, flags: ['from', 'dry-run', 'apply'], required: ['from', 'worktree'] },
 }
-const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'help', 'version']
-const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply'])
+export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'help', 'version']
+export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply'])
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 export function flag(request: CommandRequest, name: string): string | undefined { const value = request.flags[name]; return typeof value === 'string' ? value : undefined }
 export function validateUuid(value: string, field: string): string { if (!uuid.test(value)) throw new HarnessError('INVALID_ARGUMENT', 'Expected a lowercase UUID', { field }); return value }

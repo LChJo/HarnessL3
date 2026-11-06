@@ -53,7 +53,7 @@ JSON 使用 UTF-8、无 BOM。所有记录带 `schemaVersion: 1`；结构指纹�
 
 本机文件按当前用户权限创建；运行服务是唯一写入者。CLI、Web 和 SQLite worker 通过服务协调，不各自读改写任务文件。数据目录不支持放在网络共享盘上进行多主写入；本机复制出的历史目录也不能作为第二个活动写入端。
 
-技能根解析顺序为 `HARNESS_SKILLS_ROOT`、项目 `.harness/project.json` 的 `skills.root`、`<data-root>/skills`；项目配置路径相对当前 worktree 解析。首次init仅在默认技能根不存在时，将随包20项方法、附件和LICENSE完整复制到同级`.skills-library-<UUID>`持久实体，通过独占创建symlink（Windows junction）原子发布skills入口。POSIX入口使用相对目标，Windows junction使用绝对目标；不使用会替换既有空目录的rename作为发布。发布失败只清理本次创建且能证明未被入口引用的实体，不能确认时保留。已有目录即使为空或并发出现也不合并、不覆盖；升级包不改用户正文。实体是活动用户技能库，不在GC删除范围。入口及实体内仍是普通可编辑文件，刷新只重建目录和诊断，与`skill-blobs`历史副本职责分开。
+技能根解析顺序为 `HARNESS_SKILLS_ROOT`、项目 `.harness/project.json` 的 `skills.root`、`<data-root>/skills`；项目配置路径相对当前 worktree 解析。首次init仅在默认技能根不存在时，将随包21项方法、附件和LICENSE完整复制到同级`.skills-library-<UUID>`持久实体，通过独占创建symlink（Windows junction）原子发布skills入口。POSIX入口使用相对目标，Windows junction使用绝对目标；不使用会替换既有空目录的rename作为发布。发布失败只清理本次创建且能证明未被入口引用的实体，不能确认时保留。已有目录即使为空或并发出现也不合并、不覆盖；升级包不改用户正文。实体是活动用户技能库，不在GC删除范围。入口及实体内仍是普通可编辑文件，刷新只重建目录和诊断，与`skill-blobs`历史副本职责分开。
 
 项目配置的技能根必须是当前 worktree 的 proper descendant，不能等于根或通过链接逃逸。所有技能根都不能等于或包含 worktree 根，不能位于/包含其 `.git`、Git common directory、`.harness` 或运行档案目录；机器数据根内只允许专用 `<data-root>/skills` 及其子目录作为技能来源，不能把整个数据根、registry 或 `worktrees/` 当技能目录。上述检查使用解析后的实际路径；用户目录不存在时同样先核对最近实际祖先。项目内技能根按相对 worktree 的字面前缀固定排除来源扫描，写入 `sourceScanRevision`；普通技能文件修改仅更新 catalog，不增加源码 epoch 或触发 `SOURCE_CHANGED`。根位置配置改变了有效内部排除前缀时，扫描策略改变并需重新核验；纯外部技能根换位不把机器绝对路径混入源码指纹。
 

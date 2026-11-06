@@ -4,11 +4,19 @@
 
 正式首版本地候选 **0.1.0** 已有实现。v0.16原型是已确认的交互/Slate视觉基准；工作规格v1.0与当前项目基准是实现契约。任务/技能/历史、只读观测、源码proof、Web和维护的行为及三平台程序、浏览器、安装、性能与真实日志的验证范围见[实施状态](docs/implementation/STATUS.md)。本地候选包尚未向npm发布。
 
+## 安装与更新
+
+让 agent 阅读根目录的[安装与更新指南](INSTALL.md)，即可从 GitHub 安装或更新 HarnessL3 CLI，并将 [harnessl3 运行时 skill](agent-skills/harnessl3/SKILL.md) 及参考附件复制到 Codex 与 Claude Code 的全局技能目录。skill 指导真实 agent 调用 CLI 获取上下文、选择/读取技能和完成同步；安装更新和项目初始化指导放在附带 Markdown 中，仅在需要时关联读取。实际命令为 `harnessl3`。
+
+基准0.22/D15确认安装后**所有任务先经L3入口**，1%的可能相关亦触发，问答/只读/轻量任务也先组织上下文并筛选技能；无需材料时明确空选，同一有效任务可继续复用。受托subagent有L3交接则继承范围和选择，独立子任务自行建档。入口由现有agent主动遵守，真实宿主触发尚待验收；无有效已有worktree或入口能力时如实报告，不自动创建仓库或worktree。
+
 ## 开发入口
 
 安装包及agent调用顺序见[CLI使用说明](docs/USAGE.md)。该说明、JSON Schema与示例随本地安装包提供。
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：目标、D01–D14、A01–A10及已确认边界。
+当前CLI可通过顶层、命令组与子命令`--help`按需发现参数及契约文件；skill负责调用时机与结果使用。职责依据、发现的问题及修补范围见[CLI与skill核对](docs/implementation/CLI_SKILL_REVIEW.md)。
+
+1. [项目基准](docs/PROJECT_BASELINE.md)：目标、D01–D15、A01–A10及新增TC27入口验收边界。
 2. [工作规格](docs/spec/README.md)：产品、架构、命令/Schema/示例、存储、日志/同步、Web与验收。
 3. [实施顺序](docs/spec/implementation.md)：从M1开始，按失败测试→实现→验证推进。
 4. [Agent维护约定](AGENTS.md)：工作区、同步与状态记录义务。
@@ -19,7 +27,7 @@
 
 - [已确认原型](docs/prototype/README.md)：最终设计、6张终版截图、历史依据与验证范围。
 - [原型复现资料](docs/prototype/RUNNING.md)：仅保留历史命令和机器配置作参考；正式使用从CLI说明进入。
-- [Skill Hub技能文件](skills/README.md)：7类20方法，作为可编辑文件分发与维护，保留MIT与来源。
+- [Skill Hub技能文件](skills/README.md)：7类21方法，含简单问答和明确小改动使用的 quick，作为可编辑文件分发与维护，保留MIT与来源。
 - [MGRP示例主模型](examples/mgrp/model/01-project.c4)及[证据引用](examples/mgrp/evidence.json)：业务来源只读，模型为审查示例，不是正式产品默认项目。
 - [清理记录](docs/prototype/CLEANUP.md)：临时产物回收与保留内容核验。
 

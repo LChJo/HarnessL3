@@ -1,6 +1,6 @@
 # CLI 与交换协议 v1
 
-状态：**正式CLI实现契约**，实际代码/验证范围见[实施状态](../implementation/STATUS.md)。本文不是旧`scripts/harness.mjs`原型的使用说明。产品边界见[产品规格](product.md)，模型字段见[模型与读取契约](model-context.md)，持久化和日志见[存储](storage.md)、[观测与同步](observation-sync.md)。对应D01–D14、A01–A10。
+状态：**正式CLI实现契约**，实际代码/验证范围见[实施状态](../implementation/STATUS.md)。本文不是旧`scripts/harness.mjs`原型的使用说明。产品边界见[产品规格](product.md)，模型字段见[模型与读取契约](model-context.md)，持久化和日志见[存储](storage.md)、[观测与同步](observation-sync.md)。对应D01–D15、A01–A10及TC27入口增量。
 
 ## 1. 调用约定与目标
 
@@ -11,6 +11,8 @@
 - `--file <path>` 读取 UTF-8 JSON；`--file -` 从 stdin 读至 EOF。允许一个文件头 BOM，拒绝重复 JSON 键、非法 Unicode、非有限数和未知字段。不从剪贴板、环境变量或日志猜测请求正文。
 - `--json` 的 stdout 只写**一个** UTF-8 JSON 对象和结尾换行；进度、诊断、服务启动提示进 stderr，不输出 ANSI。JSON 模式不提问、不等待交互输入。非 JSON 模式呈现同一结果的文字，退出码完全一致。
 - 除 `--help`、`--version` 外，JSON 成功/失败均使用下文封套。`--help` 和 `--version` 是静态文字，不启动服务。
+
+`--help`分为顶层能力总览、命令组（如`task --help`）和具体命令（如`task select --help`）。具体用法、参数名称与必需项复用解析器注册表；帮助同时给出返回含义、当前安装包内响应Schema/使用说明路径，JSON请求命令另给请求Schema与示例的绝对路径及从Schema读取的根必需字段。嵌套格式通过已有文件工具按需读取Schema及本地引用，不在skill维护另一份参数定义。未知帮助主题返回`INVALID_ARGUMENT`/2；`--json --help`仍为静态文字。业务封套与字段不变，不要求每次业务结果重复接口文档。
 
 `--request-id` 与输入 JSON 的 requestId 同时给出时必须完全相等，否则 `INVALID_ARGUMENT`。raw 文件可只省略 requestId：CLI 从显式 flag 或自动 UUID 补齐，再以 schema 验证规范请求；其他必需字段不猜值。调用方需要可靠重试应预生成并保存 requestId；未保存自动 ID 且丢失响应时，不能宣称可“恰好一次”重试，须查询任务/请求记录，不能盲目用新 ID 二次选择。自动生成的 ID 在封套返回，也可在 stderr 诊断提供，不污染 JSON stdout。
 
@@ -64,6 +66,10 @@
 `serve start --foreground` 为显式诊断模式，服务就绪后进程长驻直到停止；`--json` 仅在 ready 时输出一个成功封套，此后日志全部 stderr，Ctrl+C 优雅停止且不输出第二个 JSON。未就绪即取消返回 CANCELLED/130；ready 后退出码反映长驻进程结束，不把已输出的 ready 回执改写成服务一直成功运行。
 
 ### 返回种类
+
+`task start` / `task prompt`的`routingPrompt`只提供可复用筛选规则并指向本封套的结构化`taskId/binding/directory/catalog`，不再内嵌这些数据的副本。具体字段/嵌套格式由当前帮助及Schema发现。任务目的仍随任务记录保存；既有幂等/历史回执保留当时原文，不为本次展示优化重写。
+
+非JSON模式先展示一次路由规则，再展示其余结构化数据，避免同一规则又作为JSON字符串重复打印；JSON模式仍保留原有`routingPrompt`字段与完整封套。
 
 [response.schema.json](contracts/response.schema.json)严格定义核心读取结果。管理命令使用 `data.kind:"command-result"`、`status:"complete"`、`operation`（上述完整命令名）、`result`；result 最小字段如下，未列的扩展诊断不改变语义。
 
@@ -141,7 +147,11 @@ harnessl3 task close <task-id> --json
 
 ## 5. Skill Hub 和迁移兼容
 
-内置的只有路由原则。npm携带独立seed文件（当前7类/20方法、附件、MIT与来源）；init仅在`<dataRoot>/skills`根完全不存在时，以[持久实体及独占目录入口](storage.md#2-目录与文件职责)发布完整副本。既有/并发出现的目录即使为空也不合并或覆盖；升级不改用户正文。实际路径优先HARNESS_SKILLS_ROOT本机覆盖、项目skills.root（worktree相对）、全局库。技能根不能等于worktree根、`.git`、`.harness`或运行档案目录；专用skills入口及其解析后的持久实体允许，不能据此把任意dataRoot子目录当库。项目内根固定排除来源扫描并记入sourceScanRevision。入口、实体和用户技能都不是可重建缓存，gc不删。
+npm另分发文件型运行时接入skill `agent-skills/harnessl3/`，供现有Codex/Claude Code正确调用上述CLI流程。D15约定安装后所有任务默认先经L3，1%可能相关也触发；连续同一有效任务可复用，空选择合法。`SKILL.md`提供触发/子任务分支、调用时机、返回含义、使用判断和少量入口示例；具体参数以当前CLI帮助/契约为准。安装更新、项目初始化、运行细节及子任务交接另放在`references/`，仅命中条件时读取，不自动预读或注入正文。有父交接的子任务复用普通task/handoff/query/read，不重选或关闭父任务；独立范围自行创建/关闭自己的task。此为agent工作约定，CLI未提供父子专用字段/权限隔离，不自动启动子agent或绑定其日志。
+
+该入口不属于普通方法seed或内置路由原则，与Hub当前21项方法分开。安装指南在安装/更新包后显式调用包内`scripts/install-agent-skills.mjs`，将整个skill及附件复制到Codex的`~/.agents/skills/harnessl3`与Claude Code的用户级skills目录；不使用npm生命周期Hook，不启动agent。相同字节不重写；更新既有主入口或附件先在skills根外按相对路径保存原字节备份，保留其它内容；实际逐文件复制结果与宿主发现/运行验证分开记录。引导恢复不递归，无明确目标或入口能力时真实报告，不伪报调用。默认目录及覆盖方式见[安装指南](../../INSTALL.md)。D13/D14的权威、技能归档和接入边界不变。
+
+内置的只有路由原则。npm携带独立seed文件（当前7类/21方法、附件、MIT与来源）；init仅在`<dataRoot>/skills`根完全不存在时，以[持久实体及独占目录入口](storage.md#2-目录与文件职责)发布完整副本。既有/并发出现的目录即使为空也不合并或覆盖；升级不改用户正文。实际路径优先HARNESS_SKILLS_ROOT本机覆盖、项目skills.root（worktree相对）、全局库。技能根不能等于worktree根、`.git`、`.harness`或运行档案目录；专用skills入口及其解析后的持久实体允许，不能据此把任意dataRoot子目录当库。项目内根固定排除来源扫描并记入sourceScanRevision。入口、实体和用户技能都不是可重建缓存，gc不删。
 
 扫描实际 `<group>/<name>/SKILL.md`，解析 name/description/可选 related，并保留普通附件原字节；name 和目录 ID 分开。目录/正文不可由固定手工名单推导。关联只辅助筛选，不自动选中，不递归加载正文。目录增加/删除/修改只更新当前轻目录和待选择提示，既有任务方案和已归档文件不变。非法当前目录显式诊断并清空候选。
 
