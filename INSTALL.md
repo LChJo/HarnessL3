@@ -7,7 +7,7 @@
 ## 安装来源与前提
 
 - GitHub 仓库：<https://github.com/LChJo/HarnessL3>。
-- 截至 2026-11-06，正式 CLI 为 **0.1.0 本地候选**，尚未发布到 npm；可安装源码位于 **`codex/harnessl3-v1-20261106`**。`main` 仍是较早版本，不能默认从 `main` 安装正式 CLI。
+- 截至 2026-11-06，正式 CLI 为 **0.1.0 源码候选**，尚未发布到 npm；正式实现已合并并推送至 **`main`**，原临时审阅分支已经删除。首次安装和更新均从 GitHub `main` 取得源码，并记录实际提交；主干不等于已发布的稳定版本。
 - Windows、macOS、Linux 均需 **Node.js >=24.12.0 且 <25**、随附 npm、Git，以及 GitHub/npm registry 网络访问。先运行 `node --version`、`npm --version`、`git --version`；缺少依赖时先安装，不忽略引擎约束。
 - npm 全局 prefix 必须可写，并将其命令目录加入 PATH；不要自动使用管理员权限。私有仓库需要使用机器已有的 GitHub 认证，不能将凭证写入命令或日志。
 
@@ -25,7 +25,7 @@
         if ($LASTEXITCODE -ne 0) { throw "$Executable failed: $LASTEXITCODE" }
     }
     Invoke-L3Step node @('-e', 'const [a,b]=process.versions.node.split(/\./).map(Number); process.exit(a===24 && b>=12 ? 0 : 1)')
-    $ref = 'codex/harnessl3-v1-20261106'
+    $ref = 'main'
     $stage = Join-Path ([IO.Path]::GetTempPath()) ('harnessl3-install-' + [guid]::NewGuid())
     New-Item -ItemType Directory -Path $stage | Out-Null
     Write-Host "Install workspace: $stage"
@@ -66,7 +66,7 @@
 (
     set -euo pipefail
     node -e 'const [a,b]=process.versions.node.split(/\./).map(Number); process.exit(a===24 && b>=12 ? 0 : 1)'
-    ref='codex/harnessl3-v1-20261106'
+    ref='main'
     stage=$(mktemp -d "${TMPDIR:-/tmp}/harnessl3-install-XXXXXXXX")
     printf 'Install workspace: %s\n' "$stage"
     git clone --depth 1 --single-branch --branch "$ref" \
@@ -119,7 +119,7 @@ node <已安装harnessl3包绝对路径>/scripts/install-agent-skills.mjs --code
 
 新建或刷新宿主会话后，Codex 可用 `$harnessl3`，Claude Code 可用 `/harnessl3`，也可按描述自动发现。示例请求：“用 harnessl3 取得当前项目上下文，完成这个修复，并核验源码与模型同步。”需在真实宿主中确认能发现 skill；文件复制成功不等于宿主已加载或已经调用 CLI。
 
-该 skill 聚焦全任务触发、子任务分支、返回含义及如何使用结果，保留少量启动示例；具体参数通过当前CLI的分层`--help`及其给出的Schema/示例路径发现。四份额外指导放在 `references/install-update.md`、`references/project-init.md`、`references/runtime.md` 与 `references/subagent.md`，仅需要时读取，不预读附件或将其正文拼入默认提示。安装更新附件指向本文的权威脚本，初始化附件提供实际接入命令，运行参考提供复杂请求/同步/恢复判断，子任务参考提供父交接核对与独立建档约定。它不启动subagent、自动绑定日志或执行所选方法，与 Skill Hub 的7类20项可编辑方法、机器数据根中的用户技能库分别存放；不会把全部 Hub 方法复制进 Codex/Claude Code。
+该 skill 聚焦全任务触发、子任务分支、返回含义及如何使用结果，保留少量启动示例；具体参数通过当前CLI的分层`--help`及其给出的Schema/示例路径发现。四份额外指导放在 `references/install-update.md`、`references/project-init.md`、`references/runtime.md` 与 `references/subagent.md`，仅需要时读取，不预读附件或将其正文拼入默认提示。安装更新附件指向本文的权威脚本，初始化附件提供实际接入命令，运行参考提供复杂请求/同步/恢复判断，子任务参考提供父交接核对与独立建档约定。它不启动subagent、自动绑定日志或执行所选方法，与 Skill Hub 的7类21项可编辑方法、机器数据根中的用户技能库分别存放；不会把全部 Hub 方法复制进 Codex/Claude Code。
 
 ## 更新、验证与故障处理
 

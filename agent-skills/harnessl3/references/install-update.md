@@ -18,10 +18,10 @@ harnessl3 --version
 完整的一次执行脚本以仓库根目录 `INSTALL.md` 为唯一维护入口，避免在附件中复制另一套安装命令。
 
 - 已有 npm 全局安装时，用 `npm root -g` 找到其下 `harnessl3/INSTALL.md`，仅在安装流程仍与目标 GitHub 来源一致时使用。更新以目标来源的最新指南为准。
-- 没有 CLI 或本地文档过旧时，使用现有网页/文件下载工具取得 [GitHub 安装指南](https://github.com/LChJo/HarnessL3/blob/codex/harnessl3-v1-20261106/INSTALL.md) 并读取正文。需要原文时使用 [Raw Markdown](https://raw.githubusercontent.com/LChJo/HarnessL3/codex/harnessl3-v1-20261106/INSTALL.md)，下载到用户项目外的临时目录。
+- 没有 CLI 或本地文档过旧时，使用现有网页/文件下载工具取得 [GitHub 安装指南](https://github.com/LChJo/HarnessL3/blob/main/INSTALL.md) 并读取正文。需要原文时使用 [Raw Markdown](https://raw.githubusercontent.com/LChJo/HarnessL3/main/INSTALL.md)，下载到用户项目外的临时目录。
 - 根据实际平台执行指南中的 PowerShell 或 Bash 整段脚本。首次安装与更新共用流程：独立临时克隆 → `npm ci` → 构建 → 打包 `.tgz` → 全局安装 → 复制整个运行时 skill 目录及参考附件。
 
-截至2026-11-06，仓库为 `LChJo/HarnessL3`，正式候选位于 `codex/harnessl3-v1-20261106`，npm尚未发布；不要以 `npm install -g harnessl3@latest` 或较早的 `main` 替代。来源变化时先核实实际发布内容，不自动猜分支。用户仅要求完成开发任务且尚未授权安装时，说明入口缺失，不据此自动升级环境。
+截至2026-11-06，仓库为 `LChJo/HarnessL3`，正式候选已合并至 `main`，原临时审阅分支已删除；npm尚未发布，按最新指南从 GitHub `main` 构建安装，不使用 `npm install -g harnessl3@latest`。记录实际来源提交，主干不等于稳定发行版；来源变化时先核实实际内容，不自动猜分支。用户仅要求完成开发任务且尚未授权安装时，说明入口缺失，不据此自动升级环境。
 
 已有 `.tgz` 且用户要求安装该包时可执行：
 
