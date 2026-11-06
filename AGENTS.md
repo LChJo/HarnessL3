@@ -39,6 +39,7 @@
 ## 原型与被管理内容
 
 - 原型主模型在examples/mgrp/model，证据在examples/mgrp/evidence.json；MGRP业务来源只读，本机sourceRoot配置留在忽略目录。原型命令与配置见[运行说明](docs/prototype/RUNNING.md)，正式命令见spec，不能混称已经实现。
+- 冻结原型另在[archive/prototype-v0.16](https://github.com/LChJo/HarnessL3/tree/archive/prototype-v0.16)独立留档，其根package脚本指向原型。复验使用该分支独立worktree与自有数据，不复制原85份历史，不在其它并行工作区切换分支或混用状态。
 - src/server/scripts/tests、模型、技能和许可证均为有效内容，包括尚未纳入Git的文件；清理按明确用途名单，禁止用git clean推断无价值。
 - .harness-local中的任务、快照、已选技能字节和机器配置必须保护；开发临时输出可再生，回收前保留最终证据并核查依赖。清理不能跟随越界链接或删除未知用途文件。
 - skills/是可编辑被管理内容；阅读方法不等于执行流程。脚本、tracker、提交、会话与并行agent行为仍服从用户授权和实际能力。保留MIT与来源，不回写E:/Ai/skills参考库。

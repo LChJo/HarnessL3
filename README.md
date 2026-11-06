@@ -26,12 +26,13 @@
 ## 原型与技能
 
 - [已确认原型](docs/prototype/README.md)：最终设计、6张终版截图、历史依据与验证范围。
+- [独立原型归档](https://github.com/LChJo/HarnessL3/tree/archive/prototype-v0.16)：可单独检出运行v0.16，包含原型源码/设计/模型/技能及[本次复验](https://github.com/LChJo/HarnessL3/blob/archive/prototype-v0.16/docs/prototype/ARCHIVE.md)。
 - [原型复现资料](docs/prototype/RUNNING.md)：仅保留历史命令和机器配置作参考；正式使用从CLI说明进入。
 - [Skill Hub技能文件](skills/README.md)：7类21方法，含简单问答和明确小改动使用的 quick，作为可编辑文件分发与维护，保留MIT与来源。
 - [MGRP示例主模型](examples/mgrp/model/01-project.c4)及[证据引用](examples/mgrp/evidence.json)：业务来源只读，模型为审查示例，不是正式产品默认项目。
 - [清理记录](docs/prototype/CLEANUP.md)：临时产物回收与保留内容核验。
 
-旧选版与旧界面只作为原型子文档中的历史资料，不提供旧产品运行入口。开源调研保留[当时结论](docs/research/open-source-project-visualization-survey-2026-11-04.md)，当前已选LikeC4。
+冻结原型在归档分支独立复现，旧选版和更早界面仍只作历史参考。当前工作区的正式入口保持CLI使用说明。开源调研保留[当时结论](docs/research/open-source-project-visualization-survey-2026-11-04.md)，当前已选LikeC4。
 
 ## 验证状态
 

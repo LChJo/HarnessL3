@@ -1,5 +1,7 @@
 # 已确认的原型 v0.16
 
+2026-11-06：原型已经单独提交并推送至[archive/prototype-v0.16](https://github.com/LChJo/HarnessL3/tree/archive/prototype-v0.16)，提交84e79ec，可在独立worktree运行。此次Windows生产构建、45项程序及6CLI/16脑图/8历史/10技能检查均通过；[复验记录与运行说明](https://github.com/LChJo/HarnessL3/blob/archive/prototype-v0.16/docs/prototype/ARCHIVE.md)随归档保存。本页以下仍保留设计冻结时的语境。
+
 2026-11-05，用户已将此方案确认作为最终设计基准。此目录是正式实现的设计与历史依据；正式需求和接口从[工作规格](../spec/README.md)进入，当前目标仍以[项目基准](../PROJECT_BASELINE.md)为准。
 
 - [最终交互与视觉](DESIGN.md)：五类上下文、Skill Hub文件夹层、统一无限画布和Slate。
