@@ -4,7 +4,7 @@
 
 ## 安装与初始化
 
-在仓库开发时执行`npm ci`、`npm run build`，通过`node bin/harnessl3.mjs --help`查看命令。本地安装包使用`npm install -g <harnessl3-0.1.0.tgz>`；构建安装包不等于已向npm发布。
+从 GitHub 安装或更新时，执行[安装指南](../INSTALL.md)中的脚本。在源码仓库开发时，可执行`npm ci`、`npm run build`，通过`node bin/harnessl3.mjs --help`查看命令。
 
 从GitHub安装/更新及复制宿主skill见根目录[安装指南](../INSTALL.md)。包内另有`agent-skills/harnessl3/SKILL.md`：用于Codex/Claude Code运行时调用本CLI，与下文Skill Hub的21项方法分开。安装指南在程序安装后显式运行`node <安装包绝对路径>/scripts/install-agent-skills.mjs`，将整个skill目录（含安装更新、项目初始化、运行细节、subagent接入四份按需参考MD）复制到Codex的`~/.agents/skills/harnessl3`和Claude Code的`~/.claude/skills/harnessl3`（支持自定义目录）；不装Hooks，不启动宿主。主入口聚焦全任务触发/子任务分支、返回含义及使用判断，参考正文不预读。新会话可分别用`$harnessl3`与`/harnessl3`调用。
 

@@ -11,7 +11,7 @@ git --version
 harnessl3 --version
 ```
 
-需要 Node.js >=24.12.0 且 <25、npm 和 Git。CLI 不存在时，最后一条命令失败是安装前状态，不表示项目损坏。更新前记录 CLI 版本和安装来源提交；同为0.1.0可能对应不同提交。
+需要 Node.js >=24.12.0 且 <25、npm 和 Git。CLI 未安装时，最后一条命令会提示找不到命令。
 
 ## 取得并执行安装流程
 
@@ -21,7 +21,7 @@ harnessl3 --version
 - 没有 CLI 或本地文档过旧时，使用现有网页/文件下载工具取得 [GitHub 安装指南](https://github.com/LChJo/HarnessL3/blob/main/INSTALL.md) 并读取正文。需要原文时使用 [Raw Markdown](https://raw.githubusercontent.com/LChJo/HarnessL3/main/INSTALL.md)，下载到用户项目外的临时目录。
 - 根据实际平台执行指南中的 PowerShell 或 Bash 整段脚本。首次安装与更新共用流程：独立临时克隆 → `npm ci` → 构建 → 打包 `.tgz` → 全局安装 → 复制整个运行时 skill 目录及参考附件。
 
-截至2026-11-06，仓库为 `LChJo/HarnessL3`，正式候选已合并至 `main`，原临时审阅分支已删除；npm尚未发布，按最新指南从 GitHub `main` 构建安装，不使用 `npm install -g harnessl3@latest`。记录实际来源提交，主干不等于稳定发行版；来源变化时先核实实际内容，不自动猜分支。用户仅要求完成开发任务且尚未授权安装时，说明入口缺失，不据此自动升级环境。
+安装和更新均执行最新 GitHub 指南中的脚本。用户仅要求完成开发任务且尚未授权安装时，说明入口缺失，不据此自动更改本机环境。
 
 已有 `.tgz` 且用户要求安装该包时可执行：
 
@@ -36,4 +36,4 @@ node <已安装harnessl3包绝对路径>/scripts/install-agent-skills.mjs
 
 更新前按实际数据根停止旧服务：`harnessl3 serve stop --json`；多个显式 `--data-dir` 分别停止。保留 npm prefix、机器数据根、项目 `.harness`、用户技能及 `.skills-library-<UUID>` 实体和全部历史。更新不需要 GC、迁移或重建项目。
 
-更新后核对 `harnessl3 --version` / `--help`、来源提交和复制程序的两条宿主结果及每文件 `files`；备份路径在各变更文件的 `backup` 中。失败时保留错误和实际完成范围，不声明全部成功。安装脚本更新当前 skill 后，正在运行的会话仍可能持有旧正文，后续会话需要重新发现。
+更新后核对 `harnessl3 --version` / `--help` 和两个宿主的 skill 复制结果；备份路径在各变更文件的 `backup` 中。失败时保留错误和实际完成范围。更新 skill 后，请新建或刷新宿主会话。
