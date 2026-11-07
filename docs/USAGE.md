@@ -8,7 +8,11 @@
 
 从GitHub安装/更新及复制宿主skill见根目录[安装指南](../INSTALL.md)。包内另有`agent-skills/harnessl3/SKILL.md`：用于Codex/Claude Code运行时调用本CLI，与下文Skill Hub的21项方法分开。安装指南在程序安装后显式运行`node <安装包绝对路径>/scripts/install-agent-skills.mjs`，将整个skill目录（含安装更新、项目初始化、运行细节、subagent接入四份按需参考MD）复制到Codex的`~/.agents/skills/harnessl3`和Claude Code的`~/.claude/skills/harnessl3`（支持自定义目录）；不装Hooks，不启动宿主。主入口聚焦全任务触发/子任务分支、返回含义及使用判断，参考正文不预读。新会话可分别用`$harnessl3`与`/harnessl3`调用。
 
-安装后所有任务默认先经L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发；不因轻量/只读跳过。有效的连续任务可复用，完全不需材料时用明确空选择。已有父交接的subagent核对并复用，不再联合选技能或关闭父任务；独立范围新建自己的任务。安装/初始化等入口恢复不递归，缺有效已有worktree或工具能力时如实说明。此为文件型宿主约定，真实触发情况另按TC27验证，不改变CLI的目标隔离、宿主名单或无Hook边界。
+安装后所有任务默认先尝试L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发；不因轻量/只读跳过。有效的连续任务可复用，完全不需材料时用明确空选择。已有父交接的subagent核对并复用，不再联合选技能或关闭父任务；独立范围新建自己的任务。安装/初始化等入口恢复不递归，缺有效已有worktree或工具能力时如实说明并继续可独立完成的工作。
+
+首次发现当前Git工作区未登记，agent会使用通用询问窗口展示路径和初始化影响。同意后先创建缺失配置/登记，再由当前大模型读取项目、直接编写LikeC4对象/关系/证据与结构视图，报告阅读、建模和校验进度；完成覆盖核对后继续原任务。拒绝或取消则普通执行，本任务内不重问。已有授权复用，无回复不算同意。CLI返回的`error.details.onboarding`只给出路径与建议命令，不自动初始化，也不在JSON进程内提问。
+
+本次上下文通过select/query/handoff实际返回且所需技能正文读取后，agent只输出单独一行“查看可视化过程”文字超链，不附使用/选择说明。网址只用于Markdown目标，不另附裸地址或常规到期说明，也不逐组重复。`web open --no-open --task <task-id> --json`取得实际任务链接，不自动打开浏览器；Web不可用时仍可继续CLI。
 
 接口发现从`harnessl3 --help`开始；`harnessl3 task --help`列该组命令，`harnessl3 task select --help`给出具体用法、必需/可选参数、请求Schema/示例路径及返回含义。路径指向当前安装包，可用现有文件工具按需读取；嵌套字段由Schema及本地引用定义。帮助/版本仍为静态文本，即使带`--json`也不启动服务或返回业务封套。业务命令只返回当次实际数据，不重复附带完整接口手册。
 
@@ -20,22 +24,39 @@ harnessl3 model validate --json
 harnessl3 web open
 ```
 
-init只创建缺失的`.harness/project.json`、`.harness/model/*.c4`、证据和别名文件，以及首次全局技能库；不会执行Git init、切换分支或创建worktree。模板只是待完善的项目边界，需用实际来源维护其简述、对象、关系和证据。
+init只创建缺失的`.harness/project.json`、`.harness/model/*.c4`、证据和别名文件，以及首次全局技能库；不会执行Git init、切换分支或创建worktree。返回的`initialization.stage:scaffold-ready`表示基础接入就绪，`semanticStatus:not-assessed`表示CLI尚未评估语义；同时给出实际模型数量和当前agent的建模/审核动作。当前大模型随后直接阅读来源并维护模型，不另起模型或用生成脚本猜业务语义。已登记但仍是占位模型时也需要补全结构；已有有效内容保留。
 
 另一个已有worktree执行init或worktree register即可。同一Git common-dir下保持项目UUID相同，各工作区有独立UUID和本机历史。项目身份冲突会拒绝，不能复制其它仓库的projectId冒充同一项目。
 
+## 随源码提交项目上下文
+
+Git项目建议将以下文件与相关源码变更一并提交，便于其他成员和机器取得同一份项目知识：
+
+| 文件 | 内容 |
+| --- | --- |
+| `.harness/model/`内的`.c4`、`.likec4` | 对象、关系、specification及views，保留稳定UUID |
+| `.harness/project.json` | 项目身份及可移植配置 |
+| `.harness/evidence.json`、`.harness/aliases.json` | 证据引用与核验指纹、显式身份迁移 |
+| 引用的项目文档、决策记录 | 模型依赖的长期说明 |
+| 仓库内真实文件形式的项目技能、附件与许可证 | 项目自行维护的共享方法 |
+
+本机数据根、任务journal/历史/快照、归档技能、SQLite/缓存/布局、日志、机器路径配置及访问凭证不纳入源码仓库；保留原数据。不要为提交复制全局技能库，或跟随symlink/junction收录外部实体。按项目规则检查diff和`.gitignore`，Git暂存、commit及push仍遵守已有授权。
+
 ## agent的一次任务
+
+先组织并取得本次实际上下文与所需技能，再显示格式化的可视化链接：
 
 ```text
 harnessl3 task start --title "本次任务目的" --json
 harnessl3 task select <task-id> --file <selection.json> --json
 harnessl3 task handoff <task-id> --json
 harnessl3 task read <task-id> --file <files.json> --json
+harnessl3 web open --no-open --task <task-id> --json
 ```
 
 task start返回本次绑定、顶层简述、实际技能轻目录和内置Skill Hub路由提示。agent一次选出所需的多个expand/read目标及技能集合；可以跨层直接请求稳定UUID。expand只返回直接子层简述，read只返回精确对象/关系正文与边界引用。祖先、端点或文件引用出现，不表示它们的正文已被读取。
 
-路由提示仅保留筛选规则，指向响应中的结构化taskId/binding/directory/catalog，不再把这些数据嵌入提示文本。旧幂等回执/历史仍保留当时原文；去重不改任务目的、上下文或技能档案。
+路由提示包含筛选规则和上述Git提交范围建议，指向响应中的结构化taskId/binding/directory/catalog，不把这些数据嵌入提示文本。旧幂等回执/历史仍保留当时原文；规则更新不改任务目的、上下文或技能档案。
 
 selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。
 
@@ -58,6 +79,8 @@ harnessl3 task close <task-id> --json
 proof使用当前status返回的目标、sourceEpoch、sourceVersion和modelRevision，声明路径/对象范围、updated或no-semantic-change及核查依据，见[proof Schema](spec/contracts/sync-proof.schema.json)。服务机械核对版本、范围、模型和checks，不代替调用方的语义判断。局部证明不清除未覆盖变化；并发新变动会拒绝旧证明。关闭任务可以保留pending或failed；历史与已选技能仍可读。
 
 ## 技能与只读观测
+
+画布逐层展示命中节点和祖先路径，其余节点合并为“…”；点击可进入全部节点列表，搜索、筛选或分页浏览。Skill Hub及技能文件夹采用相同处理。列表可打开详情并显式加入正文、目录或技能候选，返回画布后提交批量请求；查看列表本身不产生读取或选择。历史页面使用当时已保存的模型和目录。
 
 只有Skill Hub路由原则内置。普通技能及附件是可编辑文件，当前7类21项方法随包提供。有效根优先级：HARNESS_SKILLS_ROOT绝对路径、项目配置的skills.root相对路径、默认机器技能库。已有库包括空目录都不补写或覆盖；升级不重置用户内容。默认skills入口通过symlink/junction指向同级持久实体，以免并发创建的空目录被覆盖；编辑入口内文件即可，`.skills-library-<UUID>`是活动内容，不能当临时文件删除。
 
@@ -95,4 +118,6 @@ harnessl3 serve status --json
 harnessl3 serve stop --json
 ```
 
-服务按需启动，只监听本机回环动态端口；web open建立短时一次浏览会话。无浏览器不妨碍CLI使用，启动浏览器失败时错误details提供打开链接。程序不终止未知端口进程，也不把“索引需要重建”误认为历史丢失。归档损坏会明确报错，不能通过清理历史来修复。
+服务按需启动，只监听本机回环动态端口。默认数据根由同一用户的所有项目/任务共享一份常驻服务，没有空闲退出时限；停止服务、进程退出或关机后结束。显式`--data-dir`可隔离测试或独立实例。serve status返回开始时间、scope:user-data-root及lifetime:until-stopped。
+
+web open默认打开浏览器，--no-open只返回链接且opened:false。网页首次登录码5分钟/一次性，成功登录后的浏览会话12小时，均非后台进程的寿命；返回的service与login字段分别描述它们。访问入口过期或已用时让agent重新取得链接即可，常规可视化提示不附有效期文案。无浏览器不影响CLI，打开失败时error.details提供链接。程序不终止未知端口进程，归档损坏也不能通过清理历史修复。

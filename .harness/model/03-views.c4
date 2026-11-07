@@ -1,0 +1,23 @@
+views {
+  view overview {
+    title "项目模块总览"
+    description "正式模块、权威文件与冻结原型参考；箭头表示静态依赖或指导/验证关系，不是运行轨迹。"
+    include app.*
+    style * { size xs textSize xl }
+    autoLayout LeftRight 35 45
+  }
+  view core {
+    title "核心用例与持久化"
+    description "按实际代码装配的核心职责；派生索引与文件历史分开，未声称全函数语义覆盖。"
+    include app.service, app.core.*, app.library, app.projectModel
+    style * { size xs textSize xl }
+    autoLayout LeftRight 35 45
+  }
+  view context {
+    title "上下文交接与源码同步"
+    description "当前agent使用CLI；服务将请求分派到任务/模型/档案/索引与同步模块，Web仅投影实际记录。"
+    include app.cli, app.service, app.core.runtime, app.core.context, app.core.model, app.core.archive, app.core.index, app.core.source, app.web, app.runtimeSkill
+    style * { size xs textSize xl }
+    autoLayout LeftRight 35 45
+  }
+}

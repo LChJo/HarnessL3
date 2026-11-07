@@ -1,9 +1,42 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fixture } from './helpers.mjs'
+import { Runtime } from '../../build/core/runtime.js'
+import { Archive } from '../../build/core/archive.js'
+
+test('TC21 opening a recorded task reuses its loaded journal and still checks its snapshot bytes', async t => {
+  const f = await fixture(t, 'harness-v1-web-loading-')
+  const root = await f.repository()
+  const runtime = new Runtime(f.dataRoot)
+  try {
+    const call = (operation, positionals = [], flags = {}) => runtime.execute({ operation, positionals, flags, cwd: root, requestId: randomUUID() })
+    const initialized = await call('init')
+    assert.equal(initialized.ok, true, JSON.stringify(initialized))
+    const started = await call('task start', [], { title: 'Open this recorded task' })
+    assert.equal(started.ok, true, JSON.stringify(started))
+    const worktree = await runtime.registry().worktree(initialized.target.worktreeId)
+    const resource = await runtime.worktreeResources(worktree)
+    // Extra committed history must not be read from disk again just to decide
+    // whether this already loaded task uses the legacy format.
+    await resource.archive.commit({ scope: 'loading-regression', requestId: randomUUID(), request: {}, payload: { kind: 'unrelated-history' }, receipt: {} })
+    let reopens = 0
+    const ready = Archive.prototype.ready
+    t.mock.method(Archive.prototype, 'ready', function () {
+      if (this.root === resource.archive.root && this !== resource.archive) reopens++
+      return ready.call(this)
+    })
+    const view = await runtime.view(worktree.id, started.data.taskId)
+    assert.equal(view.task.id, started.data.taskId)
+    const shown = await call('task show', [started.data.taskId])
+    assert.equal(shown.ok, true, JSON.stringify(shown))
+    assert.equal(reopens, 0, 'opening a known task must not replay all committed history')
+    await writeFile(path.join(resource.archive.root, 'snapshots', view.task.modelSnapshotHash + '.json'), '{}')
+    await assert.rejects(runtime.view(worktree.id, started.data.taskId), { code: 'ARCHIVE_CORRUPT' })
+  } finally { await runtime.close() }
+})
 
 test('TC20 Web projects committed task snapshots without renewing reads, and streams only its target', async t => {
   const f = await fixture(t, 'harness-v1-web-service-')

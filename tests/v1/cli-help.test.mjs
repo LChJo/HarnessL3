@@ -56,6 +56,9 @@ test('TC22 group help narrows discovery and sync help uses its own schema and pa
   const migration = await f.help('migrate', 'prototype')
   assert.match(migration, /--from.*required/i)
   assert.match(migration, /--worktree.*required/i)
+  const web = await f.help('web', 'open')
+  assert.match(web, /Usage: harnessl3 web open \[--task <UUID>\] \[--no-open\]/)
+  assert.match(web, /opened:false/)
   await assert.rejects(access(f.dataRoot))
 })
 

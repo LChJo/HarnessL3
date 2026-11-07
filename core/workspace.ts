@@ -398,7 +398,21 @@ export class WorkspaceRegistry {
     if (cwdRecord && (explicitWorktree && explicitWorktree.id !== cwdRecord.id || explicitProject && explicitProject.id !== cwdRecord.projectId)) {
       throw new HarnessError('TARGET_CONFLICT', 'The explicit target conflicts with the registered current worktree.', { cwdWorktreeId: cwdRecord.id });
     }
-    if (!cwdRecord && !explicitWorktree) throw new HarnessError('TARGET_REQUIRED', 'Specify a worktree UUID when running outside a registered worktree.');
+    if (!cwdRecord && !explicitWorktree) {
+      if (cwdIdentity && !options.projectId) {
+        const configured = await exists(path.join(cwdIdentity.root, '.harness', 'project.json'));
+        throw new HarnessError('TARGET_REQUIRED', 'This Git worktree is not registered. Ask the user whether to set up HarnessL3 in the agent question UI; if declined, continue the original task without L3.', {
+          onboarding: {
+            state: configured ? 'registration-required' : 'initialization-required',
+            worktreeRoot: cwdIdentity.root,
+            confirmationRequired: true,
+            command: configured ? ['worktree', 'register', cwdIdentity.root] : ['init'],
+            fallback: 'continue-without-l3',
+          },
+        });
+      }
+      throw new HarnessError('TARGET_REQUIRED', 'Specify a worktree UUID when running outside a registered worktree.');
+    }
     const selected = explicitWorktree ?? cwdRecord;
     if (!selected) throw new HarnessError('TARGET_REQUIRED', 'A worktree target is required.');
     const project = data.projects.find((item) => item.id === selected.projectId)!;

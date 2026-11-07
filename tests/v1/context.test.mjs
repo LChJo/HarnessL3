@@ -88,6 +88,16 @@ test('TC06/19 routing rules do not duplicate entry payloads; prompt refresh and 
   const entry = await f.start(purpose, requestId)
   const { routingPrompt, taskId, binding, directory, catalog } = entry.data
   t.diagnostic(JSON.stringify({ promptBytes: Buffer.byteLength(routingPrompt), entryBytes: Buffer.byteLength(JSON.stringify(entry)) }))
+  for (const file of ['.harness/model/', '.c4', '.likec4', '.harness/project.json', '.harness/evidence.json', '.harness/aliases.json']) {
+    assert.ok(routingPrompt.includes(file), `Git guidance must identify the portable context file ${file}`)
+  }
+  assert.match(routingPrompt, /Git projects/)
+  assert.match(routingPrompt, /related source changes/)
+  assert.match(routingPrompt, /project-owned skill files.*attachments.*licenses/)
+  assert.match(routingPrompt, /machine-local.*journals.*snapshots.*SQLite.*credentials/)
+  assert.match(routingPrompt, /preserve.*history/i)
+  assert.match(routingPrompt, /commit authorization/)
+  assert.match(routingPrompt, /symlinks.*junctions/)
   for (const value of [purpose, taskId, binding.modelRevision, binding.catalogRevision, directory.items[0].brief, catalog[0].description, JSON.stringify(binding), JSON.stringify(directory), JSON.stringify(catalog)]) {
     assert.ok(!routingPrompt.includes(value), 'Routing rules must refer to structured entry data instead of embedding it')
   }

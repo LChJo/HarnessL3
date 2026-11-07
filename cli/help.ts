@@ -5,7 +5,7 @@ import { PACKAGE_ROOT, PACKAGE_VERSION, SCHEMA_ROOT } from '../core/package.js'
 import { HarnessError } from '../core/errors.js'
 
 const descriptions: Record<string, string> = {
-  init: 'Create missing context files and register this existing Git worktree; preserve existing content.',
+  init: 'Create missing context files and register this Git worktree; the current agent authors/reviews its project model and reports progress.',
   'project register': 'Register an existing configured project without creating its model.',
   'project list': 'List registered projects from any directory.',
   'project show': 'Show a registered project by its stable ID.',
@@ -35,7 +35,7 @@ const descriptions: Record<string, string> = {
   'serve start': 'Start/reuse the correct loopback-only service; foreground mode stays attached.',
   'serve status': 'Inspect this data root service without selecting a worktree.',
   'serve stop': 'Stop this data root service; retain committed work.',
-  'web open': 'Open a short-lived browser session for the exact target; browsing is not context reading.',
+  'web open': 'Return a Web sign-in URL for the resident service; open the browser unless --no-open is supplied.',
   'model validate': 'Validate the current LikeC4 model without editing or marking source as synchronized.',
   gc: 'Preview rebuildable derived-data cleanup by default; never purge history or user skills.',
   'migrate prototype': 'Preview legacy archive copying by default; apply preserves the original source.',
@@ -64,6 +64,7 @@ const options: Record<string, [string, string]> = {
   'log-file': ['absolute-path', 'Explicit existing log; do not discover unrelated sessions.'],
   port: ['0..65535', 'Loopback port; default 0 selects an available dynamic port.'],
   foreground: ['', 'Stay attached after service readiness; JSON readiness is emitted once.'],
+  'no-open': ['', 'Return a clickable authenticated Web URL without launching a browser; first use may have no target.'],
   'dry-run': ['', 'Preview only; default for gc and migrate prototype. Mutually exclusive with --apply.'],
   apply: ['', 'Apply the named conservative operation; mutually exclusive with --dry-run.'],
 }
@@ -71,6 +72,9 @@ const contracts: Record<string, string> = {
   'task select': 'selection', 'context query': 'query', 'task read': 'file-read', 'sync verify': 'sync-proof',
 }
 const resultKinds: Record<string, string> = {
+  init: 'command-result: registration and initialization stage, model counts and agent guidance. scaffold-ready is mechanical setup; semanticStatus is not-assessed. The current agent reads sources, writes the model and reports progress.',
+  'serve status': 'command-result: shared service identity, startedAt, scope:user-data-root and lifetime:until-stopped; no idle expiry. The default data root shares one service across projects.',
+  'web open': 'command-result: url, opened, service and login metadata; --no-open returns opened:false. The single-use sign-in code lasts five minutes, the authenticated browser session lasts twelve hours, and the service runs until stopped. After context is returned, show only the named text hyperlink on its own line.',
   'task start': 'task-entry: taskId, binding, routingPrompt, directory and catalog.',
   'task prompt': 'task-entry: refreshed routing material and binding for the pending selection.',
   'task select': 'selection: context packet, archived skill plan and exact file references.',

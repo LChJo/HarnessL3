@@ -14,7 +14,9 @@
   ...source files...
 ```
 
-`init` 生成最小合法模板，不扫描所有源文件生成“完整知识”，不创建 Git、不编辑 AGENTS、不初始化 tracker。运行数据、解析索引、C4 布局、任务和日志观测均在[本机数据根](storage.md)，不纳入 `.harness/model`。源码是事实依据，模型的存在不是完整性或实时一致的保证。
+`init`只生成最小合法模板并做机械接入，返回scaffold-ready、当前模型数量及语义not-assessed。当前大模型随后用已有文件工具读取实际项目，编写/审核对象、组成层次、真实关系、证据及结构视图，并报告阅读/建模/校验进度与覆盖缺口。已登记但仍为模板或明显漏掉模块的项目需补全；模型语法有效不代表语义完整。CLI不另起模型、不以目录脚本生成“完整知识”，也不创建Git或tracker。运行数据、索引、布局、任务与观测在[本机数据根](storage.md)，不纳入权威模型。
+
+Git项目建议将上述权威文件与相关源码变更一并提交；引用文档和项目内真实技能文件的归属、机器数据排除及提交授权边界见[存储规格](storage.md#1-数据权威与身份)。`task start`/`task prompt`的可复用规则应直接包含这项建议，不能只依赖agent另读文档。
 
 [project-config.schema.json](contracts/project-config.schema.json)中的 skills.root 可省略，省略使用本机全局技能库；存在时为 worktree 相对路径。解析后的项目内技能根从来源扫描排除，策略记入 sourceScanRevision；禁止将 worktree 根或运行档案当技能根。source.excludePatterns 是根锚定的相对 POSIX glob 列表（`*` 匹配单段、`**` 匹配跨段、`?` 匹配单字符；点文件也参与匹配，无 `!`、字符类或大括号扩展），加入固定排除之外；只改变扫描策略，不删除文件。实际模型目录固定为 `.harness/model`，不提供另一份可编辑对象库。
 

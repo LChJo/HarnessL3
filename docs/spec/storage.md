@@ -1,13 +1,17 @@
 # 本机存储、事务与历史恢复
 
 - 状态：正式CLI首版实现契约；实际模块和平台验证见[实施状态](../implementation/STATUS.md)，不把v0.16原型报告当正式验收。
-- 规格版本：1；核对日期：2026-11-05。
+- 规格版本：1；核对日期：2026-11-07。
 - 约束：D05–D09、D12–D13；验收：A01、A02、A09、A10。
 - 关联：[运行架构](architecture.md)、[CLI 契约](cli-contract.md)、[模型与读取契约](model-context.md)、[日志与同步](observation-sync.md)、[验收矩阵](acceptance.md)。
 
 ## 1. 数据权威与身份
 
 业务仓库中的 `.harness/project.json`、`model/*.c4` / `*.likec4`、`evidence.json`、`aliases.json` 是可维护的长期上下文。普通技能仍是技能目录中的文件。运行服务读取这些文件，派生目录、模型投影和索引；数据库不提供第二套可编辑对象，也不把读取历史写回业务仓库。
+
+Git项目的入口筛选提示应建议将`.harness/model/`内的`.c4`/`.likec4`（含specification与views）、`.harness/project.json`、`.harness/evidence.json`、`.harness/aliases.json`与相关源码变更一并版本管理。引用的长期项目文档，以及仓库内以真实文件维护的项目技能、附件和许可证，也按项目规则提交。项目UUID及可移植相对配置随Git保存，机器绝对路径、worktree登记与访问凭证不纳入。
+
+本机数据根中的journal、任务、快照、归档技能字节、SQLite索引、缓存/布局和日志不随源码提交；项目已有的本机输出目录同样按其用途排除。历史与用户技能仍须保留，Git排除不构成删除授权。默认全局技能库及其symlink/junction入口、外部目标不因这条建议被复制或纳入仓库。提示仅提供提交范围建议，暂存、commit和push遵守用户已有授权。
 
 项目使用随 Git 保存的 `projectId` UUID；本机登记为每个已有 worktree 分配 `worktreeId` UUID，并绑定解析后的绝对路径和 Git common directory。分支名、HEAD、目录拼写均不是主键。分支变化保留 worktree 身份，但重新计算版本并将已有任务保留为原绑定；路径移动必须通过登记流程显式重新定位，不能自动把另一目录的记录接上。取消登记只停用本机绑定，不删除源码目录、任务和快照。
 

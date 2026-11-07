@@ -291,8 +291,14 @@ export class Runtime extends EventEmitter {
         case 'init': {
           const initialized = await registry.init(request.cwd, flag(request, 'name'))
           target = { projectId: initialized.worktree.projectId, worktreeId: initialized.worktree.id }
-          await loadModel(initialized.worktree.root)
-          result = initialized; break
+          const model = await loadModel(initialized.worktree.root)
+          const modelCreated = initialized.createdFiles.some(file => /\.(?:c4|likec4)$/.test(file))
+          result = { ...initialized, initialization: {
+            stage: 'scaffold-ready', semanticStatus: 'not-assessed', modelCreated,
+            nextAction: modelCreated ? 'model-project' : 'review-project-model',
+            model: { objects: model.entities.filter(entity => entity.entityType === 'object').length, relations: model.entities.filter(entity => entity.entityType === 'relation').length, views: model.views.length },
+            agentGuidance: 'Use the current agent and existing file tools to inspect the project and author or review LikeC4 objects, relationships and evidence. Report reading, modeling and validation progress. Check the model and structure views before reporting project initialization complete, and disclose unmodeled scope.',
+          } }; break
         }
         case 'project register': result = await registry.register(path.resolve(request.cwd, id)); break
         case 'project list': result = { items: await registry.projects() }; break
@@ -314,7 +320,7 @@ export class Runtime extends EventEmitter {
         }
         case 'web open': {
           try { const worktree = await this.resolve(request, true); target = { projectId: worktree.projectId, worktreeId: worktree.id } }
-          catch (error) { if (!(error instanceof HarnessError) || error.code !== 'TARGET_REQUIRED' || flag(request, 'worktree') || flag(request, 'project')) throw error }
+          catch (error) { if (!(error instanceof HarnessError) || error.code !== 'TARGET_REQUIRED' || flag(request, 'worktree') || flag(request, 'project') || flag(request, 'task')) throw error }
           result = { target }; break
         }
         case 'skills list': case 'skills refresh': {

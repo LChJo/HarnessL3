@@ -18,11 +18,11 @@ export const commands: Record<string, CommandDefinition> = {
   'agent unbind': { count: 1 }, 'agent status': { count: 0, flags: ['binding'] },
   'sync status': { count: 0 }, 'sync verify': { count: 0, flags: ['file'], required: ['file'] },
   'serve start': { count: 0, flags: ['port', 'foreground'] }, 'serve status': { count: 0 }, 'serve stop': { count: 0 },
-  'web open': { count: 0, flags: ['task'] }, 'model validate': { count: 0 },
+  'web open': { count: 0, flags: ['task', 'no-open'] }, 'model validate': { count: 0 },
   gc: { count: 0, flags: ['dry-run', 'apply'] }, 'migrate prototype': { count: 0, flags: ['from', 'dry-run', 'apply'], required: ['from', 'worktree'] },
 }
 export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'help', 'version']
-export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply'])
+export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply', 'no-open'])
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 export function flag(request: CommandRequest, name: string): string | undefined { const value = request.flags[name]; return typeof value === 'string' ? value : undefined }
 export function validateUuid(value: string, field: string): string { if (!uuid.test(value)) throw new HarnessError('INVALID_ARGUMENT', 'Expected a lowercase UUID', { field }); return value }

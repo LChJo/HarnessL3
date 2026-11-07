@@ -61,6 +61,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
   let draining = false, active = 0, cancelledBeforeReady = false
   const drainWaiters: (() => void)[] = []
   const browserCodes = new Map<string, number>(), sessions = new Map<string, number>()
+  const loginCodeTtlMs = 5 * 60_000, browserSessionTtlMs = 12 * 3600_000
   const streams = new Set<ServerResponse>()
   const bearer = (request: IncomingMessage) => secureEqual(request.headers.authorization ?? '', 'Bearer ' + token)
   const browser = (request: IncomingMessage) => {
@@ -103,16 +104,17 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
       if (endpoint.pathname === '/browser-session' && request.method === 'POST') {
         if (!auth) return json(response, { error: 'Unauthorized' }, 401)
         const code = randomBytes(32).toString('hex')
-        browserCodes.set(code, Date.now() + 5 * 60_000)
-        return json(response, { code })
+        const expires = Date.now() + loginCodeTtlMs
+        browserCodes.set(code, expires)
+        return json(response, { code, expiresAt: new Date(expires).toISOString(), browserSessionTtlMs })
       }
       if (endpoint.pathname === '/session' && request.method === 'POST') {
         if (request.headers.origin !== record.url) return json(response, { error: 'Forbidden origin' }, 403)
         const value = await body(request) as { code?: string }
-        if (!value || typeof value.code !== 'string' || (browserCodes.get(value.code) ?? 0) < Date.now()) return json(response, { error: 'Expired browser session link; run web open again' }, 401)
+        if (!value || typeof value.code !== 'string' || (browserCodes.get(value.code) ?? 0) < Date.now()) return json(response, { error: 'Web sign-in code expired or already used; request a fresh Web link. This does not stop the background service.' }, 401)
         browserCodes.delete(value.code)
-        const cookie = randomBytes(32).toString('hex'); sessions.set(cookie, Date.now() + 12 * 3600_000)
-        response.setHeader('set-cookie', `harnessl3_session=${cookie}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`)
+        const cookie = randomBytes(32).toString('hex'); sessions.set(cookie, Date.now() + browserSessionTtlMs)
+        response.setHeader('set-cookie', `harnessl3_session=${cookie}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${browserSessionTtlMs / 1000}`)
         return json(response, { authenticated: true })
       }
       if (endpoint.pathname === '/rpc' && request.method === 'POST') {

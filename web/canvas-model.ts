@@ -16,8 +16,21 @@ export type PlacedItem = MapItem & Bounds & { depth: number; parentId: string | 
 export type MapEdge = { source: string; target: string; kind: 'input' | 'branch' | 'output'; d: string; hit: boolean; relatedIds: string[] }
 export function layoutMindmap(roots: MapItem[], expanded: string[]) {
   const open = new Set(expanded), nodes: PlacedItem[] = [], edges: MapEdge[] = [], frontier: PlacedItem[] = []
-  const children = (node: MapItem) => open.has(node.id) ? node.children : []
-  const size = (node: MapItem): number => Math.max(node.kind === 'category' ? 86 : 74, children(node).reduce((sum, child, i) => sum + size(child) + (i ? 16 : 0), 0))
+  const visible = new Map<string, MapItem[]>(), heights = new Map<string, number>()
+  const children = (node: MapItem): MapItem[] => {
+    if (!open.has(node.id)) return []
+    if (visible.has(node.id)) return visible.get(node.id)!
+    const hits = node.children.filter(child => child.hit), hiddenCount = node.children.length - hits.length
+    if (hiddenCount) hits.push({ id: 'overflow:' + node.id, title: '…', brief: `其余 ${hiddenCount} 项`, category: node.category, kind: 'overflow', children: [], hit: false, hits: 0, state: 'available', relatedIds: [], fields: {}, overflowFor: node.id, hiddenCount })
+    visible.set(node.id, hits)
+    return hits
+  }
+  const size = (node: MapItem): number => {
+    if (heights.has(node.id)) return heights.get(node.id)!
+    const height = Math.max(node.kind === 'category' ? 86 : 74, children(node).reduce((sum, child, i) => sum + size(child) + (i ? 16 : 0), 0))
+    heights.set(node.id, height)
+    return height
+  }
   function place(node: MapItem, top: number, depth: number, parent: PlacedItem | null) {
     const height = node.kind === 'category' ? 86 : 74
     const placed = { ...node, depth, parentId: parent?.id ?? null, x: 350 + depth * 302, y: top + size(node) / 2 - height / 2, width: depth ? 236 : 224, height }

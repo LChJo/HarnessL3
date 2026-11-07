@@ -1,0 +1,272 @@
+model {
+  app.cli -[uses]-> app.service "认证RPC与服务复用" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000001"
+      brief "CLI发现/复用后台服务，使用认证RPC调用同一核心。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016"
+      version "1"
+    }
+  }
+  app.web -[uses]-> app.service "Web API与事件流" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000002"
+      brief "Web以同源认证访问RPC、view及worktree事件流。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000010"
+      version "1"
+    }
+  }
+  app.service -[uses]-> app.core.runtime "分派公共用例" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000003"
+      brief "HTTP服务将已校验命令交给Runtime执行，视图来自同一Runtime。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000003"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.workspace "定位工作区" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000004"
+      brief "Runtime通过WorkspaceRegistry核查登记和请求目标。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.context "任务与交接" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000005"
+      brief "Runtime为每worktree创建TaskService并分派任务命令。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.model "校验与投影" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000006"
+      brief "Runtime读取模型用于初始化校验、模型校验和视图响应。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.skills "目录与刷新" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000007"
+      brief "Runtime按实际技能路径执行目录扫描与刷新。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.source "来源与同步" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000008"
+      brief "Runtime装配FreshnessManager并提供来源扫描与同步命令。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.observation "显式日志绑定" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000009"
+      brief "Runtime为worktree装配只读观测并分派绑定、状态和解除命令。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.maintenance "显式维护" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000a"
+      brief "Runtime装配原型导入和保守GC，不能借维护删除未知用户内容。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.archive "装配文件档案" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000b"
+      brief "每worktree的Archive实例交给任务、同步、观测与维护用例。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.index "装配派生索引" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000c"
+      brief "Runtime为worktree创建独立SQLite索引并交给TaskService。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.context -[uses]-> app.core.model "取得精确上下文" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000d"
+      brief "TaskService从模型获得目录和精确正文，并核对模型版本。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000007"
+      version "1"
+    }
+  }
+  app.core.context -[uses]-> app.core.skills "选择与归档技能" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000e"
+      brief "TaskService扫描实际目录并捕获一次联合选择的技能文件。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000007"
+      version "1"
+    }
+  }
+  app.core.context -[uses]-> app.core.archive "提交任务与文件" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000000f"
+      brief "任务、回执、快照和所选技能字节写入Archive，历史按提交恢复。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000007"
+      version "1"
+    }
+  }
+  app.core.context -[uses]-> app.core.index "投影与检索" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000010"
+      brief "TaskService投影已提交文档并通过派生索引检索任务。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000007"
+      version "1"
+    }
+  }
+  app.core.source -[uses]-> app.core.model "核对模型与来源" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000011"
+      brief "FreshnessManager分别读取当前模型和来源，保存两轴状态及核验代次。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-00000000000c"
+      version "1"
+    }
+  }
+  app.core.source -[uses]-> app.core.archive "保存核验事实" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000012"
+      brief "来源manifest、扫描策略、状态与核验声明保存到文件档案。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-00000000000c"
+      version "1"
+    }
+  }
+  app.core.observation -[uses]-> app.core.archive "归档有限观测" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000013"
+      brief "只读日志绑定、检查点及有限事件按实际提交写入Archive。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-00000000000d"
+      version "1"
+    }
+  }
+  app.core.maintenance -[uses]-> app.core.archive "恢复原型档案" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000014"
+      brief "显式原型复制导入使用目标档案并保留来源及原始字节。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-00000000000e"
+      version "1"
+    }
+  }
+  app.core.model -[uses]-> app.projectModel "读取权威文本" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000015"
+      brief "模型模块从.harness读取LikeC4、证据和别名；投影不回写为另一套真相。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000006 d6250000-0000-4000-8000-000000000015"
+      version "1"
+    }
+  }
+  app.core.skills -[uses]-> app.library "读取实际文件型方法" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000016"
+      brief "技能模块按实际根目录扫描方法与附件；随包内容只作首次播种来源。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000008 d6250000-0000-4000-8000-000000000012"
+      version "1"
+    }
+  }
+  app.runtimeSkill -[guides]-> app.cli "指导当前agent调用" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000017"
+      brief "文件型入口指导当前agent组织上下文，不代表CLI启动或调度agent。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000011"
+      version "1"
+    }
+  }
+  app.runtimeSkill -[guides]-> app.projectModel "当前agent直接建模" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000018"
+      brief "当前大模型读取真实项目并直接编写对象、关系、证据及视图，报告真实进度。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000011"
+      version "1"
+    }
+  }
+  app.quality -[verifies]-> app.cli "CLI与安装验证" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-000000000019"
+      brief "隔离程序和消费者安装场景核对CLI与分发契约，不说明本次全部平台已运行。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000013"
+      version "1"
+    }
+  }
+  app.quality -[verifies]-> app.core "核心契约验证" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000001a"
+      brief "正式测试使用Node测试入口和隔离夹具核对核心行为与持久化契约。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000013"
+      version "1"
+    }
+  }
+  app.quality -[verifies]-> app.web "结构与交互验证" {
+    metadata {
+      harness_id "e6250000-0000-4000-8000-00000000001b"
+      brief "正式Web浏览门禁检查五类、技能文件夹层、结构和真实记录投影。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000017"
+      version "1"
+    }
+  }
+}

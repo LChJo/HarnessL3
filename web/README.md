@@ -4,7 +4,7 @@ The approved Slate canvas is preserved here. `src/` remains the frozen prototype
 
 Entry: `index.html` and `main.tsx`. Runtime data comes from cookie-authenticated `/view`, `/rpc`, and worktree-scoped `/events`; no source-project path or task is hard-coded.
 
-Browser gate: `node web/verify-browser.mjs <isolated-service-url[#code=...]>`. It checks five collapsed categories, closed Skill Hub, folder-first disclosure, camera controls, and zero retrieval RPCs during browsing. The initial behavioral RED was recorded against the frozen prototype before the formal entry was available.
+Browser gate: `node web/verify-browser.mjs <isolated-service-url[#code=...]>`. It checks five collapsed categories, closed Skill Hub, selected folder disclosure or an unmatched-directory overflow, camera controls, and zero retrieval RPCs during browsing. The initial behavioral RED was recorded against the frozen prototype before the formal entry was available.
 
 For the root-created `harnessl3-browser-*` fixture only:
 
@@ -15,7 +15,11 @@ For the root-created `harnessl3-browser-*` fixture only:
 
 These are Windows Edge/Chromium fixture checks, not a claim that native macOS/Linux acceptance has run. Build with `npm run build:web`.
 
-Stable gates: `data-testid=app-shell/project-select/worktree-select`, `data-category-root`, `data-map-depth`, `data-node-id`, `data-node-state`, `data-skill-selector`, `data-skill-folder`, `data-skill-id`, `data-skill-file`, `data-historical`, `data-task-id`, and `data-view-seq`. Status labels distinguish browser requests, CLI responses, references, unknown observations, and partial results.
+`node scripts/v1/web-loading-smoke.mjs` creates its own isolated fixture and holds the first task view response across an SSE reset. It checks that the first request survives, only the loading state is visible until data arrives, and the correct task then appears with five closed categories and a closed Hub. Results and screenshots are saved under `.harness-local/validation/`.
+
+`node --test tests/v1/web-projection.test.mjs` checks hit paths, unmatched aggregation, empty selections and archived skill groups using the formal layout modules. `node scripts/v1/web-matched-smoke.mjs` adds a clearly synthetic render payload of 10,000 unmatched context nodes and 10,000 unmatched skills to an isolated native fixture. It checks bounded canvas nodes, 50-row pages, search, folder scope, details, unavailable unselected archives, URL refresh/back/forward, camera preservation and mobile layout. Browsing must leave the native task unchanged. Reports and screenshots use `.harness-local/validation/matched-nodes-*`; these results do not establish a large-repository backend SLA.
+
+Stable gates: `data-testid=app-shell/project-select/worktree-select/node-directory`, `data-category-root`, `data-map-depth`, `data-node-id`, `data-node-state`, `data-node-overflow`, `data-directory-row`, `data-skill-overflow`, `data-skill-selector`, `data-skill-folder`, `data-skill-id`, `data-skill-file`, `data-historical`, `data-task-id`, and `data-view-seq`. Status labels distinguish browser requests, CLI responses, references, unknown observations, and partial results.
 
 Legacy projection is separate: original dot IDs, group, local source-version fields and file references remain original. Missing complete snapshots/C4 remain unknown; current model/catalog never fill those gaps.
 

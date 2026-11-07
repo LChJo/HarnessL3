@@ -240,7 +240,12 @@ export class MigrationService {
     try { verifyTask(record, snapshots, stored.sourcePath); } catch { throw new HarnessError('ARCHIVE_CORRUPT', 'Imported prototype record no longer has a valid original reference closure.'); }
     return { inspector, stored, record, snapshots };
   }
-  async has(taskId: string): Promise<boolean> { return (await this.entries(this.inspector())).get(taskId)?.archiveHash ? true : false; }
+  async has(taskId: string): Promise<boolean> {
+    // The owning runtime has already verified and loaded this journal. Format
+    // routing must not reopen every unrelated snapshot on each task/view read.
+    // Explicit migration inspection and requested archive reads keep their checks.
+    return (await this.entries(this.options.archive)).get(taskId)?.archiveHash ? true : false;
+  }
   async list(): Promise<any[]> {
     const inspector = this.inspector();
     const result = [];

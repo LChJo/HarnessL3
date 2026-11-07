@@ -23,7 +23,7 @@ export type SkillLayoutInput = {
 export type LayoutSkillNode = Bounds & {
   id: string
   skillId: string
-  kind: 'folder' | 'selected' | 'catalog' | 'file'
+  kind: 'folder' | 'selected' | 'catalog' | 'file' | 'overflow'
   parentId: string
   depth: number
   selected: boolean
@@ -39,6 +39,7 @@ export type LayoutSkillNode = Bounds & {
   fileCount: number
   skillCount?: number
   selectedCount?: number
+  hiddenCount?: number
   related?: string[]
   diagnostics?: string[]
 }
@@ -65,17 +66,21 @@ const connection = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   return `M${a.x},${a.y} C${mid},${a.y} ${mid},${b.y} ${b.x},${b.y}`
 }
 
+export function skillEntries(catalog: SkillBrief[], plan?: SkillPlan | null): { skill: SkillBrief | SkillSelection; selected: boolean }[] {
+  const saved = new Set(plan?.skills.map(skill => skill.id) ?? [])
+  return [...(plan?.skills.map(skill => ({ skill, selected: true })) ?? []), ...catalog.filter(skill => !saved.has(skill.id)).map(skill => ({ skill, selected: false }))]
+}
+
 /** All coordinates belong to the existing canvas world; this function has no camera or UI state. */
 export function layoutSkills({ input, contextFrame, contextOutput, catalog, plan, expanded, expandedFolders = new Set<string>(), expandedSkills = new Set<string>() }: SkillLayoutInput): SkillLayout {
   const selected = !!plan, frameY = contextFrame.y + contextFrame.height + 104
   // Deliberately pick only reference metadata even when a saved plan also contains file bodies.
   const reference = (file: SkillFileReference): SkillFileReference => ({ path: file.path, hash: file.hash, bytes: file.bytes, encoding: file.encoding })
-  const skills = !expanded ? [] : plan ? plan.skills : catalog
-  const entries = skills.map(skill => {
-    const files = skill.files?.map(reference)
+  const entries = (!expanded ? [] : skillEntries(catalog, plan)).map(({ skill, selected: chosen }) => {
+    const files = chosen ? skill.files?.map(reference) : undefined
     const refs: { path: string; file?: SkillFileReference }[] = files?.length ? files.map(file => ({ path: file.path, file })) : []
     const visible = expandedSkills.has(skill.id) ? refs : []
-    return { skill, files, refs, visible, height: Math.max(108, visible.length * 88 + Math.max(0, visible.length - 1) * 16) }
+    return { skill, selected: chosen, files, refs, visible, height: Math.max(108, visible.length * 88 + Math.max(0, visible.length - 1) * 16) }
   })
   const grouped = new Map<string, typeof entries>()
   for (const entry of entries) {
@@ -84,28 +89,35 @@ export function layoutSkills({ input, contextFrame, contextOutput, catalog, plan
     if (!grouped.has(group)) grouped.set(group, [])
     grouped.get(group)!.push(entry)
   }
-  const folders = [...grouped].map(([group, members]) => ({
-    group, members, open: expandedFolders.has(group),
-    height: expandedFolders.has(group) ? members.reduce((sum, entry, index) => sum + entry.height + (index ? 20 : 0), 0) : 96,
-  }))
-  const treeHeight = folders.reduce((sum, folder, index) => sum + folder.height + (index ? 28 : 0), 0)
+  const folders = [...grouped].filter(([, members]) => members.some(entry => entry.selected)).map(([group, members]) => {
+    const chosen = members.filter(entry => entry.selected), hidden = members.length - chosen.length
+    return { group, members, chosen, hidden, open: expandedFolders.has(group), height: expandedFolders.has(group) ? chosen.reduce((sum, entry, index) => sum + entry.height + (index ? 20 : 0), 0) + (hidden ? 94 : 0) : 96 }
+  })
+  const hiddenFolders = [...grouped].filter(([, members]) => !members.some(entry => entry.selected))
+  const hiddenSkills = hiddenFolders.reduce((sum, [, members]) => sum + members.length, 0)
+  const treeHeight = folders.reduce((sum, folder, index) => sum + folder.height + (index ? 28 : 0), 0) + (hiddenSkills ? 96 + (folders.length ? 28 : 0) : 0)
   const bodyHeight = Math.max(expanded && !entries.length ? 208 : 176, treeHeight), bodyTop = frameY + 74
   const centerY = bodyTop + bodyHeight / 2
   const selector = { x: contextFrame.x + 40, y: centerY - 56, width: 224, height: 112 }
   const nodes: LayoutSkillNode[] = [], edges: LayoutSkillEdge[] = [], frontier: LayoutSkillNode[] = []
+  function overflow(parent: { id: string; x: number; y: number; width: number; height: number }, x: number, y: number, hiddenCount: number, group?: string) {
+    const node: LayoutSkillNode = { id: 'skill-overflow:' + parent.id, skillId: '', kind: 'overflow', parentId: parent.id, depth: group ? 2 : 1, selected: false, name: '…', description: `其余 ${hiddenCount} 项`, group, path: '', contentHash: '', fileCount: 0, hiddenCount, x, y, width: 240, height: 74 }
+    nodes.push(node)
+    edges.push({ source: parent.id, target: node.id, kind: 'branch', selected: false, d: connection({ x: parent.x + parent.width, y: parent.y + parent.height / 2 }, { x, y: y + node.height / 2 }) })
+  }
   let top = bodyTop + (bodyHeight - treeHeight) / 2
   for (const folder of folders) {
     const folderNode: LayoutSkillNode = {
       id: `skill-folder:${encodeURIComponent(folder.group)}`, skillId: '', kind: 'folder', selected,
       parentId: 'skill-selector', depth: 1, name: folder.group, group: folder.group, description: '',
-      path: folder.group, contentHash: '', fileCount: 0, skillCount: folder.members.length, selectedCount: selected ? folder.members.length : 0,
+      path: folder.group, contentHash: '', fileCount: 0, skillCount: folder.members.length, selectedCount: folder.chosen.length,
       x: selector.x + 302, y: top + folder.height / 2 - 48, width: 240, height: 96,
     }
     nodes.push(folderNode)
     edges.push({ source: 'skill-selector', target: folderNode.id, kind: 'branch', selected, d: connection({ x: selector.x + selector.width, y: centerY }, { x: folderNode.x, y: folderNode.y + folderNode.height / 2 }) })
     if (!folder.open) frontier.push(folderNode)
     let memberTop = top
-    for (const entry of folder.open ? folder.members : []) {
+    for (const entry of folder.open ? folder.chosen : []) {
       const { skill } = entry
       const catalogEntry = plan ? undefined : skill as SkillBrief
       const node: LayoutSkillNode = {
@@ -130,8 +142,10 @@ export function layoutSkills({ input, contextFrame, contextOutput, catalog, plan
       if (!entry.visible.length) frontier.push(node)
       memberTop += entry.height + 20
     }
+    if (folder.open && folder.hidden) overflow(folderNode, folderNode.x + 300, memberTop, folder.hidden, folder.group)
     top += folder.height + 28
   }
+  if (hiddenSkills) overflow({ id: 'skill-selector', ...selector }, selector.x + 302, top + 11, hiddenSkills)
   const right = Math.max(selector.x + selector.width, ...nodes.map(node => node.x + node.width))
   const frame = { x: contextFrame.x, y: frameY, width: right + 40 - contextFrame.x, height: bodyTop + bodyHeight + 32 - frameY }
   const output = { x: Math.max(contextOutput.x, right + 152), y: centerY - 80, width: contextOutput.width, height: 160 }

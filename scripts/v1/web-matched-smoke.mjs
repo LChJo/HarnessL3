@@ -1,0 +1,93 @@
+import assert from 'node:assert/strict'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { chromium } from 'playwright'
+import { createBrowserFixture, browserIds } from './browser-fixture.mjs'
+
+const fixture = await createBrowserFixture()
+let browser
+try {
+  browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
+  const page = await context.newPage(), errors = [], requests = []
+  page.on('pageerror', error => errors.push(error.message))
+  page.on('request', request => { if (new URL(request.url()).pathname === '/rpc') requests.push(request.postDataJSON()?.operation) })
+  const count = 10000
+  await page.route('**/view?*', async route => {
+    const response = await route.fetch(), value = await response.json()
+    if (value.task?.id === fixture.entry.taskId) {
+      const template = value.model.entities.find(entity => entity.id === browserIds.client)
+      value.model.entities.push(...Array.from({ length: count }, (_, i) => ({ ...template, id: `unmatched-${i}`, locator: `app.unmatched${i}`, title: `Unused node ${i}`, description: '', brief: `Unmatched fixture node ${i}`, parentId: browserIds.app, evidenceIds: [] })))
+      const method = value.task.catalog.find(skill => skill.id === 'quality/tdd')
+      value.task.catalog.push(...Array.from({ length: count }, (_, i) => ({ ...method, id: `unused/method-${i}`, group: i % 2 ? 'unused' : 'quality', name: `Unused skill ${i}`, description: `Unmatched fixture method ${i}` })))
+    }
+    await route.fulfill({ response, json: value })
+  })
+  const before = (await fixture.cli(['task', 'show', fixture.entry.taskId])).data.result.task
+  const started = performance.now()
+  await page.goto(await fixture.url())
+  await page.waitForFunction(() => document.querySelector('[data-view-ready="true"]') && !document.querySelector('.view-loading'))
+  const firstReadyMs = performance.now() - started
+  const fit = () => page.getByRole('button', { name: '概览全部内容', exact: true }).click()
+  await page.locator('[data-category-root="objects"] .map-main').click()
+  await page.locator(`[data-node-id="object:${browserIds.app}"] .map-main`).click()
+  await fit()
+  const graphNodes = await page.locator('[data-node-id],[data-node-overflow]').count()
+  assert.ok(graphNodes < 20)
+  assert.equal(await page.locator('[data-node-id="object:unmatched-17"]').count(), 0)
+  const camera = () => page.locator('.world').evaluate(element => element.style.transform)
+  const cameraBefore = await camera()
+  await page.locator(`[data-node-overflow="object:${browserIds.app}"]`).click()
+  const directory = page.getByTestId('node-directory')
+  await directory.waitFor()
+  assert.equal(await directory.locator('[data-directory-row]').count(), 50)
+  await page.getByRole('button', { name: '下一页', exact: true }).click()
+  assert.equal(await directory.locator('[data-directory-row]').count(), 50)
+  await page.getByRole('searchbox', { name: '搜索全部节点' }).fill('Unused node 9999')
+  assert.equal(await directory.locator('[data-directory-row]').count(), 1)
+  await directory.getByRole('button', { name: 'Unused node 9999', exact: true }).click()
+  assert.equal(await page.locator('.exact-body').count(), 0)
+  await page.getByRole('button', { name: '关闭详情', exact: true }).click()
+  await page.goBack()
+  await directory.waitFor({ state: 'detached' })
+  assert.equal(await camera(), cameraBefore)
+  await page.goForward()
+  await directory.waitFor()
+  await page.reload()
+  await directory.waitFor()
+  await page.waitForFunction(() => document.querySelectorAll('[data-directory-row]').length === 50)
+  assert.ok(new URL(page.url()).searchParams.get('directory').startsWith('context:'))
+  await mkdir('.harness-local/validation', { recursive: true })
+  await page.screenshot({ path: '.harness-local/validation/matched-nodes-directory.png' })
+  await page.getByRole('button', { name: '返回画布', exact: true }).click()
+  await page.locator('[data-skill-selector]').click()
+  await fit()
+  await page.locator('[data-skill-folder="quality"] .skill-lane-main').click()
+  await fit()
+  const skillGraphNodes = await page.locator('[data-skill-node],[data-skill-overflow]').count()
+  assert.ok(skillGraphNodes < 15)
+  await page.screenshot({ path: '.harness-local/validation/matched-nodes-canvas.png' })
+  await page.locator('[data-skill-overflow="*"]').click()
+  assert.equal(await directory.locator('[data-directory-row]').count(), 50)
+  await page.getByRole('searchbox', { name: '搜索全部节点' }).fill('Unused skill 9999')
+  assert.equal(await directory.locator('[data-directory-row]').count(), 1)
+  await directory.getByRole('button', { name: 'Unused skill 9999' }).click()
+  await page.getByTestId('skill-details').waitFor()
+  assert.equal(await page.getByRole('button', { name: /^网页预览归档文件/ }).count(), 0, 'Unselected catalog files must not become readable archives')
+  await page.getByRole('button', { name: '关闭详情', exact: true }).click()
+  await page.getByRole('button', { name: '返回画布', exact: true }).click()
+  await page.locator('[data-skill-overflow="quality"]').click()
+  await page.getByRole('searchbox', { name: '搜索全部节点' }).fill('Unused skill 9999')
+  assert.equal(await directory.locator('[data-directory-row]').count(), 0, 'Folder page stays scoped to the saved folder')
+  await page.getByRole('searchbox', { name: '搜索全部节点' }).fill('Unused skill 9998')
+  assert.equal(await directory.locator('[data-directory-row]').count(), 1)
+  await page.setViewportSize({ width: 390, height: 844 })
+  assert.ok(await directory.evaluate(element => element.scrollWidth <= element.clientWidth + 1))
+  await page.screenshot({ path: '.harness-local/validation/matched-nodes-mobile.png' })
+  const after = (await fixture.cli(['task', 'show', fixture.entry.taskId])).data.result.task
+  assert.deepEqual(after, before, 'Directory browsing must not create batches, reads or skill selections')
+  assert.ok(!requests.some(operation => ['context query', 'task select', 'task read'].includes(operation)))
+  assert.deepEqual(errors, [])
+  const report = { platform: process.platform, node: process.version, fixture: 'synthetic large render payload on isolated native service', unmatchedContexts: count, unmatchedSkills: count, firstReadyMs, graphNodes, skillGraphNodes, pageSize: 50, search: true, paging: true, backForwardCamera: true, deepLinkRefresh: true, unselectedArchivesUnavailable: true, mobile: true, taskUnchanged: true, pageErrors: errors }
+  await writeFile('.harness-local/validation/matched-nodes-browser.json', JSON.stringify(report, null, 2) + '\n')
+  console.log(JSON.stringify(report))
+} finally { await browser?.close(); await fixture.stop() }

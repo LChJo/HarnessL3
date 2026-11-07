@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { PointerEvent, RefObject, MouseEvent as ReactMouseEvent } from 'react'
 import { fitBounds, zoomAt } from './canvas-model'
 import type { Bounds, Camera, Point } from './canvas-model'
@@ -23,7 +23,7 @@ export function useCanvas(viewport: RefObject<HTMLDivElement | null>, initial: B
     const { width, height } = viewport.current.getBoundingClientRect(), scale = width < 650 ? .95 : 1
     setSmooth(!reduced); setCamera({ scale, x: width / 2 - (bounds.x + bounds.width / 2) * scale, y: height * .58 - (bounds.y + bounds.height / 2) * scale })
   }
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ready || initialized.current || !viewport.current) return
     initialized.current = true
     const { width, height } = viewport.current.getBoundingClientRect()

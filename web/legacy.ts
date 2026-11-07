@@ -19,8 +19,9 @@ export function legacyContext(archive: LegacyArchive): MapItem[] {
   const task = { ...record, modelRevision: record.modelRevision ?? snapshot.revision, disclosedIds: record.disclosedIds ?? [], packet: { modelRevision: record.packet?.modelRevision ?? snapshot.revision, contexts } } as Task
   const roots: MapItem[] = projectPrototype(snapshot, task, '')
   function mark(item: MapItem) {
-    if (item.id.startsWith('version:worktree:')) { item.title = '原工作区'; item.fields.范围 = '原型记录中的绑定，未转换为正式工作区身份' }
-    if (item.kind === 'object') item.fields.身份 = '原始 dot ID，未转换为正式 UUID'
+    if (item.fields.范围) item.fields.范围 = item.kind === 'relation' ? '关系引用' : item.kind === 'evidence' ? '证据引用' : '所引文件'
+    if (item.id.startsWith('version:worktree:')) { item.title = '原工作区'; item.fields.范围 = '旧格式工作区' }
+    if (item.kind === 'object') item.fields.身份 = 'dot ID'
     item.children.forEach(mark)
   }
   roots.forEach(mark)

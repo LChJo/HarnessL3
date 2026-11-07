@@ -59,14 +59,32 @@ export async function packageSmoke() {
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
     assert.equal(installedSchema, path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json'))
     assert.equal(JSON.parse(await readFile(installedSchema, 'utf8')).type, 'object')
+    const webHelp = (await execFile(process.execPath, [installedBinary, 'web', 'open', '--help'], { cwd: project, windowsHide: true })).stdout
+    assert.match(webHelp, /--no-open/)
     const git = (...args) => execFile('git', ['-C', project, ...args], { windowsHide: true })
     await git('init', '-b', 'main'); await git('config', 'user.name', 'Package fixture'); await git('config', 'user.email', 'fixture@example.invalid')
     await writeFile(path.join(project, 'README.md'), 'Isolated installed-package fixture\n')
     await git('add', 'README.md'); await git('commit', '-m', 'Fixture source')
+    const firstLink = await cli(['web', 'open', '--no-open'])
+    assert.equal(firstLink.data.result.opened, false)
+    assert.equal(firstLink.target, null)
+    assert.match(new URL(firstLink.data.result.url).hash, /^#code=[a-f0-9]{64}$/)
     const initialized = await cli(['init'])
     assert.equal(initialized.ok, true)
+    assert.equal(initialized.data.result.initialization.stage, 'scaffold-ready')
+    assert.equal(initialized.data.result.initialization.semanticStatus, 'not-assessed')
+    assert.equal(initialized.data.result.initialization.nextAction, 'model-project')
     const started = await cli(['task', 'start', '--title', 'Installed package task'])
     const entry = started.data
+    const taskLink = await cli(['web', 'open', '--no-open', '--task', entry.taskId])
+    const linkParameters = new URLSearchParams(new URL(taskLink.data.result.url).hash.slice(1))
+    assert.equal(taskLink.data.result.opened, false)
+    assert.equal(taskLink.data.result.service.lifetime, 'until-stopped')
+    assert.equal(taskLink.data.result.service.scope, 'user-data-root')
+    assert.equal(taskLink.data.result.login.oneTime, true)
+    assert.equal(taskLink.data.result.login.browserSessionTtlMs, 43_200_000)
+    assert.equal(linkParameters.get('worktree'), started.target.worktreeId)
+    assert.equal(linkParameters.get('task'), entry.taskId)
     assert.equal(entry.catalog.length, 21)
     for (const value of [entry.taskId, entry.binding.modelRevision, entry.binding.catalogRevision]) assert.ok(!entry.routingPrompt.includes(value), 'Routing text must refer to the structured task data')
     const skill = entry.catalog[0]
@@ -87,7 +105,7 @@ export async function packageSmoke() {
     await mkdir(artifacts, { recursive: true })
     const output = path.join(artifacts, manifest.filename)
     await copyFile(tarball, output)
-    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, tarball: output }
+    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, tarball: output }
     await writeFile(path.join(artifacts, 'package-smoke-' + process.platform + '.json'), JSON.stringify(report, null, 2) + '\n')
     return report
   } finally {

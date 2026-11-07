@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "evidence": [
+    {
+      "id": "d6250000-0000-4000-8000-000000000001",
+      "kind": "document",
+      "claim": "Current product boundary, text authority, agent-driven entry and formal/prototype scope.",
+      "location": {
+        "path": "docs/PROJECT_BASELINE.md"
+      },
+      "hash": "e670c779309b99389058e89902bd25419b8013ce7407b76046f7175cf44966a4",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000002",
+      "kind": "source-code",
+      "claim": "CLI performs input adaptation, service discovery, RPC and output; it does not run a model.",
+      "location": {
+        "path": "cli/main.ts"
+      },
+      "hash": "dbd18a1c8482f3563af92fc5b1bce666f580031bda3f5cba374c8c8ada1adab8",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Loopback HTTP service authenticates requests and delegates RPC/views/events to Runtime.",
+      "location": {
+        "path": "service/main.ts"
+      },
+      "hash": "e71e3d9408c794e5ffeaafa3d07febc480f16c2aed33099e7662da5b6ac4c484",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000004",
+      "kind": "source-code",
+      "claim": "Runtime assembles per-worktree task, workspace, model, skills, archive, index, freshness, observation and maintenance resources.",
+      "location": {
+        "path": "core/runtime.ts"
+      },
+      "hash": "d1d25ae3cb2002692d0c8d3c2abd5128283bd8bf7925ea82022110a3862eace2",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000005",
+      "kind": "source-code",
+      "claim": "WorkspaceRegistry checks existing Git identities and creates missing scaffold files without semantic project modeling.",
+      "location": {
+        "path": "core/workspace.ts"
+      },
+      "hash": "9f5bedd4b56555b8c9eccf62d3e9936a45a8ef04a1a13b3236ef6af1b8dba341",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000006",
+      "kind": "source-code",
+      "claim": "LikeC4 and tracked evidence/aliases are parsed into validated entities, directories, bodies and views.",
+      "location": {
+        "path": "core/model.ts"
+      },
+      "hash": "784cd6057a4bb512765cdf85d7b32817f4c173f69a2cc599f57e395b4d37fd4b",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000007",
+      "kind": "source-code",
+      "claim": "TaskService returns reusable Git tracking boundaries at entry and handles joint selection, precise queries, archived handoff, file reads and history without rewriting old receipts.",
+      "location": {
+        "path": "core/context.ts"
+      },
+      "hash": "553ed9cf13ee415f5d0657d5c45699d212d0afa5d7fb704fe3f22126f7b06b9c",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000008",
+      "kind": "source-code",
+      "claim": "Actual skill files and references are scanned, versioned and captured as editable file content.",
+      "location": {
+        "path": "core/skills.ts"
+      },
+      "hash": "d92a5313ecedd2c00a0bf2438da9d6d76064b74b1aada37f2c86e9d547ee1f08",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000009",
+      "kind": "source-code",
+      "claim": "Archive persists committed journal facts, snapshots, blobs and replay receipts.",
+      "location": {
+        "path": "core/archive.ts"
+      },
+      "hash": "dfca5c51238271dc991de55656d77477226ffa1b49bac81bdafc75f1e24eb410",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000a",
+      "kind": "source-code",
+      "claim": "SearchIndex sends typed operations to a separate SQLite worker and supports derived projection rebuilding.",
+      "location": {
+        "path": "core/index.ts"
+      },
+      "hash": "93019992673703e0b074ffd73053761d4ff77f608efe08eea044f02067a51b54",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000b",
+      "kind": "source-code",
+      "claim": "Source scanning captures actual Git/file scope and fingerprints without interpreting business semantics.",
+      "location": {
+        "path": "core/source.ts"
+      },
+      "hash": "e8bee0c1be3af5ff6b3d7b951f3618288c729f10d330dd80ed71099eaa8df6b2",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000c",
+      "kind": "source-code",
+      "claim": "FreshnessManager reads model/source separately, tracks changes and persists scoped verification facts to Archive.",
+      "location": {
+        "path": "core/freshness.ts"
+      },
+      "hash": "55d83ba81d8c0ee6e14ef021e2b56bf5f5f4d88375316894a358a2df62386a90",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000d",
+      "kind": "source-code",
+      "claim": "ObservationManager restores explicit log bindings and checkpoint/events from the file archive.",
+      "location": {
+        "path": "core/observation.ts"
+      },
+      "hash": "f76a32a0f69f5898a794e0a59db7cf47aac684c38de3cc7deb1d12c97331bfbc",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000e",
+      "kind": "source-code",
+      "claim": "Explicit prototype copying and conservative GC preserve source archives and protected user content.",
+      "location": {
+        "path": "core/maintenance.ts"
+      },
+      "hash": "eb3ab338d6a5369cc0a38ebebe7ea2be58f3b8595f850ef8d37add5d46a8f4cb",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000000f",
+      "kind": "source-code",
+      "claim": "Formal Web preserves target and archive boundaries, projects hit paths with unmatched overflows and opens a scoped standalone directory without recording reads.",
+      "location": {
+        "path": "web/main.tsx"
+      },
+      "hash": "bdd6550f8d6a55bf49306cb1c1af27d42adb1a5b68edd83eea380c7ead65a154",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000010",
+      "kind": "source-code",
+      "claim": "Web uses same-origin authenticated RPC and target-specific views.",
+      "location": {
+        "path": "web/api.ts"
+      },
+      "hash": "b6405d162922991a0881776f500484f7b7ca0a87bd8ebb7f52a3f36e08140dcc",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000011",
+      "kind": "document",
+      "claim": "Runtime instructions guide context selection, direct project modeling, progress reporting and portable Git context tracking under existing commit authorization.",
+      "location": {
+        "path": "agent-skills/harnessl3/SKILL.md"
+      },
+      "hash": "189aed78e0c2f06426f170e6cf2fecc7b44daeb5b56471ff4a7e303472d8a988",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000012",
+      "kind": "document",
+      "claim": "Skill Hub ordinary methods and attachments remain editable files; selection and reading do not execute them.",
+      "location": {
+        "path": "skills/README.md"
+      },
+      "hash": "ff4139f387bee27109851f7e525c552fe5cfc46fb61e6a1873141cdcc7e66673",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000013",
+      "kind": "source-code",
+      "claim": "Formal build, test and distribution entry points are separate from the retained prototype scripts.",
+      "location": {
+        "path": "package.json"
+      },
+      "hash": "52d05489b711393083c90ee2fc15f1a92e5309912cdaf5c487e5422ab78f2f51",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000014",
+      "kind": "document",
+      "claim": "Frozen v0.16 prototype and MGRP examples remain historical/reference material separate from the formal implementation.",
+      "location": {
+        "path": "docs/prototype/README.md"
+      },
+      "hash": "9d49cb7af03ad5e7ff76b54a162e24c2e1b15a1ae29f7d6dc0f22e49689e4d59",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000015",
+      "kind": "document",
+      "claim": "Tracked LikeC4 text, project configuration, evidence and aliases define project knowledge authority; the entry must advise tracking them with related source changes.",
+      "location": {
+        "path": "docs/spec/model-context.md"
+      },
+      "hash": "542d9d60147234c83e08590940603539a08895868b991226b7428214b314561c",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000016",
+      "kind": "source-code",
+      "claim": "Authenticated service identity checks and a private per-data-root lock coordinate resident daemon reuse.",
+      "location": {
+        "path": "service/controller.ts"
+      },
+      "hash": "a0dadd41a4f47c71b08b12a0eb0072094a293ed221db7f51d84a3a9a5678f9c2",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000017",
+      "kind": "document",
+      "claim": "Formal isolated Web gates cover hit-only projections, large paginated directories, archived structure and existing browser workflows.",
+      "location": {
+        "path": "web/README.md"
+      },
+      "hash": "bc131a822dd746a83615d6610430a504157e9af188e26dd92c51fe66017be301",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000018",
+      "kind": "source-code",
+      "claim": "Canvas layout keeps matched nodes and ancestor paths, combines unmatched siblings into one overflow and memoizes visible subtree heights.",
+      "location": {
+        "path": "web/canvas-model.ts"
+      },
+      "hash": "fcb261dd4cda01672630876cead31f239e7309cbbe91ecdd9727c2f57cd2636f",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-000000000019",
+      "kind": "source-code",
+      "claim": "Skill layout preserves saved selection identities and groups, aggregates unselected catalog members and folders, and omits unselected file nodes.",
+      "location": {
+        "path": "web/skill-layout.ts"
+      },
+      "hash": "af9610aa9834d6cf8e5593a30aaecb54d67273ebdcf27990ad1da1e4af7c0ab3",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "d6250000-0000-4000-8000-00000000001a",
+      "kind": "source-code",
+      "claim": "Standalone context and skill directories provide scoped search, hit filtering and 50-row paging with explicit inspection and candidate actions.",
+      "location": {
+        "path": "web/DirectoryPage.tsx"
+      },
+      "hash": "fb85fa49550f1bbce056ff6eb1d3be9e45cf25baffd0522a785670cd1717a87f",
+      "observedAt": "2026-11-07T12:41:21.092Z"
+    }
+  ]
+}

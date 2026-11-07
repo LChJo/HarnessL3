@@ -1,6 +1,76 @@
 # 正式首版实施状态
 
-2026-11-06，基准0.21的M1–M4首版本地候选0.1.0已实现并完成下述既有范围验收；功能提交`f8eb2a4`的最终三平台CI全部成功。当前[基准](../PROJECT_BASELINE.md)为0.23，新增GitHub真实本机安装与更新结果；全任务入口/子任务约定的TC27仍待真实宿主验收。本页记录代码与实际范围；[规格](../spec/README.md)及[完整验收目标](../spec/acceptance.md)中的宿主工具子集、平台能力跳过与性能限制继续明确保留。
+2026-11-07，基准0.21的M1–M4首版本地候选0.1.0已实现并完成下述既有范围验收；功能提交`f8eb2a4`的最终三平台CI全部成功。当前[基准](../PROJECT_BASELINE.md)为0.28，画布只展示命中与祖先，未命中上下文/技能进入独立列表；保留Git提交建议、任务加载、单行文字链接、当前agent语义初始化/进度及独立访问凭证边界。TC27未实跑宿主范围仍待验收。本页记录代码与实际范围，旧三平台结果不覆盖本次增量。
+
+## v0.28：命中节点与独立目录页
+
+用户反馈展开后未命中节点过多。正式画布保留初始五类，各层只布局命中及其祖先，未命中兄弟合并为一个“…”；技能Hub只展示含已选技能的文件夹及已选成员，其余文件夹/成员采用相同入口。父层计数保留完整范围与已选数，未命中入口不点亮；布局只计算可见前沿并复用高度/技能投影，不复制未选文件引用用于画布。
+
+DirectoryPage在独立URL页面中展示完整分支后代或技能目录，支持搜索、命中筛选和每页50项。刷新、浏览器前进/后退、返回相机、手机布局及详情定位可用；正文/目录/技能仍需显式候选和原批量提交，未选技能没有归档预览权限。当前目录变化在列表更新，历史继续使用当时模型/catalog和所选group/ID/字节，不补当前缺失内容。
+
+Windows/Node24.12.0实际验证：4个初始投影场景因铺开未命中节点或缺少聚合入口失败，实现后连同显式空选共5项通过；正式构建、3个既有浏览门禁（手动选择/幂等重试、历史/手机/离线、技能目录生命周期）及首屏延迟回归通过。合成渲染负载在独立本机服务响应上注入各10000个未命中上下文/技能，展开区域分别9和6个节点，列表最多50行；搜索、分页、文件夹范围、刷新链接、前进/后退、相机、未选归档拒读和手机布局通过，原任务前后深比较不变。该最终合成首屏就绪样本2419ms含认证和网络响应处理，不是大仓库后端基准或SLA；截图已检查。证据为`.harness-local/validation/matched-nodes-browser.json`及同名前缀截图，既有门禁为`browser-win32.json`，首屏回归为`web-loading-browser.json`。
+
+候选包337028字节/138文件，21方法及安装后上下文往返/离线资源验证通过；本机全局安装138文件中137原字节一致，bin仅npm首行换行修正，两宿主10个入口文件匹配且未重写。SHA512为`8Cu0ImmBR3EvF1B5+E3BcB5RgiezeAONLjdmXRQKStwupdu98SicYQMZBf5P8MTZOeLyCxX9+xQaQ8PET6sD4Q==`。17份改动Markdown的157个本地链接、26条证据哈希及模型20对象/27关系核对通过，拓扑未新增；本次未发布npm或新跑macOS/Linux增量验收。
+
+实际已安装版本另用本机原Git建议任务（4项正文）只读复验：展开对象/核心层及技能文件夹，非类别实体节点均为真实命中，未命中入口可打开完整列表；脑图/列表/C4截图已检查，任务前后深比较不变，页面错误为0且只请求本机资源。3次暖`/view`为472/430/421ms，浏览器登录至任务就绪1752ms；只记录本机样本，不与另一个任务的旧基准作比较。证据为`matched-nodes-actual.json`及其截图，本机包字节核对为`matched-nodes-global-install.json`。
+
+提交前核查发现本机`core.autocrlf=true`使24条当前证据的工作区原字节与Git暂存字节不同。当前仓库新增`.gitattributes`，仅将`.harness`和26个证据引用的项目文本固定为LF；先规范实际工作区字节再重新计算当前指纹，不使用Git blob替换已观察历史，也不改任务归档或用户技能库。26条证据现同时匹配工作区与暂存区，53个构建输出文件前后原字节一致；初始化/首次接入/投影12项回归、构建及暂存差异检查通过。基准正文同时对齐已确认v0.28的命中投影与列表交互，无新增产品决策或模型拓扑。
+
+## v0.27：CLI上下文的Git提交范围
+
+实际已安装CLI的start/prompt原先只给筛选规则，未提C4提交Git；D06的边界仅存在文档。现将模型目录（.c4/.likec4、specification/views）、项目配置、证据、别名与相关源码一并版本管理的建议加入返回规则和运行时skill。项目文档及仓库内真实技能/附件/许可证按归属纳入；本机登记、journal/历史/快照/归档技能、SQLite/缓存/布局、日志、机器配置及凭证排除但保留，不复制全局库或外部链接实体。提交建议不授权暂存/commit/push；封套、技能选择及旧幂等回执不改。
+
+Windows/Node24.12.0实际验证：新增文件范围断言先因缺少`.harness/model/`失败，修改后通过；context、agent-skills、cli-help共38项及task-cli的文本/JSON/重启/隔离4项全部通过，正式构建通过。17份改动Markdown的156个真实本地链接和23条证据哈希核对通过。隔离消费者安装、21方法、上下文/技能往返、宿主skill重复安装及离线资源验证通过；本机全局安装138文件中137原字节一致，bin仅npm首行换行修正，两宿主共10文件匹配。实际已安装CLI在独立临时Git仓库的start/prompt均返回新规则，前后HEAD、工作区状态及暂存清单一致，证据在`.harness-local/validation/context-git-installed-cli.json`与`context-git-global-install.json`。候选包332868字节，SHA512为`WZs1sM/q/37bRt221sqmQCVzUg3FRjMi4Axph+H2CNcW73T04kttwt3AGWBb1lSEKO/pIsaNjby9rEgD2TZxbw==`；未发布npm，未新跑三平台或真实宿主全量入口验收。
+
+## v0.26：任务入口加载与单行文字链接
+
+真实本机已运行服务的同一历史任务`/view`实测15443ms，项目/工作区/任务列表分别59/243/292ms。定位到MigrationService.has为每次格式判断新建只读Archive，重复读取整个journal及全部快照/技能引用。现复用所属Runtime已加载的日志进行格式判断，所请求任务的归档校验仍保留；显式迁移检查保持独立只读路径。
+
+前端原SSE reset在首个view未返回时取消它并重发，等待期间画出零命中和空任务。现同目标在途请求合并、完成后补取，切换目标仍取消旧请求并拒收旧结果；首屏数据未到只显示加载状态，首次相机定位在绘制前完成。运行时skill/参考/AGENTS及规格统一为实际上下文及必要方法正文返回后，仅输出单独一行“查看可视化过程”文字超链，不附使用或选择说明。
+
+用户进一步要求清除正式产品中的注释性描述。主页去除CONTEXT/同一画布标签、泛化宣传标题、展开指导、来源/执行边界说明、计数解释、输入输出说明与手势说明；技能、结构、历史及旧格式详情去除固定注释，改为简短的实际状态与字段。保留任务名称、领域简述、选择理由、必要连接/加载/错误状态、原文及用户明确请求的诊断；不改动历史归档字节。AGENTS及Web/产品规格同步此交付约定。
+
+Windows/Node24.12.0/Edge156.0.4314.58：后端和浏览器两条回归均实际RED→GREEN。程序相关回归50/50通过，包括归档损坏仍失败、迁移/GC、上下文与skill复制；帮助检查另3/3通过。浏览器注入首屏延迟跨过SSE reset时保持1个在途请求、0取消，输入/输出隐藏而加载提示可见，返回后2项正文、五类闭合和Hub闭合，0页面异常。证据在`.harness-local/validation/web-loading-{red,regression}.txt`、`web-loading-browser-{red,green}.txt`、`web-loading-browser.json`和`web-loading-fixed.png`。
+
+清理文案后的完整三组浏览门禁通过：桌面/手机触摸/离线、历史与跨工作区隔离、手工选择/丢响应重试、技能目录生命周期；0页面异常。测试从旧说明文案定位改为连接状态/更新标记及当前操作名，未改产品行为以迁就测试。3个提交到绘制样本为928/855/887ms，P50/P95为887/928ms；只是本机三个样本，不宣称SLA。报告`.harness-local/validation/browser-win32.json`。随后移除结构视图的模型说明段落，以最终安装页面与结构弹窗补做视觉核对，截图为`web-loading-actual.png`与`web-loading-actual-structure.png`。
+
+最终包完成全新中文/空格消费者安装、真实npm bin、21方法、两宿主skill复制/重复不改写、任务/归档正文/关闭及2离线资产检查。正常停服后更新本机全局CLI；138包文件中137原字节一致，bin仅npm首行CRLF→LF修正，两宿主10文件一致。SHA-512为`4scBGCOxeZNOSyj2xMlsIHEsDsK/LB4u/aEVlzrD7+vFtv+5b1vP7M2XhMcHUFtcM1PSDNGg0+6i6/O/OAFDXA==`，报告`web-loading-global-install.json`及`.harness-local/artifacts/package-smoke-win32.json`。更新前包和报告保存在`.harness-local/artifacts/before-web-loading-20261107-102825/`。
+
+本机原任务复测：同一`/view`的三个热读取为482/424/396ms，浏览器登录到正确任务就绪871ms，任务原归档逐字段不变、0页面异常、仅本地资源。报告`.harness-local/validation/web-loading-actual.json`。前一次重启曾因历史恢复超过CLI就绪等待而返回BUSY，后台完成后只读重试成功；最终包此次重启未重试。这些结果证明本次已运行服务下的任务打开切片，不覆盖所有冷启动或大规模历史性能。
+
+本次未运行新的macOS/Linux或Claude Code宿主行为，不能借旧三平台结果扩大TC21/27的通过范围；未推送或发布npm。
+
+## v0.25：当前agent建模、结构完善与生命周期说明
+
+调查确认旧init仅创建4份模板/配置并登记，不调用大模型；上一阶段实际模型只有1对象、0关系、0子层，未完成语义建模，不能用当时机械成功证明项目初始化完整。当前CLI增加initialization结果：scaffold-ready、not-assessed、实际对象/关系/视图数量及model-project/review-project-model动作，由当前agent继续真实阅读和直接写模型。主skill及接入参考要求阅读→建模→校验进度、覆盖核查及缺口披露，不引入另一个模型、agent启动或语义生成脚本；机械存储/解析/索引保留。
+
+当前agent依据实际入口、核心资源装配、文件模块及正式/原型边界，直接编写`.harness/model/main.c4`、`02-relations.c4`和`03-views.c4`，保留原app UUID，补为20对象、27条静态依赖/指导/验证关系、3结构视图及23份来源证据。模型解析实际有效；覆盖正式主模块与关键依赖，不声称逐函数或全项目语义完整。证据指纹仅核对所引用文件，不替代语义审查，旧任务/历史不改写为新结构。
+
+可视化提示从每组命令前改为实际上下文返回且必要skill正文读取之后，只显示harnessl3提示与“查看可视化过程”Markdown链接，不另附裸网址或常规有效期文案。当前会话已在实际读取上下文及所选方法正文/交接之后显示链接；安装文件文本核对不能替代其它宿主自动遵守的验收。
+
+服务调查确认：默认用户数据根跨项目/任务复用常驻单实例，无空闲退出时限；显式数据根隔离继续有效。网页一次登录码5分钟/一次性、成功浏览会话12小时一直是访问凭证期限，非服务寿命。serve结果新增startedAt/scope/lifetime，web open分别返回service和login；使用已消费/过期码的错误也明确不表示后台退出。未放宽认证或改为固定端口。
+
+本机Windows/Node24.12.0的两个新增接口切片分别实际RED→GREEN：init语义后续动作、服务/登录期限分离；随后手工文件型模型保留与真实拓扑数量切片通过，3/3。证据在`.harness-local/validation/agent-init-red-20261107.xml`、`service-lifetime-red-20261107.xml`及`agent-authored-model-green-20261107.xml`。相关回归49/49、CLI/Web构建、skill校验、15份变动Markdown的146个本地链接和diff检查通过；报告`agent-init-regression-20261107.xml`。新平台/宿主范围不沿用旧证据。
+
+全新中文/空格消费者安装、真实npm bin、两宿主各5文件及重装不重写、21方法、任务/交接/归档正文/关闭和2个离线资产通过；新增scaffold语义后续动作及service/login结果也通过。用户此前的本机更新授权沿用，正常停旧服务后更新全局CLI和两宿主skill；138包文件中137原字节匹配，bin仅npm首行换行修正，两宿主10文件均匹配。包SHA-512为`Q/8Vt9xiAHW1nl6u+b2Tm8teYhLY6glFaudpHfesoXqZ0Dv1NSyIEtGmEpMp/Ty/JuSEfLYo8Yk+WKqxzmX4Yw==`；报告`agent-init-global-install-20261107.json`与`package-smoke-win32.json`。已安装CLI实际返回当前模型20对象/27关系/3视图和review-project-model，仍不伪报机器评估了语义。
+
+当前agent按新版本任务实际取得12项模型正文、2项目录、0读取错误后再提示格式化链接。Edge156.0.4314.58实跑对象逐层展开、3视图切换及核心图14节点/20边，0页面异常、0浏览触发的读取；23份证据指纹全部匹配。视图采用既有紧凑节点样式以避免长局部说明撑大C4布局，旧模型任务仍保留当时结构，新版本另建档。首个浏览脚本使用显示文本“结构”定位失败，按实际无障碍名“项目结构”修正后通过，不把脚本定位问题记为产品失败。证据`agent-init-actual-web-20261107.json`与`agent-init-structure-*.png`；覆盖正式主要模块/关键依赖，不作逐函数或全项目语义完成声明。没有运行本次macOS/Linux或Claude Code自动发现/交互，TC27不标完整passed；未提交、推送或发布npm。
+
+## v0.24：首次接入询问与调用前可视化链接
+
+用户反馈未登记只报错退出。当前CLI在无显式目标且cwd为未登记Git worktree时，以`TARGET_REQUIRED.details.onboarding`返回实际根路径、初始化/登记命令、需确认和拒绝回退指引；不自动写入工作区。无Git目录或显式目标不全/冲突不产生首次接入建议。`web open --no-open`返回现有短时一次性浏览登录链接及`opened:false`，不启动浏览器；显式task失败不降级成无目标链接，认证与读取计量保持。
+
+主skill及接入/运行参考要求使用agent通用询问窗口，展示路径与影响，同意后接入并恢复任务，拒绝/取消后本任务普通执行且不再询问；已有授权复用，无回复不算同意。首次CLI调用前说明使用harnessl3和正在获取地址，取得真实链接后每组任务命令前展示名称与链接；Web失败不阻断可用CLI。D15/FR02/12/15、TC27、基准和AGENTS已同步；无新增Hook、agent启动、宿主或自动Git生命周期。
+
+本机Windows/Node24.12.0的隔离行为测试先出现3项实际RED（缺接入指引两项、--no-open未知参数一项），修复后4/4通过，涵盖未同意不写入、显式初始化后恢复任务、已有配置保留、错误目标及可登录/精确task链接，浏览不续期。证据：`.harness-local/validation/first-use-red-20261107.txt`与`first-use-green-20261107.xml`。这些程序调用不模拟用户的真实拒绝流程；拒绝/取消及Claude Code宿主行为仍需独立实跑，不能借旧三平台CI或skill文字核对宣称TC27完整通过。
+
+本次真实Codux/Codex会话通过通用询问窗口收到用户同意；在`I:/AI/HarnessL3`当前main完成init（4份缺失文件、首次默认技能库）及模型校验，执行前在agent输出流展示实际后台Web链接。首个task start连接中断后先查询得到任务列表为空，再用原requestId重试，建档及一次显式空选择成功；未盲目换ID重复建档。当前项目仅有人工维护的项目边界模型，内部模块未建模，保持needs-review；本次局部同步不证明全项目已核验。
+
+相关Windows回归46/46通过；帮助增加--no-open发现性断言后另3/3通过，轮次不合并。CLI/Web构建、skill-creator校验、14份变动Markdown的137个本地链接及git diff --check通过。最新包的全新中文/空格消费者安装、真实npm bin、两宿主各5份skill及重复复制、21项Hub方法、init/start/select/handoff/read/close和2个离线资源均通过；新增后台初始链接和精确task链接也通过。包报告`.harness-local/artifacts/package-smoke-win32.json`，相关回归报告`first-use-regression-20261107.xml`。
+
+实际任务链接在本机Edge156.0.4314.58中打开后，任务标题与归档一致、URL定位同一task、0页面异常；证据为`.harness-local/validation/first-use-actual-web-20261107.json`及PNG。默认Playwright Chromium未安装，改用已有Edge；首个Edge脚本的中文经PowerShell stdin变成问号而超时，改为从归档取预期标题后验证通过，不记为产品浏览失败或三平台结果。
+
+用户另外明确同意将此修复包更新本机全局CLI及两宿主skill。更新前正常停服，安装包为`.harness-local/artifacts/harnessl3-0.1.0.tgz`；138包文件中137原字节相同，bin仅首行CRLF→LF符合npm修正，两个宿主共10份skill与包字节一致，旧skill已按安装器规则备份。已安装CLI支持--no-open并定位原任务，模型校验及归档handoff通过；全局安装证据在`first-use-global-install-20261107.json`及`first-use-installed-skills-20261107.json`。安装包SHA-512为`lmHcpvu/nz2kjV5Lx0iC1sIrOoQWXdvyxWYDF0iPOW3fPCpm3RuX0BRCqnrxBFxmFmXTtgcrkHXPJ8N3vH5ZpA==`。未推送或发布npm；真实拒绝/取消、Claude Code加载/询问及新macOS/Linux增量未运行，TC27不标完整passed。
 
 ## v0.23：GitHub真实本机安装与更新
 

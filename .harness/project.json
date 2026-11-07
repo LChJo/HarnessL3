@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "projectId": "d0071b39-e287-445a-a390-11771d1adbfe",
+  "name": "HarnessL3",
+  "source": {
+    "excludePatterns": []
+  }
+}

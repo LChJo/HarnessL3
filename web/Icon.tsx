@@ -1,3 +1,3 @@
-import { ArrowsOut, ArrowRight, CaretRight, Check, ClockCounterClockwise, Copy, CrosshairSimple, FileText, Info, ListBullets, Minus, Plus, TreeStructure, X } from '@phosphor-icons/react'
-const icons = { plus: Plus, minus: Minus, fit: ArrowsOut, target: CrosshairSimple, close: X, chevron: CaretRight, check: Check, branch: TreeStructure, info: Info, record: ListBullets, output: FileText, arrow: ArrowRight, copy: Copy, history: ClockCounterClockwise }
+import { ArrowsOut, ArrowRight, CaretRight, Check, ClockCounterClockwise, Copy, CrosshairSimple, FileText, Info, ListBullets, MagnifyingGlass, Minus, Plus, TreeStructure, X } from '@phosphor-icons/react'
+const icons = { plus: Plus, minus: Minus, fit: ArrowsOut, target: CrosshairSimple, close: X, chevron: CaretRight, check: Check, branch: TreeStructure, info: Info, record: ListBullets, output: FileText, arrow: ArrowRight, copy: Copy, history: ClockCounterClockwise, search: MagnifyingGlass }
 export function Icon({ name, size = 16 }: { name: keyof typeof icons; size?: number }) { const Component = icons[name]; return <Component size={size} weight="regular" aria-hidden="true" /> }

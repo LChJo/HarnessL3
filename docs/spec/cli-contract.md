@@ -23,6 +23,8 @@
 3. 带 task ID 的命令可定位该任务归属，但仍必须与显式目标和已登记 cwd 一致。在未登记 cwd 中必须显式提供 worktree（以及需要时的 project），不能仅从 task ID 猜写入目标。
 4. 没有任务的目标命令使用显式目标或已登记 cwd；无法唯一解析即 `TARGET_REQUIRED`。不使用全局“最后活动项目/任务”。
 
+无显式目标、cwd处于未登记的已有Git worktree时，`TARGET_REQUIRED`的`details.onboarding`提供`state:"initialization-required"|"registration-required"`、实际`worktreeRoot`、`confirmationRequired:true`、`command`参数数组（`["init"]`或`["worktree","register",root]`）及`fallback:"continue-without-l3"`。仅提供建议，不自动写入工作区/登记/任务。agent在通用询问窗口展示实际路径与影响，同意后在该根目录执行对应命令并校验，拒绝/取消则本任务普通执行且不重问；已有授权复用。无Git目录、显式目标不全或其它冲突不产生首次接入指引；不能借该指引切换数据根或初始化另一个项目。CLI的JSON模式继续非交互。
+
 `project list`、`serve start/status/stop` 等全局命令无 worktree 时返回 `target:null`；worktree list 的 project 参数仅作过滤，不要求选择该项目的单一 worktree。项目登记结果可有 projectId 而无 worktree，仍放在 data 内，不构造虚假的 worktree。登记同一实际路径幂等；复制的项目标识、路径重定位和已丢失 worktree 按[架构](architecture.md)规则处理，不能仅以分支名识别。
 
 取消登记的本机记录保留 inactive 身份。显式指定原 worktree UUID 时，`history list/show`、`task show/handoff/read` 可只读访问其档案，免 live 根目录存在/HEAD 检查，但仍核对注册归属、显式目标/cwd 冲突及档案完整性；select/query/prompt/sync 等活动操作拒绝。当前源码不可访问时如实显示不可用，不把档案读取变成当前源码已核验。
@@ -56,7 +58,7 @@
 | `agent unbind <binding-id>` / `agent status [--binding <id>]` | 停止本机尾读或查询绑定、游标、解析器版本、覆盖缺口；不删除日志/历史 |
 | `sync status` / `sync verify --file <proof.json>` | 查看来源 epoch/指纹/扫描策略与待核验范围；提交阶段核验声明并执行 CAS/模型及引用校验，详见[同步规格](observation-sync.md) |
 | `serve start [--port <0..65535>] [--foreground]` / `serve status` / `serve stop` | 同一用户/数据根管理单实例，默认 port=0 由系统分配，实际 URL 由握手返回；可显式指定端口，若占用且非同实例则明确冲突，不接入未知服务。仅绑定回环地址；不同隔离数据根可并行 |
-| `web open [--task <id>]` | 自动启动/复用正确本机服务，打开目标 Web；task 可定位档案。打开失败返回可复制 URL 和失败原因，不将失败报告为已打开 |
+| `web open [--task <id>] [--no-open]` | 自动启动/复用本机服务并取得短时一次性Web登录链接。默认打开浏览器；--no-open仅返回链接供agent输出流展示，opened:false。无显式目标/task且cwd未登记可返回无目标工作台；显式目标/task失败不能静默降级。浏览器打开失败给可复制URL，不伪报已打开 |
 | `model validate` | 解析当前 LikeC4 并校验[模型字段/引用](model-context.md)，返回诊断；不格式化、不补字段、不编辑模型 |
 | `gc --dry-run` / `gc --apply` | 仅枚举/清理[明确可重建派生数据](storage.md)。两个开关互斥，省略默认 dry-run；不清任务、事件、快照、注册信息、技能或源码 |
 | `migrate prototype --from <directory> --worktree <uuid> [--dry-run\|--apply]` | 唯一原型导入入口；默认 dry-run，显式来源与目标，复制不删源，ID 冲突不同内容则拒绝；只读 legacy wrapper，不重写旧 ID 或续期。见[迁移规格](storage.md) |
@@ -67,7 +69,7 @@
 
 ### 返回种类
 
-`task start` / `task prompt`的`routingPrompt`只提供可复用筛选规则并指向本封套的结构化`taskId/binding/directory/catalog`，不再内嵌这些数据的副本。具体字段/嵌套格式由当前帮助及Schema发现。任务目的仍随任务记录保存；既有幂等/历史回执保留当时原文，不为本次展示优化重写。
+`task start` / `task prompt`的`routingPrompt`提供可复用筛选与Git持久化规则并指向本封套的结构化`taskId/binding/directory/catalog`，不内嵌这些数据的副本。Git项目的规则列出应随相关源码提交的`.harness/model/`（`.c4`/`.likec4`、specification与views）、`.harness/project.json`、`.harness/evidence.json`、`.harness/aliases.json`，以及按实际归属纳入的项目文档/技能/附件/许可证；同时说明本机运行历史、归档、派生索引/缓存、机器配置与凭证排除，保留用户数据、不收录外部技能链接及遵守已有提交授权。具体字段/嵌套格式由当前帮助及Schema发现。任务目的仍随任务记录保存；既有幂等/历史回执保留当时原文，不为新规则重写。规则文本更新不改变封套Schema或技能选择语义。
 
 非JSON模式先展示一次路由规则，再展示其余结构化数据，避免同一规则又作为JSON字符串重复打印；JSON模式仍保留原有`routingPrompt`字段与完整封套。
 
@@ -86,12 +88,14 @@
 | agent bind/unbind/status | `bindings:[{id,agent,sessionId,logFile,taskId,state,parserVersion,cursor,coverage}]`；unbind 返回停止后的记录 |
 | sync status/verify | `state`、`sourceEpoch`、`sourceVersion`、`sourceScanRevision`、`modelRevision`、`pendingPaths:[]`、`proofId`（无则 null）；verify 包含声明与自动检查各自结果 |
 | serve start/status/stop | `state:"running"\|"stopped"`、`url`、`instanceId`、`protocolVersion:1`；停止时 url/instanceId 为 null |
-| web open | `url`、`opened:true` |
+| web open | `url`、`opened:boolean`；默认成功为true，--no-open为false；URL带一次性浏览会话码，首次打开有效期5分钟，过期或已用且需重新打开时重新取链接，不包含CLI连接凭据 |
 | model validate | `valid:true`、`modelRevision`、`objectCount`、`relationCount`、`diagnostics:[]`；非法模型用错误封套及 details.diagnostics |
 | gc | `mode`、`candidates:[{path,kind,bytes,reason}]`、`totalBytes`、`removed:[]`，dry-run removed 为空 |
 | migrate prototype | `mode`、`migrationId`、`source`、`target`、`tasks:[{id,action:"copy"\|"skip"\|"conflict",completeness}]`、`sourcePreserved:true`；dry-run 不写注册/档案 |
 
 该 result 表是 v1 字段契约，JSON Schema 对管理 result 仅检查对象封装，额外语义/字段存在性须由各命令验收测试验证。核心请求和结果不允许未知字段。未来破坏性字段变化须提升 schemaVersion；protocolVersion 是服务握手版本，不等于 npm 版本。
+
+v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",semanticStatus:"not-assessed",modelCreated:boolean,nextAction:"model-project"|"review-project-model",model:{objects,relations,views},agentGuidance}`；数量只表示当前可解析模型，不证明完整性。当前agent按实际项目阅读/建模/校验并报告进度，直接用文件工具维护LikeC4和证据。serve结果增加`startedAt`（未运行为null）、`scope:"user-data-root"`及`lifetime:"until-stopped"`；默认全用户项目共享当前用户数据根服务，显式数据根隔离继续有效。web open增加`service:{instanceId,scope:"user-data-root",lifetime:"until-stopped"}`和`login:{oneTime:true,expiresAt,browserSessionTtlMs:43200000}`，expiresAt是一次登录码到期时间，非进程退出时间。JSON stdout仍只返回一个封套，不代agent显示进度或注入宿主提示；可视化文案由agent在实际上下文返回后以Markdown链接展示。
 
 ## 3. 版本、批次与错误
 
