@@ -52,8 +52,15 @@ test('copies the runtime skill and on-demand references to both roots; repeated 
   assert.deepEqual((await readdir(path.join(f.codexSkillsDir, 'harnessl3'))).sort(), ['SKILL.md', 'references'])
 })
 
-test('updating preserves customized skill bytes in backups and leaves other files and skills alone', async t => {
+for (const linkedRoot of [false, true]) test('updating preserves customized skill bytes in backups and leaves other files and skills alone' + (linkedRoot ? ' through a linked skills root' : ''), async t => {
   const f = await fixture(t)
+  if (linkedRoot) {
+    await mkdir(f.codexSkillsDir, { recursive: true })
+    const alias = path.join(f.root, 'linked codex skills')
+    try { await symlink(f.codexSkillsDir, alias, process.platform === 'win32' ? 'junction' : 'dir') }
+    catch (error) { if (error.code === 'EPERM') { t.skip('Host cannot create directory links'); return }; throw error }
+    f.codexSkillsDir = alias
+  }
   await installAgentSkills(f)
   const entry = path.join(f.codexSkillsDir, 'harnessl3', 'SKILL.md')
   const note = path.join(f.codexSkillsDir, 'harnessl3', 'user-note.txt')
@@ -71,7 +78,9 @@ test('updating preserves customized skill bytes in backups and leaves other file
   assert.equal(await readFile(entry, 'utf8'), 'Updated runtime skill\n')
   assert.equal(await readFile(note, 'utf8'), 'Keep my attachment')
   assert.equal(await readFile(other, 'utf8'), 'Keep other skill')
-  const updatedGuide = updated[0].files.find(item => item.path === guide)
+  const updatedGuide = updated[0].files.find(item => item.relativePath === 'references/project-init.md')
+  assert.ok(updatedGuide)
+  assert.equal(updatedGuide.path, path.join(path.dirname(updated[0].path), 'references', 'project-init.md'))
   assert.equal(updatedGuide.status, 'updated')
   assert.equal(await readFile(updatedGuide.backup, 'utf8'), 'User edited project setup\r\n')
   assert.equal(await readFile(guide, 'utf8'), 'Updated project setup\n')

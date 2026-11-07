@@ -176,8 +176,40 @@ test('TC08 linked evidence failures and repaired pending paths match physical an
   await writeFile(evidencePath, JSON.stringify(evidence));
   const repaired = await f.manager.status(f.skillsRoot);
   const result = await f.manager.verify(proof(repaired, f.initialized.worktree, { scope: { paths: [alternative], entities: [] } }), f.skillsRoot);
-  assert.equal(result.state, 'verified');
+  assert.equal(result.state, 'verified', JSON.stringify({ pendingPaths: result.pendingPaths, diagnostics: result.diagnostics }));
   assert.deepEqual(result.pendingPaths, []);
+});
+
+test('TC08 verifying one linked document preserves a pending sibling in the same directory', async t => {
+  const f = await linkedDocument(t);
+  const sibling = 'ignored/alias/sibling.md';
+  const siblingPath = path.join(path.dirname(f.document), 'sibling.md');
+  await writeFile(siblingPath, 'Sibling decision\n');
+  const evidencePath = path.join(f.checkout, '.harness', 'evidence.json');
+  const evidence = JSON.parse(await readFile(evidencePath, 'utf8'));
+  const siblingId = randomUUID();
+  evidence.evidence.push({ ...evidence.evidence[0], id: siblingId, location: { path: sibling }, hash: sha256(await readFile(siblingPath)) });
+  await writeFile(evidencePath, JSON.stringify(evidence));
+  const modelPath = path.join(f.checkout, '.harness', 'model', 'main.c4');
+  await writeFile(modelPath, (await readFile(modelPath, 'utf8')).replace(`evidence "${f.evidenceId}"`, `evidence "${f.evidenceId} ${siblingId}"`));
+  const baseline = await f.manager.status(f.skillsRoot);
+  await f.manager.verify(proof(baseline, f.initialized.worktree), f.skillsRoot);
+  await writeFile(f.document, 'Changed linked decision\n');
+  await writeFile(siblingPath, 'Changed sibling decision\n');
+  const changed = await f.manager.status(f.skillsRoot);
+  assert.ok(changed.diagnostics.some(item => item.code === 'EVIDENCE_CHANGED' && item.evidenceId === f.evidenceId));
+  assert.ok(changed.diagnostics.some(item => item.code === 'EVIDENCE_CHANGED' && item.evidenceId === siblingId));
+  for (const item of evidence.evidence) item.hash = sha256(await readFile(path.join(f.checkout, item.location.path)));
+  await writeFile(evidencePath, JSON.stringify(evidence));
+  const repaired = await f.manager.status(f.skillsRoot);
+  const partial = await f.manager.verify(proof(repaired, f.initialized.worktree, { scope: { paths: [f.targetRelative], entities: [] } }), f.skillsRoot);
+  assert.equal(partial.state, 'pending');
+  assert.ok(partial.pendingPaths.includes(sibling));
+  assert.ok(!partial.pendingPaths.includes(f.relative));
+  const current = await f.manager.status(f.skillsRoot);
+  const complete = await f.manager.verify(proof(current, f.initialized.worktree, { scope: { paths: [sibling], entities: [] } }), f.skillsRoot);
+  assert.equal(complete.state, 'verified', JSON.stringify({ pendingPaths: complete.pendingPaths }));
+  assert.deepEqual(complete.pendingPaths, []);
 });
 
 test('TC07 referenced documents inside .harness invalidate old proofs after a byte rollback', async t => {

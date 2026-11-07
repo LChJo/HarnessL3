@@ -36,3 +36,6 @@ web/canvas-model.ts text eol=lf
 web/main.tsx text eol=lf
 web/skill-layout.ts text eol=lf
 web/skill-reason.ts text eol=lf
+tests/v1/agent-skills.test.mjs text eol=lf
+tests/v1/freshness.test.mjs text eol=lf
+docs/implementation/STATUS.md text eol=lf

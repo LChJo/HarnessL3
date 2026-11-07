@@ -114,12 +114,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "FreshnessManager observes declared and boundary-checked real reference paths before directory exclusions, preserves safe missing-link targets, rejects stale epochs, and uses equivalent path scopes for evidence checks and pending cleanup.",
+      "claim": "FreshnessManager observes declared and boundary-checked real reference paths before exclusions, maps directory notifications to affected evidence files, rejects stale epochs, and preserves unrelated pending scope during verification.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "f8dddc2bccd7b20268e48d47e3f28a8c819d7da0cd11c8cc44bbbab726ad114b",
-      "observedAt": "2026-11-07T15:30:46.328Z"
+      "hash": "745575270ea6b68f8cf583315306b0062da343ed9241dbad5d413f1ab0d5f814",
+      "observedAt": "2026-11-07T16:14:32.614Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -350,6 +350,36 @@
       },
       "hash": "d047ce7ac2c004c4b756d32c42e93c05966b513cdabf688523f3851d9f0e57f6",
       "observedAt": "2026-11-07T15:02:49.539Z"
+    },
+    {
+      "id": "c7e37e35-b20f-45d8-b816-8ad845bdb602",
+      "kind": "source-code",
+      "claim": "Installer regression covers canonical attachment paths, linked skill roots and byte-preserving backups without modifying unrelated user files.",
+      "location": {
+        "path": "tests/v1/agent-skills.test.mjs"
+      },
+      "hash": "622f2e0b90356983c39f73addcdaebb3a507b988fdfc0c9cfcb9ebe18aba40aa",
+      "observedAt": "2026-11-07T16:14:32.614Z"
+    },
+    {
+      "id": "1e950683-1469-49c8-9164-d439932a7bf2",
+      "kind": "source-code",
+      "claim": "Native linked-reference regressions check repaired physical/alternative scopes and preserve a sibling document pending after partial verification.",
+      "location": {
+        "path": "tests/v1/freshness.test.mjs"
+      },
+      "hash": "f2356e3525d57d44bd3995972902e418263a086eec856972b14e85219921f0c9",
+      "observedAt": "2026-11-07T16:14:32.614Z"
+    },
+    {
+      "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
+      "kind": "document",
+      "claim": "The main CI repair records observed GitHub failures, native RED/GREEN results, separate Windows/Linux full validation and the unverified macOS/remote rerun scope.",
+      "location": {
+        "path": "docs/implementation/STATUS.md"
+      },
+      "hash": "f8e28ad53bc73b6a89adcb278431383e8ae36ad3a22c6bc57accab37a3de94a6",
+      "observedAt": "2026-11-07T16:27:45.000Z"
     }
   ]
 }

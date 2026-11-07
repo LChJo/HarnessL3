@@ -247,7 +247,7 @@ export class FreshnessManager {
   private watchEvent(relative: string): void {
     if (prefix('.git', relative)) { this.schedule(); return; }
     const referenced = this.referencePaths.get(referenceKey(relative));
-    if (referenced) this.markReferences(relative, referenced);
+    if (referenced) this.markReferences(referenced);
     if (prefix('.harness', relative)) {
       if (relative === '.harness/project.json') { this.changeGeneration++; this.state.scanPending = true; this.state.state = 'pending'; this.schedule(); return; }
       if (prefix('.harness/model', relative) || ['.harness/evidence.json', '.harness/aliases.json'].includes(relative)) {
@@ -258,7 +258,7 @@ export class FreshnessManager {
     }
     if (referenced) return;
     if (this.lastScan?.policy && !isSourcePathIncluded(relative, this.lastScan.policy)) return;
-    if (this.lastScan?.manifest?.content.entries.some(entry => prefix(relative, entry.path))) { this.markSource(relative); return; }
+    if (this.lastScan?.manifest?.content.entries.some(entry => prefix(relative, entry.path))) { this.markSource([relative]); return; }
     // Keep native Git's last observed directory classification after deletion;
     // checking a missing `build` as a file loses a `build/` ignore rule.
     if (this.lastScan?.ignoredDirectoryPrefixes?.some(ignored => prefix(ignored, relative))) return;
@@ -267,17 +267,18 @@ export class FreshnessManager {
     void pending.catch(() => {});
   }
 
-  private markReferences(relative: string, references: Iterable<string>): void {
-    this.markSource(relative);
+  private markReferences(references: Iterable<string>): void {
+    // Directory notifications invalidate the affected evidence files, not an
+    // extra ancestor scope that a file-level declaration could never clear.
+    this.markSource(references);
     this.state.modelPending = true;
-    this.state.pendingPaths = sorted([...this.state.pendingPaths, ...references]);
   }
 
-  private markSource(relative: string): void {
+  private markSource(paths: Iterable<string>): void {
     if (this.closed) return;
     if (this.state.sourceEpoch >= Number.MAX_SAFE_INTEGER) { this.state.state = 'unknown'; return; }
     this.changeGeneration++; this.state.sourceEpoch++; this.state.state = 'pending'; this.state.scanPending = true;
-    this.state.pendingPaths = sorted([...this.state.pendingPaths, relative]);
+    this.state.pendingPaths = sorted([...this.state.pendingPaths, ...paths]);
     this.persistObserved('source-event'); this.schedule();
   }
 
@@ -294,7 +295,7 @@ export class FreshnessManager {
       } catch (error) {
         if (!(error && typeof error === 'object' && 'code' in error && error.code === 1)) throw error;
       }
-      this.markSource(relative);
+      this.markSource([relative]);
     } catch { this.state.scanPending = true; this.schedule(); }
   }
 

@@ -138,14 +138,14 @@ model {
         }
       }
       source = component "源码与同步 · source/freshness" {
-        description "source.ts按Git及忽略策略核对原始文件；freshness.ts在目录排除前处理显式引用，同时观测声明路径和经过工作区边界检查的真实目标，目标暂缺时保留最后安全目标用于观测重建。引用变更和字节回退推进代次，不扩展来源manifest；范围核验及pending清理统一处理链接与Windows大小写等价路径。成功模型的证据异常保留，命中范围不能被声明清除，无关局部proof可保存且未解决部分仍pending；机械核验不等于语义理解。"
+        description "source.ts按Git及忽略策略核对原始文件；freshness.ts在目录排除前处理显式引用，同时观测声明路径和经过工作区边界检查的真实目标，目标暂缺时保留最后安全目标用于观测重建。引用变更和字节回退推进代次，不扩展来源manifest；范围核验及pending清理统一处理链接与Windows大小写等价路径。成功模型的证据异常保留，命中范围不能被声明清除，无关局部proof可保存且未解决部分仍pending；目录通知只将受影响的引用文件标pending，不额外加入目录范围；单文件核验保留同目录其它引用的待核验状态。机械核验不等于语义理解。"
         metadata {
           harness_id "c6250000-0000-4000-8000-00000000000a"
           brief "观测来源及显式引用的真实目标，保留证据异常和实际范围的同步声明。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-00000000000b d6250000-0000-4000-8000-00000000000c e94d7f43-9e04-4d1d-872f-b8125998f02e"
-          version "3"
+          version "4"
         }
       }
       observation = component "只读观测 · observation.ts" {
@@ -216,14 +216,14 @@ model {
       }
     }
     quality = component "隔离验证 · tests/v1与web验证" {
-      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者检查分发后的真实入口。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
+      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者检查分发后的真实入口。程序回归覆盖规范化技能安装路径、链接目录通知和同目录多证据的局部核验。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000010"
         brief "通过临时Git、独立数据根、程序/浏览器与安装消费者核对正式契约。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0"
-        version "2"
+        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c"
+        version "3"
       }
     }
     prototype = component "冻结原型参考 · src/server/examples" {
