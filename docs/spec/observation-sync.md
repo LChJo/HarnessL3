@@ -89,6 +89,10 @@ harnessl3 agent unbind <binding-id>
 
 watcher 收到有效源码变化立即递增该 worktree 的单调 `sourceEpoch` 并标 pending，再异步扫描来源指纹；定期 reconciliation 和 `sync status/verify` 前的扫描补偿 watcher 丢失、服务停机及分支切换。模型/依据文件变化触发解析与模型版本更新，不增加 sourceEpoch；旧 proof 的模型版本不再匹配时，当前新鲜度也回到 pending。技能根内普通文件变动只更新 catalog，不增加源码 epoch；运行数据、缓存和索引写入不触发源码待核验循环。扫描失败返回 unknown/错误范围，不沿用旧指纹冒充当前。
 
+当前实体显式引用的本地证据文件也属于核验输入：即使被Git忽略或来源策略排除，watcher仍将该文件及受影响的引用路径标pending并推进同一代次，字节回退也不能复用旧proof；来源manifest/扫描策略不因引用而扩展。reconciliation保留成功模型加载返回的证据诊断，changed/missing/unreadable使关联范围待核验。普通未被引用的排除文件、技能和本机输出继续按原规则处理，不制造读取事件。历史模型/证据仍使用当时归档。
+
+显式引用先于`.harness`等目录的常规分流处理，未被引用的模型文件仍遵守模型版本规则。工作区内的文件链接/junction同时登记声明路径及经过边界检查的真实目标；目标暂时缺失时保留最后安全目标用于观测重建，当前引用移除或成功改指后更新派生索引，不改写历史。不会为了观测引用而跟随越界目标或扩大来源manifest。
+
 `sourceVersion` 固定为 `{head: string|null, treeHash: sha256|null, status: clean|dirty|unknown}`。`status` 是过滤后选定来源范围内的 Git 工作区状态，不是语义已同步：仅排除目录中的修改不把它变成 dirty，不能直接复制整个仓库的 porcelain 状态。unknown 的 `treeHash` 必须为空。`head` 为实际完整 commit，detached HEAD 保留 commit，尚无 commit 可为空；它不代表未提交内容。
 
 <a id="source-manifest"></a>
@@ -209,6 +213,8 @@ paths 为目标工作区内 POSIX 相对路径，entities 为模型稳定 UUID�
 1. 解析 proof 与目标；来源不得 unknown，scope 必须明确本次核验范围，不能把仅一文件的核验发布为整工作区已同步。scope 超出项目/引用不存在返回明确错误；提交局部范围可以保留其核验结果，未覆盖变化仍待核验。
 2. 扫描当前来源和策略，解析/校验当前模型及证据引用格式；核对 expectedSourceVersion、expectedModelRevision、sourceEpoch 与当前值。若与 task 开始时模型不同，同步校验针对当前提交的 proof，旧任务读取绑定仍不被重写。
 3. `updated` 表示调用方声明已更新受影响上下文；`no-semantic-change` 表示声明核验后无需语义修改。两者仍需合法模型、来源一致、scope 覆盖及 checks 全部 passed；失败/未知 checks 或 `unresolved` 均不能变 verified。
+   当前模型成功加载时的证据诊断同样保留在同步状态。被当前对象/关系引用的本地证据若 changed/missing/unreadable，其路径保持待核验；proof 的路径或实体范围命中该异常时返回 `SYNC_UNRESOLVED`，全 passed 的调用方声明不能清除此机械异常。未命中的局部 proof 可以保存，工作区仍 pending；未被当前实体引用的证据记录只保留诊断。自动检查 `referenced-evidence` 与调用方 checks 分开，不改写人工 status 或以哈希替代语义审核。
+   路径范围使用声明路径和边界检查后的真实路径匹配证据及待核验项；Windows大小写等价路径一致处理，POSIX大小写不同的路径仍独立。通过其它工作区内链接进入同一文件也不能绕过证据异常；清理pending使用同一范围规则，不能因别名保留已核验项或清除无关路径。
 4. 完成校验后进入 worktree 写队列，再核查实际来源指纹、模型版本、策略和 epoch，不仅比较缓存；通过才提交 proof、自动校验结果和验证到的版本/扫描时点。异步期间观察到新变更则拒绝旧 proof，保留 pending 并返回最新版本供重做，不能用最后写入者覆盖新状态。提交后检测到的变化立即使该 proof 成为历史核验点，不继续标当前 verified。
 
 scope 可核验一部分变化：保存局部 proof，但只有所有待核验路径均被覆盖且当前版本/epoch 一致，工作区才是 verified；剩余范围继续 pending。语义影响范围由提交者声明并记录，不伪装成服务已经自动理解。路径/哈希匹配、模型有效、测试通过分别显示，自动校验结果和调用方语义声明分开保存。

@@ -269,4 +269,14 @@ model {
       version "1"
     }
   }
+  app.core.model -[uses]-> app.core.references "文档Git归属诊断" {
+    metadata {
+      harness_id "b32c83ec-0b4d-418f-916b-4481c79521a1"
+      brief "模型加载调用批量只读Git检查，将文档归属提示保留在同一模型快照。"
+      source "fact"
+      status "verified"
+      evidence "d6250000-0000-4000-8000-000000000006 eabb0836-b70b-4b73-aa11-806c7f49c526"
+      version "1"
+    }
+  }
 }

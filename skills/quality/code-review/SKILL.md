@@ -1,11 +1,9 @@
 ---
 name: code-review
 description: Review a diff against a fixed point along two axes, documented standards and the originating spec, and report them separately. Use for a branch, PR or work-in-progress review; parallel agents are optional.
-related:
-  - ../../meta/setup-matt-pocock-skills/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
@@ -14,7 +12,7 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
 Keep the two review axes independent, then aggregate their findings. Use parallel agents only when supported and authorized; otherwise perform separate passes in the current agent and describe that accurately.
 
-Use the project's existing requirements and tracker conventions. [Project setup guidance](../../meta/setup-matt-pocock-skills/SKILL.md) is optional if those conventions genuinely need defining; a missing `docs/agents/issue-tracker.md` does not require initialization or an external service.
+Use the project's existing requirements and tracker conventions. If these are unclear, inspect the current task store and document only the conventions this review needs. A missing `docs/agents/issue-tracker.md` does not require initialization or an external service.
 
 ## Process
 

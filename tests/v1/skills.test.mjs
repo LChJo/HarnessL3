@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fsPromises, { mkdtemp, mkdir, writeFile, readFile, readdir, symlink, rm, lstat, realpath } from 'node:fs/promises'
 import { syncBuiltinESMExports } from 'node:module'
 import { tmpdir } from 'node:os'
-import { join, resolve, dirname, basename } from 'node:path'
+import { join, resolve, dirname, basename, posix } from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
 import { execFile as callbackExecFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -85,6 +85,41 @@ test('actual library includes 7 categories and 21 editable methods without built
   assert.equal(new Set(catalog.skills.map(item => item.group)).size, 7)
   assert.ok(catalog.skills.every(item => !['ask-matt', 'skill-hub', 'grill-me'].includes(item.name)))
   assert.ok(catalog.skills.find(item => item.id === 'quality/tdd').files.some(file => file.path === 'tests.md'))
+})
+
+test('bundled library navigation resolves within the seeded library without repository-only documents', async () => {
+  const root = resolve('skills')
+  for (const file of ['README.md', 'FILE-REFERENCES.md']) {
+    const text = await readFile(join(root, file), 'utf8')
+    for (const match of text.matchAll(/\[[^\]\n]*\]\(([^\s)]+)\)/g)) {
+      const target = match[1].split('#')[0]
+      if (!target || /^[a-z][a-z0-9+.-]*:/i.test(target)) continue
+      const local = posix.normalize(target)
+      assert.ok(local !== '..' && !local.startsWith('../') && !local.startsWith('/'), `${file}: ${target} is not available in the seeded library`)
+      await readFile(join(root, decodeURIComponent(local)))
+    }
+  }
+})
+
+test('TC19 each bundled method can resolve its local references from its own archive', async () => {
+  const catalog = await scanSkills(resolve('skills'))
+  assert.equal(catalog.valid, true, JSON.stringify(catalog.diagnostics))
+  const failures = []
+  for (const skill of catalog.skills) {
+    const captured = captureSkills(catalog, [{ id: skill.id, reason: 'Verify an independently selected method' }])
+    if (skill.related.length) failures.push(`${skill.id}: related points outside the selected archive`)
+    const files = new Set(captured.skills[0].files.map(file => file.path))
+    for (const file of skill.files.filter(file => file.path.endsWith('.md'))) {
+      const text = captured.blobs.get(file.hash).toString('utf8').replace(/^```[^\n]*\n[\s\S]*?^```\s*$/gm, '')
+      for (const match of text.matchAll(/\[[^\]\n]*\]\(([^\s)]+)\)/g)) {
+        const target = match[1].split('#')[0]
+        if (!target || /^[a-z][a-z0-9+.-]*:/i.test(target)) continue
+        const local = posix.normalize(posix.join(posix.dirname(file.path), decodeURIComponent(target)))
+        if (!files.has(local)) failures.push(`${skill.id}/${file.path}: ${target}`)
+      }
+    }
+  }
+  assert.deepEqual(failures, [], 'Bundled Markdown references must be available when only this method is selected')
 })
 
 test('empty existing root is a valid empty catalog and missing root is invalid', async t => {

@@ -1,17 +1,15 @@
 ---
 name: triage
 description: Move issues and external PRs through a state machine of triage roles — categorise, verify, grill if needed, and write agent-ready briefs.
-related:
-  - ../../discovery/grilling/SKILL.md
-  - ../../architecture/domain-modeling/SKILL.md
-  - ../../meta/setup-matt-pocock-skills/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Triage
 
 Apply the role model below to the project's existing incoming work, whether stored as local task files or on a configured issue tracker. First read its current conventions. Viewing this method does not authorize posting comments, changing labels, closing work or creating an external tracker; prepare recommendations first and perform only task-authorized writes through available tools.
+
+Retained local briefs and scope decisions follow the project's knowledge lifecycle: maintain current model/evidence pointers when they change, move or are superseded, and review Git ownership alongside the related project changes. A local task artifact and the CLI's machine-local task history have different retention boundaries.
 
 If this repo treats external pull requests as a request surface (see the issue-tracker config), triage covers them too: **a PR is an issue with attached code** — same roles, same states, same machine, with a few deltas marked "for a PR" below. Resolve a bare `#42` to an issue or PR per the tracker config.
 
@@ -45,7 +43,7 @@ For a PR, the same states read against the attached code: `ready-for-agent` mean
 
 Every triaged issue should carry exactly one category role and one state role. If state roles conflict, flag it and ask the maintainer before doing anything else.
 
-These are conceptual role names; actual project labels may differ. Use the existing mapping when present. [Project setup guidance](../../meta/setup-matt-pocock-skills/SKILL.md) is an optional reference for defining one, not a required initialization step.
+These are conceptual role names; actual project labels may differ. Use the existing mapping when present. If a mapping is needed, document it in the project's existing task convention; no initialization is required.
 
 State transitions: an unlabeled issue normally goes to `needs-triage` first; from there it moves to `needs-info`, `ready-for-agent`, `ready-for-human`, or `wontfix`. `needs-info` returns to `needs-triage` once the reporter replies. The maintainer can override at any time — flag transitions that look unusual and ask before proceeding.
 
@@ -78,7 +76,7 @@ Show counts and a one-line summary per item. Let the maintainer pick.
 
 3. **Verify the claim.** Before any grilling, check that the claim holds up. For a bug, reproduce it from the reporter's steps. For a PR, inspect the diff and run relevant checks in an authorized isolated worktree when needed; do not switch another task's branch. Report confirmed, failed or insufficient detail, with actual evidence.
 
-4. **Grill (if needed).** If the request needs fleshing out, run the [grilling](../../discovery/grilling/SKILL.md) and [domain-modeling](../../architecture/domain-modeling/SKILL.md) skills together — grill it into shape one question at a time, sharpening domain terms and updating `CONTEXT.md`/ADRs inline as decisions land.
+4. **Grill (if needed).** If the request needs fleshing out, resolve the open decisions one question at a time. Look up facts before asking, give a recommendation, and wait for the user's decision. Sharpen domain terms and update the project's authoritative model or decision records as answers land.
 
 5. **Apply the outcome:**
    - `ready-for-agent` — post an agent brief comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).

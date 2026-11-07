@@ -1,0 +1,3 @@
+.skill-reason-raw{margin-top:8px;font-size:11px;color:var(--muted)}
+.skill-reason-raw summary{cursor:pointer}
+.skill-reason-raw pre{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.8 Consolas,"Microsoft YaHei",monospace}

@@ -3,7 +3,7 @@ name: teach
 description: Teach the user a new skill or concept, within this workspace.
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 The user wants to learn a topic. Use the scope they requested: one lesson or a stateful course across work periods. Learning records support continuity without assuming automatic session control or a new course workspace.
 
@@ -18,6 +18,8 @@ Use the learning workspace agreed for this task; the current repository is not a
 - `./lessons/*.html`: A directory of lessons. A **lesson** is a single, self-contained HTML output that teaches one tightly-scoped thing tied to the mission. This is the primary unit of teaching in this workspace.
 - `./assets/*`: Reusable **components** shared across lessons. See [Assets](#assets).
 - `NOTES.md`: A scratchpad for you to jot down user preferences, or working notes.
+
+If the agreed course workspace uses a project context model, maintain references to retained missions, lessons and learning records when they change or move. Review their Git ownership separately from personal notes, following the course's retention convention.
 
 ## Philosophy
 

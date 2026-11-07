@@ -30,6 +30,34 @@ test('TC21 an entirely unmatched context branch opens only its directory overflo
   assert.equal(layout.nodes[1].hiddenCount, 1)
 })
 
+test('TC21 returning a parent body keeps a hit leaf and output path when all descendants are unmatched', () => {
+  const parent = { ...item('app', true, [item('unread-child')]), entityId: 'app-id' }
+  const root = { ...item('category:objects', true, [parent]), kind: 'category', state: 'aggregate' }
+  const layout = layoutMindmap([root], [root.id, parent.id])
+  const hitLeaves = layout.nodes.filter(node => node.hit && !layout.edges.some(edge => edge.source === node.id && edge.kind === 'branch'))
+  assert.equal(hitLeaves.length, 1, 'A returned parent body must remain a visible terminal hit')
+  assert.equal(hitLeaves[0].entityId, parent.entityId)
+  assert.ok(layout.edges.some(edge => edge.source === hitLeaves[0].id && edge.kind === 'output' && edge.hit))
+  assert.equal(root.hits, 1, 'A body projection must not count the same returned entity twice')
+  assert.equal(parent.children[0].hit, false, 'The unreturned child must remain unmatched')
+  assert.equal(layout.nodes.find(node => node.kind === 'overflow').hiddenCount, 1)
+})
+
+test('TC21 aggregate ancestors do not create body hits and direct parent/child returns stay distinct', () => {
+  const child = { ...item('child', true), entityId: 'child-id' }
+  const parent = { ...item('parent', true, [child]), entityId: 'parent-id', state: 'aggregate' }
+  const aggregate = layoutMindmap([parent], [parent.id])
+  assert.deepEqual(aggregate.nodes.filter(node => node.kind === 'body'), [], 'A child return must not imply the parent body was read')
+  parent.state = 'returned'; parent.hits = 2
+  const direct = layoutMindmap([parent], [parent.id])
+  const leaves = direct.nodes.filter(node => node.hit && !direct.edges.some(edge => edge.source === node.id && edge.kind === 'branch'))
+  assert.deepEqual(leaves.map(node => node.entityId).sort(), ['child-id', 'parent-id'])
+  assert.equal(parent.hits, 2)
+  const collapsed = layoutMindmap([parent], [])
+  assert.equal(collapsed.nodes.length, 1)
+  assert.ok(collapsed.edges.some(edge => edge.kind === 'output' && edge.hit))
+})
+
 test('TC20/21 skill folders keep selected members and aggregate all unmatched catalog entries', () => {
   const catalog = [skill('quality/chosen'), skill('quality/unused'), skill('planning/other', 'planning')]
   const plan = { id: 'plan', skills: [{ ...catalog[0], reason: 'Requested method' }] }

@@ -3,7 +3,7 @@ name: domain-modeling
 description: Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, record an architectural decision, or when another skill needs to maintain the domain model.
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Domain Modeling
 
@@ -42,6 +42,8 @@ If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The ma
 ```
 
 Create new glossary or ADR files only when needed and permitted by the project's chosen layout. Missing `CONTEXT.md` or `docs/adr/` alone is not a reason to create them.
+
+Retained terminology and decision documents are part of the same knowledge change: maintain their current model/evidence links and Git ownership. Repair references when a document moves or is superseded, preserving stable identities and archived history.
 
 ## During the session
 

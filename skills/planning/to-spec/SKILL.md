@@ -1,15 +1,13 @@
 ---
 name: to-spec
 description: Synthesize the current conversation and project evidence into a buildable spec using the project's existing artifact convention. Use when discussion is ready to become a spec rather than starting another interview.
-related:
-  - ../../meta/setup-matt-pocock-skills/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 This skill takes the current conversation context and codebase understanding and produces a spec (you may know this document as a PRD). Do NOT interview the user — just synthesize what you already know.
 
-Use the existing project spec location and work-tracking convention. [Project setup guidance](../../meta/setup-matt-pocock-skills/SKILL.md) is optional when that convention actually needs defining; an external tracker is not a prerequisite.
+Use the existing project spec location and work-tracking convention. Clarify an unclear convention from the project's actual files; an external tracker is not a prerequisite.
 
 ## Process
 
@@ -20,6 +18,8 @@ Use the existing project spec location and work-tracking convention. [Project se
 Reuse already confirmed testing decisions. Ask about a new seam only when the choice needs a user decision and is not resolved by project evidence.
 
 3. Write the spec using the useful parts of the template below in the authorized project location. Publish to an external tracker and apply its readiness label only when that write is authorized and the configured tools are available; otherwise leave a reviewable local draft. Do not initialize a tracker or invent a successful publication.
+
+When retaining the spec as project knowledge, update affected context briefs and evidence references in the same phase. Reuse existing entities and record its Git ownership with related model/source changes; a local draft and a retained project spec can have different lifetimes.
 
 <spec-template>
 

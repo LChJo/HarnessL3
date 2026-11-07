@@ -44,4 +44,6 @@
 .directory-pagination{display:flex;align-items:center;justify-content:flex-end;gap:13px;margin-top:24px;color:var(--muted);font-size:12px}
 .directory-pagination>span:first-child{margin-right:auto}
 .directory-empty{padding:54px 0;text-align:center;color:var(--muted);font-size:14px}
+.session-required{display:flex;flex-direction:column;align-items:flex-start;gap:18px;max-width:calc(100% - 40px)}
+.session-required p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
 @media(max-width:650px){.directory-content{padding:22px 20px 32px}.directory-heading h1{font-size:22px}.directory-row{gap:12px;padding:17px 0}.directory-row-meta{min-width:72px;max-width:100px}.directory-toolbar{gap:8px}.directory-toolbar>select{min-width:88px;padding:8px}.directory-pagination{gap:8px}.directory-row-title{font-size:14px}}

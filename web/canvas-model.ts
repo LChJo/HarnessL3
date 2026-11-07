@@ -21,6 +21,8 @@ export function layoutMindmap(roots: MapItem[], expanded: string[]) {
     if (!open.has(node.id)) return []
     if (visible.has(node.id)) return visible.get(node.id)!
     const hits = node.children.filter(child => child.hit), hiddenCount = node.children.length - hits.length
+    const entityId = node.entityId ?? node.objectId
+    if (node.kind === 'object' && node.state === 'returned' && node.children.length && entityId) hits.unshift({ ...node, id: 'body:' + node.id, title: node.title + ' · 正文', brief: '', kind: 'body', children: [], hit: true, hits: 1, relatedIds: [entityId], bodyFor: node.id })
     if (hiddenCount) hits.push({ id: 'overflow:' + node.id, title: '…', brief: `其余 ${hiddenCount} 项`, category: node.category, kind: 'overflow', children: [], hit: false, hits: 0, state: 'available', relatedIds: [], fields: {}, overflowFor: node.id, hiddenCount })
     visible.set(node.id, hits)
     return hits

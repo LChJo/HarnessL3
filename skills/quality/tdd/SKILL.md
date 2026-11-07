@@ -1,11 +1,9 @@
 ---
 name: tdd
 description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
-related:
-  - ../code-review/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Test-Driven Development
 
@@ -37,4 +35,4 @@ Resolve: "What's the public interface, and which seams should we test?" Existing
 
 - **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
-- **Keep the implementation slice focused.** Use the [review method](../code-review/SKILL.md) when evaluating broader refactoring; follow the target project's development rules rather than treating this method as a fixed execution pipeline.
+- **Keep the implementation slice focused.** Evaluate broader refactoring against the originating spec and the repository's standards; follow the target project's development rules rather than treating this method as a fixed execution pipeline.

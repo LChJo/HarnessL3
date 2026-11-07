@@ -3,7 +3,7 @@ name: prototype
 description: Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Prototype
 
@@ -25,4 +25,4 @@ The two branches produce very different artifacts — getting this wrong wastes 
 3. **No persistence by default.** State lives in memory. Persistence is the thing the prototype is _checking_, not something it should depend on. If the question explicitly involves a database, hit a scratch DB or a local file with a clear "PROTOTYPE — wipe me" name.
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
-6. **Capture the answer and evidence.** Record the question, verdict and a pointer to the runnable artifact in the project's established local artifact location. Apply a validated decision to production code only when implementation is in scope. A separate branch/worktree, commit, issue update, or deletion is optional and must be authorized; never switch a parallel task's branch or delete its files to archive this prototype.
+6. **Capture the answer and evidence.** Record the question, verdict and a pointer to the runnable artifact in the project's established local artifact location. For retained evidence, maintain current context references and decide Git ownership by its purpose; repair pointers before authorized cleanup. Apply a validated decision to production code only when implementation is in scope. A separate branch/worktree, commit, issue update, or deletion is optional and must be authorized; never switch a parallel task's branch or delete its files to archive this prototype.

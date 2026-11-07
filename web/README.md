@@ -2,6 +2,18 @@
 
 The approved Slate canvas is preserved here. `src/` remains the frozen prototype reference.
 
+## v0.30 task presentation
+
+Web displays existing CLI-created tasks. Input cards, history controls and the blank workspace have no task creation controls; headings, selectors and history rows omit the closed label. The stored lifecycle and read-only rules remain intact. The manual browser gate now creates its isolated tasks through the CLI, then exercises the same explicit Web selection, retry and empty-selection flows.
+
+## v0.29 direct bodies and repeat links
+
+An expanded object whose own body was returned keeps an explicit body leaf and hit route to output. The leaf opens that original entity's archived text; it does not add a second hit or imply any child body was returned. Aggregate ancestors generate no body leaf. Unmatched children retain the standalone directory overflow.
+
+Opening the original sign-in link again reuses a valid browser session without cookie rotation or expiry extension. Without that session, consumed/invalid codes remain rejected. HTTP 401 shows sign-in recovery and preserves the requested target instead of claiming the local service is unavailable. The resident service lifetime remains separate from both login-code and cookie expiry.
+
+Windows validation: `node --test tests/v1/web-projection.test.mjs tests/v1/web-service.test.mjs tests/v1/agent-initialization.test.mjs tests/v1/first-use.test.mjs` passed 16 tests after two initial failures. `node scripts/v1/web-hit-session-smoke.mjs` exercised real Edge, repeated original URLs, archived body details, unchanged cookie/expiry, signed-out recovery and unchanged task records. Existing browser and large-directory gates also passed. Reports and inspected screenshots are under `.harness-local/validation/hit-session-*`; the installed CLI was checked against the user's original one-body task. Cold restart recovery exceeded the first startup/reader deadlines and remains a separate performance limitation; no new macOS/Linux result is claimed. See [implementation status](../docs/implementation/STATUS.md).
+
 Entry: `index.html` and `main.tsx`. Runtime data comes from cookie-authenticated `/view`, `/rpc`, and worktree-scoped `/events`; no source-project path or task is hard-coded.
 
 Browser gate: `node web/verify-browser.mjs <isolated-service-url[#code=...]>`. It checks five collapsed categories, closed Skill Hub, selected folder disclosure or an unmatched-directory overflow, camera controls, and zero retrieval RPCs during browsing. The initial behavioral RED was recorded against the frozen prototype before the formal entry was available.

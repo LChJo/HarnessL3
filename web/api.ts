@@ -7,6 +7,7 @@ export class ApiError extends Error {
   constructor(code: string, message: string, details: Record<string, unknown> = {}) { super(`${code}: ${message}`); this.code = code; this.details = details }
 }
 async function json(response: Response): Promise<unknown> {
+  if (response.status === 401) throw new ApiError('AUTH_REQUIRED', '访问凭证已失效，请让当前 agent 重新生成访问链接。')
   let value: unknown
   try { value = await response.json() } catch { throw new ApiError('CONNECTION_ERROR', `本机服务返回无效数据（HTTP ${response.status}）`) }
   if (!response.ok) {

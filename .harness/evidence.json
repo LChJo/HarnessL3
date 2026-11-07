@@ -8,8 +8,8 @@
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "e670c779309b99389058e89902bd25419b8013ce7407b76046f7175cf44966a4",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "22bf9d21c7ab3dcae60f9c7cce9bb2c79a4a42b1c30a7db76c8d2a12c72a34c4",
+      "observedAt": "2026-11-07T15:05:50.000Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -24,12 +24,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Loopback HTTP service authenticates requests and delegates RPC/views/events to Runtime.",
+      "claim": "Loopback HTTP service authenticates requests and delegates RPC/views/events; repeated sign-in links reuse valid sessions without rotating or extending them, while unauthenticated code reuse remains rejected.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "e71e3d9408c794e5ffeaafa3d07febc480f16c2aed33099e7662da5b6ac4c484",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "9b8777506f8e9c77dc103977c94332485c33a06b5380a199e4ed5efc00707715",
+      "observedAt": "2026-11-07T13:02:35.518Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
@@ -54,22 +54,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000006",
       "kind": "source-code",
-      "claim": "LikeC4 and tracked evidence/aliases are parsed into validated entities, directories, bodies and views.",
+      "claim": "LikeC4 and evidence/aliases form one model snapshot, retaining evidence identities and document Git diagnostics without rewriting authored status.",
       "location": {
         "path": "core/model.ts"
       },
-      "hash": "784cd6057a4bb512765cdf85d7b32817f4c173f69a2cc599f57e395b4d37fd4b",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "5ae42fee4f7bbe7c0bcb3fc02af202b453f88066c4644ff4614c5410330b0921",
+      "observedAt": "2026-11-07T14:25:11.750Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService returns reusable Git tracking boundaries at entry and handles joint selection, precise queries, archived handoff, file reads and history without rewriting old receipts.",
+      "claim": "Task entry returns reusable document lifecycle and Git boundaries; joint selection, exact reads and immutable archived history retain their existing authority.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "553ed9cf13ee415f5d0657d5c45699d212d0afa5d7fb704fe3f22126f7b06b9c",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "ce5dfc76663648e6922ee00c6afc8c41871e4f865de4d1e23b54fd3416856fc0",
+      "observedAt": "2026-11-07T14:25:11.750Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -114,12 +114,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "FreshnessManager reads model/source separately, tracks changes and persists scoped verification facts to Archive.",
+      "claim": "FreshnessManager observes declared and boundary-checked real reference paths before directory exclusions, preserves safe missing-link targets, rejects stale epochs, and uses equivalent path scopes for evidence checks and pending cleanup.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "55d83ba81d8c0ee6e14ef021e2b56bf5f5f4d88375316894a358a2df62386a90",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "f8dddc2bccd7b20268e48d47e3f28a8c819d7da0cd11c8cc44bbbab726ad114b",
+      "observedAt": "2026-11-07T15:30:46.328Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -148,38 +148,38 @@
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "bdd6550f8d6a55bf49306cb1c1af27d42adb1a5b68edd83eea380c7ead65a154",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "bd3627988388b40d3b584086e42425cc10c9fcd4dadffd68bf0a2555cc62bb6f",
+      "observedAt": "2026-11-07T13:25:06.078Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
       "kind": "source-code",
-      "claim": "Web uses same-origin authenticated RPC and target-specific views.",
+      "claim": "Web uses same-origin authenticated RPC and target-specific views, preserves link targets and classifies HTTP 401 as authentication recovery.",
       "location": {
         "path": "web/api.ts"
       },
-      "hash": "b6405d162922991a0881776f500484f7b7ca0a87bd8ebb7f52a3f36e08140dcc",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "810ba1c71ed453129e142b68f839ac5d45acac5ae84b3d1218d5ce03f21fd2d4",
+      "observedAt": "2026-11-07T13:02:35.522Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime instructions guide context selection, direct project modeling, progress reporting and portable Git context tracking under existing commit authorization.",
+      "claim": "Runtime entry recommends UTF-8 files for multilingual requests, preserves document/Git duties and shows one card after actual context return.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "189aed78e0c2f06426f170e6cf2fecc7b44daeb5b56471ff4a7e303472d8a988",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "29d7c26e569a6b2484c0bda759286c04b3c7d4e7f0ff7ae28d478ba3bb4ba3e0",
+      "observedAt": "2026-11-07T15:02:49.539Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
       "kind": "document",
-      "claim": "Skill Hub ordinary methods and attachments remain editable files; selection and reading do not execute them.",
+      "claim": "Bundled methods are self-contained within each selected folder; editable user files and archived bytes retain their existing boundaries.",
       "location": {
         "path": "skills/README.md"
       },
-      "hash": "ff4139f387bee27109851f7e525c552fe5cfc46fb61e6a1873141cdcc7e66673",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "bf710836ecef0990887cb7385f1f56235890fd764e6b6222397f5a4ba2b025fa",
+      "observedAt": "2026-11-07T15:05:50.007Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000013",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Tracked LikeC4 text, project configuration, evidence and aliases define project knowledge authority; the entry must advise tracking them with related source changes.",
+      "claim": "Text authority defines document identity, current reference lifecycle and read-only Git diagnostics; document bodies still require explicit reading.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "542d9d60147234c83e08590940603539a08895868b991226b7428214b314561c",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "3faec2e0be3372fc95381271be520257605907453b7172a6cb89e24330e5e3ae",
+      "observedAt": "2026-11-07T15:02:49.539Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -228,18 +228,18 @@
       "location": {
         "path": "web/README.md"
       },
-      "hash": "bc131a822dd746a83615d6610430a504157e9af188e26dd92c51fe66017be301",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "7897a34aa9c3cc853016ede826ce2a36f8d9fb3226c80a7c256d934c6f1201a6",
+      "observedAt": "2026-11-07T13:25:06.081Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
       "kind": "source-code",
-      "claim": "Canvas layout keeps matched nodes and ancestor paths, combines unmatched siblings into one overflow and memoizes visible subtree heights.",
+      "claim": "Context layout keeps hit paths, explicit returned parent-body leaves and unmatched overflows without duplicating entity counts or changing the complete directory.",
       "location": {
         "path": "web/canvas-model.ts"
       },
-      "hash": "fcb261dd4cda01672630876cead31f239e7309cbbe91ecdd9727c2f57cd2636f",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "810e781faa276308cacb547d20f5ac5a49b9c4cbc0a6c7fc1bd26fde3abbea35",
+      "observedAt": "2026-11-07T13:02:35.524Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000019",
@@ -260,6 +260,96 @@
       },
       "hash": "fb85fa49550f1bbce056ff6eb1d3be9e45cf25baffd0522a785670cd1717a87f",
       "observedAt": "2026-11-07T12:41:21.092Z"
+    },
+    {
+      "id": "eabb0836-b70b-4b73-aa11-806c7f49c526",
+      "kind": "source-code",
+      "claim": "Batch read-only Git classification distinguishes tracked, untracked, ignored and unknown local document evidence without staging or changing source exclusions.",
+      "location": {
+        "path": "core/references.ts"
+      },
+      "hash": "d95b94c20bd7745f009a313b49ed966c6192cc885d8fe703406f01bf425fd9c0",
+      "observedAt": "2026-11-07T14:25:11.750Z"
+    },
+    {
+      "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
+      "kind": "document",
+      "claim": "Explicit references include .harness and safe in-worktree link targets without expanding source scans; scoped verification handles real paths and native casing while preserving unrelated pending work and history.",
+      "location": {
+        "path": "docs/spec/observation-sync.md"
+      },
+      "hash": "57cfe0b6323e57fcb569c1e6887b87aef977972944a271e1087b0f462cdcf087",
+      "observedAt": "2026-11-07T15:30:46.328Z"
+    },
+    {
+      "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
+      "kind": "document",
+      "claim": "Long-term project documents and task Markdown follow Git ownership while machine-local task journals and archives retain their separate boundary.",
+      "location": {
+        "path": "docs/spec/storage.md"
+      },
+      "hash": "377fc149d7ad4a35bcab1594ee7ce37f3a02e26a56c25bb46725e00bc8e9c88e",
+      "observedAt": "2026-11-07T14:25:11.750Z"
+    },
+    {
+      "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
+      "kind": "document",
+      "claim": "Default methods link only to their own archived attachments; user related candidates remain optional and historical bytes remain immutable.",
+      "location": {
+        "path": "skills/FILE-REFERENCES.md"
+      },
+      "hash": "1c5269f4bc67a6fe311169331873edc614eabc0ab3edc820b72ad60b75ae6387",
+      "observedAt": "2026-11-07T15:02:49.539Z"
+    },
+    {
+      "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
+      "kind": "document",
+      "claim": "Runtime reference explains UTF-8 request construction, PowerShell pipeline loss, immutable damaged history and scoped phase maintenance.",
+      "location": {
+        "path": "agent-skills/harnessl3/references/runtime.md"
+      },
+      "hash": "f62062cc0599f753a952a2f3924169ae01eb0f121f91266629f2bb0b463c6b73",
+      "observedAt": "2026-11-07T15:02:49.539Z"
+    },
+    {
+      "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
+      "kind": "source-code",
+      "claim": "CLI help recommends UTF-8 request files in PowerShell and follows the runtime skill output card after actual context and required skill contents return; the final answer does not repeat the card.",
+      "location": {
+        "path": "cli/help.ts"
+      },
+      "hash": "1d303808df7b70e0f3f4cdd3742997c520751ffda28b71b3fb4052b6ac8e1420",
+      "observedAt": "2026-11-07T15:30:46.328Z"
+    },
+    {
+      "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
+      "kind": "source-code",
+      "claim": "A conservative display-only predicate marks suspected damaged reasons without changing archived input.",
+      "location": {
+        "path": "web/skill-reason.ts"
+      },
+      "hash": "cb43b1c415d18a97beb0f20ff61f216c5de49a3d34e305288f3ea8465e339f90",
+      "observedAt": "2026-11-07T15:02:49.539Z"
+    },
+    {
+      "id": "0e16b65c-8bb4-4dc2-be03-cc93b19fe707",
+      "kind": "source-code",
+      "claim": "Skill details show a suspected encoding warning and expose the exact saved reason on demand.",
+      "location": {
+        "path": "web/SkillReason.tsx"
+      },
+      "hash": "5983ce984e0beefc30e2e48869085f20daa39aa422b9f96046da01a604c44adc",
+      "observedAt": "2026-11-07T15:02:49.539Z"
+    },
+    {
+      "id": "deda538a-cccc-4f64-9909-86d4445ed1d0",
+      "kind": "source-code",
+      "claim": "Isolated browser checks exercise Unicode, damaged and operator reasons, self-contained review bytes, and unchanged saved plans/batches.",
+      "location": {
+        "path": "scripts/v1/skill-content-smoke.mjs"
+      },
+      "hash": "d047ce7ac2c004c4b756d32c42e93c05966b513cdabf688523f3851d9f0e57f6",
+      "observedAt": "2026-11-07T15:02:49.539Z"
     }
   ]
 }

@@ -2,10 +2,10 @@ import type { Entity, ModelSnapshot, TaskRecord, ViewData } from './types'
 
 export type Category = 'objects' | 'relations' | 'sources' | 'evidence' | 'versions'
 export type MapItem = {
-  id: string; title: string; brief: string; category: Category; kind: 'category' | 'group' | 'object' | 'relation' | 'source' | 'evidence' | 'version' | 'overflow'
+  id: string; title: string; brief: string; category: Category; kind: 'category' | 'group' | 'object' | 'body' | 'relation' | 'source' | 'evidence' | 'version' | 'overflow'
   children: MapItem[]; hit: boolean; hits: number; state: 'available' | 'disclosed' | 'returned' | 'reference' | 'associated' | 'aggregate'
   relatedIds: string[]; entityId?: string; objectId?: string; evidenceId?: string; fields: Record<string, string>
-  overflowFor?: string; hiddenCount?: number
+  overflowFor?: string; hiddenCount?: number; bodyFor?: string
 }
 const categories: [Category, string, string][] = [['objects', '对象', '项目由哪些部分组成'], ['relations', '关系', '这些部分如何协作'], ['sources', '来源', '这些声明从哪里来'], ['evidence', '证据', '回到具体依据核对'], ['versions', '版本', '本次上下文对应哪一版']]
 const sourceName: Record<string, string> = { fact: '事实声明', human: '人工维护', inference: '推断' }

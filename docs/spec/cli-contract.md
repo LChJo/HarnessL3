@@ -8,7 +8,7 @@
 - CLI 由**当前 agent 主动调用**。它提供确定性的发现、校验、归档和读取，不启动 agent、不请求另一模型、不自动执行技能脚本、不安装 Hooks。
 - 全局参数：`--json`、`--project <UUID>`、`--worktree <UUID>`、`--data-dir <absolute-path>`、`--request-id <UUID>`、`--help`、`--version`。全局参数可放在子命令之后。未知参数、重复的单值参数和多余位置参数报 `INVALID_ARGUMENT`。
 - 数据根优先级：`--data-dir` > `HARNESSL3_HOME` > [存储规格](storage.md)的系统默认目录。它是本机路径，不写入 Git；必须位于所有已登记 worktree 之外，且不能是 worktree 的祖先目录，登记时也要核查这一边界。
-- `--file <path>` 读取 UTF-8 JSON；`--file -` 从 stdin 读至 EOF。允许一个文件头 BOM，拒绝重复 JSON 键、非法 Unicode、非有限数和未知字段。不从剪贴板、环境变量或日志猜测请求正文。
+- `--file <path>` 读取 UTF-8 JSON；`--file -` 从UTF-8字节的stdin读至EOF。允许一个文件头BOM，拒绝重复JSON键、非法Unicode、非有限数和未知字段。中文请求优先用明确的UTF-8文件，避免PowerShell默认原生管道在输入前替换成问号；合法ASCII问号不等于可恢复的中文，CLI不猜写文字。不从剪贴板、环境变量或日志猜测请求正文。
 - `--json` 的 stdout 只写**一个** UTF-8 JSON 对象和结尾换行；进度、诊断、服务启动提示进 stderr，不输出 ANSI。JSON 模式不提问、不等待交互输入。非 JSON 模式呈现同一结果的文字，退出码完全一致。
 - 除 `--help`、`--version` 外，JSON 成功/失败均使用下文封套。`--help` 和 `--version` 是静态文字，不启动服务。
 
@@ -88,14 +88,18 @@
 | agent bind/unbind/status | `bindings:[{id,agent,sessionId,logFile,taskId,state,parserVersion,cursor,coverage}]`；unbind 返回停止后的记录 |
 | sync status/verify | `state`、`sourceEpoch`、`sourceVersion`、`sourceScanRevision`、`modelRevision`、`pendingPaths:[]`、`proofId`（无则 null）；verify 包含声明与自动检查各自结果 |
 | serve start/status/stop | `state:"running"\|"stopped"`、`url`、`instanceId`、`protocolVersion:1`；停止时 url/instanceId 为 null |
-| web open | `url`、`opened:boolean`；默认成功为true，--no-open为false；URL带一次性浏览会话码，首次打开有效期5分钟，过期或已用且需重新打开时重新取链接，不包含CLI连接凭据 |
+| web open | `url`、`opened:boolean`；默认成功为true，--no-open为false；URL带一次性浏览会话码，首次登录有效期5分钟。同浏览器有效会话可重复打开原链接，不续期；无有效会话且码过期/已用时重新取链接，不包含CLI连接凭据 |
 | model validate | `valid:true`、`modelRevision`、`objectCount`、`relationCount`、`diagnostics:[]`；非法模型用错误封套及 details.diagnostics |
 | gc | `mode`、`candidates:[{path,kind,bytes,reason}]`、`totalBytes`、`removed:[]`，dry-run removed 为空 |
 | migrate prototype | `mode`、`migrationId`、`source`、`target`、`tasks:[{id,action:"copy"\|"skip"\|"conflict",completeness}]`、`sourcePreserved:true`；dry-run 不写注册/档案 |
 
 该 result 表是 v1 字段契约，JSON Schema 对管理 result 仅检查对象封装，额外语义/字段存在性须由各命令验收测试验证。核心请求和结果不允许未知字段。未来破坏性字段变化须提升 schemaVersion；protocolVersion 是服务握手版本，不等于 npm 版本。
 
-v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",semanticStatus:"not-assessed",modelCreated:boolean,nextAction:"model-project"|"review-project-model",model:{objects,relations,views},agentGuidance}`；数量只表示当前可解析模型，不证明完整性。当前agent按实际项目阅读/建模/校验并报告进度，直接用文件工具维护LikeC4和证据。serve结果增加`startedAt`（未运行为null）、`scope:"user-data-root"`及`lifetime:"until-stopped"`；默认全用户项目共享当前用户数据根服务，显式数据根隔离继续有效。web open增加`service:{instanceId,scope:"user-data-root",lifetime:"until-stopped"}`和`login:{oneTime:true,expiresAt,browserSessionTtlMs:43200000}`，expiresAt是一次登录码到期时间，非进程退出时间。JSON stdout仍只返回一个封套，不代agent显示进度或注入宿主提示；可视化文案由agent在实际上下文返回后以Markdown链接展示。
+v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",semanticStatus:"not-assessed",modelCreated:boolean,nextAction:"model-project"|"review-project-model",model:{objects,relations,views},agentGuidance}`；数量只表示当前可解析模型，不证明完整性。当前agent按实际项目阅读/建模/校验并报告进度，直接用文件工具维护LikeC4和证据。serve结果增加`startedAt`（未运行为null）、`scope:"user-data-root"`及`lifetime:"until-stopped"`；默认全用户项目共享当前用户数据根服务，显式数据根隔离继续有效。web open增加`service:{instanceId,scope:"user-data-root",lifetime:"until-stopped"}`和`login:{oneTime:true,expiresAt,browserSessionTtlMs:43200000}`，expiresAt是一次登录码到期时间，非进程退出时间。JSON stdout仍只返回一个封套，不代agent显示进度或注入宿主提示；当前v0.32由agent在实际上下文和必要技能正文返回后取得链接，在进度消息中展示一次“查看HarnessL3的输出”引用卡片，再继续用户工作。
+
+`model validate`保留本地证据内容和Git归属诊断，文件诊断可附`evidenceId`。`sync status`同样返回成功加载模型时的证据诊断；`sync verify`新增自动检查`referenced-evidence`，命中当前引用changed/missing/unreadable的路径或实体范围返回`SYNC_UNRESOLVED`，无关局部proof仍可保存且全局保持pending。Git未跟踪/被忽略/无法核查为只读建议，不要求先暂存。请求和封套Schema不变，历史/幂等回执保留原文。
+
+`routingPrompt`也包含长期项目文档的增删改移和阶段维护规则：当前agent用普通文件工具维护受影响简述/关系/证据，保留稳定身份和历史；项目任务Markdown与临时草稿、本机task journal分开，不以`.scratch`名字决定Git归属。正文按需显式读取，CLI不自动建立文档关联。
 
 ## 3. 版本、批次与错误
 

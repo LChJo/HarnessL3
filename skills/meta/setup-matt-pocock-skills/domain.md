@@ -8,7 +8,7 @@ Optional seed for consuming domain documents. First use the target project's act
 - **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
 
-If these example files do not exist, continue with the project's actual context sources. [Domain-modeling](../../architecture/domain-modeling/SKILL.md), sometimes useful with [grill-with-docs](../../discovery/grill-with-docs/SKILL.md) or [architecture review](../../architecture/improve-codebase-architecture/SKILL.md), is a method reference; it does not automatically create files or override the project's authority.
+If these example files do not exist, continue with the project's actual context sources. Resolve ambiguous terms or design choices with the user when needed and maintain the established authority; this template does not require new files or a different model.
 
 ## File structure
 
@@ -42,7 +42,7 @@ Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
 
 When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for [domain-modeling](../../architecture/domain-modeling/SKILL.md)).
+If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (record the agreed term and its meaning in the project's existing authority).
 
 ## Flag ADR conflicts
 

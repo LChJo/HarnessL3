@@ -8,35 +8,35 @@ specification {
 }
 model {
   app = system "HarnessL3" {
-    description "面向现有AI Agent的项目上下文CLI。此模型覆盖正式主模块、文件型知识与技能、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
+    description "面向现有AI Agent的项目上下文CLI。此模型覆盖正式主模块、文件型知识与技能、文档留存/证据核验、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
     metadata {
       harness_id "ad94bb95-82f8-4485-b9ac-e1064fcdfa36"
       brief "以LikeC4文本组织项目上下文与文件型技能，通过CLI交接并在Web追溯任务。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000001"
-      version "3"
+      version "5"
     }
     cli = component "CLI入口 · cli/" {
-      description "解析参数、发现帮助、调用或复用本机服务并输出单个结果封套；不启动agent或执行技能。"
+      description "解析参数、发现帮助、调用或复用本机服务并输出单个结果封套；帮助明确PowerShell优先使用UTF-8请求文件，避免管道输入前丢字，并遵循运行时skill的上下文返回后进度输出卡片约定。不启动agent或执行技能。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000001"
         brief "harnessl3命令、输入契约、后台服务发现和文本/JSON输出适配。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016"
-        version "1"
+        evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016 2f63b728-1e83-4ac8-aff3-bd766333ee5e"
+        version "3"
       }
     }
     service = component "本机服务 · service/" {
-      description "默认用户数据根共享一份常驻回环HTTP服务；认证CLI/Web访问，提供RPC、视图和SSE。显式数据根可隔离实例。"
+      description "默认用户数据根共享一份常驻回环HTTP服务；认证CLI/Web访问，提供RPC、视图和SSE。重复网页链接复用有效浏览会话，不轮换或续期；无有效会话仍校验一次性登录码。显式数据根可隔离实例。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000002"
         brief "单用户常驻HTTP/RPC、浏览登录会话和按worktree隔离的事件流。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000016"
-        version "1"
+        version "2"
       }
     }
     core = component "核心用例 · core/" {
@@ -72,25 +72,36 @@ model {
         }
       }
       model = component "文本模型 · model.ts" {
-        description "loadModel读取.harness中的LikeC4、证据与别名，检查身份/引用和元数据，再形成可用于modelDirectory/modelBody及C4视图的同一快照。"
+        description "loadModel读取.harness中的LikeC4、证据与别名，检查身份/引用和元数据，并保留带evidenceId的内容异常及本地文档Git归属诊断，再形成目录/正文/C4共用的快照；不改写人工知识状态。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000005"
           brief "解析LikeC4与证据/别名，校验稳定身份并生成目录、正文和结构视图。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000006"
+          version "2"
+        }
+      }
+      references = component "文档Git归属 · references.ts" {
+        description "批量读取Git索引和原生ignore判定，为本地document证据报告未跟踪、忽略或无法核查。诊断只读，不暂存、不改变来源扫描策略，也不要求先提交才能组织上下文。"
+        metadata {
+          harness_id "51285d7d-1f8e-405d-a729-1363a0940efa"
+          brief "对本地项目文档证据提供批量、只读的Git归属诊断。"
+          source "fact"
+          status "verified"
+          evidence "eabb0836-b70b-4b73-aa11-806c7f49c526"
           version "1"
         }
       }
       context = component "任务上下文 · context.ts" {
-        description "TaskService处理start/select/query/handoff/read/close及历史。入口规则直接给出权威上下文随源码提交Git的范围、本机数据排除与已有提交授权边界；联合选择只记录一次，精确正文和已选技能字节归档，旧回执不改写。"
+        description "TaskService处理start/select/query/handoff/read/close及历史。入口规则包含长期文档增删改移后的模型/证据维护、Git归属和本机数据边界；联合选择只记录一次，精确正文和已选技能字节归档，旧回执不改写。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000006"
           brief "任务建档、一次联合选择、精确查询、归档交接和技能正文读取。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000007"
-          version "2"
+          version "3"
         }
       }
       skills = component "技能文件 · skills.ts" {
@@ -127,14 +138,14 @@ model {
         }
       }
       source = component "源码与同步 · source/freshness" {
-        description "source.ts按Git及忽略策略核对原始文件，freshness.ts监听变化并管理待核验状态与proof的代次比较。机械指纹一致不等于语义理解；局部证明保留其它未解决范围。"
+        description "source.ts按Git及忽略策略核对原始文件；freshness.ts在目录排除前处理显式引用，同时观测声明路径和经过工作区边界检查的真实目标，目标暂缺时保留最后安全目标用于观测重建。引用变更和字节回退推进代次，不扩展来源manifest；范围核验及pending清理统一处理链接与Windows大小写等价路径。成功模型的证据异常保留，命中范围不能被声明清除，无关局部proof可保存且未解决部分仍pending；机械核验不等于语义理解。"
         metadata {
           harness_id "c6250000-0000-4000-8000-00000000000a"
-          brief "扫描真实来源、监听变化和核验代次，保存局部同步声明及未解决范围。"
+          brief "观测来源及显式引用的真实目标，保留证据异常和实际范围的同步声明。"
           source "fact"
           status "verified"
-          evidence "d6250000-0000-4000-8000-00000000000b d6250000-0000-4000-8000-00000000000c"
-          version "1"
+          evidence "d6250000-0000-4000-8000-00000000000b d6250000-0000-4000-8000-00000000000c e94d7f43-9e04-4d1d-872f-b8125998f02e"
+          version "3"
         }
       }
       observation = component "只读观测 · observation.ts" {
@@ -161,47 +172,47 @@ model {
       }
     }
     web = component "可视化工作台 · web/" {
-      description "React主入口main.tsx通过api.ts访问同源服务；首屏只显示加载状态，同目标刷新合并且不取消首个请求。五类与技能逐层只展命中及祖先，其余以省略节点进入DirectoryPage独立搜索/分页列表，返回保留相机；历史保持当时模型/目录/技能引用，浏览不制造上下文读取。"
+      description "React主入口main.tsx通过api.ts访问同源服务，浏览由agent经CLI建立的任务，不提供网页新建入口或关闭标签；首屏只显示加载状态，同目标刷新合并且不取消首个请求。五类与技能逐层只展命中及祖先；父对象自身正文返回时保留正文叶子和输出路径，不重复计数。其余以省略节点进入DirectoryPage独立搜索/分页列表，返回保留相机；401显示登录恢复状态。明显损坏的技能选择理由给疑似编码提示，可展开原文；不猜写档案。历史保持当时模型/目录/技能引用，浏览不制造上下文读取。"
       metadata {
         harness_id "c6250000-0000-4000-8000-00000000000d"
         brief "显示任务五类脑图、文件夹Skill Hub、项目结构、历史及真实状态。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-00000000000f d6250000-0000-4000-8000-000000000010 d6250000-0000-4000-8000-000000000018 d6250000-0000-4000-8000-000000000019 d6250000-0000-4000-8000-00000000001a"
-        version "3"
+        evidence "d6250000-0000-4000-8000-00000000000f d6250000-0000-4000-8000-000000000010 d6250000-0000-4000-8000-000000000018 d6250000-0000-4000-8000-000000000019 d6250000-0000-4000-8000-00000000001a fd73b46e-52f4-4779-9daf-314249502ea4 0e16b65c-8bb4-4dc2-be03-cc93b19fe707"
+        version "6"
       }
     }
     runtimeSkill = artifact "Agent入口 · agent-skills/" {
-      description "harnessl3/SKILL.md及按需参考指导已有agent先组织上下文，再继续标准工作；首次确认后由当前大模型直接建模，实际内容返回后只输出单行文字超链。权威上下文随相关源码版本管理，项目技能按真实文件归属纳入，本机数据及外部技能库排除，提交遵守已有授权。"
+      description "harnessl3/SKILL.md及按需参考指导已有agent先组织上下文；中文JSON优先写入worktree外UTF-8文件，明确字节的stdin仍可用；实际上下文和必要技能正文返回后，取得真实链接，在进度消息中展示一次查看HarnessL3的输出引用卡片，再继续标准工作，最终答复不重复。首次确认后由当前大模型直接建模；源码/文档/知识阶段均维护当前关联与证据，移动保留身份、删除保留历史，区分长期文档和本机task记录。权威上下文随相关源码版本管理，项目技能按真实文件归属纳入，本机数据及外部技能库排除，提交遵守已有授权。"
       metadata {
         harness_id "c6250000-0000-4000-8000-00000000000e"
         brief "指导当前agent接入、阅读/建模、选择/交接上下文和报告真实进度。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000011"
-        version "3"
+        evidence "d6250000-0000-4000-8000-000000000011 7f0df0da-7a72-47aa-8953-343a7927cb24"
+        version "7"
       }
     }
     library = artifact "可编辑方法 · skills/" {
-      description "随包分发的普通方法和附件首次播种到用户库，之后以实际配置的文件为准；选择/读取不等于执行。"
+      description "随包普通方法和附件首次播种到用户库，之后以实际配置文件为准，升级不覆盖用户库。默认方法自包含，移除跨技能和库根说明引用，保留同方法实际附件；用户related候选仍兼容且不自动归档。文档产出方法在留存步骤衔接当前上下文/证据及Git归属维护，quick在需核查长期关联时退出；选择/读取不等于执行。"
       metadata {
         harness_id "c6250000-0000-4000-8000-00000000000f"
         brief "Skill Hub的文件型方法来源、相关引用和附件，不是自动执行工作流。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000012"
-        version "1"
+        evidence "d6250000-0000-4000-8000-000000000012 04fbf739-c340-4ea7-9b55-80a266ca4b00"
+        version "3"
       }
     }
     projectModel = artifact "权威上下文 · .harness/" {
-      description "project.json保存Git内项目身份与相对配置，model/中的.c4/.likec4表达对象、关系与视图，evidence.json与aliases.json保存依据和身份迁移；入口直接建议随相关源码提交。端口、机器绝对路径、访问凭证及运行历史保存在机器数据根。"
+      description "project.json保存Git内项目身份与相对配置，model/中的.c4/.likec4表达对象、关系与视图，evidence.json与aliases.json保存依据和身份迁移；引用的长期项目文档与模型及相关源码共同审阅。项目任务Markdown与本机task历史分开，临时目录名不决定留存。端口、机器绝对路径、访问凭证及运行历史保存在机器数据根。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000013"
         brief "随Git保存的LikeC4文本、项目配置、证据及别名；由当前agent直接维护。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000015"
-        version "2"
+        evidence "d6250000-0000-4000-8000-000000000015 e553d996-f21a-4af0-bc7c-eec02753f102"
+        version "3"
       }
     }
     quality = component "隔离验证 · tests/v1与web验证" {
@@ -211,8 +222,8 @@ model {
         brief "通过临时Git、独立数据根、程序/浏览器与安装消费者核对正式契约。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017"
-        version "1"
+        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0"
+        version "2"
       }
     }
     prototype = component "冻结原型参考 · src/server/examples" {

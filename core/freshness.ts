@@ -19,6 +19,12 @@ const execFile = promisify(callbackExecFile);
 const same = (left: unknown, right: unknown) => canonicalJson(left) === canonicalJson(right);
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort();
 const prefix = (parent: string, child: string) => child === parent || child.startsWith(parent + '/');
+const referenceKey = (relative: string) => process.platform === 'win32' ? relative.toLowerCase() : relative;
+const evidenceFailures = new Set(['EVIDENCE_CHANGED', 'EVIDENCE_MISSING', 'EVIDENCE_UNREADABLE']);
+function referencedEvidenceProblems(model: ModelSnapshot): Diagnostic[] {
+  const referenced = new Set(model.entities.flatMap(entity => entity.evidenceIds));
+  return model.diagnostics.filter(item => item.evidenceId && referenced.has(item.evidenceId) && evidenceFailures.has(item.code ?? ''));
+}
 type FreshnessKind = 'unknown' | 'pending' | 'verifying' | 'verified' | 'failed';
 interface SourceReferences { manifest: string; policy: string; ignoreRules: string; ruleBytes: string }
 interface CompleteSource { sourceVersion: SourceVersion; sourceScanRevision: string; references: SourceReferences }
@@ -56,7 +62,8 @@ export class FreshnessManager {
   private readonly pollIntervalMs: number;
   private state: FreshnessState;
   private lastScan: SourceScan | null = null;
-  private lastModel: ModelSnapshot | null = null;
+  private referencePaths = new Map<string, Set<string>>();
+  private referenceTargets = new Map<string, string>();
   private loading?: Promise<void>;
   private watcher?: FSWatcher;
   private timer?: NodeJS.Timeout;
@@ -116,13 +123,45 @@ export class FreshnessManager {
         ignoreRuleFiles: await this.archive.readSnapshot<IgnoreRuleFile[]>(last.references.ruleBytes),
       };
     }
-    if (this.state.lastValidModelSnapshotHash) this.lastModel = await this.archive.readSnapshot<ModelSnapshot>(this.state.lastValidModelSnapshotHash);
+    if (this.state.lastValidModelSnapshotHash) await this.rememberModel(await this.archive.readSnapshot<ModelSnapshot>(this.state.lastValidModelSnapshotHash));
     // A stopped watcher cannot attest to the downtime. Retain the actual epoch,
     // but require a new declaration before treating an old proof as current.
     if (this.state.state === 'verified' || this.state.state === 'verifying') {
       this.state.state = 'pending'; this.state.scanPending = true;
       this.state.pendingPaths = sorted([...this.state.pendingPaths, ...(this.lastScan?.manifest?.content.entries.map(entry => entry.path) ?? [])]);
     }
+  }
+
+  private async resolvedRelative(relative: string): Promise<string> {
+    const actual = await resolveInside(this.worktree.root, relative, { allowMissing: true });
+    return path.relative(this.worktree.root, actual).split(path.sep).join('/');
+  }
+
+  private async rememberModel(model: ModelSnapshot): Promise<void> {
+    const referenced = new Set(model.entities.flatMap(entity => entity.evidenceIds));
+    const local = sorted(model.evidence.flatMap(evidence => referenced.has(evidence.id) && 'path' in evidence.location ? [evidence.location.path] : []));
+    const locations = await Promise.all(local.map(async relative => {
+      let target: string | undefined;
+      try { target = await this.resolvedRelative(relative); }
+      catch { target = this.referenceTargets.get(relative); } // Retain the last safe target while a link is missing or unreadable.
+      return { relative, target };
+    }));
+    const paths = new Map<string, Set<string>>(), targets = new Map<string, string>();
+    const add = (location: string, relative: string) => {
+      const parts = location.split('/');
+      for (let length = 1; length <= parts.length; length++) {
+        const ancestor = referenceKey(parts.slice(0, length).join('/'));
+        const references = paths.get(ancestor) ?? new Set<string>();
+        references.add(relative);
+        paths.set(ancestor, references);
+      }
+    };
+    for (const { relative, target } of locations) {
+      add(relative, relative);
+      if (target) { add(target, relative); targets.set(relative, target); }
+    }
+    this.referencePaths = paths;
+    this.referenceTargets = targets;
   }
 
   private track<T>(promise: Promise<T>): Promise<T> {
@@ -207,6 +246,8 @@ export class FreshnessManager {
 
   private watchEvent(relative: string): void {
     if (prefix('.git', relative)) { this.schedule(); return; }
+    const referenced = this.referencePaths.get(referenceKey(relative));
+    if (referenced) this.markReferences(relative, referenced);
     if (prefix('.harness', relative)) {
       if (relative === '.harness/project.json') { this.changeGeneration++; this.state.scanPending = true; this.state.state = 'pending'; this.schedule(); return; }
       if (prefix('.harness/model', relative) || ['.harness/evidence.json', '.harness/aliases.json'].includes(relative)) {
@@ -215,6 +256,7 @@ export class FreshnessManager {
       }
       return;
     }
+    if (referenced) return;
     if (this.lastScan?.policy && !isSourcePathIncluded(relative, this.lastScan.policy)) return;
     if (this.lastScan?.manifest?.content.entries.some(entry => prefix(relative, entry.path))) { this.markSource(relative); return; }
     // Keep native Git's last observed directory classification after deletion;
@@ -223,6 +265,12 @@ export class FreshnessManager {
     const pending = this.classifyNewPath(relative).finally(() => this.classifiers.delete(pending));
     this.classifiers.add(pending);
     void pending.catch(() => {});
+  }
+
+  private markReferences(relative: string, references: Iterable<string>): void {
+    this.markSource(relative);
+    this.state.modelPending = true;
+    this.state.pendingPaths = sorted([...this.state.pendingPaths, ...references]);
   }
 
   private markSource(relative: string): void {
@@ -259,7 +307,7 @@ export class FreshnessManager {
     let model: ModelSnapshot | null = null;
     let modelDiagnostics: Diagnostic[] = [];
     let attemptedModelRevision: string | null = null;
-    try { model = await loadModel(this.worktree.root); attemptedModelRevision = model.revision; }
+    try { model = await loadModel(this.worktree.root); attemptedModelRevision = model.revision; modelDiagnostics = model.diagnostics; }
     catch (error) {
       if (error instanceof HarnessError) {
         if (Array.isArray(error.details.diagnostics)) modelDiagnostics = error.details.diagnostics as Diagnostic[];
@@ -305,10 +353,18 @@ export class FreshnessManager {
       if (this.state.modelRevision !== captured.model.revision) { this.state.modelPending = true; if (validSource) this.state.state = 'pending'; }
       this.state.modelRevision = captured.model.revision;
       this.state.lastValidModelSnapshotHash = await this.archive.snapshot('model-snapshot', captured.model);
-      this.lastModel = captured.model;
+      await this.rememberModel(captured.model);
     } else this.state.state = 'failed';
     this.state.scanPending = this.changeGeneration !== captured.generation;
     this.state.diagnostics = [...next.diagnostics, ...captured.modelDiagnostics];
+    if (captured.model) {
+      const problems = referencedEvidenceProblems(captured.model);
+      if (problems.length) {
+        this.state.pendingPaths = sorted([...this.state.pendingPaths, ...problems.flatMap(item => item.file ? [item.file] : [])]);
+        this.state.modelPending = true;
+        if (validSource && this.state.state !== 'failed') this.state.state = 'pending';
+      }
+    }
   }
 
   async status(skillsRoot: string): Promise<FreshnessState> {
@@ -331,15 +387,29 @@ export class FreshnessManager {
     return result;
   }
 
-  private async validateScope(proof: SyncProof, model: ModelSnapshot): Promise<void> {
+  private pathScope(paths: string[]): (relative: string) => boolean {
+    const declared = sorted(paths.map(referenceKey));
+    const references = new Set(declared.flatMap(location => [...(this.referencePaths.get(location) ?? [])].map(referenceKey)));
+    return relative => {
+      const key = referenceKey(relative);
+      return references.has(key) || declared.some(location => prefix(location, key));
+    };
+  }
+
+  private async validateScope(proof: SyncProof, model: ModelSnapshot): Promise<string[]> {
+    const paths: string[] = [];
     for (const relative of proof.scope.paths) {
       safeRelative(relative);
-      if (prefix('.git', relative)) throw new HarnessError('INVALID_ARGUMENT', 'Git metadata cannot be declared as source verification scope.');
-      await resolveInside(this.worktree.root, relative, { allowMissing: true });
+      if (prefix('.git', referenceKey(relative))) throw new HarnessError('INVALID_ARGUMENT', 'Git metadata cannot be declared as source verification scope.');
+      const actual = await this.resolvedRelative(relative);
+      if (prefix('.git', referenceKey(actual))) throw new HarnessError('INVALID_ARGUMENT', 'Git metadata cannot be declared as source verification scope.');
+      const locations = [relative, actual];
+      paths.push(...locations);
       try { await lstat(path.join(this.worktree.root, ...relative.split('/'))); }
-      catch (error) { if (!(isErrno(error, 'ENOENT') && this.state.pendingPaths.some(pending => prefix(relative, pending)))) throw new HarnessError('NOT_FOUND', 'A declared verification path does not exist or cover a pending deletion.', { path: relative }); }
+      catch (error) { if (!(isErrno(error, 'ENOENT') && this.state.pendingPaths.some(this.pathScope(locations)))) throw new HarnessError('NOT_FOUND', 'A declared verification path does not exist or cover a pending deletion.', { path: relative }); }
     }
     for (const id of proof.scope.entities) if (!model.entities.some(entity => entity.id === id)) throw new HarnessError('INVALID_ARGUMENT', 'A declared model UUID does not exist in the current model.', { id });
+    return paths;
   }
 
   async verify(input: unknown, skillsRoot: string, requestId?: string): Promise<VerificationResult> {
@@ -362,21 +432,29 @@ export class FreshnessManager {
       await this.apply(current);
       let error: VerifyReceipt['error'] = null;
       let scopeValid = false;
+      const evidenceProblems = current.model ? referencedEvidenceProblems(current.model) : [];
+      const scopedEntities = new Set(proof.scope.entities);
+      const scopedEvidence = new Set(current.model?.entities.filter(entity => scopedEntities.has(entity.id)).flatMap(entity => entity.evidenceIds));
+      let pathInScope = this.pathScope(proof.scope.paths);
+      const problemsInScope = () => evidenceProblems.filter(item => (item.file && pathInScope(item.file)) || scopedEvidence.has(item.evidenceId!));
+      let scopedEvidenceProblems = problemsInScope();
       if (!current.model) error = { code: 'MODEL_INVALID', message: 'The current model is invalid; no successful verification was recorded.' };
       else if (current.source.sourceVersion.status === 'unknown' || !current.source.sourceScanRevision) error = { code: 'SYNC_UNRESOLVED', message: 'The current source scope is unknown.' };
       else if (proof.sourceEpoch !== this.state.sourceEpoch || this.changeGeneration !== current.generation || preflight.generation !== current.generation || !same(proof.expectedSourceVersion, current.source.sourceVersion) || proof.expectedModelRevision !== current.model.revision || preflight.epoch !== current.epoch || !same(preflight.source.sourceVersion, current.source.sourceVersion) || preflight.source.sourceScanRevision !== current.source.sourceScanRevision || preflight.model?.revision !== current.model.revision) {
         error = { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.' };
       } else {
-        try { await this.validateScope(proof, current.model); scopeValid = true; }
+        try { pathInScope = this.pathScope(await this.validateScope(proof, current.model)); scopeValid = true; scopedEvidenceProblems = problemsInScope(); }
         catch (failure) { error = { code: failure instanceof HarnessError ? failure.code : 'INVALID_ARGUMENT', message: failure instanceof Error ? failure.message : 'The declared scope could not be validated.' }; }
+        if (!error && this.changeGeneration !== current.generation) error = { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.' };
+        if (!error && scopedEvidenceProblems.length) error = { code: 'SYNC_UNRESOLVED', message: 'Referenced evidence in the declared scope is changed, missing or unreadable; repair its current references before verifying.' };
         if (!error && (proof.disposition === 'unresolved' || proof.checks.some(check => check.status !== 'passed'))) error = { code: 'SYNC_UNRESOLVED', message: 'The declaration or its checks leave unresolved work.' };
       }
       const successful = error === null;
       this.state.proofId = randomUUID();
       if (successful) {
-        this.state.pendingPaths = this.state.pendingPaths.filter(pending => !proof.scope.paths.some(declared => prefix(declared, pending)));
-        this.state.modelPending = false; this.state.scanPending = false;
-        this.state.state = this.state.pendingPaths.length ? 'pending' : 'verified';
+        this.state.pendingPaths = this.state.pendingPaths.filter(pending => !pathInScope(pending));
+        this.state.modelPending = evidenceProblems.length > 0; this.state.scanPending = false;
+        this.state.state = this.state.pendingPaths.length || this.state.modelPending ? 'pending' : 'verified';
         if (this.state.state === 'verified') this.state.verifiedAt = this.instant();
       } else this.state.state = error!.code === 'SYNC_RACE' ? 'pending' : 'failed';
       const receipt: VerifyReceipt = {
@@ -384,6 +462,7 @@ export class FreshnessManager {
           { name: 'current-model', status: current.model ? 'passed' : 'failed', scope: ['.harness/model', '.harness/evidence.json', '.harness/aliases.json'] },
           { name: 'source-model-epoch-cas', status: !current.model || error?.code === 'SYNC_RACE' || current.source.sourceVersion.status === 'unknown' ? 'failed' : 'passed', scope: [...proof.scope.paths] },
           { name: 'declared-scope', status: scopeValid ? 'passed' : 'failed', scope: [...proof.scope.paths, ...proof.scope.entities] },
+          { name: 'referenced-evidence', status: current.model && !scopedEvidenceProblems.length ? 'passed' : 'failed', scope: [...proof.scope.paths, ...proof.scope.entities] },
         ] }, error,
       };
       const committed = await this.persist('verification', proof, receipt);

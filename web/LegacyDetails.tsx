@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { LegacyArchive, Rpc } from './types'
 import { errorMessage, pretty, time } from './types'
 import { legacyPlan } from './legacy'
+import { SkillReason } from './SkillReason'
 
 export function LegacySkillDetails({ archive, worktree, focusId, focusFile, rpc }: { archive: LegacyArchive; worktree: string; focusId?: string; focusFile?: string; rpc: Rpc }) {
   const [returned, setReturned] = useState<LegacyArchive['record']['legacyRead']>(), [error, setError] = useState(''), [reading, setReading] = useState('')
@@ -18,7 +19,7 @@ export function LegacySkillDetails({ archive, worktree, focusId, focusFile, rpc 
   }
   return <div className="skill-details" data-testid="legacy-skills"><span className="detail-state">{plan ? `当时已选 ${plan.skills.length} 项` : '技能选择未知'}</span>
     {!plan && <p className="detail-note">暂无选择记录</p>}
-    {plan?.skills.filter(skill => !focusId || skill.id === focusId).map(skill => <section className="skill-method" key={skill.id}><div className="skill-method-title"><strong>{skill.name}</strong><span>{skill.group}</span></div><code>{skill.id}</code><p>{skill.description}</p><p className="skill-reason">选择理由：{skill.reason}</p><div className="skill-file-list">{skill.files.filter(file => !focusFile || file.path === focusFile).map(file => <div className="skill-file-row" key={file.path}><div><strong>{file.path}</strong><small>{file.bytes} B · {file.encoding.toUpperCase()} · {file.hash.slice(0, 12)}</small></div><button disabled={!!reading} onClick={() => void read(skill.id, file.path, file.hash)}>{reading === skill.id + '/' + file.path ? '读取中…' : '预览归档'}</button></div>)}</div></section>)}
+    {plan?.skills.filter(skill => !focusId || skill.id === focusId).map(skill => <section className="skill-method" key={skill.id}><div className="skill-method-title"><strong>{skill.name}</strong><span>{skill.group}</span></div><code>{skill.id}</code><p>{skill.description}</p><SkillReason reason={skill.reason} /><div className="skill-file-list">{skill.files.filter(file => !focusFile || file.path === focusFile).map(file => <div className="skill-file-row" key={file.path}><div><strong>{file.path}</strong><small>{file.bytes} B · {file.encoding.toUpperCase()} · {file.hash.slice(0, 12)}</small></div><button disabled={!!reading} onClick={() => void read(skill.id, file.path, file.hash)}>{reading === skill.id + '/' + file.path ? '读取中…' : '预览归档'}</button></div>)}</div></section>)}
     {error && <p className="record-error" role="alert">{error}</p>}
     {returned?.errors.map((item, index) => <p className="record-error" key={index}>{item.skillId}/{item.path}: {item.code}</p>)}
     {returned?.files.map(item => <section className="skill-returned" key={item.skillId + '/' + item.file.path}><strong>{item.skillId}/{item.file.path}</strong><textarea aria-label="旧技能归档原文" readOnly rows={14} value={item.file.content}/><small>{item.file.encoding.toUpperCase()}</small></section>)}

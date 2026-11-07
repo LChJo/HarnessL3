@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { skillReasonLabel } from './skill-reason'
 import type { LayoutSkillNode, SkillPlan, SkillLayout } from './skill-layout'
 import './skill-lane.css'
 
@@ -80,9 +81,9 @@ export function SkillLane({ layout, plan, expanded, onToggle, expandedFolders = 
     </button>
     const open = expandedSkills.has(node.skillId), expandable = !!node.fileCount && !!onToggleSkill
     return <div key={node.id} className={`mind-node skill-lane-node ${node.selected ? 'has-selection' : ''}`} style={{ left: node.x, top: node.y, width: node.width, height: node.height }} data-skill-node={node.id} data-skill-id={node.skillId} data-skill-state={node.kind}>
-      <button type="button" className="skill-lane-main" aria-label={expandable ? `${open ? '收起' : '展开'}技能${node.name}文件引用` : `查看技能${node.name}详情`} aria-expanded={expandable ? open : undefined} title={`${node.name}\n${node.reason || node.description}\n${node.path}`} onClick={() => expandable ? onToggleSkill!(node.skillId) : onInspect(node.skillId)}>
+      <button type="button" className="skill-lane-main" aria-label={expandable ? `${open ? '收起' : '展开'}技能${node.name}文件引用` : `查看技能${node.name}详情`} aria-expanded={expandable ? open : undefined} title={`${node.name}\n${node.reason ? skillReasonLabel(node.reason) : node.description}\n${node.path}`} onClick={() => expandable ? onToggleSkill!(node.skillId) : onInspect(node.skillId)}>
         <span className="skill-lane-node-title"><i/><strong>{node.name}</strong>{expandable && <><span className="skill-lane-file-count" title={`${node.fileCount} 个文件引用`}>{node.fileCount}</span><Chevron expanded={open}/></>}</span>
-        <span className="skill-lane-brief">{node.reason || node.description || '暂无简述'}</span>
+        <span className="skill-lane-brief">{node.reason ? skillReasonLabel(node.reason) : node.description || '暂无简述'}</span>
         <span className="skill-lane-node-state">{node.selected ? '已选择' : `${node.group || '技能目录'} · 未选择`}{!!node.diagnostics?.length && ' · 有提示'}</span>
       </button>
       <button type="button" className="skill-lane-inspect" aria-label={`查看技能${node.name}详情`} title="查看简述、选择理由和文件详情" onClick={() => onInspect(node.skillId)}><InspectIcon/></button>

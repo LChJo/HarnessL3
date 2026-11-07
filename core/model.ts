@@ -5,6 +5,7 @@ import { FqnRef, type Fqn, type RelationId } from '@likec4/core'
 import { HarnessError } from './errors.js'
 import { canonicalJson, digest, sha256, parseJsonStrict } from './json.js'
 import { validateContract } from './contract.js'
+import { documentGitDiagnostics } from './references.js'
 import type { Brief, ContextBody, Diagnostic, Directory, Entity, Evidence, ModelSnapshot, SourceVersion } from './types.js'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
@@ -177,11 +178,12 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
       const path = await evidencePath(root, proof.location.path)
       try {
         const bytes = await readFile(path)
-        if (proof.hash && sha256(bytes) !== proof.hash) diagnostics.push({ code: 'EVIDENCE_CHANGED', severity: 'warning', file: proof.location.path, message: `Evidence file bytes changed: ${proof.id}` })
+        if (proof.hash && sha256(bytes) !== proof.hash) diagnostics.push({ code: 'EVIDENCE_CHANGED', severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file bytes changed: ${proof.id}` })
       } catch (error) {
-        diagnostics.push({ code: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'EVIDENCE_MISSING' : 'EVIDENCE_UNREADABLE', severity: 'warning', file: proof.location.path, message: `Evidence file is ${(error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'unreadable'}: ${proof.id}` })
+        diagnostics.push({ code: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'EVIDENCE_MISSING' : 'EVIDENCE_UNREADABLE', severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file is ${(error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'unreadable'}: ${proof.id}` })
       }
     }
+    diagnostics.push(...await documentGitDiagnostics(root, evidenceJson.value.evidence))
     parser = await LikeC4.fromSource(sources.map(source => source.text).join('\n'), { logger: false, printErrors: false, watch: false })
     for (const error of parser.getErrors()) diagnostics.push({ code: 'LIKEC4_INVALID', severity: 'error', message: error.message, ...position(sources, error.range.start.line, error.range.start.character) })
     if (diagnostics.some(item => item.severity === 'error')) invalid(diagnostics)

@@ -22,8 +22,10 @@ Skill Hub 是 CLI 入口能力；普通技能是当前 agent 可按需读取的�
 
 [quick](development/quick/SKILL.md) 用于简单询问和改法已明确的小范围修改：在 L3 入口后直接完成，不额外记录过程、不执行验证。L3 入口已有记录与宿主日志仍保留；该方法不提供无痕模式。
 
-跨技能方法用相对 `SKILL.md` 链接表达；可选 frontmatter `related` 数组只给出关联文件，不自动加入选择集合。例如 quality/tdd 同类引用 `../code-review/SKILL.md`，planning/triage 跨类引用 `../../discovery/grilling/SKILL.md`。附件路径相对其所在文件；移动或删除时同步 Markdown 链接、YAML related、CLI 示例及调用方。执行和归档约定见 [文件引用约定](FILE-REFERENCES.md)。
+长期规格、任务文档、决策、研究和交接的增删改移，同阶段维护受影响的当前上下文/证据与文档入链；同一实体保留身份，历史不回写。留存/Git归属按用途决定，项目任务Markdown与本机task记录分开，`.scratch`名字不代表可以丢弃。各产出方法在相应步骤提示维护；需要核查长期关联或证据时退出quick，沿用项目的阶段同步规则。CLI不自动建立文档对象或替agent理解正文。
+
+默认方法独立使用：不含跨技能 `SKILL.md` 链接、`related` 清单或指向库根目录的维护说明；保留本方法目录内真实附件的相对链接，必要行为写入正文。任务仅归档显式所选方法的文件夹，不能假定其它方法或共享说明也已提供。用户自有技能的可选 `related` 仍兼容，作为目录候选展示，不自动加入选择。移动或删除时检查附件入链、CLI 示例及调用方。执行和归档约定见 [文件引用约定](FILE-REFERENCES.md)。
 
 最初 21 项来自本地参考提交 `2ab958093e83e0ec752e6c1c5932da465bf23e0c`：[LChJo/skills](https://github.com/LChJo/skills)，上游为 [Matt Pocock skills](https://github.com/mattpocock/skills)。原导入范围为 engineering 16 项和 productivity 5 项；v0.14 按用途重分类，删除重复包装后保留 20 项。保留方法名称、[MIT 许可](LICENSE) 及 copyright 2026 Matt Pocock；不回写 `E:/Ai/skills`，不承诺这是上游最新状态。
 
-本地库现有 21 份方法正文、21 份参考 Markdown 和 1 份 Bash 模板（共 43 个方法目录内文件）；其中 quick 为 HarnessL3 新增方法，其余 20 项来自上述导入。先前已移除 21 份宿主专用 `agents/openai.yaml`。原 slash 调用已改为文件引用；提交、tracker、会话及并行 agent 遵守实际授权和工具能力。`meta/setup-matt-pocock-skills` 保留历史方法名，仅用于可选项目约定梳理。来源与 v0.13 适配见 [历史审计](../docs/prototype/archive/design/skill-hub-file-audit.md)，当前目录迁移见 [v0.14 记录](../docs/prototype/archive/design/skill-taxonomy.md)。
+本地库现有 21 份方法正文、21 份参考 Markdown 和 1 份 Bash 模板（共 43 个方法目录内文件）；其中 quick 为 HarnessL3 新增方法，其余 20 项来自上述导入。先前已移除 21 份宿主专用 `agents/openai.yaml`。原 slash 调用已改为文件引用；提交、tracker、会话及并行 agent 遵守实际授权和工具能力。`meta/setup-matt-pocock-skills` 保留历史方法名，仅用于可选项目约定梳理。

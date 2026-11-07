@@ -2,28 +2,32 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from 'playwright'
+import { execFile as callbackExecFile } from 'node:child_process'
+import { promisify } from 'node:util'
+import { fileURLToPath } from 'node:url'
 
-// Intentionally creates one task in an explicitly generated fixture. Never run
+// Intentionally creates tasks in an explicitly generated fixture. Never run
 // against product task archives or a descriptor from the user's source project.
 if (!process.argv[2]) throw new Error('Usage: node web/verify-manual.mjs <isolated-browser-fixture.json>')
 const fixture = JSON.parse(await readFile(process.argv[2], 'utf8'))
 assert.ok(path.basename(fixture.directory).startsWith('harnessl3-browser-'))
 const service = JSON.parse(await readFile(path.join(fixture.dataRoot, 'service.json'), 'utf8'))
+const execFile = promisify(callbackExecFile)
+const createTask = async title => JSON.parse((await execFile(process.execPath, [fileURLToPath(new URL('../bin/harnessl3.mjs', import.meta.url)), 'task', 'start', '--title', title, '--data-dir', fixture.dataRoot, '--json'], { cwd: fixture.root, env: { ...process.env, HARNESS_SKILLS_ROOT: '', HARNESSL3_HOME: '' }, windowsHide: true, maxBuffer: 32e6 })).stdout).data
+const entry = await createTask('CLI task with Web manual selection ' + new Date().toISOString())
 const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
 const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
 const errors = []
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
   page.on('pageerror', error => errors.push(error.message))
-  await page.goto(service.url + '/#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId }))
+  await page.goto(service.url + '/#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId, task: entry.taskId }))
   await page.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-route-worktree') && !document.querySelector('.view-loading'))
-  await page.getByRole('textbox', { name: '任务目的', exact: true }).fill('Web UI verification ' + new Date().toISOString())
-  await page.getByRole('button', { name: '开始检索', exact: true }).click()
   await page.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-task-id') && !document.querySelector('.view-loading'))
   const taskId = await page.getByTestId('app-shell').getAttribute('data-task-id')
   const taskView = () => page.evaluate(async args => await fetch('/view?' + new URLSearchParams(args)).then(response => response.json()), { worktree: fixture.target.worktreeId, task: taskId })
   let current = await taskView()
-  assert.equal(current.task.source, 'web')
+  assert.equal(current.task.source, 'cli')
   assert.equal(current.task.lastReadAt, null)
   const root = current.model.entities.find(entity => entity.entityType === 'object' && entity.parentId === null)
   const children = current.model.entities.filter(entity => entity.entityType === 'object' && entity.parentId === root.id)
@@ -104,9 +108,8 @@ try {
   assert.deepEqual(current.task.packet.contexts.find(body => body.entity.id === children[0].id), retainedBody)
   await page.unroute('**/rpc')
 
-  await page.locator('.input-card').getByRole('button', { name: '新建任务', exact: true }).click()
-  await page.getByRole('textbox', { name: '任务目的', exact: true }).fill('Web explicit empty selection ' + new Date().toISOString())
-  await page.getByRole('button', { name: '开始检索', exact: true }).click()
+  const emptyEntry = await createTask('CLI task with Web explicit empty selection ' + new Date().toISOString())
+  await page.goto(service.url + '/?' + new URLSearchParams({ worktree: fixture.target.worktreeId, task: emptyEntry.taskId }))
   await page.getByRole('button', { name: '保存空集合', exact: true }).waitFor()
   const emptyTaskId = await page.getByTestId('app-shell').getAttribute('data-task-id')
   await page.getByRole('button', { name: '保存空集合', exact: true }).click()
@@ -118,5 +121,5 @@ try {
   assert.equal(await page.locator('[data-output-count]').getAttribute('data-output-count'), '0')
   assert.equal(await page.locator('[data-category-root="objects"]').getAttribute('data-hit-count'), '0')
   assert.deepEqual(errors, [])
-  console.log(JSON.stringify({ taskId, emptyTaskId, createdBy: 'web', selection: 'directory+two-bodies+three-explicit-skill-reasons', nextQuery: 'two-targets-with-retained-known', retry: 'same-id-after-committed-response-loss', batches: 3, emptySelection: 'zero-body-no-false-object-return', pageErrors: errors }))
+  console.log(JSON.stringify({ taskId, emptyTaskId, createdBy: 'cli', selectionSource: 'web', selection: 'directory+two-bodies+three-explicit-skill-reasons', nextQuery: 'two-targets-with-retained-known', retry: 'same-id-after-committed-response-loss', batches: 3, emptySelection: 'zero-body-no-false-object-return', pageErrors: errors }))
 } finally { await browser.close() }

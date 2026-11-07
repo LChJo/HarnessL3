@@ -41,6 +41,28 @@ test('TC22 text routing is displayed once while structured entry data remains av
   for (const field of ['taskId', 'binding', 'directory', 'catalog']) assert.deepEqual(displayed[field], entry[field])
 })
 
+test('TC22 UTF-8 file and byte stdin preserve multilingual skill reasons through restart', async t => {
+  const f = await setup(t)
+  const reason = '与 HEAD 比较，核对规格、標準和实现 🙂'
+  const tasks = []
+  for (const mode of ['file', 'stdin']) {
+    const entry = (await f.start()).body.data
+    const request = { schemaVersion: 1, requestId: randomUUID(), binding: entry.binding, context: { expand: [], read: [], known: {} }, skills: [{ id: 'quality/check', reason }] }
+    const requestFile = path.join(f.directory, '中文 请求.json')
+    if (mode === 'file') await writeFile(requestFile, '\uFEFF' + JSON.stringify(request), 'utf8')
+    const result = await f.call(['task', 'select', entry.taskId, '--file', mode === 'file' ? requestFile : '-'], mode === 'stdin' ? { input: Buffer.from(JSON.stringify(request), 'utf8') } : {})
+    assert.equal(result.code, 0, result.stdout)
+    assert.equal(result.body.data.skillPlan.skills[0].reason, reason)
+    tasks.push(entry.taskId)
+  }
+  await f.call(['serve', 'stop'])
+  for (const taskId of tasks) {
+    const shown = await f.call(['task', 'show', taskId])
+    assert.equal(shown.code, 0, shown.stdout)
+    assert.equal(shown.body.data.result.task.skillPlan.skills[0].reason, reason)
+  }
+})
+
 test('TC06 CLI selects context and file references, reads archived bytes, and restores after restart', async t => {
   const f = await setup(t)
   const requestId = randomUUID()

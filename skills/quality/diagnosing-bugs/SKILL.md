@@ -1,11 +1,9 @@
 ---
 name: diagnosing-bugs
 description: Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", or reports something broken/throwing/failing/slow.
-related:
-  - ../../architecture/improve-codebase-architecture/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Diagnosing Bugs
 
@@ -134,5 +132,6 @@ Required before declaring done:
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The confirmed cause is recorded in the project's task outcome; include it in a commit/PR only when that operation is authorized
+- [ ] Retained diagnostic documents and any changed project knowledge have current context/evidence links; prototype cleanup preserves the retained evidence pointers
 
-**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the [improve-codebase-architecture](../../architecture/improve-codebase-architecture/SKILL.md) skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) record the specific coupling or missing test seam and recommend a scoped architectural follow-up. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.

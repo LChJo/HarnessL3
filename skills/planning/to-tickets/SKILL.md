@@ -1,17 +1,15 @@
 ---
 name: to-tickets
 description: Break a plan, spec or conversation into independently verifiable tracer-bullet tickets with explicit blocking edges. Use existing local task files or a configured tracker when publishing is authorized.
-related:
-  - ../../meta/setup-matt-pocock-skills/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # To Tickets
 
 Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
-Use the project's current task-file or tracker convention and any configured label vocabulary. [Project setup guidance](../../meta/setup-matt-pocock-skills/SKILL.md) is optional if this genuinely needs defining; missing tracker configuration does not block drafting tickets.
+Use the project's current task-file or tracker convention and any configured label vocabulary. Record any convention that genuinely needs defining in the existing project documentation; missing tracker configuration does not block drafting tickets.
 
 ## Process
 
@@ -66,6 +64,8 @@ Save the agreed tickets within the task's allowed write scope. Use the project's
 - **A configured issue tracker** → when authorized, publish one issue per ticket in dependency order so blocking edges reference real identifiers. Use supported native relationships or explicit "Blocked by" links, and the project's actual readiness labels. Do not assume a provider, account, paid feature or label already exists.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
+
+Keep retained ticket/spec references and blocking relationships current in the project's context model. Moving, replacing or deleting a local task file also requires repairing current links and evidence, while preserving archived history. Decide Git ownership from its purpose; `.scratch/` alone does not make a retained task disposable.
 
 Do NOT close or modify any parent issue.
 

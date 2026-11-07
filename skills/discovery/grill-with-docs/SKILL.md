@@ -1,11 +1,12 @@
 ---
 name: grill-with-docs
 description: Combine an interview with maintaining domain terms and design decision records in the project's existing documentation. Use when both unresolved choices and durable documentation need work; use grilling for a plain interview.
-related:
-  - ../grilling/SKILL.md
-  - ../../architecture/domain-modeling/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
-Read the [grilling method](../grilling/SKILL.md) when unresolved design choices need an interview. Read [domain-modeling](../../architecture/domain-modeling/SKILL.md) when terminology or decisions also need recording, using the target project's existing authoritative model. These linked methods are candidates for the task's joint selection, not automatically installed or executed dependencies.
+Explore the project's actual files before asking about facts. Walk the unresolved design decisions and their dependencies one question at a time; provide a recommendation and wait for the user's answer before depending on it. Reuse decisions already confirmed.
+
+As answers land, record the resolved domain terms and design decisions in the project's existing authoritative model, glossary or ADRs. Preserve the term's meaning, the decision's rationale and relevant alternatives; keep unanswered choices explicitly unresolved. Do not create a second knowledge store merely to use this method.
+
+When confirmed answers change retained project documents, maintain their current context/evidence references in the same phase. Reuse the project's authority and retention/Git conventions rather than introducing a second glossary or decision store.

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FileRef, Rpc, SelectedSkill, SkillBrief, TaskRecord } from './types'
 import { errorMessage } from './types'
+import { SkillReason } from './SkillReason'
 
 interface ReturnedFile { skillId: string; file: FileRef & { content: string } }
 export function SkillDetails({ task, catalog, diagnostics = [], catalogValid = true, focusId, focusFile, worktree, rpc, selected, onChoose, historical, onRefresh }: { task: TaskRecord | null; catalog: SkillBrief[]; diagnostics?: { message: string }[]; catalogValid?: boolean; focusId?: string; focusFile?: string; worktree: string; rpc: Rpc; selected: Map<string, string>; onChoose: (id: string, reason: string | null) => void; historical: boolean; onRefresh?: () => void }) {
@@ -30,7 +31,7 @@ export function SkillDetails({ task, catalog, diagnostics = [], catalogValid = t
     {visible.map(skill => <section className="skill-method" key={skill.id} data-skill-detail={skill.id}>
       <div className="skill-method-title"><strong>{skill.name}</strong><span>{skill.group}</span></div>
       <p>{skill.description}</p>
-      {'reason' in skill && <p className="skill-reason">选择理由：{skill.reason}</p>}
+      {'reason' in skill && <SkillReason reason={skill.reason} />}
       {!recorded && <div className="skill-choice"><label><input type="checkbox" aria-label={`选择技能${skill.name}`} checked={selected.has(skill.id)} disabled={historical || !task} onChange={event => onChoose(skill.id, event.target.checked ? '' : null)} />加入联合选择</label>{selected.has(skill.id) && <textarea aria-label={`${skill.name}选择理由`} value={selected.get(skill.id) ?? ''} onChange={event => onChoose(skill.id, event.target.value)} placeholder="本次任务为什么需要它" rows={2} />}</div>}
       {'related' in skill && !!skill.related.length && <p className="skill-related">相关技能：{skill.related.join('、')}</p>}
       {'diagnostics' in skill && skill.diagnostics.map((message, index) => <p key={index} className="record-error">{message}</p>)}

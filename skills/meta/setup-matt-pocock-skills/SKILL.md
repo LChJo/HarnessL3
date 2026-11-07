@@ -1,15 +1,9 @@
 ---
 name: setup-matt-pocock-skills
 description: Optional guidance for documenting a project's existing task store, triage vocabulary and domain-document conventions. Use only when those conventions need clarification; no tracker or host initialization is required.
-related:
-  - ../../architecture/domain-modeling/SKILL.md
-  - ../../discovery/grill-with-docs/SKILL.md
-  - ../../architecture/improve-codebase-architecture/SKILL.md
-  - ../../planning/triage/SKILL.md
-  - ../../planning/wayfinder/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Project Workflow Conventions
 
@@ -24,8 +18,8 @@ Look for existing task files and configured tools before proposing changes. Git 
 ## 2. Identify only the conventions this task needs
 
 - **Task store**: reuse local task/spec files or the already configured tracker. External services are optional. If the task only needs a draft, write it in the authorized artifact location without initializing a tracker.
-- **Triage roles**: relevant only when the user actually needs incoming-work triage. Read the [triage method](../../planning/triage/SKILL.md) if useful, and map its conceptual roles to existing labels; do not create new labels or a second state machine automatically.
-- **Domain knowledge**: reuse the established authoritative model, glossary and decisions. LikeC4 or another existing model does not need a duplicate `CONTEXT.md` just to satisfy this method. Read [domain-modeling](../../architecture/domain-modeling/SKILL.md) for terminology work when needed.
+- **Triage roles**: relevant only when the user actually needs incoming-work triage. Map who clarifies, prioritizes and implements work to the existing labels; do not create new labels or a second state machine automatically.
+- **Domain knowledge**: reuse the established authoritative model, glossary and decisions. LikeC4 or another existing model does not need a duplicate `CONTEXT.md` just to satisfy this method. When terminology needs work, record the term's agreed meaning and boundaries in that existing authority.
 
 Ask only for decisions the project evidence and current authorization do not already settle. Preserve unknown access/capabilities explicitly instead of assuming installation or login.
 

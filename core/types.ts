@@ -1,7 +1,7 @@
 export interface Target { projectId: string; worktreeId: string }
 export interface SourceVersion { head: string | null; treeHash: string | null; status: 'clean' | 'dirty' | 'unknown' }
 export interface Binding extends Target { modelRevision: string; catalogRevision: string; sourceVersion: SourceVersion; sourceScanRevision: string }
-export interface Diagnostic { message: string; code?: string; file?: string; line?: number; column?: number; severity?: 'error' | 'warning' }
+export interface Diagnostic { message: string; code?: string; file?: string; line?: number; column?: number; severity?: 'error' | 'warning'; evidenceId?: string }
 export interface ProjectConfig { schemaVersion: 1; projectId: string; name: string; source: { excludePatterns: string[] }; skills?: { root: string } }
 export interface ProjectRecord { id: string; name: string; gitCommonDir: string; active: boolean; configPath: string }
 export interface WorktreeRecord { id: string; projectId: string; root: string; gitCommonDir: string; branch: string | null; available: boolean; active: boolean; config?: ProjectConfig }

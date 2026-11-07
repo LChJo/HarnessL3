@@ -194,6 +194,17 @@ test('evidence records retain reference truth, not semantic success from matchin
   assert.ok((await loadModel(root)).diagnostics.some(item => /missing/i.test(item.code)))
 })
 
+test('TC06 unavailable Git classification is an explicit document warning while model browsing remains available', async t => {
+  const bytes = Buffer.from('Retained project document\n')
+  const evidence = [{ id: ids.proof, kind: 'document', claim: 'Retained decision', location: { path: 'decision.md' }, hash: hash(bytes), observedAt: '2026-11-07T00:00:00.000Z' }]
+  const root = await fixture(t, model().replace('evidence "none"', `evidence "${ids.proof}"`), evidence)
+  await writeFile(join(root, 'decision.md'), bytes)
+  await mkdir(join(root, '.git'))
+  const snapshot = await loadModel(root)
+  assert.equal(snapshot.entities.length, 4)
+  assert.ok(snapshot.diagnostics.some(item => item.code === 'EVIDENCE_GIT_UNKNOWN' && item.evidenceId === ids.proof))
+})
+
 test('relation evidence is included in exact boundary evidence union', async t => {
   const evidence = [{ id: ids.proof, kind: 'manual', claim: 'Reviewed relationship', location: { url: 'https://example.test/proof' }, hash: null, observedAt: null }]
   const root = await fixture(t, model().replace('brief "Dispatches queued requests"\n  source "human"\n  status "unknown"\n  evidence "none"', `brief "Dispatches queued requests"\n  source "human"\n  status "unknown"\n  evidence "${ids.proof}"`), evidence)

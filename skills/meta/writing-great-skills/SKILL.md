@@ -3,7 +3,7 @@ name: writing-great-skills
 description: Reference for writing and editing skills well — the vocabulary and principles that make a skill predictable.
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 A skill exists to wrangle determinism out of a stochastic system. **Predictability** — the agent taking the same _process_ every run, not producing the same output — is the root virtue; every lever below serves it.
 
@@ -16,7 +16,7 @@ In Skill Hub, every method keeps a useful `description` for the current model's 
 - **Model-selected**: the agent judges disclosed descriptions against the task and selects only relevant method references. This spends tokens and attention for the material actually disclosed, not a guaranteed permanent description on every turn.
 - **User-directed**: the user identifies a file or purpose. Keep its description anyway so the next reader understands applicability; requiring the user to remember every file increases cognitive load.
 
-State the applicability and meaningful branches clearly. Use relative `SKILL.md` links and optional `related` metadata for other method candidates, without automatically selecting or executing them. Host-specific fields such as `disable-model-invocation` are not the Hub's selection contract.
+State the applicability and meaningful branches clearly. Keep a bundled method usable from its own folder: link only to real attachments inside that folder, and include the small amount of essential guidance inline. Discover any additional capability from the actual catalog when the task needs it; a name is not an archived file or an instruction to execute it. Host-specific fields such as `disable-model-invocation` are not the Hub's selection contract.
 
 Skill Hub reduces the need to remember names through its derived directory. Do not hand-maintain another router's fixed list inside a method: edits, additions and deletions should be discovered from the actual files.
 

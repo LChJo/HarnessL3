@@ -1,15 +1,9 @@
 ---
 name: wayfinder
 description: Clarify a large uncertain effort through a shared map of decision tickets, resolving the frontier until implementation can be planned. Use existing local task artifacts or a configured tracker; session and provider controls are optional.
-related:
-  - ../../discovery/grilling/SKILL.md
-  - ../../architecture/domain-modeling/SKILL.md
-  - ../../development/prototype/SKILL.md
-  - ../../discovery/research/SKILL.md
-  - ../../meta/setup-matt-pocock-skills/SKILL.md
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 A large idea is wrapped in fog: the way from here to the **destination** is not visible yet. Wayfinding charts a **shared map** in the project's existing task artifacts, then works its **decision tickets** — questions whose resolution is a decision, not slices of a build to execute. The map may span several work periods without assuming a particular agent session size or a session-control command.
 
@@ -29,7 +23,7 @@ The map is one artifact in the project's existing task store; each decision tick
 
 The map is an **index**, not a store. It lists the decisions made and points at the tickets that hold their detail; a decision lives in exactly one place — its ticket — so the map never restates it, only gists it and links.
 
-**Where artifacts, blocking edges and frontier queries live is project-specific.** Read the existing task convention. [Optional project setup guidance](../../meta/setup-matt-pocock-skills/SKILL.md) can help document it, but do not initialize an external tracker as a prerequisite. Without one, draft in the already authorized local artifact location.
+**Where artifacts, blocking edges and frontier queries live is project-specific.** Read the existing task convention and clarify only the missing details this work needs. Do not initialize an external tracker as a prerequisite. Without one, draft in the already authorized local artifact location.
 
 ### The map body
 
@@ -81,9 +75,9 @@ The answer isn't part of the body — it's recorded on resolution (see [Work thr
 
 Every ticket is either **HITL** — human in the loop, worked *with* a human who speaks for themselves — or **AFK**, driven by the agent alone. A HITL ticket only resolves through that live exchange; the agent never stands in for the human's side of it (a grilling agent that answers its own questions has broken this).
 
-- **Research** (AFK): Read primary sources or local knowledge to surface a fact a decision needs, using the [research method](../../discovery/research/SKILL.md). The current agent can do this; an independently scoped reader is optional when available and authorized.
-- **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or UI/logic code via the [prototype](../../development/prototype/SKILL.md) skill. Links the prototype as an asset. Use when "how should it look" or "how should it behave" is the key question.
-- **Grilling** (HITL): Conversation via the [grilling](../../discovery/grilling/SKILL.md) and [domain-modeling](../../architecture/domain-modeling/SKILL.md) skills, one question at a time. The default case.
+- **Research** (AFK): Read primary sources or local knowledge to surface a fact a decision needs, and capture cited findings in the project's existing research location. The current agent can do this; an independently scoped reader is optional when available and authorized.
+- **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or minimal UI/logic code that tests the unresolved design question. Links the prototype as an asset. Use when "how should it look" or "how should it behave" is the key question.
+- **Grilling** (HITL): Resolve open design choices in conversation, one question at a time, and record confirmed terms and decisions in the project's existing authority. Look up facts first and wait for the user's decisions. The default case.
 - **Task** (HITL or AFK): Manual work that must happen before a *decision* can be made — nothing to decide, prototype, or research, but the discussion is blocked until it's done. Signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen. This is the one type that *does* rather than decides — and it earns its place by unblocking a decision, not by delivering the destination. The agent drives it alone where it can (AFK); otherwise it hands the human a precise checklist (HITL). Resolved when the work is done; the answer records what was done and any resulting facts (credentials location, new URLs, row counts) later tickets depend on.
 
 ## Fog of war
@@ -115,11 +109,11 @@ Two modes. Work through bounded decisions with explicit checkpoints; continue an
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Run a [grilling](../../discovery/grilling/SKILL.md) and [domain-modeling](../../architecture/domain-modeling/SKILL.md) session to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Resolve the open scope decisions with the user one question at a time, recording confirmed terminology and choices, to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Explore breadth-first, surfacing open decisions and first steps. If the path is already clear and bounded, a map adds no value; continue the authorized planning or implementation work rather than imposing an extra phase.
 3. **Create the map** (label `wayfinder:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
-5. **Resolve independent research where useful.** Use the [research method](../../discovery/research/SKILL.md) in the current agent, or independently scoped readers when available and authorized. Keep cited findings in the existing artifact location and link them from the ticket. A new branch, worktree or commit is not required by this method.
+5. **Resolve independent research where useful.** Read primary sources in the current agent, or use independently scoped readers when available and authorized. Keep cited findings in the existing artifact location and link them from the ticket. A new branch, worktree or commit is not required by this method.
 6. Record the map's current frontier, confirmed decisions and unknowns. Charting does not silently start the implementation phase.
 
 ### Work through the map
@@ -128,8 +122,8 @@ User invokes with a map (URL or number). A ticket is **optional** — without on
 
 1. Load the **map** — the low-res view, not every ticket body.
 2. Choose the ticket. If the user named one, use it. Otherwise take the first appropriate frontier item and follow the authorized ownership convention.
-3. Resolve it — **zoom as needed**: read related ticket bodies and method references only when useful. The Notes block's suggestions do not select or execute files automatically; verify actual references and capabilities. [Grilling](../../discovery/grilling/SKILL.md) and [domain-modeling](../../architecture/domain-modeling/SKILL.md) may help with unresolved choices and terminology.
-4. Record the resolution in its existing artifact and append a context pointer to Decisions-so-far. Post comments or close external issues only when those writes are authorized and supported; otherwise retain a local draft and report the pending publication.
+3. Resolve it — **zoom as needed**: read related ticket bodies and method references only when useful. The Notes block's suggestions do not select or execute files automatically; verify actual references and capabilities. Resolve remaining choices with the user one at a time and keep confirmed terminology and decisions in the project's existing authority.
+4. Record the resolution in its existing artifact and append a context pointer to Decisions-so-far. Maintain affected project-model/evidence links for retained maps and tickets, including repairs when tickets move or are removed; keep archived history. Post comments or close external issues only when those writes are authorized and supported; otherwise retain a local draft and report the pending publication.
 5. Add newly-surfaced tickets (create-then-wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket — this one or another — sits beyond the destination, **rule it out of scope** rather than resolving it on the route. If the decision invalidates other parts of the map, update or delete those tickets.
 
 The user may run unblocked tickets in parallel, so expect other sessions to be editing the tracker concurrently.

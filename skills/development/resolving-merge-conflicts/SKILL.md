@@ -3,7 +3,7 @@ name: resolving-merge-conflicts
 description: "Use when you need to resolve an in-progress git merge/rebase conflict."
 ---
 
-> Skill Hub file reference: use this method under the target project's rules and task authorization; selecting or reading it runs no command or workflow. Linked methods are optional candidates, not automatic selections or archives; [maintenance notes](../../FILE-REFERENCES.md) are optional current-library guidance, and unprovided files or capabilities must be checked.
+> Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 1. **See the current state** of the merge/rebase. Check git history, and the conflicting files.
 

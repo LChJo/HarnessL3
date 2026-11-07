@@ -24,7 +24,7 @@ export function HistoryPanel({ rpc, worktree, onOpen }: { rpc: Rpc; worktree: st
     {error && <p role="alert" className="record-error">{error}</p>}
     {loading && <p className="history-count" role="status">搜索中…</p>}
     {result && <><p className="history-count">{result.total} 个任务</p>
-      <div>{result.items.map(item => <button className="history-task" key={item.id} data-history-task={item.id} onClick={() => onOpen(item.id)}><strong>{item.title || '未记录目的'}</strong><span>{item.contextCount ?? '未知'} 项正文<i/>{item.skillCount ?? '未知'} 项技能<i/>{item.closedAt ? '已关闭' : '上下文组织'}<i/>{item.completeness === 'complete' ? '归档完整' : '已知范围有限'}</span><small><span>{time(item.retentionBasisAt)}</span><b>{item.format === 'v1' ? item.binding?.modelRevision?.slice(0, 8) || '版本未知' : '旧格式记录'}</b></small></button>)}</div>
+      <div>{result.items.map(item => <button className="history-task" key={item.id} data-history-task={item.id} onClick={() => onOpen(item.id)}><strong>{item.title || '未记录目的'}</strong><span>{item.contextCount ?? '未知'} 项正文<i/>{item.skillCount ?? '未知'} 项技能<i/>{item.completeness === 'complete' ? '归档完整' : '已知范围有限'}</span><small><span>{time(item.retentionBasisAt)}</span><b>{item.format === 'v1' ? item.binding?.modelRevision?.slice(0, 8) || '版本未知' : '旧格式记录'}</b></small></button>)}</div>
       {!result.items.length && <p className="detail-note">暂无任务</p>}
       <div className="history-pagination"><button disabled={loading || !result.offset} onClick={() => void load(Math.max(0, result.offset - result.limit))}>上一页</button><span>{result.total ? result.offset + 1 : 0}–{result.offset + result.items.length} / {result.total}</span><button disabled={loading || !result.hasMore} onClick={() => void load(result.offset + result.limit)}>下一页</button></div>
     </>}
