@@ -63,6 +63,15 @@ test('TC22 UTF-8 file and byte stdin preserve multilingual skill reasons through
   }
 })
 
+test('TC06 task select omits the positional task ID when the request JSON carries it', async t => {
+  const f = await setup(t)
+  const entry = (await f.start()).body.data
+  const request = { schemaVersion: 1, requestId: randomUUID(), binding: entry.binding, context: { expand: [], read: [], known: {} }, skills: [], taskId: entry.taskId }
+  const result = await f.call(['task', 'select', '--file', '-'], { input: JSON.stringify(request) })
+  assert.equal(result.code, 0, result.stdout)
+  assert.equal(result.body.data.taskId, entry.taskId)
+})
+
 test('TC06 CLI selects context and file references, reads archived bytes, and restores after restart', async t => {
   const f = await setup(t)
   const requestId = randomUUID()

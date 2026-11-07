@@ -34,6 +34,16 @@ test('Draft 2020-12 validates normalized requests deeply and reports unknown sch
   assert.throws(() => validateContract('project-config', { ...value, skills: { root: '../escape' } }), e => e.code === 'SCHEMA_INVALID')
 })
 
+test('Schema failures point at the installed request example when one ships', () => {
+  const selection = { schemaVersion: 1, requestId: '10000000-0000-4000-8000-000000000001', binding: {}, context: [], skills: [] }
+  const failure = (() => { try { validateContract('selection', selection) } catch (error) { return error } })()
+  assert.equal(failure.code, 'SCHEMA_INVALID')
+  assert.ok(failure.details.example.endsWith(path.join('examples', 'selection.json')), JSON.stringify(failure.details))
+  const response = (() => { try { validateContract('response', { schemaVersion: 1 }) } catch (error) { return error } })()
+  assert.equal(response.code, 'SCHEMA_INVALID')
+  assert.equal('example' in response.details, false)
+})
+
 test('atomic replace preserves current file when the new write fails and preserves exact bytes', async t => {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harnessl3-io-')))
   t.after(() => rm(root, { recursive: true, force: true }))

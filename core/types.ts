@@ -27,7 +27,7 @@ export interface SkillCatalog { root: string; revision: string | null; skills: S
 export interface SkillPlan { id: string; batchId: string; routerVersion: string; catalogRevision: string; skills: SelectedSkill[]; observation: 'selection-recorded; execution-unknown' }
 export interface QueryFields { expand: string[]; read: string[]; known: Record<string, string> }
 export interface QueryRequest extends QueryFields { schemaVersion: 1; requestId: string; expectedModelRevision: string }
-export interface SelectionRequest { schemaVersion: 1; requestId: string; binding: Binding; context: QueryFields; skills: { id: string; reason: string }[] }
+export interface SelectionRequest { schemaVersion: 1; requestId: string; binding: Binding; context: QueryFields; skills: { id: string; reason: string }[]; taskId?: string }
 export interface FileReadRequest { schemaVersion: 1; requestId: string; throughBatchId?: string; files: { skillId: string; path: string; expectedHash: string }[] }
 export interface ItemError { operation: 'expand' | 'read' | 'skill-file'; id: string; path?: string; code: string; message: string }
 export interface BatchResult { batchId: string; directories: Directory[]; contexts: ContextBody[]; unchanged: { id: string; contentHash: string; reason: 'retained-in-this-task' }[]; errors: ItemError[]; observation: 'reader-response-produced' }

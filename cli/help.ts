@@ -92,7 +92,7 @@ function flagUsage(operation: string, name: string): string {
 }
 function usage(operation: string): string {
   const definition = commands[operation]
-  const positional = !definition.count ? '' : operation.endsWith(' register') ? ' <path>' : operation.startsWith('project ') ? ' <project-id>' : operation.startsWith('worktree ') ? ' <worktree-id>' : operation === 'agent unbind' ? ' <binding-id>' : ' <task-id>'
+  const positional = !definition.count ? '' : operation === 'task select' ? ' [<task-id>]' : operation.endsWith(' register') ? ' <path>' : operation.startsWith('project ') ? ' <project-id>' : operation.startsWith('worktree ') ? ' <worktree-id>' : operation === 'agent unbind' ? ' <binding-id>' : ' <task-id>'
   const required = definition.required ?? []
   const optional = (definition.flags ?? []).filter(name => !required.includes(name))
   return 'harnessl3 ' + operation + positional + required.map(name => ' ' + flagUsage(operation, name)).join('') + optional.map(name => ' [' + flagUsage(operation, name) + ']').join('')

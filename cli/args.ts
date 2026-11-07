@@ -3,13 +3,13 @@ import path from 'node:path'
 import { HarnessError } from '../core/errors.js'
 
 export interface CommandRequest { operation: string; positionals: string[]; flags: Record<string, string | boolean>; requestId: string; cwd: string; input?: unknown; skillsRoot?: string; source?: 'cli' | 'web' }
-interface CommandDefinition { count: number; flags?: string[]; required?: string[] }
+interface CommandDefinition { count: number; optionalPositional?: boolean; flags?: string[]; required?: string[] }
 export const commands: Record<string, CommandDefinition> = {
   init: { count: 0, flags: ['name'] },
   'project register': { count: 1 }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
   'worktree register': { count: 1 }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
   'task start': { count: 0, flags: ['title', 'session'], required: ['title'] }, 'task prompt': { count: 1 },
-  'task select': { count: 1, flags: ['file'], required: ['file'] }, 'task read': { count: 1, flags: ['file', 'batch'], required: ['file'] },
+  'task select': { count: 1, optionalPositional: true, flags: ['file'], required: ['file'] }, 'task read': { count: 1, flags: ['file', 'batch'], required: ['file'] },
   'task show': { count: 1, flags: ['batch'] }, 'task handoff': { count: 1, flags: ['batch'] }, 'task close': { count: 1 },
   'task list': { count: 0, flags: ['limit', 'offset'] }, 'context query': { count: 1, flags: ['file'], required: ['file'] },
   'history list': { count: 0, flags: ['query', 'from', 'to', 'limit', 'offset'] }, 'history show': { count: 1, flags: ['batch'] },
@@ -51,7 +51,7 @@ export function parseArgs(args: string[], cwd = process.cwd()): CommandRequest {
   const definition = commands[operation]
   if (!definition) throw new HarnessError('INVALID_ARGUMENT', 'Unknown command; use harnessl3 --help')
   const positionals = words.slice(length)
-  if (positionals.length !== definition.count) throw new HarnessError('INVALID_ARGUMENT', 'Incorrect number of positional arguments', { operation, expected: definition.count })
+  if (positionals.length !== definition.count && !(definition.optionalPositional && positionals.length === definition.count - 1)) throw new HarnessError('INVALID_ARGUMENT', 'Incorrect number of positional arguments', { operation, expected: definition.optionalPositional ? `0..${definition.count}` : definition.count })
   for (const name of Object.keys(flags)) if (!globals.includes(name) && !definition.flags?.includes(name)) throw new HarnessError('INVALID_ARGUMENT', 'Argument is not valid for this command', { operation, argument: name })
   for (const name of definition.required ?? []) if (flags[name] === undefined) throw new HarnessError('INVALID_ARGUMENT', 'Missing required argument', { argument: name })
   for (const name of ['project', 'worktree', 'request-id', 'batch', 'task', 'binding']) if (typeof flags[name] === 'string') validateUuid(flags[name] as string, name)

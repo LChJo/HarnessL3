@@ -65,7 +65,7 @@ Git项目建议将以下文件与相关源码变更一并提交，便于其他�
 
 ```text
 harnessl3 task start --title "本次任务目的" --json
-harnessl3 task select <task-id> --file <selection.json> --json
+harnessl3 task select [<task-id>] --file <selection.json> --json
 harnessl3 task handoff <task-id> --json
 harnessl3 task read <task-id> --file <files.json> --json
 harnessl3 web open --no-open --task <task-id> --json
@@ -75,7 +75,7 @@ task start返回本次绑定、顶层简述、实际技能轻目录和内置Skil
 
 路由提示包含筛选规则和上述Git提交范围建议，指向响应中的结构化taskId/binding/directory/catalog，不把这些数据嵌入提示文本。旧幂等回执/历史仍保留当时原文；规则更新不改任务目的、上下文或技能档案。
 
-selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。
+selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。任务ID可作命令位置参数传入，也可写入selection.json的可选`taskId`字段后省略位置参数；两者都不能缺省。
 
 handoff返回累计实际上下文和版本化技能文件引用。文件正文/附件随后以task read和expectedHash按需读取，见[file-read Schema](spec/contracts/file-read.schema.json)。选择与读取技能都不表示已执行。独立的后续上下文可用context query批量请求，见[query Schema](spec/contracts/query.schema.json)。
 

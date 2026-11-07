@@ -25,7 +25,7 @@ test('TC22 help discovers a command-specific request contract without starting t
   const top = await f.help()
   const selection = await f.help('task', 'select')
   assert.notEqual(selection, top)
-  assert.match(selection, /Usage: harnessl3 task select <task-id> --file <path\|->/)
+  assert.match(selection, /Usage: harnessl3 task select \[<task-id>\] --file <path\|->/)
   assert.match(selection, /--file.*required/i)
   assert.match(selection, /Returns:.*selection/)
   const schemaPath = selection.match(/^Request schema: (.+)$/m)?.[1]

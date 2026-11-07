@@ -206,6 +206,19 @@ test('TC08 explicit empty joint selection is final; failed context targets still
   assert.equal(selected.data.skillPlan.skills.length, 1)
 })
 
+test('TC08 task select accepts the task ID in the request JSON and rejects a missing one', async t => {
+  const f = await fixture(t)
+  const entry = await f.start()
+  const input = f.selection(entry, { expand: [], read: [ids.one], known: {} }, [{ id: 'quality/debug', reason: 'Use diagnosis' }])
+  const withoutPositional = await f.call('task select', null, { ...input, taskId: entry.data.taskId })
+  assert.equal(withoutPositional.ok, true, JSON.stringify(withoutPositional))
+  assert.equal(withoutPositional.data.taskId, entry.data.taskId)
+  assert.equal(withoutPositional.data.skillPlan.skills[0].id, 'quality/debug')
+  const replayed = await f.call('task select', null, { ...input, taskId: entry.data.taskId })
+  assert.equal(replayed.replayed, true)
+  expectError(await f.call('task select', null, f.selection(entry)), 'INVALID_ARGUMENT')
+})
+
 test('TC09 request replay precedes changed source/model, close and expiration checks and conflicts remain explicit', async t => {
   const f = await fixture(t)
   const startId = randomUUID()

@@ -9,6 +9,7 @@ import { HarnessError, asHarnessError } from './errors.js'
 import { validateContract } from './contract.js'
 import { readJson } from './io.js'
 import { flag, validateUuid, type CommandRequest } from '../cli/args.js'
+import { SCHEMA_ROOT } from './package.js'
 import type { BatchResult, Binding, Envelope, FileReadRequest, ItemError, ModelSnapshot, Packet, ProjectConfig, QueryFields, QueryRequest, SelectionRequest, SkillBrief, SkillCatalog, SourceVersion, Target, TaskBatch, TaskRecord, WorktreeRecord } from './types.js'
 
 const RETENTION = 60 * 86400000
@@ -287,7 +288,7 @@ export class TaskService {
   private route(): string {
     return [
       `Skill Hub ${ROUTER_VERSION}`,
-      "Use this response's structured taskId, binding, directory and catalog fields as the task-specific source; preserve the exact binding when selecting. Discover command options and request contracts through the installed CLI help.",
+      `Use this response's structured taskId, binding, directory and catalog fields as the task-specific source; preserve the exact binding when selecting. Discover command options and request contracts through the installed CLI help; request schemas and examples are installed under ${SCHEMA_ROOT} (examples/selection.json is the task select request example).`,
       'Select all necessary context and methods together in one task select request. Independent targets can be requested together; read UUIDs may cross hierarchy levels. Expand returns direct child briefs; read returns only the exact entity and boundary references. A directory count does not mean its full content was read.',
       'Skills are editable file references, not automatic dependencies or executed tools. Select actual catalog IDs with a reason; related entries are optional suggestions. Empty context and skill collections are valid when no extra resources are required. Read selected skill files later using their exact archived path and expectedHash; choosing or reading a skill does not execute it. The current agent continues its standard workflow; HarnessL3 does not start a model or agent.',
       'When retaining, editing, moving or deleting project documents, maintain affected model briefs, relationships and evidence with ordinary file tools, even without source-code changes. Preserve stable identities, repair current references and retain archived history; verify the actual phase scope before closing. Use established artifact and retention conventions for specs, local tickets, decisions, research and handoffs; distinguish durable project documents from temporary drafts and machine-local task journals. A .scratch path does not decide Git ownership. Read referenced document bodies explicitly when needed.',
@@ -307,16 +308,17 @@ export class TaskService {
       return { scope: `worktree:${this.worktree.id}`, value: { operation, title, session: flag(request, 'session') ?? null } }
     }
     if (operation === 'task list' || operation === 'history list') return { scope: `worktree:${this.worktree.id}`, value: { operation, flags: request.flags } }
-    const taskId = request.positionals[0]
-    validateUuid(taskId, 'taskId')
-    const value: Record<string, unknown> = { operation, taskId }
     const schema = operation === 'task select' ? 'selection' : operation === 'context query' ? 'query' : operation === 'task read' ? 'file-read' : null
     let input: SelectionRequest | QueryRequest | FileReadRequest | undefined
     if (schema) {
       input = validateContract<SelectionRequest | QueryRequest | FileReadRequest>(schema, request.input)
       if (input.requestId !== request.requestId) throw new HarnessError('INVALID_ARGUMENT', 'The JSON requestId and command requestId differ.')
-      value.input = input
     }
+    const taskId = request.positionals[0] ?? (operation === 'task select' ? (input as SelectionRequest | undefined)?.taskId : undefined)
+    if (!taskId) throw new HarnessError('INVALID_ARGUMENT', 'Provide the task ID as the command positional or, for task select, the JSON taskId field.')
+    validateUuid(taskId, 'taskId')
+    const value: Record<string, unknown> = { operation, taskId }
+    if (input) value.input = input
     const batch = flag(request, 'batch')
     if (batch) { validateUuid(batch, 'batchId'); value.batch = batch }
     if (operation === 'task read' && (input as FileReadRequest).throughBatchId && batch && (input as FileReadRequest).throughBatchId !== batch) throw new HarnessError('INVALID_ARGUMENT', 'The command batch and JSON throughBatchId must match.')
@@ -380,7 +382,7 @@ export class TaskService {
       })
       if (operation === 'task start') return await this.start(request, normalized, skillsRoot)
       if (!['task prompt', 'task select', 'context query'].includes(operation)) throw new HarnessError('INVALID_ARGUMENT', 'Unknown task operation.', { operation })
-      const initial = this.task(request.positionals[0])
+      const initial = this.task(normalized.value.taskId as string)
       this.active(initial)
       await this.verifyTask(initial)
       if (operation === 'task prompt' && initial.skillPlan) throw new HarnessError('SELECTION_EXISTS', 'This task already has a skill plan; use task handoff.')

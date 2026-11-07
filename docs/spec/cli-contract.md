@@ -44,7 +44,7 @@
 | `worktree unregister <worktree-id>` | 取消本机登记/观测绑定；保留目录和历史，不删除分支 |
 | `task start --title <purpose> [--session <declared-id>]` | 验证当前模型和实际技能目录，创建任务，归档顶层简述，返回 `task-entry`。session 只是调用方声明，不等于日志绑定或已观测 |
 | `task prompt <task-id>` | 尚未选择时返回当前筛选材料；实际目录变化时重建 catalogRevision。模型/来源已变化需新任务。已选择时拒绝重新路由，提示查看 handoff |
-| `task select <task-id> --file <selection.json>` | 一次提交上下文 `expand/read/known` 与 `skills[{id,reason}]`；验证版本、冻结技能文件、记录方案，返回 `selection` |
+| `task select [<task-id>] --file <selection.json>` | 一次提交上下文 `expand/read/known` 与 `skills[{id,reason}]`；验证版本、冻结技能文件、记录方案，返回 `selection`。任务ID可由位置参数或selection.json可选`taskId`字段提供，两者缺一不可 |
 | `context query <task-id> --file <query.json>` | 同批展开多个目录/读取多个正文，返回 `context-batch`。允许在联合选择前辅助筛选，或选择后补充上下文，不产生第二次技能选择 |
 | `task show <task-id> [--batch <batch-id>]` | 查询完整记录或截至该批的累计组织；只读，不续期 |
 | `task list [--limit <n>] [--offset <n>]` | 当前目标 60 天窗口内最近任务，默认 limit 50、offset 0；limit 范围 1–200，返回总数/hasMore |
@@ -137,7 +137,7 @@ v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",s
 ```text
 harnessl3 init --name "Example SDK" --json
 harnessl3 task start --title "Find the cancellation state boundary" --json
-harnessl3 task select <task-id> --file selection.json --json
+harnessl3 task select [<task-id>] --file selection.json --json
 harnessl3 context query <task-id> --file query.json --json
 harnessl3 task handoff <task-id> --json
 harnessl3 task read <task-id> --file files.json --json
