@@ -354,12 +354,12 @@
     {
       "id": "c7e37e35-b20f-45d8-b816-8ad845bdb602",
       "kind": "source-code",
-      "claim": "Installer regression covers canonical attachment paths, linked skill roots and byte-preserving backups without modifying unrelated user files.",
+      "claim": "Installer regression covers canonical attachment paths, linked skill roots, byte-preserving backups and direct execution through a package directory alias with JSON, reinstallation and invalid-argument checks.",
       "location": {
         "path": "tests/v1/agent-skills.test.mjs"
       },
-      "hash": "622f2e0b90356983c39f73addcdaebb3a507b988fdfc0c9cfcb9ebe18aba40aa",
-      "observedAt": "2026-11-07T16:14:32.614Z"
+      "hash": "a3c822c665701caf91212d45c9b86af15bc5f8ee8923270e3044121974238c34",
+      "observedAt": "2026-11-07T17:35:58.359Z"
     },
     {
       "id": "1e950683-1469-49c8-9164-d439932a7bf2",
@@ -374,12 +374,32 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "The main CI repair records observed GitHub failures, native RED/GREEN results, separate Windows/Linux full validation and the unverified macOS/remote rerun scope.",
+      "claim": "Main CI repair history records observed GitHub annotations, separate native regression and installed-consumer results, and unverified remote/macOS scope.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "f8e28ad53bc73b6a89adcb278431383e8ae36ad3a22c6bc57accab37a3de94a6",
-      "observedAt": "2026-11-07T16:27:45.000Z"
+      "hash": "54882366a125cb9ee853611a887757e34c63e0e2254f7e442721da040afb6b84",
+      "observedAt": "2026-11-07T17:35:58.359Z"
+    },
+    {
+      "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
+      "kind": "source-code",
+      "claim": "The explicit runtime-skill installer uses Node main-module identity so aliased entry paths execute its JSON CLI; imports do not perform installation. Existing backup and destination-link checks remain.",
+      "location": {
+        "path": "scripts/install-agent-skills.mjs"
+      },
+      "hash": "3caefd51925335a37ca699a91babc63d85ad5edc6b33ee88360441d666be881f",
+      "observedAt": "2026-11-07T17:35:58.359Z"
+    },
+    {
+      "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
+      "kind": "source-code",
+      "claim": "A fresh installed package checks optional task-select ID help, packaged schemas, runtime-skill copies, task/archive roundtrips, login links and offline Web assets.",
+      "location": {
+        "path": "scripts/v1/package-smoke.mjs"
+      },
+      "hash": "0cf935a3e11514eb4475ada26b2aec3e4f28c744b081565d63fbf7ba0651372b",
+      "observedAt": "2026-11-07T17:35:58.359Z"
     }
   ]
 }

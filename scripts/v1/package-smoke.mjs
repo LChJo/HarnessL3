@@ -55,7 +55,7 @@ export async function packageSmoke() {
     const help = await execFile(process.execPath, [installedBinary, '--help'], { cwd: project, windowsHide: true })
     assert.match(help.stdout, /HarnessL3 0\.1\.0/)
     const selectHelp = (await execFile(process.execPath, [installedBinary, 'task', 'select', '--help'], { cwd: project, windowsHide: true })).stdout
-    assert.match(selectHelp, /Usage: harnessl3 task select <task-id> --file/)
+    assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] --file/)
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
     assert.equal(installedSchema, path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json'))
     assert.equal(JSON.parse(await readFile(installedSchema, 'utf8')).type, 'object')

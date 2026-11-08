@@ -146,3 +146,28 @@ test('packaged installer supports explicit global directories and rejects unknow
     })
   }
 })
+
+test('packaged installer invoked through a directory alias emits JSON and installs both hosts', async t => {
+  const f = await fixture(t)
+  const alias = path.join(f.root, 'linked package 中文')
+  const packageRoot = path.resolve(path.dirname(installer), '..')
+  try { await symlink(packageRoot, alias, process.platform === 'win32' ? 'junction' : 'dir') }
+  catch (error) { if (error.code === 'EPERM') { t.skip('Host cannot create directory links'); return }; throw error }
+  const args = [path.join(alias, 'scripts', 'install-agent-skills.mjs'), '--codex-skills-dir', f.codexSkillsDir, '--claude-skills-dir', f.claudeSkillsDir]
+  const { stdout } = await execFile(process.execPath, args, { windowsHide: true })
+  assert.ok(stdout.trim(), 'Invoking the installer through an alias must execute its CLI and return JSON')
+  const result = JSON.parse(stdout)
+  assert.equal(result.ok, true)
+  assert.deepEqual(result.results.map(item => [item.agent, item.status]), [['codex', 'installed'], ['claude-code', 'installed']])
+  for (const item of result.results) {
+    assert.equal(item.files.length, 5)
+    for (const file of item.files) assert.deepEqual(await readFile(file.path), await readFile(path.join(packageRoot, 'agent-skills', 'harnessl3', file.relativePath)))
+  }
+  const repeated = JSON.parse((await execFile(process.execPath, args, { windowsHide: true })).stdout)
+  assert.ok(repeated.results.every(item => item.status === 'unchanged'))
+  await assert.rejects(execFile(process.execPath, [args[0], '--unknown'], { windowsHide: true }), error => {
+    assert.equal(error.code, 1)
+    assert.equal(JSON.parse(error.stderr).ok, false)
+    return true
+  })
+})

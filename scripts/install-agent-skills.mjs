@@ -137,7 +137,7 @@ function parseArguments(args) {
   return options
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (import.meta.main) {
   try {
     const results = await installAgentSkills(parseArguments(process.argv.slice(2)))
     process.stdout.write(JSON.stringify({ ok: true, results }) + '\n')
