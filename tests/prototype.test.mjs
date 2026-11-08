@@ -1,5 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import { syncBuiltinESMExports } from 'node:module'
 import { mkdtemp, writeFile, mkdir, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -107,5 +109,37 @@ test('watching actual file edits updates the model; restarting with invalid text
     assert.equal(wb.snapshot().revision, valid)
     assert.equal(wb.snapshot().elements[0].title, 'Second')
     assert.notEqual(wb.snapshot().attemptedRevision, valid)
+  } finally { await wb.close() }
+})
+
+test('watching reconciles real model edits even when native file notifications are lost', async t => {
+  const nativeWatch = fs.watch
+  const mockedWatch = t.mock.method(fs, 'watch', (file, options) => nativeWatch(file, options, () => {}))
+  syncBuiltinESMExports()
+  t.after(() => { mockedWatch.mock.restore(); syncBuiltinESMExports() })
+  const root = await mkdtemp(join(tmpdir(), 'harness-watch-reconcile-'))
+  const modelDir = join(root, 'model'), stateDir = join(root, 'state')
+  await mkdir(modelDir)
+  const file = join(modelDir, 'project.c4')
+  await writeFile(file, 'specification { element app } model { a = app "First" } views { view index { include * } }')
+  const wb = await createWorkbench({ modelDir, sourceRoot: root, stateDir, evidenceFile: null, watch: true })
+  try {
+    const original = wb.snapshot().revision
+    const updated = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        off()
+        const { modelStatus, revision, attemptedRevision, refreshMs, diagnostics } = wb.snapshot()
+        reject(new Error('File notification loss left the model stale: ' + JSON.stringify({ modelStatus, revision, attemptedRevision, refreshMs, diagnostics })))
+      }, 7000)
+      const off = wb.onChange(state => {
+        if (state.revision !== original && state.modelStatus === 'valid') { clearTimeout(timeout); off(); resolve(state) }
+      })
+    })
+    // Equal-length edits require content reconciliation rather than file-size checks.
+    await writeFile(file, 'specification { element app } model { a = app "Other" } views { view index { include * } }')
+    const state = await updated
+    assert.equal(state.elements[0].title, 'Other')
+    assert.notEqual(state.revision, original)
+    assert.equal(JSON.parse(await readFile(join(stateDir, 'last-valid.json'), 'utf8')).revision, state.revision)
   } finally { await wb.close() }
 })

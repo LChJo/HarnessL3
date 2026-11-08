@@ -12,6 +12,9 @@ async function listFiles(dir) {
   const nested = await Promise.all(entries.map(e => e.isDirectory() ? listFiles(join(dir, e.name)) : /\.(?:likec4|c4)$/.test(e.name) ? [join(dir, e.name)] : []))
   return nested.flat().sort()
 }
+async function modelSources(dir) {
+  return Promise.all((await listFiles(dir)).map(async path => ({ path: relative(dir, path).replaceAll('\\', '/'), content: await readFile(path, 'utf8') })))
+}
 const plain = value => typeof value === 'string' ? value : value?.txt ?? value?.md ?? value?.text ?? ''
 
 export async function createWorkbench({ modelDir, sourceRoot, stateDir, evidenceFile, watch = true }) {
@@ -19,15 +22,15 @@ export async function createWorkbench({ modelDir, sourceRoot, stateDir, evidence
   const emitter = new EventEmitter()
   let state = { modelStatus: 'loading', revision: null, attemptedRevision: null, data: null, elements: [], relationships: [], views: [], diagnostics: [], modelFiles: [], source: { status: 'unknown', scope: 'evidence-files-only' } }
   try { state = { ...state, ...JSON.parse(await readFile(join(stateDir, 'last-valid.json'), 'utf8')), modelStatus: 'loading' } } catch {}
-  let busy = false, queued = false, timer, modelWatcher, sourceWatcher
+  let busy = false, queued = false, closed = false, timer, poll, reconciliation, modelWatcher, sourceWatcher
   async function refresh() {
+    if (closed) return
     if (busy) { queued = true; return }
     busy = true
     const started = performance.now()
     let parser
     try {
-      const files = await listFiles(modelDir)
-      const sources = await Promise.all(files.map(async path => ({ path: relative(modelDir, path).replaceAll('\\', '/'), content: await readFile(path, 'utf8') })))
+      const sources = await modelSources(modelDir)
       const attemptedRevision = sha256(JSON.stringify(sources))
       state = { ...state, attemptedRevision, modelFiles: sources.map(s => ({ path: s.path, lines: s.content.split('\n').length, bytes: Buffer.byteLength(s.content) })) }
       parser = await LikeC4.fromWorkspace(modelDir, { logger: false, printErrors: false, watch: false })
@@ -41,7 +44,7 @@ export async function createWorkbench({ modelDir, sourceRoot, stateDir, evidence
           const contract = validateModelContract(data, JSON.parse(await readFile(evidenceFile, 'utf8')))
           if (contract.length) throw new Error(contract.map(d => d.message).join('\n'))
         }
-        const after = await Promise.all((await listFiles(modelDir)).map(async path => ({ path: relative(modelDir, path).replaceAll('\\', '/'), content: await readFile(path, 'utf8') })))
+        const after = await modelSources(modelDir)
         if (sha256(JSON.stringify(after)) !== attemptedRevision) { queued = true; state = { ...state, modelStatus: 'loading' }; return }
         const elements = Object.values(data.elements).map(e => ({ id: e.id, title: e.title, kind: e.kind, description: plain(e.description), technology: e.technology, metadata: e.metadata ?? {}, tags: e.tags ?? [] }))
         const relationships = Object.values(data.relations).map(r => ({ id: r.id, source: FqnRef.flatten(r.source), target: FqnRef.flatten(r.target), kind: r.kind, title: r.title ?? '', metadata: r.metadata ?? {}, description: plain(r.description) }))
@@ -63,7 +66,7 @@ export async function createWorkbench({ modelDir, sourceRoot, stateDir, evidence
     }
   }
   await refresh()
-  const schedule = () => { clearTimeout(timer); timer = setTimeout(refresh, 250) }
+  const schedule = () => { if (!closed) { clearTimeout(timer); timer = setTimeout(refresh, 250) } }
   if (watch) {
     modelWatcher = watchFiles(modelDir, { recursive: true }, schedule)
     try {
@@ -75,7 +78,25 @@ export async function createWorkbench({ modelDir, sourceRoot, stateDir, evidence
         schedule()
       })
     } catch { state.source.watchStatus = 'unavailable' }
+    // Native notifications can be coalesced or lost. Reconcile bytes without
+    // rerunning the parser or publishing changes when the model is unchanged.
+    const reconcile = async () => {
+      if (closed || busy) return
+      let revision
+      try { revision = sha256(JSON.stringify(await modelSources(modelDir))) }
+      catch { if (!closed) await refresh(); return }
+      if (!closed && revision !== state.attemptedRevision) await refresh()
+    }
+    poll = setInterval(() => {
+      if (!reconciliation) reconciliation = reconcile().catch(error => {
+        if (!closed) {
+          state = { ...state, modelStatus: 'invalid', diagnostics: [{ message: error.message }] }
+          emitter.emit('change', state)
+        }
+      }).finally(() => { reconciliation = undefined })
+    }, 1000)
+    poll.unref?.()
   }
   return { snapshot: () => state, refresh, onChange: handler => { emitter.on('change', handler); return () => emitter.off('change', handler) },
-    close: async () => { clearTimeout(timer); modelWatcher?.close(); sourceWatcher?.close(); emitter.removeAllListeners() } }
+    close: async () => { closed = true; clearTimeout(timer); clearInterval(poll); modelWatcher?.close(); sourceWatcher?.close(); await reconciliation; emitter.removeAllListeners() } }
 }

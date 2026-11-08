@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation history separates observed platform scopes; v0.35 records Windows 320 tests (316 passed, 4 skipped), packaged-consumer validation and the local service stability changes without claiming deployment or complete project semantic synchronization.",
+      "claim": "Implementation history records the exact latest Actions failure, deterministic missed-notification RED/GREEN, and actual per-platform validation scopes without inferring the underlying macOS event cause or full-project synchronization.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "40dcdb525b4085e6c860a24b70fe84cd955d94dc4d761a9b10350c1f97b0ef45",
-      "observedAt": "2026-11-08T08:02:43.094127Z"
+      "hash": "fc4d947f4380a62f393be6b6b90b959e349163760e9e2a03f47993f02a633dc8",
+      "observedAt": "2026-11-08T15:28:50.764Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -410,6 +410,26 @@
       },
       "hash": "0d0e89467a8eb48a1ed9d26da3880b6a4b29c1528feed4e9893e465f8ee5c1ba",
       "observedAt": "2026-11-08T07:56:57.414399Z"
+    },
+    {
+      "id": "b8b7071a-58e2-4eb5-b66e-72b0dcdf5e49",
+      "kind": "source-code",
+      "claim": "Retained prototype model watching reconciles content hashes after missed native notifications, skips unchanged parsing, and cancels reconciliation when closed.",
+      "location": {
+        "path": "server/workbench.mjs"
+      },
+      "hash": "2a345086ce21f2db754fba12f0b275fcd41327f73fc91c2673ea33b96407d8cd",
+      "observedAt": "2026-11-08T15:21:44.849Z"
+    },
+    {
+      "id": "5adba891-e681-40f9-8340-255671acdb9f",
+      "kind": "source-code",
+      "claim": "Real-file prototype regressions retain the native watcher deadline and inject lost notifications to verify equal-length content edits update the parsed model and persisted valid revision.",
+      "location": {
+        "path": "tests/prototype.test.mjs"
+      },
+      "hash": "257a7c198431e2309d6e5fdba3e15fd1c21493892463a042e369ccccdeb5bece",
+      "observedAt": "2026-11-08T15:21:44.849Z"
     }
   ]
 }
