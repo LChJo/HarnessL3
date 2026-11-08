@@ -91,6 +91,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
       const endpoint = new URL(request.url ?? '/', record.url)
       const auth = bearer(request), web = browser(request)
       if (request.headers['x-harness-protocol'] && request.headers['x-harness-protocol'] !== '1') return json(response, { error: 'Incompatible protocolVersion', protocolVersion: 1 }, 409)
+      if ((request.headers['x-harness-instance'] && request.headers['x-harness-instance'] !== instanceId) || (request.headers['x-harness-data-root'] && request.headers['x-harness-data-root'] !== record.dataRootHash)) return json(response, { error: 'Incompatible service identity' }, 409)
       if (endpoint.pathname === '/health') {
         if (!auth) return json(response, { error: 'Unauthorized' }, 401)
         return json(response, { state: draining ? 'draining' : 'running', instanceId, pid: process.pid, dataRootHash: record.dataRootHash, protocolVersion: 1 })

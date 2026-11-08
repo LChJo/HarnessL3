@@ -67,6 +67,10 @@
 
 `serve start --foreground` 为显式诊断模式，服务就绪后进程长驻直到停止；`--json` 仅在 ready 时输出一个成功封套，此后日志全部 stderr，Ctrl+C 优雅停止且不输出第二个 JSON。未就绪即取消返回 CANCELLED/130；ready 后退出码反映长驻进程结束，不把已输出的 ready 回执改写成服务一直成功运行。
 
+普通命令读取服务描述后直接发送认证RPC，不设独立探活门槛。连接拒绝及服务分派前的401/403/409/503拒绝可在重读定位后有界重连；只有确认未执行业务才自动重发，requestId和请求正文不变。未变化的身份/协议拒绝明确报冲突；暂时不可用耗尽重试返回BUSY且retryable:true。状态查询和启动检查对健康请求做有界重试，PID不是端点可用的前提；serve stop直接请求停止并可跟随更新的定位，不依赖健康检查，也不强杀未知进程。
+
+连接诊断在error.details返回reason、适用时的httpStatus/systemCode及原requestId；RPC额外返回outcome:"not-executed"|"unknown"。响应丢失、损坏或requestId不符时保留unknown，CLI不自动重发；调用方先核对已有回执，再按该操作的幂等契约使用原requestId恢复，不能假设所有管理写操作都支持归档回放。取消仍保留已提交结果。错误诊断不输出本地token或浏览会话凭据。
+
 ### 返回种类
 
 `task start` / `task prompt`的`routingPrompt`提供可复用筛选与Git持久化规则并指向本封套的结构化`taskId/binding/directory/catalog`，不内嵌这些数据的副本。Git项目的规则列出应随相关源码提交的`.harness/model/`（`.c4`/`.likec4`、specification与views）、`.harness/project.json`、`.harness/evidence.json`、`.harness/aliases.json`，以及按实际归属纳入的项目文档/技能/附件/许可证；同时说明本机运行历史、归档、派生索引/缓存、机器配置与凭证排除，保留用户数据、不收录外部技能链接及遵守已有提交授权。具体字段/嵌套格式由当前帮助及Schema发现。任务目的仍随任务记录保存；既有幂等/历史回执保留当时原文，不为新规则重写。规则文本更新不改变封套Schema或技能选择语义。
@@ -87,7 +91,7 @@
 | skills list/refresh | `root`、`revision`（无有效目录为 null）、`skills:[]`、`diagnostics:[]`、`checkedAt`、`valid`；非法目录 skills 为空，不拿上次有效目录冒充当前 |
 | agent bind/unbind/status | `bindings:[{id,agent,sessionId,logFile,taskId,state,parserVersion,cursor,coverage}]`；unbind 返回停止后的记录 |
 | sync status/verify | `state`、`sourceEpoch`、`sourceVersion`、`sourceScanRevision`、`modelRevision`、`pendingPaths:[]`、`proofId`（无则 null）；verify 包含声明与自动检查各自结果 |
-| serve start/status/stop | `state:"running"\|"stopped"`、`url`、`instanceId`、`protocolVersion:1`；停止时 url/instanceId 为 null |
+| serve start/status/stop | `state:"running"\|"stopped"`、`url`、`instanceId`、`protocolVersion:1`；停止时 url/instanceId 为 null。status另可返回`draining`、`unavailable`或`conflict`，并附`diagnostic:{state,reason?,httpStatus?,systemCode?}`；表示查询完成，不把服务暂时不可达伪报为已停止 |
 | web open | `url`、`opened:boolean`；默认成功为true，--no-open为false；URL带一次性浏览会话码，首次登录有效期5分钟。同浏览器有效会话可重复打开原链接，不续期；无有效会话且码过期/已用时重新取链接，不包含CLI连接凭据 |
 | model validate | `valid:true`、`modelRevision`、`objectCount`、`relationCount`、`diagnostics:[]`；非法模型用错误封套及 details.diagnostics |
 | gc | `mode`、`candidates:[{path,kind,bytes,reason}]`、`totalBytes`、`removed:[]`，dry-run removed 为空 |

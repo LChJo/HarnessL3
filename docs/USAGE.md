@@ -137,4 +137,6 @@ harnessl3 serve stop --json
 
 服务按需启动，只监听本机回环动态端口。默认数据根由同一用户的所有项目/任务共享一份常驻服务，没有空闲退出时限；停止服务、进程退出或关机后结束。显式`--data-dir`可隔离测试或独立实例。serve status返回开始时间、scope:user-data-root及lifetime:until-stopped。
 
+普通命令和停止操作不会因单次健康检查失败被拦截。暂时连接失败会自动重连，服务已退出时自动恢复；仍不可用会返回可重试的BUSY。`serve status`可区分running、stopped、draining、unavailable和conflict，并给出具体原因。若写请求报响应丢失且`details.outcome`为`unknown`，先查看任务或原requestId的结果；需要重试时遵守对应命令的幂等约定，保留原requestId，避免重复写入。
+
 web open默认打开浏览器，--no-open只返回链接且opened:false。网页首次登录码5分钟/一次性，成功登录后的浏览会话12小时，均非后台进程的寿命；返回的service与login字段分别描述它们。同一浏览器的有效会话可重复打开原链接，不延长会话期限。没有有效会话、清除cookie、换浏览器或服务重启后，已用/过期码需要让agent重新取得链接；页面会提示重新登录。常规可视化提示不附有效期文案。无浏览器不影响CLI，打开失败时error.details提供链接。程序不终止未知端口进程，归档损坏也不能通过清理历史修复。

@@ -4,32 +4,32 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current product boundary, text authority, agent-driven entry and formal/prototype scope.",
+      "claim": "Current v0.35 product boundary includes stability-first local RPC, bounded pre-execution recovery, single-writer protection and honest unknown write outcomes.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "22bf9d21c7ab3dcae60f9c7cce9bb2c79a4a42b1c30a7db76c8d2a12c72a34c4",
-      "observedAt": "2026-11-07T15:05:50.000Z"
+      "hash": "d3e3b59189ccd52d711bb730de53eeb815f8fe4e72676efddcb35fb3cc576e67",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "CLI performs input adaptation, service discovery, RPC and output; it does not run a model.",
+      "claim": "CLI adapts input and output, sends ordinary authenticated RPC without a health gate, presents classified service status and delegates bounded connection recovery.",
       "location": {
         "path": "cli/main.ts"
       },
-      "hash": "dbd18a1c8482f3563af92fc5b1bce666f580031bda3f5cba374c8c8ada1adab8",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "72f26be216a8d98a216a882c8f9c63adb46cae0af8ca44d5f43526a28efeaf40",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Loopback HTTP service authenticates requests and delegates RPC/views/events; repeated sign-in links reuse valid sessions without rotating or extending them, while unauthenticated code reuse remains rejected.",
+      "claim": "Loopback HTTP service authenticates CLI/Web requests, rejects supplied instance/data-root/protocol mismatches before dispatch, and preserves existing browser-session reuse rules.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "9b8777506f8e9c77dc103977c94332485c33a06b5380a199e4ed5efc00707715",
-      "observedAt": "2026-11-07T13:02:35.518Z"
+      "hash": "3b233986e4f475b6e3c1e6d2c0807d78270f0bfa35cbac7ec220b937260cb115",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
@@ -214,12 +214,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000016",
       "kind": "source-code",
-      "claim": "Authenticated service identity checks and a private per-data-root lock coordinate resident daemon reuse.",
+      "claim": "Local RPC connects directly, retries only confirmed pre-execution failures with unchanged requestId, refreshes endpoints, classifies health diagnostics and recovers dead daemons under the startup lock; lost responses are not automatically resent.",
       "location": {
         "path": "service/controller.ts"
       },
-      "hash": "a0dadd41a4f47c71b08b12a0eb0072094a293ed221db7f51d84a3a9a5678f9c2",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "cabc0390be3501c6ace6cca162785d75e9359a4198a7ee51998efae462c426d1",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000017",
@@ -284,12 +284,12 @@
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Long-term project documents and task Markdown follow Git ownership while machine-local task journals and archives retain their separate boundary.",
+      "claim": "Storage separates Git authority from local archives and derived data; local connection recovery retains the single-writer lock, original request IDs and commit-based outcome recovery.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "377fc149d7ad4a35bcab1594ee7ce37f3a02e26a56c25bb46725e00bc8e9c88e",
-      "observedAt": "2026-11-07T14:25:11.750Z"
+      "hash": "81d344c5389eacdd815fca0e612cd10d7bbd4bd1f433b8ed31884d614c56f5d5",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -314,12 +314,12 @@
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "CLI help recommends UTF-8 request files in PowerShell and follows the runtime skill output card after actual context and required skill contents return; the final answer does not repeat the card.",
+      "claim": "CLI help documents classified local service states, direct RPC/stop, transient recovery and checking original requestId outcomes, while retaining UTF-8 file and output-card guidance.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "1d303808df7b70e0f3f4cdd3742997c520751ffda28b71b3fb4052b6ac8e1420",
-      "observedAt": "2026-11-07T15:30:46.328Z"
+      "hash": "7ab4539a26845f90e5a2a090a1d3eda5eed981ae813469a085ce7a58bf0dc5c5",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Main CI repair history records observed native failure annotations, separate scoped regressions and installed-consumer checks, without replacing later remote results with local passes.",
+      "claim": "Implementation history separates observed platform scopes; v0.35 records Windows 320 tests (316 passed, 4 skipped), packaged-consumer validation and the local service stability changes without claiming deployment or complete project semantic synchronization.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "3e6dc500058d3b3ff7f29fd7f91b21501558aaa8d9c471484d4723b205b06e0c",
-      "observedAt": "2026-11-08T04:50:29.131Z"
+      "hash": "40dcdb525b4085e6c860a24b70fe84cd955d94dc4d761a9b10350c1f97b0ef45",
+      "observedAt": "2026-11-08T08:02:43.094127Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -400,6 +400,16 @@
       },
       "hash": "2ddeaaf9dbe26e8999d3853049901ec1cc1670d1cfffb4f021042ec9c0d5bbcf",
       "observedAt": "2026-11-08T04:50:29.133Z"
+    },
+    {
+      "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
+      "kind": "source-code",
+      "claim": "Isolated CLI/HTTP regressions cover unavailable or slow health, PID-independent endpoint checks, classified status, endpoint/stop rotation, safe admission retries, dead-daemon recovery and a real committed task whose lost response must not cause a duplicate write.",
+      "location": {
+        "path": "tests/v1/service-stability.test.mjs"
+      },
+      "hash": "0d0e89467a8eb48a1ed9d26da3880b6a4b29c1528feed4e9893e465f8ee5c1ba",
+      "observedAt": "2026-11-08T07:56:57.414399Z"
     }
   ]
 }

@@ -8,35 +8,35 @@ specification {
 }
 model {
   app = system "HarnessL3" {
-    description "面向现有AI Agent的项目上下文CLI。此模型覆盖正式主模块、文件型知识与技能、文档留存/证据核验、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
+    description "面向现有AI Agent的项目上下文CLI。本机服务稳定连接与提交一致性优先；此模型覆盖正式主模块、文件型知识与技能、文档留存/证据核验、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
     metadata {
       harness_id "ad94bb95-82f8-4485-b9ac-e1064fcdfa36"
       brief "以LikeC4文本组织项目上下文与文件型技能，通过CLI交接并在Web追溯任务。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000001"
-      version "5"
+      version "6"
     }
     cli = component "CLI入口 · cli/" {
-      description "解析参数、发现帮助、调用或复用本机服务并输出单个结果封套；帮助明确PowerShell优先使用UTF-8请求文件，避免管道输入前丢字，并遵循运行时skill的上下文返回后进度输出卡片约定。不启动agent或执行技能。"
+      description "解析参数、发现帮助并输出单个结果封套；普通命令直接认证RPC，不依赖独立探活。连接拒绝或执行前拒绝可重读定位并有界重连，保持requestId；响应丢失保留结果未知，不盲目重发写请求。状态查询区分运行、停止、排空、不可用和冲突。保留UTF-8请求文件和上下文返回后输出卡片约定，不启动agent或执行技能。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000001"
-        brief "harnessl3命令、输入契约、后台服务发现和文本/JSON输出适配。"
+        brief "harnessl3命令与输入契约、RPC直连/有界恢复及文本/JSON输出。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016 2f63b728-1e83-4ac8-aff3-bd766333ee5e"
-        version "3"
+        version "4"
       }
     }
     service = component "本机服务 · service/" {
-      description "默认用户数据根共享一份常驻回环HTTP服务；认证CLI/Web访问，提供RPC、视图和SSE。重复网页链接复用有效浏览会话，不轮换或续期；无有效会话仍校验一次性登录码。显式数据根可隔离实例。"
+      description "默认用户数据根共享一份常驻回环HTTP服务，认证CLI/Web访问并提供RPC、视图和SSE。本机连接稳定性优先：健康检查仅用于状态/启动诊断，区分暂时不可用与身份/协议冲突；PID只作恢复线索。业务分派前核对可选实例/数据根头，保留协议1旧客户端；确认退出后在单实例锁下恢复，stop不依赖探活、不强杀未知进程。网页会话及显式数据根隔离边界保持。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000002"
-        brief "单用户常驻HTTP/RPC、浏览登录会话和按worktree隔离的事件流。"
+        brief "单用户常驻RPC与分类诊断、单实例恢复、浏览会话及worktree事件流。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000016"
-        version "2"
+        version "3"
       }
     }
     core = component "核心用例 · core/" {
@@ -216,14 +216,14 @@ model {
       }
     }
     quality = component "隔离验证 · tests/v1与web验证" {
-      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者经中文链接目录检查分发后的真实入口、task select可选任务ID帮助及安装包Schema实际文件，绝对路径核对兼容目录别名和Windows短目录名。程序回归覆盖规范化技能安装路径、链接入口执行安装器、链接目录通知和同目录多证据的局部核验。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
+      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者经中文链接目录检查真实入口及安装包Schema，兼容路径别名。程序回归覆盖技能安装、链接通知和局部核验，以及本机服务探活不可用但RPC正常、慢响应/状态分类、端点轮转、死亡恢复、实例归属和停止重连；真实临时档案验证提交后丢响应不会重复创建任务，原requestId可回放。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000010"
         brief "通过临时Git、独立数据根、程序/浏览器与安装消费者核对正式契约。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c 1adbda54-d648-4a22-a7b0-cf7f7a7ad845"
-        version "6"
+        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c 1adbda54-d648-4a22-a7b0-cf7f7a7ad845 f3392c10-b6b2-4bfb-aa3a-e7860e44c55a"
+        version "7"
       }
     }
     prototype = component "冻结原型参考 · src/server/examples" {

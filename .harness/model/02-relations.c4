@@ -2,11 +2,11 @@ model {
   app.cli -[uses]-> app.service "认证RPC与服务复用" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000001"
-      brief "CLI发现/复用后台服务，使用认证RPC调用同一核心。"
+      brief "CLI直接认证RPC调用同一核心；仅未执行失败有界重连，保持requestId和单实例。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016"
-      version "1"
+      version "2"
     }
   }
   app.web -[uses]-> app.service "Web API与事件流" {

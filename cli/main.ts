@@ -9,7 +9,7 @@ import { HarnessError, asHarnessError } from '../core/errors.js'
 import { resolveDataRoot } from '../core/environment.js'
 import { PACKAGE_VERSION } from '../core/package.js'
 import { validateContract } from '../core/contract.js'
-import { descriptor, ensureService, serviceStatus, stopService, rpc, type ServiceDescriptor } from '../service/controller.js'
+import { ensureService, serviceStatus, inspectService, stopService, executeRpc, type ServiceDescriptor } from '../service/controller.js'
 import type { Envelope } from '../core/types.js'
 
 const serviceLifetime = { scope: 'user-data-root', lifetime: 'until-stopped' } as const
@@ -84,8 +84,12 @@ export async function runCli(args: string[]): Promise<void> {
     await loadInput(request, cancellation.signal)
     if (cancellation.signal.aborted) throw new HarnessError('CANCELLED', 'CLI request cancelled before dispatch')
     let response: Envelope
-    if (request.operation === 'serve status') response = success(request, serviceResult(request.operation, await serviceStatus(dataRoot)))
-    else if (request.operation === 'serve stop') { await stopService(dataRoot); response = success(request, serviceResult(request.operation, null)) }
+    if (request.operation === 'serve status') {
+      const inspected = await inspectService(dataRoot, cancellation.signal)
+      const data = serviceResult(request.operation, inspected.record)
+      response = success(request, { ...data, result: { ...data.result, state: inspected.state, ...(inspected.diagnostic ? { diagnostic: inspected.diagnostic } : {}) } })
+    }
+    else if (request.operation === 'serve stop') { await stopService(dataRoot, cancellation.signal); response = success(request, serviceResult(request.operation, null)) }
     else if (request.operation === 'serve start' && request.flags.foreground) {
       if (await serviceStatus(dataRoot)) throw new HarnessError('SERVICE_CONFLICT', 'A service is already running; use serve status or stop it before foreground mode')
       const { startServer } = await import('../service/main.js')
@@ -93,8 +97,14 @@ export async function runCli(args: string[]): Promise<void> {
       await startServer(dataRoot, Number(flag(request, 'port') ?? 0), record => { output(success(request!, serviceResult('serve start', record)), jsonMode); alreadyPrinted = true })
       return
     } else {
-      const record = await ensureService(dataRoot, request.operation === 'serve start' ? Number(flag(request, 'port') ?? 0) : 0, cancellation.signal)
-      response = request.operation === 'serve start' ? success(request, serviceResult(request.operation, record)) : await rpc(record, request, cancellation.signal)
+      let record: ServiceDescriptor
+      if (request.operation === 'serve start') {
+        record = await ensureService(dataRoot, Number(flag(request, 'port') ?? 0), cancellation.signal)
+        response = success(request, serviceResult(request.operation, record))
+      } else {
+        const connected = await executeRpc(dataRoot, request, cancellation.signal)
+        record = connected.record; response = connected.response
+      }
       if (request.operation === 'web open' && response.ok) {
         const session = await fetch(record.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + record.token, 'x-harness-protocol': '1' } })
         if (!session.ok) throw new HarnessError('SERVICE_CONFLICT', 'Could not create a local browser session')

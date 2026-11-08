@@ -73,7 +73,7 @@ const contracts: Record<string, string> = {
 }
 const resultKinds: Record<string, string> = {
   init: 'command-result: registration and initialization stage, model counts and agent guidance. scaffold-ready is mechanical setup; semanticStatus is not-assessed. The current agent reads sources, writes the model and reports progress.',
-  'serve status': 'command-result: shared service identity, startedAt, scope:user-data-root and lifetime:until-stopped; no idle expiry. The default data root shares one service across projects.',
+  'serve status': 'command-result: state (running/stopped/draining/unavailable/conflict), diagnostic when needed, shared service identity, startedAt, scope:user-data-root and lifetime:until-stopped; no idle expiry. Ordinary RPC and stop have no separate health gate. Transient connection failures are retried; lost write responses require checking the original requestId before retrying.',
   'web open': 'command-result: url, opened, service and login metadata; --no-open returns opened:false. The single-use sign-in code lasts five minutes, the authenticated browser session lasts twelve hours, and the service runs until stopped. After context and required skill contents return, follow the runtime skill to show one progress output card before continuing; do not repeat it in the final answer.',
   'task start': 'task-entry: taskId, binding, routingPrompt, directory and catalog.',
   'task prompt': 'task-entry: refreshed routing material and binding for the pending selection.',
