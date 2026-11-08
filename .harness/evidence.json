@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "fa3fa87c02f72d12e2e2782015504d81e869e1c2f7288e25162036382e418695",
-      "observedAt": "2026-11-08T04:26:15.748Z"
+      "hash": "3e6dc500058d3b3ff7f29fd7f91b21501558aaa8d9c471484d4723b205b06e0c",
+      "observedAt": "2026-11-08T04:50:29.131Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "A fresh installed package is exercised through a Unicode directory alias; help must return the exact real Schema path. Packaged resources, runtime skills, task/archive roundtrips, login and offline assets remain checked.",
+      "claim": "A fresh installed package is exercised through a Unicode directory alias; help must provide an absolute Schema path whose real target matches the expected packaged file, including Windows short-name aliases. Packaged resources, runtime skills, task/archive roundtrips, login and offline assets remain checked.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "ed93a84da00fd23e1734fbb65d9b51603ece6e03ac8541fca9e77b0b3f68d9de",
-      "observedAt": "2026-11-08T04:26:15.750Z"
+      "hash": "2ddeaaf9dbe26e8999d3853049901ec1cc1670d1cfffb4f021042ec9c0d5bbcf",
+      "observedAt": "2026-11-08T04:50:29.133Z"
     }
   ]
 }
