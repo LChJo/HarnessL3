@@ -40,7 +40,7 @@ try {
   await page.getByRole('button', { name: `选择${children[0].title}正文`, exact: true }).click()
   await page.getByRole('button', { name: `选择${children[1].title}正文`, exact: true }).click()
   await page.getByRole('button', { name: '返回画布', exact: true }).click()
-  await page.locator('.selection-dock').getByRole('button', { name: '技能方案', exact: true }).click()
+  await page.getByRole('button', { name: '查看技能方案', exact: true }).click()
   const methods = ['quality/tdd', 'quality/diagnosing-bugs', 'quality/code-review']
   for (const id of methods) {
     await page.getByRole('searchbox', { name: '搜索全部节点' }).fill(id)
