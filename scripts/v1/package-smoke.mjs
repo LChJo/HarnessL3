@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm, copyFile, symlink, realpath } from 'node:fs/promises'
 import path from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -14,6 +14,7 @@ export async function packageSmoke() {
   const temporary = await mkdtemp(path.join(tmpdir(), 'harnessl3-package-'))
   const dataRoot = path.join(temporary, 'machine data')
   const consumer = path.join(temporary, '中文 package consumer')
+  const consumerFiles = path.join(temporary, '中文 package files')
   const project = path.join(temporary, 'isolated project')
   let installedBinary
   const cli = (args, input) => new Promise((resolve, reject) => {
@@ -34,7 +35,8 @@ export async function packageSmoke() {
     const tarball = path.join(temporary, manifest.filename)
     const bytes = await readFile(tarball)
     assert.equal('sha512-' + createHash('sha512').update(bytes).digest('base64'), manifest.integrity)
-    await mkdir(consumer); await mkdir(project)
+    await mkdir(consumerFiles); await mkdir(project)
+    await symlink(consumerFiles, consumer, process.platform === 'win32' ? 'junction' : 'dir')
     await writeFile(path.join(consumer, 'package.json'), JSON.stringify({ private: true, name: 'harnessl3-package-consumer', version: '1.0.0' }))
     await npm(['install', tarball, '--prefix', consumer, '--global=false', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: consumer })
     const shim = await npm(['exec', '--offline', '--', 'harnessl3', '--version'], { cwd: consumer })
@@ -57,7 +59,7 @@ export async function packageSmoke() {
     const selectHelp = (await execFile(process.execPath, [installedBinary, 'task', 'select', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] --file/)
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
-    assert.equal(installedSchema, path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json'))
+    assert.equal(installedSchema, await realpath(path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json')))
     assert.equal(JSON.parse(await readFile(installedSchema, 'utf8')).type, 'object')
     const webHelp = (await execFile(process.execPath, [installedBinary, 'web', 'open', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(webHelp, /--no-open/)

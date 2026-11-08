@@ -216,14 +216,14 @@ model {
       }
     }
     quality = component "隔离验证 · tests/v1与web验证" {
-      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者检查分发后的真实入口及task select可选任务ID帮助。程序回归覆盖规范化技能安装路径、链接入口执行安装器、链接目录通知和同目录多证据的局部核验。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
+      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者经中文链接目录检查分发后的真实入口、task select可选任务ID帮助及安装包Schema真实路径。程序回归覆盖规范化技能安装路径、链接入口执行安装器、链接目录通知和同目录多证据的局部核验。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000010"
         brief "通过临时Git、独立数据根、程序/浏览器与安装消费者核对正式契约。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c 1adbda54-d648-4a22-a7b0-cf7f7a7ad845"
-        version "4"
+        version "5"
       }
     }
     prototype = component "冻结原型参考 · src/server/examples" {

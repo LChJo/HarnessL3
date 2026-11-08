@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Main CI repair history records observed GitHub annotations, separate native regression and installed-consumer results, and unverified remote/macOS scope.",
+      "claim": "Main CI repair history records observed native failure annotations, separate scoped regressions and installed-consumer checks, without replacing later remote results with local passes.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "54882366a125cb9ee853611a887757e34c63e0e2254f7e442721da040afb6b84",
-      "observedAt": "2026-11-07T17:35:58.359Z"
+      "hash": "fa3fa87c02f72d12e2e2782015504d81e869e1c2f7288e25162036382e418695",
+      "observedAt": "2026-11-08T04:26:15.748Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "A fresh installed package checks optional task-select ID help, packaged schemas, runtime-skill copies, task/archive roundtrips, login links and offline Web assets.",
+      "claim": "A fresh installed package is exercised through a Unicode directory alias; help must return the exact real Schema path. Packaged resources, runtime skills, task/archive roundtrips, login and offline assets remain checked.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "0cf935a3e11514eb4475ada26b2aec3e4f28c744b081565d63fbf7ba0651372b",
-      "observedAt": "2026-11-07T17:35:58.359Z"
+      "hash": "ed93a84da00fd23e1734fbb65d9b51603ece6e03ac8541fca9e77b0b3f68d9de",
+      "observedAt": "2026-11-08T04:26:15.750Z"
     }
   ]
 }
