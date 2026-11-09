@@ -5,6 +5,17 @@ import { createHash } from 'node:crypto'
 import { chromium } from 'playwright'
 
 if (!process.argv[2]) throw new Error('Usage: node web/verify-directory.mjs <isolated-browser-fixture.json>')
+// Windows can briefly reject directory rename/removal while a watcher or an
+// external scanner holds a newly written handle; retry only those errno values.
+const retrying = async operation => {
+  for (let attempt = 1; ; attempt++) {
+    try { return await operation() }
+    catch (error) {
+      if (attempt >= 20 || !['EPERM', 'EACCES', 'EBUSY'].includes(error.code)) throw error
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+  }
+}
 const fixture = JSON.parse(await readFile(process.argv[2], 'utf8'))
 assert.ok(path.basename(fixture.directory).startsWith('harnessl3-browser-'))
 const dataRoot = await realpath(fixture.dataRoot)
@@ -21,7 +32,9 @@ try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
   const page = await context.newPage()
   page.on('pageerror', error => errors.push(error.message))
-  await page.goto(service.url + '/#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId }))
+  // Keep the page in live browsing mode. A restored task would freeze the
+  // skill catalog and stop the polling this directory lifecycle relies on.
+  await page.goto(service.url + '/?' + new URLSearchParams({ overview: '1' }) + '#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId }))
   await page.waitForFunction(() => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-route-worktree') && !document.querySelector('.view-loading'))
   const rpc = operation => page.evaluate(async args => {
     const response = await fetch('/rpc', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Harness-Web': '1' }, body: JSON.stringify({ operation: args.operation, positionals: [], flags: { worktree: args.worktree }, requestId: crypto.randomUUID() }) }).then(response => response.json())
@@ -58,10 +71,10 @@ try {
   await page.waitForFunction(id => document.querySelector(`[data-directory-row="${id}"]`)?.textContent?.includes('First actual'), originalGroup + '/' + method)
   await writeFile(path.join(folder(originalGroup), method, 'SKILL.md'), validSkill('Updated description comes from the edited bytes.'))
   await page.waitForFunction(id => document.querySelector(`[data-directory-row="${id}"]`)?.textContent?.includes('Updated description'), originalGroup + '/' + method)
-  await rename(folder(originalGroup), folder(renamedGroup))
+  await retrying(() => rename(folder(originalGroup), folder(renamedGroup)))
   await waitFolder(originalGroup, false); await waitFolder(renamedGroup)
   assert.equal((await lstat(folder(renamedGroup))).isSymbolicLink(), false)
-  await rm(folder(renamedGroup), { recursive: true })
+  await retrying(() => rm(folder(renamedGroup), { recursive: true }))
   await waitFolder(renamedGroup, false)
 
   await mkdir(path.join(folder(originalGroup), method), { recursive: true })
@@ -88,7 +101,7 @@ try {
   await archived.locator('[data-skill-selector]').click()
   assert.equal(await archived.locator('[data-skill-folder="quality"]').count(), 1)
   await writeFile(path.join(quality, 'tdd', 'SKILL.md'), Buffer.concat([qualityBytes, Buffer.from('\nUI_DIRECTORY_MUTATION_MARKER\n')]))
-  await rename(quality, qualityTarget); qualityMoved = true
+  await retrying(() => rename(quality, qualityTarget)); qualityMoved = true
   await waitFolder('quality', false); await waitFolder(renamedQuality)
   assert.equal(await archived.locator('[data-skill-folder="quality"]').count(), 1)
   assert.equal(await archived.locator(`[data-skill-folder="${renamedQuality}"]`).count(), 0)
@@ -114,7 +127,7 @@ try {
   const oldText = archived.getByRole('textbox', { name: '技能归档文件原文', exact: true })
   await oldText.waitFor()
   assert.equal(await oldText.inputValue(), qualityBytes.toString('utf8').replace(/\r\n?/g, '\n'), 'textarea displays the original archive text with HTML newline normalization')
-  await rename(qualityTarget, quality); qualityMoved = false
+  await retrying(() => rename(qualityTarget, quality)); qualityMoved = false
   await writeFile(path.join(quality, 'tdd', 'SKILL.md'), qualityBytes)
   await waitFolder('quality'); await waitFolder(renamedQuality, false)
   const after = await rpc('sync status')
@@ -122,7 +135,7 @@ try {
   assert.deepEqual(after.sourceVersion, before.sourceVersion)
   assert.equal(after.sourceScanRevision, before.sourceScanRevision)
   assert.ok(inside(library, await realpath(folder(originalGroup))))
-  await rm(folder(originalGroup), { recursive: true })
+  await retrying(() => rm(folder(originalGroup), { recursive: true }))
   await waitFolder(originalGroup, false)
   const final = await refresh()
   assert.equal(final.revision, initial.revision, 'fixture skill bytes and directory restored exactly')
@@ -132,7 +145,7 @@ try {
   // Only known fixture paths are restored/deleted; never touch repo skills.
   if (library && qualityBytes) {
     const quality = path.join(library, 'quality'), moved = path.join(library, renamedQuality)
-    if (qualityMoved) { assert.ok(inside(library, await realpath(moved))); await rename(moved, quality) }
+    if (qualityMoved) { assert.ok(inside(library, await realpath(moved))); await retrying(() => rename(moved, quality)) }
     assert.ok(inside(library, await realpath(quality)))
     await writeFile(path.join(quality, 'tdd', 'SKILL.md'), qualityBytes)
   }

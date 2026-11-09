@@ -110,7 +110,9 @@ try {
   let delayed = false
   const delayedView = async route => {
     const url = new URL(route.request().url())
-    if (!delayed && url.searchParams.get('worktree') === fixture.target.worktreeId && !url.searchParams.has('task')) {
+    // A worktree switch restores its last task, so the first target view may
+    // carry a task and batch instead of being a plain overview request.
+    if (!delayed && url.searchParams.get('worktree') === fixture.target.worktreeId) {
       delayed = true
       try { const response = await route.fetch(); await new Promise(resolve => setTimeout(resolve, 350)); await route.fulfill({ response }) } catch { /* aborted by an explicit target switch */ }
     } else await route.continue()
