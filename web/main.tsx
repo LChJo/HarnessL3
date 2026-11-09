@@ -32,7 +32,7 @@ function App() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]), [worktrees, setWorktrees] = useState<WorktreeRecord[]>([]), [project, setProject] = useState('')
   const [route, setRoute] = useState<Route | null>(null), [data, setData] = useState<ViewData | null>(null), [taskList, setTaskList] = useState<TaskSummary[]>([])
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState(''), [viewError, setViewError] = useState(''), [connected, setConnected] = useState(false), [offline, setOffline] = useState(!navigator.onLine), [updates, setUpdates] = useState(false)
-  const loginError = [error, viewError].find(value => value.startsWith('AUTH_REQUIRED:'))
+  const loginError = [error, viewError].find(value => /^(AUTH_REQUIRED|SIGN_IN_RETRY):/.test(value))
   const [expanded, setExpanded] = useState<string[]>([]), [hubOpen, setHubOpen] = useState(false), [folders, setFolders] = useState(new Set<string>()), [skillsOpen, setSkillsOpen] = useState(new Set<string>())
   const [reads, setReads] = useState<string[]>([]), [expands, setExpands] = useState<string[]>([]), [skillChoices, setSkillChoices] = useState(new Map<string, string>()), [refreshing, setRefreshing] = useState(false), [liveCatalog, setLiveCatalog] = useState<Catalog | null>(null)
   const [detail, setDetail] = useState<Detail | null>(null), [copied, setCopied] = useState(false), [fresh, setFresh] = useState<string[]>([]), [freshBatch, setFreshBatch] = useState(''), [retry, setRetry] = useState<Command | null>(null)
@@ -125,6 +125,11 @@ function App() {
     return flight.promise
   }, [batchOptions.task, chooseRoute])
 
+  useEffect(() => {
+    const signInLink = () => { if (new URLSearchParams(location.hash.slice(1)).has('code')) location.reload() }
+    window.addEventListener('hashchange', signInLink)
+    return () => window.removeEventListener('hashchange', signInLink)
+  }, [])
   useEffect(() => {
     let live = true
     void (async () => {
@@ -309,7 +314,7 @@ function App() {
       {data && !historical && data.modelState.state !== 'valid' && <div className="model-warning" data-no-pan>当前模型{data.modelState.state === 'invalid' ? '无效' : '未知'}。{data.model ? ' · 最近有效版本' : ''}</div>}
       {!route && !loading && <div className="empty-workspace" data-no-pan><strong>{error ? '无法读取本机工作区' : '还没有登记的项目'}</strong><button onClick={() => location.reload()}>重新连接</button></div>}
     </main>
-    {loginError && <div className="empty-workspace session-required" role="alert" data-testid="session-required"><strong>需要重新登录</strong><p>{loginError.replace(/^AUTH_REQUIRED:\s*/, '')}</p><button onClick={() => location.reload()}>重新检查登录</button></div>}
+    {loginError && <div className="empty-workspace session-required" role="alert" data-testid="session-required"><strong>{loginError.startsWith('SIGN_IN_RETRY:') ? '登录未完成' : '需要重新登录'}</strong><p>{loginError.replace(/^(AUTH_REQUIRED|SIGN_IN_RETRY):\s*/, '')}</p><button onClick={() => location.reload()}>重试登录</button></div>}
     {directory && !loginError && <DirectoryPage target={directory} root={directory.kind === 'context' ? byId.get(directory.id) : undefined} catalog={availableSkills} plan={plan} loading={!data && loading} notice={viewError || (directory.kind === 'skills' ? libraryStatus.error : '') || (offline ? '已离线' : !data ? error : '') || undefined} onRefresh={directory.kind === 'skills' && !plan && canRefresh ? () => void refreshSkills() : undefined} refreshing={refreshing} onBack={closeDirectory} onInspectNode={id => setDetail({ kind: 'node', id })} onInspectSkill={id => setDetail({ kind: 'skills', id })} onToggle={toggle} reads={reads} expands={expands} disabled={readonly || busy || !task} nodeLabel={label}/>}
     </div>
     {detail && !loginError && <div className="detail-shade" onClick={event => { if (event.target === event.currentTarget) setDetail(null) }}><aside ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="detail-title" className={`detail-panel ${['packet', 'skills'].includes(detail.kind) ? 'packet-panel' : detail.kind === 'history' ? 'history-panel' : detail.kind === 'structure' ? 'structure-panel' : ''}`}><div className="detail-heading"><span>{detail.kind === 'history' ? '最近60天' : historical ? '历史' : ''}</span><button aria-label="关闭详情" onClick={() => setDetail(null)}><Icon name="close"/></button></div><h2 id="detail-title">{detailTitle}</h2>

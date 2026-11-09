@@ -46,7 +46,7 @@ try {
   await ready(page)
   const cookieAfter = (await context.cookies(fixture.origin)).find(cookie => cookie.name === 'harnessl3_session')
   assert.deepEqual(cookieAfter, cookieBefore, 'Reopening must reuse the same cookie and expiry')
-  assert.deepEqual(logins, [200, 200])
+  assert.deepEqual(logins, [200, 200, 200, 200], 'each code exchange must also confirm the browser session')
   await page.reload()
   await ready(page)
   const anonymous = await browser.newContext({ viewport: { width: 900, height: 700 } })

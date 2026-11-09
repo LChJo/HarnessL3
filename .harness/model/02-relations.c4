@@ -12,11 +12,11 @@ model {
   app.web -[uses]-> app.service "Web API与事件流" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000002"
-      brief "Web以同源认证访问RPC、view及worktree事件流。"
+      brief "Web确认同源浏览会话后访问RPC、view及worktree事件流，登录中断保留凭证供显式重试。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000010"
-      version "1"
+      version "2"
     }
   }
   app.service -[uses]-> app.core.runtime "分派公共用例" {
@@ -262,11 +262,11 @@ model {
   app.quality -[verifies]-> app.web "结构与交互验证" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000001b"
-      brief "正式Web浏览门禁检查五类、技能文件夹层、结构和真实记录投影。"
+      brief "正式Web浏览门禁检查登录恢复、五类、技能文件夹层、结构和真实记录投影。"
       source "fact"
       status "verified"
-      evidence "d6250000-0000-4000-8000-000000000017"
-      version "1"
+      evidence "d6250000-0000-4000-8000-000000000017 da230000-0000-4000-8000-000000000003"
+      version "2"
     }
   }
   app.core.model -[uses]-> app.core.references "文档Git归属诊断" {

@@ -2,6 +2,12 @@
 
 The approved Slate canvas is preserved here. `src/` remains the frozen prototype reference.
 
+## Sign-in recovery
+
+The entry keeps its one-time code until sign-in succeeds and a second same-origin request confirms the browser session, or authentication is explicitly rejected with HTTP 401. Interrupted requests and malformed or temporary responses show a retry action without losing the link or target. Rejected credentials are removed while preserving the target. A lost confirmation response can reuse the cookie already issued; a missing cookie is reported separately. A fresh code arriving through a same-document fragment navigation reloads authentication instead of leaving the old error visible. Cleaned URLs only verify their existing session. The server distinguishes missing sessions, expired codes and invalid/used codes without extending the five-minute code or twelve-hour session lifetime. Codes are not written to storage or logs, and no business mutation is retried by sign-in.
+
+`node --test tests/v1/web-auth.test.mjs tests/v1/web-session-service.test.mjs` covers the client failure paths and real isolated HTTP authentication, including simulated expiry. `node scripts/v1/web-login-recovery-smoke.mjs` checks interrupted first/confirmation requests, missing cookies, retry/fresh-link recovery, unchanged cookie expiry and unchanged task records in an isolated browser fixture. Reports and screenshots are written to `.harness-local/validation/web-login-recovery/`; actual platform results are recorded in the [implementation status](../docs/implementation/STATUS.md).
+
 ## v0.30 task presentation
 
 Web displays existing CLI-created tasks. Input cards, history controls and the blank workspace have no task creation controls; headings, selectors and history rows omit the closed label. The stored lifecycle and read-only rules remain intact. The manual browser gate now creates its isolated tasks through the CLI, then exercises the same explicit Web selection, retry and empty-selection flows.

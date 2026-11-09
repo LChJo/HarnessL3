@@ -7,7 +7,11 @@ export class ApiError extends Error {
   constructor(code: string, message: string, details: Record<string, unknown> = {}) { super(`${code}: ${message}`); this.code = code; this.details = details }
 }
 async function json(response: Response): Promise<unknown> {
-  if (response.status === 401) throw new ApiError('AUTH_REQUIRED', '访问凭证已失效，请让当前 agent 重新生成访问链接。')
+  if (response.status === 401) {
+    const value = await response.json().catch(() => null)
+    const error = value && typeof value.error === 'object' ? value.error : null
+    throw new ApiError('AUTH_REQUIRED', typeof error?.message === 'string' ? error.message : '当前浏览器尚未登录或会话已失效，请让当前 agent 重新生成访问链接。', error?.details && typeof error.details === 'object' ? error.details : {})
+  }
   let value: unknown
   try { value = await response.json() } catch { throw new ApiError('CONNECTION_ERROR', `本机服务返回无效数据（HTTP ${response.status}）`) }
   if (!response.ok) {
@@ -17,14 +21,35 @@ async function json(response: Response): Promise<unknown> {
   }
   return value
 }
+async function authenticate(code?: string): Promise<void> {
+  try {
+    const result = await json(await fetch('/session', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Harness-Web': '1' }, body: JSON.stringify(code ? { code } : {}) })) as { authenticated?: boolean } | null
+    if (result?.authenticated !== true) throw new Error('Invalid sign-in response')
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'AUTH_REQUIRED') throw error
+    throw new ApiError('SIGN_IN_RETRY', '暂时无法完成登录，请重试。')
+  }
+}
 export async function session(): Promise<{ worktree?: string; task?: string; batch?: string }> {
   const url = new URL(location.href)
   const hash = new URLSearchParams(url.hash.slice(1))
   const code = hash.get('code')
   for (const name of ['worktree', 'task', 'batch']) if (hash.get(name)) url.searchParams.set(name, hash.get(name)!)
-  url.hash = ''
-  history.replaceState(null, '', url.pathname + url.search)
-  if (code) await json(await fetch('/session', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Harness-Web': '1' }, body: JSON.stringify({ code }) }))
+  const clearCode = () => { url.hash = ''; history.replaceState(null, '', url.pathname + url.search) }
+  try {
+    await authenticate(code ?? undefined)
+    if (code) {
+      try { await authenticate() }
+      catch (error) {
+        if (error instanceof ApiError && error.code === 'AUTH_REQUIRED') throw new ApiError('AUTH_REQUIRED', '登录会话未能保存，请允许此站点使用 Cookie，再让当前 agent 重新生成访问链接。', { reason: 'cookie-not-retained' })
+        throw error
+      }
+    }
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'AUTH_REQUIRED') clearCode()
+    throw error
+  }
+  clearCode()
   return Object.fromEntries(['worktree', 'task', 'batch'].filter(name => url.searchParams.has(name)).map(name => [name, url.searchParams.get(name)!]))
 }
 export const rpc: Rpc = async (operation, options = {}) => {

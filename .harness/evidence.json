@@ -24,12 +24,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Loopback service preflights data-root isolation, publishes the control endpoint before background archive recovery, reports scoped recovery progress and retains authenticated admission, drain and browser boundaries.",
+      "claim": "Loopback service preserves authenticated admission and recovery boundaries; browser login reports missing sessions, expired codes and invalid/used codes, and checking a valid session does not rotate or extend it.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "daba309136a5133c8c2deb2d5666febc463399384ec6d1d887dc062b2dda4fe8",
-      "observedAt": "2026-11-09T05:37:20.125Z"
+      "hash": "1b34bfbcb53e8dc7605f61bf9d718fb4385e07c82eb14576fb48b9ce25ebfeed",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
@@ -144,22 +144,22 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Formal Web preserves target and archive boundaries, projects hit paths with unmatched overflows and opens a scoped standalone directory without recording reads.",
+      "claim": "Formal Web preserves task targets and archived projections; interrupted sign-in has an explicit retry state, and fresh login fragments arriving in the same document reload authentication.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "bd3627988388b40d3b584086e42425cc10c9fcd4dadffd68bf0a2555cc62bb6f",
-      "observedAt": "2026-11-07T13:25:06.078Z"
+      "hash": "52c56b6ef776419d96ecd742c839af1b94bb46ba53097af5a0de019664044bf7",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
       "kind": "source-code",
-      "claim": "Web uses same-origin authenticated RPC and target-specific views, preserves link targets and classifies HTTP 401 as authentication recovery.",
+      "claim": "Web confirms browser cookies before clearing successful sign-in credentials, retains the original URL on transient failures, clears explicitly rejected credentials with targets preserved, and keeps actual HTTP 401 reasons.",
       "location": {
         "path": "web/api.ts"
       },
-      "hash": "810ba1c71ed453129e142b68f839ac5d45acac5ae84b3d1218d5ce03f21fd2d4",
-      "observedAt": "2026-11-07T13:02:35.522Z"
+      "hash": "f324f9d3afcb3c8e21cd2f5be6381fca603d2916e3b7686bc4d7011925e3d23e",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000011",
@@ -224,12 +224,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000017",
       "kind": "document",
-      "claim": "Formal isolated Web gates cover hit-only projections, large paginated directories, archived structure and existing browser workflows.",
+      "claim": "Formal Web documentation describes sign-in recovery, precise credential cleanup, isolated program/browser regression commands and existing projection gates without claiming unrun platforms.",
       "location": {
         "path": "web/README.md"
       },
-      "hash": "7897a34aa9c3cc853016ede826ce2a36f8d9fb3226c80a7c256d934c6f1201a6",
-      "observedAt": "2026-11-07T13:25:06.081Z"
+      "hash": "e2593045e5de9797da1b792a503f050a23e12d12a468e9d80fd636415fd1b3b1",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Current v0.36 status records implemented startup/history/install changes, actual Windows program/browser/installed-consumer results and separately scoped synthetic performance evidence; native cross-platform CI, real global update and unrelated pending remain unclaimed.",
+      "claim": "Current v0.36 status records scoped startup/history/install work plus the Web sign-in recovery repair, actual Windows program and two browser gate results, unchanged authentication lifetimes and the unmodified global installation; other platforms remain unclaimed.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "38e0672dcff08e6ec58c7e9f6647c29846c8e0648ab045bf35fc718d8efbb1fd",
-      "observedAt": "2026-11-09T05:37:20.139Z"
+      "hash": "0442d17b052fca884ed807926b535ab637f906d145bcaf4e9ec13a3cf9b9045a",
+      "observedAt": "2026-11-09T06:41:14.362Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC17/22/23/26 define independent complete-history timings, blocked-recovery control availability, honest startup/stop state and installed-build/handoff verification scopes.",
+      "claim": "TC17/22/23/26 retain recovery, installation and archive boundaries; TC23 additionally checks interrupted authentication and confirmation, cookie failures, fresh-fragment recovery, unchanged cookie expiry and task records.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "7179e0da60be03c33e4de0ca0503f2ff6e51589a6ee179d97036dd064b529635",
-      "observedAt": "2026-11-09T05:37:20.154Z"
+      "hash": "4c5095f99394801a220f048896f1da04bbb0e969060ffac76cbe240fbf30d9c6",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -610,6 +610,46 @@
       },
       "hash": "286605187aac6ffdd229235a20ec135fc1a9832c17cee34610d79653861a468e",
       "observedAt": "2026-11-09T05:37:20.162Z"
+    },
+    {
+      "id": "da230000-0000-4000-8000-000000000001",
+      "kind": "source-code",
+      "claim": "Client regressions check interrupted and malformed sign-in, delayed cookie confirmation, rejected credentials, missing cookies, cleaned URLs, exact targets and legacy HTTP 401 responses.",
+      "location": {
+        "path": "tests/v1/web-auth.test.mjs"
+      },
+      "hash": "f40c17b1ae5e8152bb00b910fe1f23e935e07b5157ff541c6d10734adac113f0",
+      "observedAt": "2026-11-09T06:07:05.388Z"
+    },
+    {
+      "id": "da230000-0000-4000-8000-000000000002",
+      "kind": "source-code",
+      "claim": "An isolated real HTTP service distinguishes missing, invalid/used and expired login codes with a test clock, while valid cookies, fixed expiry and origin rejection remain enforced.",
+      "location": {
+        "path": "tests/v1/web-session-service.test.mjs"
+      },
+      "hash": "9bf9df6ed438320fb9e026a5c37ae14efe8078f791ba4ddb2788ead1992ae5e4",
+      "observedAt": "2026-11-09T06:07:05.388Z"
+    },
+    {
+      "id": "da230000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "The browser regression injects interrupted first and confirmation requests plus missing cookies, exercises button and same-document fresh-link recovery, and checks credential cleanup, exact target, unchanged session expiry and task archive.",
+      "location": {
+        "path": "scripts/v1/web-login-recovery-smoke.mjs"
+      },
+      "hash": "025043ac83426128d424b43f85ef7f251f0dc14f1590dac981413865b1fa72b2",
+      "observedAt": "2026-11-09T06:07:05.388Z"
+    },
+    {
+      "id": "da230000-0000-4000-8000-000000000004",
+      "kind": "document",
+      "claim": "Web authentication recovery preserves retry credentials only on transient failures, confirms browser sessions, handles fresh fragments and keeps precise rejection and target boundaries.",
+      "location": {
+        "path": "docs/spec/web.md"
+      },
+      "hash": "75701b35ed00760f3f0dd2808ee598b17ad8e9ca8f323a4bfec16714c08801d9",
+      "observedAt": "2026-11-09T06:07:05.388Z"
     }
   ]
 }

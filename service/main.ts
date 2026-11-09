@@ -116,7 +116,11 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
           if (typeof value?.code === 'string') browserCodes.delete(value.code)
           return json(response, { authenticated: true })
         }
-        if (!value || typeof value.code !== 'string' || (browserCodes.get(value.code) ?? 0) < Date.now()) return json(response, { error: { code: 'AUTH_REQUIRED', message: '访问凭证已失效，请让当前 agent 重新生成访问链接。' } }, 401)
+        const rejected = (reason: string, message: string) => json(response, { error: { code: 'AUTH_REQUIRED', message, details: { reason } } }, 401)
+        if (!value || typeof value.code !== 'string' || !value.code) return rejected('session-missing', '当前浏览器尚未登录或会话已失效，请让当前 agent 重新生成访问链接。')
+        const expires = browserCodes.get(value.code)
+        if (expires === undefined) return rejected('code-invalid-or-used', '登录链接无效或已使用，请让当前 agent 重新生成访问链接。')
+        if (expires < Date.now()) return rejected('code-expired', '登录链接已超过有效期，请让当前 agent 重新生成访问链接。')
         browserCodes.delete(value.code)
         const cookie = randomBytes(32).toString('hex'); sessions.set(cookie, Date.now() + browserSessionTtlMs)
         response.setHeader('set-cookie', `harnessl3_session=${cookie}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${browserSessionTtlMs / 1000}`)
