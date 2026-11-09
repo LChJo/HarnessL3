@@ -83,3 +83,19 @@ scripts/v1/web-login-recovery-smoke.mjs text eol=lf
 scripts/v1/web-hit-session-smoke.mjs text eol=lf
 tests/v1/web-auth.test.mjs text eol=lf
 tests/v1/web-session-service.test.mjs text eol=lf
+
+core/catalog.ts text eol=lf
+
+core/index-worker.ts text eol=lf
+
+scripts/v1/observe-benchmark.mjs text eol=lf
+
+scripts/v1/web-observation-smoke.mjs text eol=lf
+
+tests/v1/catalog-observer.test.mjs text eol=lf
+
+tests/v1/source-observation-probe.mjs text eol=lf
+
+tests/v1/source-observation.test.mjs text eol=lf
+
+tests/v1/web-service.test.mjs text eol=lf

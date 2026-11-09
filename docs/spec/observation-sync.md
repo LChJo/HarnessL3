@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.41：日常watcher变化按worktree立即推进代次、保持pending并合并变化路径，后台只读取这些叶条目，目录/策略/身份/事件缺口转为完整reconciliation。sourceObservation仅记录本次增量观测的路径、字节指纹、时间、代次及缺口；sourceVersion/lastCompleteSource保留上次完整检查的值，scanPending不因增量成功清除，不能用增量观测声明当前来源完整或恢复旧proof。后台完整补偿有界调度，观测覆盖正常时空闲tick不重复全扫；watcher不可用/失败保留诊断并退回完整补偿，补偿周期使用单调时钟；sync status、任务绑定及sync verify仍进行既有两遍字节/前后Git状态/提交前核对。同目标并发status可共享一次在途采集，后续新调用重新核对；verify的独立复核保留。显式引用在排除前处理，字节回退、链接边界和中途新变动保持原约束。
+
 - 状态：正式CLI实现契约，实际双适配器样本、合成负例和同步/平台范围见[实施状态](../implementation/STATUS.md)；v0.16有限演示不代替正式证据。
 - 规格版本：1；核对日期：2026-11-06。
 - 约束：D01–D09、D11–D13；验收：A02、A03、A05–A09。

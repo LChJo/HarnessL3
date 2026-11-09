@@ -17,7 +17,7 @@ import { errorMessage, pretty, time, type Binding, type C4View, type HistoryResu
 import './styles.css'
 import './formal.css'
 
-interface Route { worktree: string; task?: string; batch?: string; frozen: boolean }
+interface Route { worktree: string; task?: string; batch?: string; frozen: boolean; browse?: boolean; listed?: boolean }
 type Detail = { kind: 'node'; id: string } | { kind: 'skills'; id?: string; file?: string } | { kind: 'history' | 'records' | 'packet' | 'workspace' | 'structure' }
 interface Command { operation: string; options: Parameters<Rpc>[1] }
 interface Catalog { root: string | null; revision: string | null; skills: SkillBrief[]; valid: boolean; diagnostics: { message: string }[]; checkedAt: string | null }
@@ -27,6 +27,7 @@ function initialBounds(roots: MapItem[]) { const context = layoutMindmap(roots, 
 function batchFields(batch: TaskBatch) { const raw = batch.request as { context?: { expand?: string[]; read?: string[] }; expand?: string[]; read?: string[] }; return raw?.context ?? raw ?? {} }
 function recordState(value: unknown): string { if (!value || typeof value !== 'object') return 'unknown'; const record = value as { state?: unknown }; return typeof record.state === 'string' ? record.state : 'unknown' }
 function dataResult<T>(value: { result: T }): T { return value.result }
+function rememberWorktree(project: string, worktree: string) { try { sessionStorage.setItem('harnessl3:worktree:' + project, worktree) } catch { /* Optional local view state. */ } }
 
 function App() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]), [worktrees, setWorktrees] = useState<WorktreeRecord[]>([]), [project, setProject] = useState('')
@@ -41,7 +42,9 @@ function App() {
   const [batchOptions, setBatchOptions] = useState<{ task: string; batches: { id: string; createdAt?: string }[] }>({ task: '', batches: [] })
   const viewport = useRef<HTMLDivElement>(null), dialog = useRef<HTMLElement>(null), restoreFocus = useRef<HTMLElement | null>(null)
   const routeRef = useRef<Route | null>(null), generation = useRef(0), loadCounter = useRef(0), abort = useRef<AbortController | null>(null), lastSeq = useRef(new Map<string, number>()), latestBatch = useRef({ task: '', batch: '' }), tasksRef = useRef<TaskSummary[]>([])
-  const pendingView = useRef<{ token: number; dirty: boolean; promise: Promise<void> } | null>(null)
+  const pendingView = useRef<{ token: number; wantedSeq: number; dirty: boolean; promise: Promise<void> } | null>(null)
+  const pendingTasks = useRef<{ token: number; worktree: string; wantedSeq: number; promise: Promise<TaskSummary[]> } | null>(null)
+  const taskListSeq = useRef(new Map<string, number>())
   const anchor = useRef<{ id: string; x: number; y: number } | null>(null), skillAnchor = useRef<{ id: string; x: number; y: number } | null>(null)
   const task = data?.task ?? null, legacy = data?.legacy ?? null, historical = !!route?.frozen || !!legacy, unavailable = !!task?.closedAt || !!task && Date.now() > Date.parse(task.expiresAt)
   const displayedId = task?.id ?? legacy?.taskId, displayedTitle = task?.title ?? legacy?.record.title, displayedBatches = task?.batches.length ?? legacy?.record.batches?.length ?? 0
@@ -66,30 +69,46 @@ function App() {
     setDirectory(null)
     if (routeRef.current?.worktree !== next.worktree) { tasksRef.current = []; setTaskList([]); setBatchOptions({ task: '', batches: [] }); latestBatch.current = { task: '', batch: '' } }
     ++generation.current; ++loadCounter.current; abort.current?.abort(); routeRef.current = next
+    if (next.task) { try { sessionStorage.setItem('harnessl3:view:' + next.worktree, JSON.stringify({ task: next.task, batch: next.batch, frozen: next.frozen })) } catch { /* Browsing works without session storage. */ } }
     setData(null); setLoading(true); setLiveCatalog(null); setRoute(next); setExpanded([]); setHubOpen(false); setFolders(new Set()); setSkillsOpen(new Set()); setReads([]); setExpands([]); setSkillChoices(new Map()); setDetail(null); setFresh([]); setUpdates(false); setError(''); setViewError(''); setRetry(null); setBusy(false); setRefreshing(false)
     const url = new URL(location.href); url.hash = ''; url.searchParams.set('worktree', next.worktree); url.searchParams.delete('directory')
+    if (!next.task && !next.browse) url.searchParams.set('overview', '1'); else url.searchParams.delete('overview')
     for (const name of ['task', 'batch']) { const value = next[name as 'task' | 'batch']; if (value) url.searchParams.set(name, value); else url.searchParams.delete(name) }
     if (next.frozen) url.searchParams.set('history', '1'); else url.searchParams.delete('history')
     history.replaceState(null, '', url.pathname + url.search)
   }, [])
-  const loadTasks = useCallback(async (worktree: string, chooseNew = false) => {
+  const loadTasks = useCallback((worktree: string, chooseNew = false, eventSeq = 0): Promise<TaskSummary[]> => {
     const token = generation.current
-    const result = dataResult(await rpc<{ result: HistoryResult }>('task list', { worktree, flags: { limit: '50' } }))
-    if (token !== generation.current || routeRef.current?.worktree !== worktree) return
-    const before = new Set(tasksRef.current.map(item => item.id))
-    tasksRef.current = result.items; setTaskList(result.items)
-    const active = routeRef.current
-    if (chooseNew && active && !active.task && !active.frozen && result.items[0] && !before.has(result.items[0].id)) chooseRoute({ worktree, task: result.items[0].id, frozen: false })
+    const pending = pendingTasks.current
+    if (pending?.token === token && pending.worktree === worktree) { pending.wantedSeq = Math.max(pending.wantedSeq, eventSeq); return pending.promise }
+    const flight = { token, worktree, wantedSeq: eventSeq, promise: Promise.resolve([] as TaskSummary[]) }
+    pendingTasks.current = flight
+    flight.promise = (async () => {
+      let result: HistoryResult
+      do {
+        const requestedSeq = flight.wantedSeq
+        result = dataResult(await rpc<{ result: HistoryResult }>('task list', { worktree, flags: { limit: '50' } }))
+        if (token !== generation.current || routeRef.current?.worktree !== worktree) return []
+        if (flight.wantedSeq <= (result.seq ?? requestedSeq)) break
+      } while (true)
+      const before = new Set(tasksRef.current.map(item => item.id))
+      if (result.seq !== undefined) taskListSeq.current.set(worktree, result.seq)
+      tasksRef.current = result.items; setTaskList(result.items)
+      const active = routeRef.current
+      if (chooseNew && active && !active.task && !active.frozen && result.items[0] && !before.has(result.items[0].id)) chooseRoute({ worktree, task: result.items[0].id, frozen: false })
+      return result.items
+    })().finally(() => { if (pendingTasks.current === flight) pendingTasks.current = null })
+    return flight.promise
   }, [chooseRoute])
-  const loadView = useCallback((target = routeRef.current): Promise<void> => {
+  const loadView = useCallback((target = routeRef.current, eventSeq?: number): Promise<void> => {
     if (!target) return Promise.resolve()
     const token = generation.current
     const pending = pendingView.current
-    if (pending?.token === token) { pending.dirty = true; return pending.promise }
+    if (pending?.token === token) { if (eventSeq === undefined) pending.dirty = true; else pending.wantedSeq = Math.max(pending.wantedSeq, eventSeq); return pending.promise }
     const sequence = ++loadCounter.current
     abort.current?.abort(); const controller = new AbortController(); abort.current = controller
     setLoading(true)
-    const flight = { token, dirty: false, promise: Promise.resolve() }
+    const flight = { token, wantedSeq: eventSeq ?? 0, dirty: false, promise: Promise.resolve() }
     pendingView.current = flight
     flight.promise = (async () => {
       do {
@@ -98,7 +117,9 @@ function App() {
           const result = await view(target.worktree, target.task, target.batch, controller.signal)
           if (token !== generation.current || sequence !== loadCounter.current || result.target.worktreeId !== target.worktree) return
           if (result.legacy && !target.frozen) { chooseRoute({ ...target, frozen: true }); return }
-          setData(result); setViewError(''); lastSeq.current.set(target.worktree, Math.max(lastSeq.current.get(target.worktree) ?? 0, result.seq))
+          setData(result); setLoading(false); setViewError(''); lastSeq.current.set(target.worktree, Math.max(lastSeq.current.get(target.worktree) ?? 0, result.seq))
+          if (target.frozen) setUpdates(flight.wantedSeq > result.seq)
+          else if (flight.wantedSeq > result.seq) flight.dirty = true
           if (result.task) {
             const key = `${target.worktree}:${result.task.id}`, latest = result.task.batches.at(-1)
             if (!target.frozen && latestBatch.current.task === key && latest && latest.id !== latestBatch.current.batch) { setFresh([...(latest.result?.contexts.map(body => body.entity.id) ?? []), ...(latest.result?.directories.flatMap(directory => directory.items.map(item => item.id)) ?? [])]); setFreshBatch(latest.id) }
@@ -141,7 +162,7 @@ function App() {
         setProjects(projectResult.result.items); setWorktrees(worktreeResult.result.items)
         const chosen = initial.worktree ? worktreeResult.result.items.find(item => item.id === initial.worktree) : worktreeResult.result.items.find(item => item.active && item.available) ?? worktreeResult.result.items[0]
         if (initial.worktree && !chosen) throw new Error('工作区未登记')
-        if (chosen) { setProject(chosen.projectId); chooseRoute({ worktree: chosen.id, task: initial.task, batch: initial.batch, frozen: !!initial.batch || new URL(location.href).searchParams.get('history') === '1' }); if (initialDirectory.current) { const target = initialDirectory.current; initialDirectory.current = null; openDirectory(target, true) } }
+        if (chosen) { rememberWorktree(chosen.projectId, chosen.id); setProject(chosen.projectId); chooseRoute({ worktree: chosen.id, task: initial.task, batch: initial.batch, frozen: !!initial.batch || new URL(location.href).searchParams.get('history') === '1', browse: !initial.task && !initialDirectory.current && new URL(location.href).searchParams.get('overview') !== '1' }); if (initialDirectory.current) { const target = initialDirectory.current; initialDirectory.current = null; openDirectory(target, true) } }
         else setLoading(false)
       } catch (error) { if (live) { setError(errorMessage(error)); setLoading(false) } }
     })()
@@ -156,23 +177,54 @@ function App() {
     }
     window.addEventListener('popstate', pop); return () => window.removeEventListener('popstate', pop)
   }, [chooseRoute, worktrees])
-  useEffect(() => { if (route) { void loadView(route); void loadTasks(route.worktree).catch(error => { if (routeRef.current?.worktree === route.worktree) setViewError(errorMessage(error)) }) } }, [route])
   useEffect(() => {
-    if (!route?.worktree) return
+    if (!route) return
+    const token = generation.current
+    if (!route.browse) void loadView(route)
+    if (route.listed) return
+    void loadTasks(route.worktree).then(items => {
+      if (!route.browse || token !== generation.current) return
+      let remembered: Partial<Route> = {}
+      try { const value = JSON.parse(sessionStorage.getItem('harnessl3:view:' + route.worktree) ?? '{}'); if (value && typeof value === 'object') remembered = value } catch { /* Use the latest recorded task. */ }
+      const selected = items?.find(item => item.id === remembered.task) ?? items?.[0]
+      const resume = selected?.id === remembered.task
+      chooseRoute({ worktree: route.worktree, task: selected?.id, batch: resume && typeof remembered.batch === 'string' ? remembered.batch : undefined, frozen: !!selected, browse: false, listed: true })
+    }).catch(error => { if (token === generation.current) { setViewError(errorMessage(error)); setLoading(false) } })
+  }, [route])
+  useEffect(() => {
+    if (!route?.worktree || route.browse) return
     const worktree = route.worktree
     let timer: ReturnType<typeof setTimeout> | undefined
     const stream = new EventSource('/events?' + new URLSearchParams({ worktree, after: String(lastSeq.current.get(worktree) ?? 0) }))
-    const refresh = () => { if (timer) clearTimeout(timer); timer = setTimeout(() => { if (routeRef.current?.worktree !== worktree) return; if (routeRef.current.frozen) setUpdates(true); else { void loadView(); void loadTasks(worktree, true).catch(error => { if (routeRef.current?.worktree === worktree) setViewError(errorMessage(error)) }) } }, 100) }
+    let wantedSeq = 0, tasksChanged = false
+    const refresh = (seq: number, kind?: string) => {
+      if (kind === 'freshness' && routeRef.current?.task) return
+      wantedSeq = Math.max(wantedSeq, seq); tasksChanged ||= !kind || kind === 'task' || kind === 'migration'
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => {
+        if (routeRef.current?.worktree !== worktree) return
+        if (routeRef.current.frozen) {
+          const pending = pendingView.current
+          if (pending?.token === generation.current) pending.wantedSeq = Math.max(pending.wantedSeq, wantedSeq)
+          else if (wantedSeq > (lastSeq.current.get(worktree) ?? 0)) setUpdates(true)
+        }
+        else {
+          if (wantedSeq > (lastSeq.current.get(worktree) ?? 0)) void loadView(undefined, wantedSeq)
+          if (tasksChanged && wantedSeq > (taskListSeq.current.get(worktree) ?? -1)) void loadTasks(worktree, true, wantedSeq).catch(error => { if (routeRef.current?.worktree === worktree) setViewError(errorMessage(error)) })
+        }
+        tasksChanged = false
+      }, 100)
+    }
     const commit = (event: MessageEvent) => {
-      try { const message = JSON.parse(event.data) as { worktreeId?: string; seq: number }; if (message.worktreeId && message.worktreeId !== worktree || routeRef.current?.worktree !== worktree || !Number.isSafeInteger(message.seq) || message.seq <= (lastSeq.current.get(worktree) ?? 0)) return; lastSeq.current.set(worktree, message.seq); refresh() } catch { setViewError('连接异常，请重试') }
+      try { const message = JSON.parse(event.data) as { worktreeId?: string; seq: number; kind?: string }; if (message.worktreeId && message.worktreeId !== worktree || routeRef.current?.worktree !== worktree || !Number.isSafeInteger(message.seq) || message.seq <= (lastSeq.current.get(worktree) ?? 0)) return; refresh(message.seq, message.kind) } catch { setViewError('连接异常，请重试') }
     }
     stream.addEventListener('commit', commit as EventListener)
     stream.addEventListener('ready', () => setConnected(true))
-    stream.addEventListener('reset', () => { setConnected(true); refresh() })
+    stream.addEventListener('reset', event => { setConnected(true); commit(event as MessageEvent) })
     stream.onopen = () => setConnected(true)
     stream.onerror = () => setConnected(false)
     return () => { stream.close(); if (timer) clearTimeout(timer); setConnected(false) }
-  }, [route?.worktree, loadTasks, loadView])
+  }, [route?.worktree, route?.browse, loadTasks, loadView])
   useEffect(() => {
     if (!route || !canRefresh || legacy || task?.skillPlan) return
     const worktree = route.worktree, token = generation.current
@@ -205,7 +257,13 @@ function App() {
     return () => { document.removeEventListener('keydown', key); if (restoreFocus.current?.isConnected) restoreFocus.current.focus({ preventScroll: true }) }
   }, [detail?.kind])
 
-  function chooseProject(id: string) { setProject(id); const next = worktrees.find(item => item.projectId === id && item.active && item.available) ?? worktrees.find(item => item.projectId === id); if (next) chooseRoute({ worktree: next.id, frozen: false }) }
+  function chooseProject(id: string) {
+    setProject(id)
+    let remembered: string | null = null
+    try { remembered = sessionStorage.getItem('harnessl3:worktree:' + id) } catch { /* Choose an available worktree. */ }
+    const next = worktrees.find(item => item.projectId === id && item.id === remembered) ?? worktrees.find(item => item.projectId === id && item.active && item.available) ?? worktrees.find(item => item.projectId === id)
+    if (next) { rememberWorktree(id, next.id); chooseRoute({ worktree: next.id, frozen: false, browse: true }) }
+  }
   function openDirectory(target: DirectoryTarget, replace = false) {
     directoryTrigger.current = document.activeElement as HTMLElement
     const url = new URL(location.href); url.searchParams.set('directory', directoryKey(target))
@@ -218,7 +276,7 @@ function App() {
     requestAnimationFrame(() => directoryTrigger.current?.focus({ preventScroll: true }))
   }
   function inspectSkill(id?: string, file?: string) { if (!id && !plan) openDirectory({ kind: 'skills' }); else setDetail({ kind: 'skills', id, file }) }
-  function chooseTask(id: string, frozen = true, batch?: string) { if (route) chooseRoute({ worktree: route.worktree, task: id || undefined, batch, frozen: !!id && frozen }) }
+  function chooseTask(id: string, frozen = true, batch?: string) { if (route) chooseRoute({ worktree: route.worktree, task: id || undefined, batch, frozen: !!id && frozen, listed: true }) }
   function toggle(id: string, kind: 'read' | 'expand') { if (readonly || !task) return; const setter = kind === 'read' ? setReads : setExpands; setter(value => value.includes(id) ? value.filter(item => item !== id) : [...value, id]) }
   function expand(item: PlacedItem) { anchor.current = { id: item.id, x: item.x, y: item.y }; setExpanded(value => value.includes(item.id) ? value.filter(id => id !== item.id) : [...value, item.id]) }
   function toggleHub() { skillAnchor.current = { id: 'skill-selector', ...skillLayout.selector }; setHubOpen(value => !value) }
@@ -288,7 +346,7 @@ function App() {
   const freshness = recordState(data?.freshness)
   const detailTitle = detail?.kind === 'node' ? selected?.title ?? '上下文详情' : detail?.kind === 'skills' ? '技能方案' : detail?.kind === 'history' ? '历史任务' : detail?.kind === 'structure' ? '项目结构' : detail?.kind === 'packet' ? '上下文包' : detail?.kind === 'records' ? '真实请求记录' : '工作区'
   return <div className="app" data-testid="app-shell" data-route-worktree={route?.worktree ?? ''} data-historical={historical} data-task-id={displayedId ?? ''} data-view-seq={data?.seq ?? 0} data-format={legacy ? 'prototype-v0.16' : 'v1'}>
-    <header className="app-header"><div className="brand"><span className="brand-mark"><i/><i/><i/><i/></span>Harness<sup>L3</sup></div><div className="target-selectors"><select data-testid="project-select" aria-label="选择项目" value={project} disabled={!projects.length} onChange={event => chooseProject(event.target.value)}>{!projects.length && <option value="">尚无项目</option>}{projects.map(item => <option key={item.id} value={item.id}>{item.name}{item.active ? '' : ' · 已停用'}</option>)}</select><select data-testid="worktree-select" aria-label="选择工作区" value={route?.worktree ?? ''} disabled={!worktrees.length} onChange={event => { const item = worktrees.find(item => item.id === event.target.value); if (item) { setProject(item.projectId); chooseRoute({ worktree: item.id, frozen: false }) } }}>{!worktrees.length && <option value="">尚无工作区</option>}{worktrees.filter(item => item.projectId === project).map(item => <option key={item.id} value={item.id}>{item.branch || 'detached'} · {item.root.split(/[\\/]/).at(-1)}{item.active && item.available ? '' : ' · 仅历史'}</option>)}</select></div><div className="header-right"><select className="task-select" aria-label="选择任务" value={route?.task ?? ''} disabled={!route} onChange={event => chooseTask(event.target.value, false)}><option value="">当前工作区</option>{displayedId && !taskList.some(item => item.id === displayedId) && <option value={displayedId}>{displayedTitle}</option>}{taskList.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select><button className="structure-button" aria-label="项目结构" onClick={() => setDetail({ kind: 'structure' })} disabled={!data}><Icon name="branch"/><span>结构</span></button><button className="history-button" aria-label="历史任务" onClick={() => setDetail({ kind: 'history' })} disabled={!route}><Icon name="history"/><span>历史</span></button><button className="records-button" aria-label="检索记录" onClick={() => setDetail({ kind: 'records' })} disabled={!data}><Icon name="record"/><span>记录</span></button></div></header>
+    <header className="app-header"><div className="brand"><span className="brand-mark"><i/><i/><i/><i/></span>Harness<sup>L3</sup></div><div className="target-selectors"><select data-testid="project-select" aria-label="选择项目" value={project} disabled={!projects.length} onChange={event => chooseProject(event.target.value)}>{!projects.length && <option value="">尚无项目</option>}{projects.map(item => <option key={item.id} value={item.id}>{item.name}{item.active ? '' : ' · 已停用'}</option>)}</select><select data-testid="worktree-select" aria-label="选择工作区" value={route?.worktree ?? ''} disabled={!worktrees.length} onChange={event => { const item = worktrees.find(item => item.id === event.target.value); if (item) { rememberWorktree(item.projectId, item.id); setProject(item.projectId); chooseRoute({ worktree: item.id, frozen: false, browse: true }) } }}>{!worktrees.length && <option value="">尚无工作区</option>}{worktrees.filter(item => item.projectId === project).map(item => <option key={item.id} value={item.id}>{item.branch || 'detached'} · {item.root.split(/[\\/]/).at(-1)}{item.active && item.available ? '' : ' · 仅历史'}</option>)}</select></div><div className="header-right"><select className="task-select" aria-label="选择任务" value={route?.task ?? ''} disabled={!route} onChange={event => chooseTask(event.target.value, false)}><option value="">当前工作区</option>{displayedId && !taskList.some(item => item.id === displayedId) && <option value={displayedId}>{displayedTitle}</option>}{taskList.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select><button className="structure-button" aria-label="项目结构" onClick={() => setDetail({ kind: 'structure' })} disabled={!data}><Icon name="branch"/><span>结构</span></button><button className="history-button" aria-label="历史任务" onClick={() => setDetail({ kind: 'history' })} disabled={!route}><Icon name="history"/><span>历史</span></button><button className="records-button" aria-label="检索记录" onClick={() => setDetail({ kind: 'records' })} disabled={!data}><Icon name="record"/><span>记录</span></button></div></header>
     <div className="workspace-content">
     <main ref={viewport} className={`canvas-viewport ${canvas.dragging ? 'is-dragging' : ''}`} {...canvas.handlers} inert={!!directory || !!loginError} aria-hidden={directory || loginError ? true : undefined} aria-label="上下文检索无限画布" aria-busy={loading} data-view-ready={!!data} style={{ visibility: directory || loginError ? 'hidden' : undefined, backgroundPosition: `${canvas.camera.x}px ${canvas.camera.y}px`, backgroundSize: `${24 * canvas.camera.scale}px ${24 * canvas.camera.scale}px` }}>
       <div className="task-heading" data-no-pan>

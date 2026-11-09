@@ -115,6 +115,11 @@ export class SearchIndex {
     await this.ready();
     await this.send('project', { documents, seq, inputRevisions });
   }
+  async catchUp(fromSeq: number, seq: number, documents: IndexDocument[]): Promise<void> {
+    canonicalJson(documents);
+    await this.ready();
+    await this.send('catch-up', { fromSeq, seq, documents });
+  }
   async search(options: SearchOptions): Promise<SearchResult> {
     await this.ready();
     return await this.send('search', options) as SearchResult;

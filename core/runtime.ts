@@ -5,7 +5,7 @@ import { EventEmitter } from 'node:events'
 import { WorkspaceRegistry } from './workspace.js'
 import { SEED_ROOT } from './package.js'
 import { loadModel } from './model.js'
-import { scanSkills } from './skills.js'
+import { CatalogObserver } from './catalog.js'
 import { Archive, type ArchiveReference } from './archive.js'
 import { SearchIndex, type IndexDocument } from './index.js'
 import { TaskService } from './context.js'
@@ -29,9 +29,11 @@ const taskOperations = new Set([...archivedOperations, 'task start', 'task promp
 export class Runtime extends EventEmitter {
   readonly dataRoot: string
   private readonly resources = new Map<string, Promise<WorktreeResources>>()
+  private readonly catalogs = new CatalogObserver()
   private readonly archives = new Map<string, Promise<Archive>>()
   private readonly lastValidModel = new Map<string, ModelSnapshot>()
   private bindingQueue: Promise<unknown> = Promise.resolve()
+  private backgroundQueue: Promise<unknown> = Promise.resolve()
   private gcApplying = false
   private activeOperations = 0
   private startup?: Promise<void>
@@ -140,7 +142,11 @@ export class Runtime extends EventEmitter {
       externalDocuments: () => legacyDocuments,
     })
     migration = new MigrationService({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: async seq => { await refreshLegacyDocuments(); await index.rebuild(tasks.projection(), seq); this.emit('commit', { worktreeId: record.id, seq, kind: 'migration' }) } })
-    freshness = new FreshnessManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) } })
+    freshness = new FreshnessManager({ worktree: record, archive, serial: operation => tasks.serial(operation), background: operation => {
+      const pending = this.backgroundQueue.then(operation)
+      this.backgroundQueue = pending.catch(() => {})
+      return pending
+    }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) } })
     const observation = new ObservationManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: () => { this.emit('commit', { worktreeId: record.id, seq: archive.seq, kind: 'observation' }) } })
     try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await freshness.ready(); await observation.ready(); return { worktree: record, archive, index, tasks, observation, freshness, migration } }
     catch (error) { await index.close().catch(() => {}); throw error }
@@ -235,9 +241,10 @@ export class Runtime extends EventEmitter {
     if (batchId) { validateUuid(batchId, 'batchId'); if (!taskId) throw new HarnessError('INVALID_ARGUMENT', 'A historical batch requires its task') }
     const worktree = await this.registry().resolve({ cwd: this.dataRoot, worktreeId, allowInactive: !!taskId })
     const resource = await this.worktreeResources(worktree)
+    const viewSeq = resource.archive.seq
     if (taskId && await resource.migration.has(taskId)) {
       const legacy = await resource.migration.show(taskId, batchId)
-      return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: resource.archive.seq, historical: true, task: null, model: null, legacy, modelState: { state: 'unknown', currentRevision: null, displayRevision: legacy.binding.modelRevision, diagnostics: [] }, catalog: { root: null, revision: legacy.binding.catalogRevision, skills: [], valid: false, diagnostics: [], checkedAt: null }, freshness: { state: 'unknown', historical: true }, observation: { bindings: [], events: [] }, archive: resource.tasks.status() }
+      return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: true, task: null, model: null, legacy, modelState: { state: 'unknown', currentRevision: null, displayRevision: legacy.binding.modelRevision, diagnostics: [] }, catalog: { root: null, revision: legacy.binding.catalogRevision, skills: [], valid: false, diagnostics: [], checkedAt: null }, freshness: { state: 'unknown', historical: true }, observation: { bindings: [], events: [] }, archive: resource.tasks.status() }
     }
     const task = taskId ? await resource.tasks.archivedTask(taskId, batchId) : null
     let model: ModelSnapshot | null = null
@@ -247,9 +254,14 @@ export class Runtime extends EventEmitter {
       modelState = { state: 'valid', currentRevision: null, displayRevision: model.revision, diagnostics: model.diagnostics }
     } else {
       try {
-        model = await loadModel(worktree.root)
-        this.lastValidModel.set(worktreeId, model)
-        modelState = { state: 'valid', currentRevision: model.revision, displayRevision: model.revision, diagnostics: model.diagnostics }
+        model = resource.freshness.currentModel()
+        if (!model) {
+          for (const saved of resource.tasks.tasks().reverse()) {
+            try { model = await resource.tasks.snapshot(saved.id); break } catch { /* Keep an unavailable recorded model unknown. */ }
+          }
+        }
+        const observed = resource.freshness.currentState()
+        modelState = { state: observed.modelState === 'invalid' ? 'invalid' : model ? 'valid' : 'unknown', currentRevision: observed.modelRevision, displayRevision: model?.revision ?? null, diagnostics: observed.diagnostics }
       } catch (error) {
         const failure = asHarnessError(error)
         model = this.lastValidModel.get(worktreeId) ?? null
@@ -265,13 +277,13 @@ export class Runtime extends EventEmitter {
     if (task) catalog = { root: null, revision: task.binding.catalogRevision, skills: task.catalog, valid: true, diagnostics: [], checkedAt: null }
     else {
       try {
-        const loaded = await scanSkills(await this.registry().skillsRoot(worktree))
+        const loaded = await this.catalogs.read(await this.registry().skillsRoot(worktree))
         catalog = { root: loaded.root, revision: loaded.revision, skills: loaded.skills, valid: loaded.valid, diagnostics: loaded.diagnostics, checkedAt: loaded.checkedAt }
       } catch (error) { const failure = asHarnessError(error); catalog = { root: null, revision: null, skills: [], valid: false, diagnostics: [{ code: failure.code, message: failure.message }], checkedAt: null } }
     }
     const observation = await resource.observation.status()
-    const freshness = task ? { state: 'unknown', historical: true, sourceVersion: task.binding.sourceVersion } : await resource.freshness.status(await this.registry().skillsRoot(worktree))
-    return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: resource.archive.seq, historical: !!taskId, task, model, modelState, catalog, freshness, observation, archive: resource.tasks.status() }
+    const freshness = task ? { state: 'unknown', historical: true, sourceVersion: task.binding.sourceVersion } : resource.freshness.currentState()
+    return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: !!taskId, task, model, modelState, catalog, freshness, observation, archive: resource.tasks.status() }
   }
   async execute(request: CommandRequest): Promise<Envelope> {
     let target: Target | null = null
@@ -368,7 +380,7 @@ export class Runtime extends EventEmitter {
             target = { projectId: worktree.projectId, worktreeId: worktree.id }
             root = await registry.skillsRoot(worktree)
           } catch (error) { if (!(error instanceof HarnessError) || error.code !== 'TARGET_REQUIRED' || flag(request, 'worktree') || flag(request, 'project')) throw error }
-          const catalog = await scanSkills(root)
+          const catalog = await this.catalogs.read(root, request.operation === 'skills refresh')
           result = { root: catalog.root, revision: catalog.revision, skills: catalog.skills, diagnostics: catalog.diagnostics, checkedAt: catalog.checkedAt, valid: catalog.valid }; break
         }
         default: throw new HarnessError('INVALID_ARGUMENT', 'This command has not yet been connected to the formal runtime', { operation: request.operation })
@@ -389,6 +401,7 @@ export class Runtime extends EventEmitter {
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.freshness.close()] : []))
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.tasks.close()] : []))
     this.resources.clear()
+    await this.catalogs.close()
     this.archives.clear()
   }
 }
