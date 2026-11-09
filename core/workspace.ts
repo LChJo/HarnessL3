@@ -401,13 +401,18 @@ export class WorkspaceRegistry {
     if (!cwdRecord && !explicitWorktree) {
       if (cwdIdentity && !options.projectId) {
         const configured = await exists(path.join(cwdIdentity.root, '.harness', 'project.json'));
-        throw new HarnessError('TARGET_REQUIRED', 'This Git worktree is not registered. Ask the user whether to set up HarnessL3 in the agent question UI; if declined, continue the original task without L3.', {
+        throw new HarnessError('TARGET_REQUIRED', 'HarnessL3 setup needs user confirmation. Ask the onboarding.question in the agent question UI before proceeding; continue without L3 only if the user declines or cancels.', {
           onboarding: {
             state: configured ? 'registration-required' : 'initialization-required',
             worktreeRoot: cwdIdentity.root,
             confirmationRequired: true,
+            nextAction: 'ask-user',
+            question: configured
+              ? `Register this existing Git worktree with HarnessL3 at ${cwdIdentity.root}? This preserves its existing configuration and model.`
+              : `Initialize HarnessL3 in this existing Git worktree at ${cwdIdentity.root}? This creates missing .harness configuration, model, evidence and alias files, registers the worktree, and creates the user skill library only if it is missing; existing content is preserved.`,
             command: configured ? ['worktree', 'register', cwdIdentity.root] : ['init'],
             fallback: 'continue-without-l3',
+            fallbackWhen: ['declined', 'cancelled'],
           },
         });
       }

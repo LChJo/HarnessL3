@@ -12,7 +12,7 @@ git branch --show-current
 harnessl3 worktree list --json
 ```
 
-CLI的`TARGET_REQUIRED`错误若包含`details.onboarding`，其中`worktreeRoot`是实际根目录，`state`区分`initialization-required`和`registration-required`，`command`是建议命令的参数数组；它只提供指引，尚未写入或取得用户同意。无Git目录、显式目标不全/冲突等错误不能按未登记自行初始化。旧CLI没有指引时，用实际Git根和`.harness/project.json`是否存在核对，不用空登记列表猜目标。
+CLI的`TARGET_REQUIRED`错误若包含`details.onboarding`，其中`worktreeRoot`是实际根目录，`state`区分`initialization-required`和`registration-required`，`command`是建议命令的参数数组；它只提供指引，尚未写入或取得用户同意。`nextAction:"ask-user"`和`question`给出当前agent应展示的询问，按用户语言呈现；`fallbackWhen:["declined","cancelled"]`明确`fallback:"continue-without-l3"`仅在拒绝/取消后适用，不能收到非零退出码就直接回退。旧版只有`confirmationRequired:true`时也先询问。无Git目录、显式目标不全/冲突等错误不能按未登记自行初始化。旧CLI没有指引时，用实际Git根和`.harness/project.json`是否存在核对，不用空登记列表猜目标。
 
 没有现成接入授权时，**用当前agent实际可用的通用询问窗口**展示一项明确选择，例如：
 

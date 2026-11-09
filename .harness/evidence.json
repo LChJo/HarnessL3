@@ -44,12 +44,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "WorkspaceRegistry checks existing Git identities and creates missing scaffold files without semantic project modeling.",
+      "claim": "WorkspaceRegistry preserves existing identities and files; unregistered Git worktrees return ask-user, an actual path/impact question, and fallback only after decline or cancellation.",
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "9f5bedd4b56555b8c9eccf62d3e9936a45a8ef04a1a13b3236ef6af1b8dba341",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "a2b84079a0b7c8ce99151088e3418425c0bc87c5ebf0098bc4b926384a46ee3e",
+      "observedAt": "2026-11-09T07:28:53.721Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime entry recommends UTF-8 files for multilingual requests, preserves document/Git duties and shows one card after actual context return.",
+      "claim": "Runtime entry prioritizes onboarding over generic failure fallback, asks before first setup even with old CLI fields, and retains existing context, document and output-card duties.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "29d7c26e569a6b2484c0bda759286c04b3c7d4e7f0ff7ae28d478ba3bb4ba3e0",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "7581e6c1263ab0b3ff8b330077453ba9aaeee328920be64f503a152865b8e282",
+      "observedAt": "2026-11-09T07:28:53.723Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Current v0.36 status records scoped startup/history/install work plus the Web sign-in recovery repair, actual Windows program and two browser gate results, unchanged authentication lifetimes and the unmodified global installation; other platforms remain unclaimed.",
+      "claim": "Current status records the first-use consent-routing correction, 34 passing Windows checks, updated host skill files, unchanged installed CLI/service and pending real-host consent verification.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "0442d17b052fca884ed807926b535ab637f906d145bcaf4e9ec13a3cf9b9045a",
-      "observedAt": "2026-11-09T06:41:14.362Z"
+      "hash": "c0a49e07ed5ff14500ab8a941b374c625fadef2c1375aff26392133d6076bcd3",
+      "observedAt": "2026-11-09T07:28:53.724Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -554,12 +554,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Protocol keeps static version and ordinary RPC semantics, adds optional restricted build/recovery diagnostics and documents startup-in-progress and explicit install verification.",
+      "claim": "Protocol preserves existing command semantics and adds explicit ask-user, question and fallbackWhen fields to noninteractive first-use guidance.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "c39c4b84ef44be5074073d32dc8f62650f5400e5168778fb1be9ae409af7a001",
-      "observedAt": "2026-11-09T05:37:20.156Z"
+      "hash": "60b5f31d81e49661fc7b88002d36ea55cae4fa608c2e8607ea8be000a12fb4ac",
+      "observedAt": "2026-11-09T07:28:53.725Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -650,6 +650,36 @@
       },
       "hash": "75701b35ed00760f3f0dd2808ee598b17ad8e9ca8f323a4bfec16714c08801d9",
       "observedAt": "2026-11-09T06:07:05.388Z"
+    },
+    {
+      "id": "d6270000-0000-4000-8000-000000000001",
+      "kind": "document",
+      "claim": "First-use routing requires an agent question before setup, reuses authorization, and limits fallback to decline/cancel, including older CLI guidance.",
+      "location": {
+        "path": "agent-skills/harnessl3/references/project-init.md"
+      },
+      "hash": "87d93dd6e0aed37c9c2d63031b7e2658c21d1215840376ced67360d687930903",
+      "observedAt": "2026-11-09T07:28:53.726Z"
+    },
+    {
+      "id": "d6270000-0000-4000-8000-000000000002",
+      "kind": "document",
+      "claim": "Usage explains TARGET_REQUIRED onboarding as pending user confirmation, with agent UI or conversational questioning and no automatic initialization.",
+      "location": {
+        "path": "docs/USAGE.md"
+      },
+      "hash": "0edb02f754e8c1160c0d73ca286ac94e9d304eb7f3602de1068f633dc4e2fefe",
+      "observedAt": "2026-11-09T07:28:53.726Z"
+    },
+    {
+      "id": "d6270000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Isolated CLI checks require explicit ask-user and conditional fallback for initialization and registration, preserve worktree bytes before consent and reject unrelated target onboarding.",
+      "location": {
+        "path": "tests/v1/first-use.test.mjs"
+      },
+      "hash": "983314783eaa22fd9db3443985a2a2d97664d993ccc6eef9c98a8b49df799b4b",
+      "observedAt": "2026-11-09T07:28:53.727Z"
     }
   ]
 }
