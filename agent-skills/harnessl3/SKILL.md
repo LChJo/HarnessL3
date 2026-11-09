@@ -1,72 +1,96 @@
 ---
 name: harnessl3
 description: >
-  所有任务的默认入口。用于提问、讨论、研究、梳理资料/需求/方案、规划、实现、调试、审查代码/文档/架构、继续工作、记录决策、交接和复盘；只要有1%的可能相关就先经HarnessL3组织上下文并筛选技能。
-  Triggers: ask / research / plan / build / implement / debug / review / resume / handoff。主agent和subagent均适用，已有L3交接的子任务复用父入口。
+  Default context entry for all tasks: use when asking, researching, planning,
+  implementing, debugging, reviewing, continuing, or handing off is even 1% relevant.
+  Reuse an existing L3 task and returned content for follow-up todos or plan execution;
+  do not re-enter per message. Applies to main agents and subagents with parent handoffs.
 ---
 
-# 所有任务先经 HarnessL3 组织上下文
+# Reuse context before calling HarnessL3
 
-<SUBAGENT-ENTRY>
-如果你是被指派具体子任务的 subagent，先按[子任务接入](references/subagent.md)核对父任务交接。已有有效L3交接时复用其上下文和技能，在指派范围内执行；不重复主agent的整体规划或联合选择，不关闭父任务。没有可用交接的独立子任务，按下方入口为自己的范围建立L3任务。
-</SUBAGENT-ENTRY>
+One real task can span many messages. Reusing its completed L3 entry satisfies the all-task requirement, including lightweight/read-only work. Follow the stages below in order; stop routing as soon as existing content is sufficient. Ask questions and report progress in the user's language.
 
-<ENTRY-REQUIRED>
-安装后，所有任务默认先通过L3入口。只要用户请求有哪怕 **1%** 的可能涉及提问、讨论、研究、规划、实施、调试、审查、继续工作、交接、记录或复盘，就**必须**先使用本流程组织上下文和筛选技能。不要因“任务简单”“只是只读”“可以直接回答”或“已有其它方法”而跳过；已有项目流程和方法在L3交接后继续使用。
-</ENTRY-REQUIRED>
+## 1. Choose whether a CLI operation is needed
 
-按实际任务而非每条消息建档：同一有效任务的澄清、进度和继续执行先复用当前绑定；新目的或旧绑定已失效时再建立新任务。无需额外上下文或技能也要记录显式空选择，不凭空加载方法。
+```text
+User request
+|-- Setup already declined/cancelled for this task -> work normally; do not ask again
+|-- Unanswered setup question -> independent work only; keep the question pending
+|-- Valid parent handoff -> reuse its scope/content/selection; see subagent reference if needed
+|-- Same worktree and goal, with an identifiable L3 task
+|   |-- Required bodies already returned -> work directly; no repeated entry/read/card
+|   |-- Returned material lost -> recover once with task handoff using the actual taskId
+|   `-- New material missing -> context query or task read for only the missing content
+`-- New goal, no reusable task, or current-version/different-skill needs -> task start
+```
 
-在当前已有 Git worktree 核对项目和分支，遵守项目约定。由当前 Codex/Claude Code 调用 CLI，取得所需材料后继续完成用户任务。
+Executing earlier todos, approving a plan, and moving from planning to implementation continue the same goal. Do not call version/help/start/show/status/handoff just to confirm reuse. Briefs and references are not returned bodies. Normal stage synchronization still applies.
 
-**入口失败先分流**：`task start`返回`TARGET_REQUIRED`且有`error.details.onboarding`时，这是**等待首次接入确认**，不能归为CLI不可用而直接跳过。立即读取[项目接入](references/project-init.md)，按实际`worktreeRoot`向用户询问是否初始化（`initialization-required`）或仅登记（`registration-required`），说明文件及登记影响。用当前agent实际可用的通用询问窗口；窗口不可用就在对话中明确提问并等待，不能直接回退。已有当前路径的明确接入授权则复用，不重复问。
+Only a chosen CLI operation proceeds to stages 2-3. Existing authorization and known setup facts are reusable; these stages are not a per-message preflight.
 
-`onboarding.nextAction:"ask-user"`指向这个询问步骤；旧版即使没有该字段也按`onboarding`处理。`fallback:"continue-without-l3"`**只在用户拒绝或取消后生效**，不是收到错误即可跳过；尚未回复只继续独立工作，不初始化、不替用户选择。无`onboarding`的目标不全/冲突或真正的CLI故障才按实际原因处理，不猜成首次接入。
+## 2. Resolve prerequisites only when needed
 
-同意后机械接入，再由**当前大模型**读取项目并用已有文件工具维护LikeC4对象/关系/证据，报告阅读、建模和校验进度，核查覆盖后恢复原任务；init的scaffold-ready和语法有效不代表项目建模完成。已登记但仍是占位模板或结构不完整时也按[项目接入](references/project-init.md)补全，不重复机械初始化。拒绝/取消后本任务普通执行且不重问。
+```text
+Chosen CLI operation
+|-- CLI missing/incompatible -> read install-update.md
+|   |-- Installation/update authorized -> install, then resume this operation
+|   `-- No authorization -> offer installation; pending: independent work only;
+|                         declined/cancelled: work without L3 for this task
+|-- Archive-only handoff/read/history -> preserve its original target; no project initialization
+`-- Live project operation
+    |-- No usable existing Git worktree -> explain the missing target; do independent work
+    |-- .harness/project.json missing -> project-init.md: ask to INITIALIZE this actual path
+    |-- Config exists but worktree is known unregistered -> project-init.md: ask to REGISTER
+    `-- Ready, or registration state unknown -> execute; route onboarding errors below
+```
 
-**项目上下文随源码版本管理**：Git项目建议将`.harness/model/`中的`.c4`/`.likec4`（含specification/views）、`.harness/project.json`、`.harness/evidence.json`、`.harness/aliases.json`与相关源码变更一并提交，连同引用的项目文档，以及仓库内以真实文件维护的项目技能/附件/许可证。本机数据根、登记、任务历史/快照/归档技能、SQLite/缓存/布局、日志、机器路径配置和访问凭证不进Git；保留这些用户数据，不因排除而删除。不为提交复制全局技能库或跟随symlink/junction收录外部实体。检查diff并遵守已有提交授权；此建议本身不授权暂存、commit或push。
+Do not create Git/worktrees, probe all prerequisites, or install software merely because a message arrived. Installation and project initialization are separate permissions. Reuse explicit authorization for the relevant action/path; otherwise use the available question UI, or ask in conversation and wait.
 
-**文档留存也是上下文维护**：创建、修改、移动或删除长期项目文档时，先沿用项目的权威位置和留存约定，再用已有文件工具维护受影响的LikeC4简述、关系和证据；同一实体保留UUID，移动修复当前路径，删除清理当前引用，历史档案保留。规格、任务Markdown、决策、研究与长期交接均适用，不因没有源码修改而跳过。临时草稿与本机task历史按各自用途保存，`.scratch`目录名不决定Git归属。阶段收尾核查实际范围并处理证据异常，操作细节见[运行参考](references/runtime.md#文档留存与阶段同步)；没有知识变化时保留核验依据，不制造对象或图改动。引用不代表文档正文已读。
+For initialization/registration: consent -> follow the project reference, then resume; decline/cancel -> ordinary work without further L3 calls for this task; pending -> independent work only. Silence is not consent. Initialization includes the current agent's reading, modeling and coverage review; scaffold-ready or parsing success alone is insufficient.
 
-**上下文返回后展示输出卡片**：完成联合选择/查询与交接，按需读取所选技能正文；实际内容进入当前agent上下文后，用`web open --no-open --task <实际taskId> --json`取得实际`result.url`，在进度消息中按下述格式展示一次卡片，再继续用户工作。空选择遵守同一时机；卡片表示本次上下文输出已可查看，不表示用户工作或核验已经完成。取得上下文前不展示，后续查询、技能读取或最终答复中不重复。
+## 3. Execute and handle the actual result
 
-面向TUI使用以下Markdown引用卡片，保留加粗标题、空白引用行与箭头链接；将链接目标替换为实际`result.url`：
+```text
+Chosen operation
+|-- Success
+|   |-- task start -> one joint context/skill selection; an explicit empty selection is valid
+|   `-- handoff/query/read -> use returned content; fetch only still-missing selected bodies
+|-- TARGET_REQUIRED with error.details.onboarding -> return to project setup in stage 2
+|-- Source/model/closed-task conflict -> obtain a new binding only if current material is needed
+`-- Other failure -> resolve the specific cause; explain unrecoverable gaps and do independent work
+```
+
+`onboarding` is a consent request, including on older CLIs. `fallback:continue-without-l3` applies only after decline/cancellation, never merely after a nonzero exit. Use its actual worktreeRoot/state; target conflicts without onboarding are not permission to initialize.
+
+One task has one joint skill selection. Own edits use stage synchronization, not repeated entry. Old archives describe their captured version; never use an old binding for a new-version request. If only the catalog changed before selection, task prompt can refresh it. For lost write responses, check the original requestId receipt before retrying.
+
+## Work and task lifecycle
+
+- Use the actual existing worktree/branch. Consult command --help/Schema only when needed; take IDs, bindings and file hashes from real responses.
+- Write non-ASCII JSON to an explicit UTF-8 file outside the worktree, then use --file. Use stdin only with guaranteed UTF-8 bytes; default PowerShell native pipelines can corrupt text. Preserve already-corrupted history.
+- After source/long-term document changes, maintain current LikeC4 descriptions, relations, evidence and incoming links; preserve identities/history and verify the actual scope. See [stage synchronization](references/runtime.md#document-maintenance-and-stage-synchronization).
+- Version project .harness authority, related source/docs and actual project skill files with Git. Preserve and isolate machine settings/credentials, derived indexes, history and external skill libraries. This is not authorization to stage/commit/push.
+- A plan, todo list or final reply does not trigger task close. Keep the task open while its work or confirmation is pending; close after actual completion/cancellation and recorded sync state. Closed tasks are read-only; subagents never close a parent task.
+- Preserve partial/unresolved/unknown states. Selection/read does not prove understanding or execution.
+
+## Output card: once per actual task
+
+After actual context and required skill bodies return (also for an explicit empty selection), obtain result.url with web open --no-open --task <actual-taskId> --json. Show this required localized card in commentary, then work:
 
 ```markdown
 > **HarnessL3 · 本次输出**
 >
-> ↗ [查看HarnessL3的输出](实际result.url)
+> ↗ [查看HarnessL3的输出](actual result.url)
 ```
 
-实际输出不包代码围栏，不使用表格、固定宽度边框或ANSI转义；卡片随终端宽度自然换行。网址只放在链接目标，不另附裸网址、使用/选择说明或常规到期文案，也不逐组重复。显示与点击效果由宿主TUI的Markdown支持决定，CLI不会改写宿主渲染器或系统提示。引用/简述不冒充正文已注入；Web不可用时如实说明，不伪造链接或阻断可用CLI。
+Do not wrap the rendered card in a code block. Keep the URL only in the link target; add no usage/selection instructions or routine expiry text. Do not repeat for continuation, delta reads or the final reply. It does not indicate completion. If Web is unavailable, say so and continue usable CLI work; do not invent a link.
 
-入口示例：
+## Load references only for the selected path
 
-```text
-harnessl3 --version
-harnessl3 --help
-harnessl3 task start --title "本次实际工作目的" --json
-```
+- Missing/incompatible CLI, installation or updates: [install-update.md](references/install-update.md).
+- Uninitialized/unregistered project, consent or incomplete modeling: [project-init.md](references/project-init.md).
+- Complex requests, sync, retries/history or explicit log binding: [runtime.md](references/runtime.md).
+- Parent handoff or independent delegated task: [subagent.md](references/subagent.md).
 
-**命令、参数、请求字段以当前 CLI 为准**：用对应子命令的 `--help` 取得用法、返回说明及安装包内 schema/示例路径，再按需读取。具体 ID、完整绑定、版本和文件引用取实际返回，不照抄示例或自行补造。
-
-**请求文字保留 UTF-8**：含中文的 JSON 优先用已有文件工具明确以 UTF-8 写入 worktree 外的临时文件，再传 `--file <实际路径>`。PowerShell 默认原生管道可能先把中文替换成问号；只有已明确保证 UTF-8 字节的管道才用 `--file -`。不要把已经变成 `?` 的文字当作可恢复原文。
-
-| 何时调用 | 返回什么 | 如何使用 |
-| --- | --- | --- |
-| 开始新工作；恢复时先核对已有任务归属和状态 | 任务身份、目录简述、实际技能目录、筛选提示和版本绑定 | 按当前目的批量选择所需上下文和方法；候选不足再批量披露，不逐节点调模型 |
-| 选择、补充读取或取得交接包 | 精确上下文、已选方法与版本化文件引用 | 用实际正文支持工作判断；目录简述和文件引用不代表已读正文 |
-| 需要某项方法的正文或附件 | 所选技能当时归档的文件内容 | 按需读取后执行适用且已授权的方法，使用原有工具完成工作；选择或读取不等于执行 |
-| 源码、文档或知识阶段结束 | 模型/来源状态、待核验范围与验证结果 | 核查并维护当前关联和证据，提交实际范围的阶段结论；如实保留未解决状态，再关闭上下文任务 |
-
-一次任务只做一次联合技能选择，后续补上下文不重新选技能。结果不全、失败或版本冲突时按实际返回处理，不能冒称完成；响应丢失先核对已提交记录，再决定重试。任务关闭不证明用户工作成功。
-
-只在需要时读取下列文件，不预读整个 `references/`：
-
-- CLI 缺失、不兼容或用户要求安装/更新：[安装更新](references/install-update.md)。
-- 项目未接入、模型仍是占位/结构不完整或要接入另一个已有 worktree：[项目接入](references/project-init.md)。
-- 需要复杂请求、同步、重试/历史或日志观测的操作细节，或旧版帮助不足：[运行参考](references/runtime.md)。
-- 受托子任务、父任务交接或独立子任务入口：[子任务接入](references/subagent.md)。
-
-安装、初始化和入口故障处理按需参考执行，不递归调用尚不可用的入口；恢复后回到本次任务。排除上述待接入确认后，仍缺少明确目标或CLI确实不可用时，如实说明L3不可用并按普通方式继续可独立完成的原任务，不伪报已完成L3入口。变更仍按用户授权执行；不自动创建/切换 worktree、不装 Hooks、不扫描未知会话，不以当前文件补造历史或通过删除用户技能与档案修复错误。
+Entry recovery must not recursively enter L3. Do not preload all references, install Hooks, launch agents, scan unknown sessions, or delete user skills/history to repair setup.
