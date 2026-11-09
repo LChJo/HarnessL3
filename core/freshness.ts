@@ -99,7 +99,7 @@ export class FreshnessManager {
 
   private async restore(): Promise<void> {
     await this.archive.ready();
-    for (const record of this.archive.records()) {
+    for (const record of this.archive.scan({ kind: 'freshness-state' })) {
       const payload = record.payload as { kind?: string; state?: FreshnessState } | null;
       if (payload?.kind !== 'freshness-state') continue;
       const state = payload.state;

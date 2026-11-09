@@ -153,10 +153,16 @@ export class MigrationService {
     await inspector.ready();
     if (inspector.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The target journal requires recovery before migration or legacy discovery.', { diagnostics: inspector.diagnostics });
     const entries = new Map<string, MigrationTask>();
-    for (const record of inspector.records()) {
+    const latest = new Map<string, number>();
+    for (const record of inspector.scan({ kind: 'legacy-migration' })) {
       const payload = record.payload as any;
-      if (payload?.kind === 'legacy-migration') for (const item of payload.tasks ?? []) entries.set(item.id, item);
-      else if (payload?.kind === 'task' && payload.task?.id) entries.set(payload.task.id, { id: payload.task.id, sourceHash: '', closureHash: '', archiveHash: '', rawRefs: [] });
+      for (const item of payload.tasks ?? []) { entries.set(item.id, item); latest.set(item.id, record.seq); }
+    }
+    for (const header of inspector.headers({ kind: 'task' })) {
+      if (header.taskId && header.seq > (latest.get(header.taskId) ?? 0)) {
+        entries.set(header.taskId, { id: header.taskId, sourceHash: '', closureHash: '', archiveHash: '', rawRefs: [] });
+        latest.set(header.taskId, header.seq);
+      }
     }
     return entries;
   }
@@ -247,7 +253,7 @@ export class MigrationService {
     return (await this.entries(this.options.archive)).get(taskId)?.archiveHash ? true : false;
   }
   async list(): Promise<any[]> {
-    const inspector = this.inspector();
+    const inspector = this.options.archive;
     const result = [];
     const entries = await this.entries(inspector);
     for (const entry of entries.values()) {

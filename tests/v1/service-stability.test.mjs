@@ -6,6 +6,23 @@ import { mkdir, realpath, readFile, writeFile, unlink } from 'node:fs/promises'
 import path from 'node:path'
 import { fixture } from './helpers.mjs'
 import { digest } from '../../build/core/json.js'
+import { ensureService } from '../../build/service/controller.js'
+
+test('TC23 startup callers wait for the existing owner without spawning another service', async t => {
+  const f = await fixture(t)
+  const e = await endpoint(t, f, (request, response, record) => health(response, record))
+  const root = await realpath(f.dataRoot)
+  await unlink(path.join(root, 'service.json'))
+  const owner = JSON.stringify({ schemaVersion: 1, pid: process.pid, instanceId: e.record.instanceId, startedAt: e.record.startedAt })
+  await writeFile(path.join(root, 'service.lock'), owner)
+  const publish = setTimeout(() => { void e.publish() }, 100)
+  try {
+    const record = await ensureService(root)
+    assert.equal(record.instanceId, e.record.instanceId)
+    await assert.rejects(readFile(path.join(root, 'service.log')), { code: 'ENOENT' })
+    assert.equal(await readFile(path.join(root, 'service.lock'), 'utf8'), owner)
+  } finally { clearTimeout(publish); await unlink(path.join(root, 'service.lock')) }
+})
 
 async function endpoint(t, f, handler) {
   await mkdir(f.dataRoot, { recursive: true })
@@ -102,6 +119,8 @@ test('TC23 status distinguishes temporary unavailability from an identity confli
     if (mismatch) health(response, record, { instanceId: randomUUID() })
     else { response.writeHead(503); response.end('{}') }
   })
+  e.record.build = { packageVersion: '0.1.0', sourceCommit: 'a'.repeat(40), sourceDirty: false, runtimeHash: 'b'.repeat(64), unexpected: e.record.token }
+  await e.publish()
   const unavailable = await f.cli(['serve', 'status'])
   assert.equal(unavailable.code, 0, unavailable.stdout)
   assert.equal(unavailable.body.data.result.state, 'unavailable')

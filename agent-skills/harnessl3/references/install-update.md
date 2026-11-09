@@ -36,4 +36,6 @@ node <已安装harnessl3包绝对路径>/scripts/install-agent-skills.mjs
 
 更新前按实际数据根停止旧服务：`harnessl3 serve stop --json`；多个显式 `--data-dir` 分别停止。保留 npm prefix、机器数据根、项目 `.harness`、用户技能及 `.skills-library-<UUID>` 实体和全部历史。更新不需要 GC、迁移或重建项目。
 
-更新后核对 `harnessl3 --version` / `--help` 和两个宿主的 skill 复制结果；备份路径在各变更文件的 `backup` 中。失败时保留错误和实际完成范围。更新 skill 后，请新建或刷新宿主会话。
+更新由已有 L3 任务发起时，先在旧服务仍可访问时，取得 `task handoff <实际taskId> --json`，明确以 UTF-8 写入 worktree 外文件；不要把封套中的 requestId 或当前时间当成 taskId。该文件是更新后只读比较的依据，不能以新返回覆盖原件。
+
+更新后核对 `harnessl3 --version` / `--help` 的版本/构建源提交和两个宿主的 skill 复制结果；安装指南中的验证工具检查实际运行文件、服务构建身份与 RPC。回到旧任务所属 worktree，用已安装的 `scripts/verify-install.mjs --handoff-before <实际UTF-8文件>` 对照原包；显式数据根继续传原 `--data-dir`。只有 `historyCheck:matched-before-update` 才表示此交接比较成功，未提供原包为 not-requested。初始化活锁期间等待同一所有者，不能将 BUSY 当作已停止或删除锁；未知业务结果不自动重发。CLI旧包在安装临时目录的 previous 中，skill备份路径在各变更文件的 backup 中。失败时保留错误和实际完成范围。更新 skill 后，请新建或刷新宿主会话。

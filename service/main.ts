@@ -8,7 +8,7 @@ import { ensureDir, isErrno, readJson, writeJson } from '../core/io.js'
 import { canonicalJson, digest, parseJsonStrict } from '../core/json.js'
 import { asHarnessError, HarnessError } from '../core/errors.js'
 import { resolveDataRoot } from '../core/environment.js'
-import { PACKAGE_ROOT } from '../core/package.js'
+import { PACKAGE_ROOT, PACKAGE_BUILD } from '../core/package.js'
 import { validateRpcRequest } from '../cli/args.js'
 import { processAlive, removeOwnedFile, validateServiceFile, type ServiceDescriptor } from './controller.js'
 import { resolveInside, safeRelative } from '../core/paths.js'
@@ -94,7 +94,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
       if ((request.headers['x-harness-instance'] && request.headers['x-harness-instance'] !== instanceId) || (request.headers['x-harness-data-root'] && request.headers['x-harness-data-root'] !== record.dataRootHash)) return json(response, { error: 'Incompatible service identity' }, 409)
       if (endpoint.pathname === '/health') {
         if (!auth) return json(response, { error: 'Unauthorized' }, 401)
-        return json(response, { state: draining ? 'draining' : 'running', instanceId, pid: process.pid, dataRootHash: record.dataRootHash, protocolVersion: 1 })
+        return json(response, { state: draining ? 'draining' : 'running', instanceId, pid: process.pid, dataRootHash: record.dataRootHash, protocolVersion: 1, build: record.build, recovery: runtime.recoveryStatus() })
       }
       if (endpoint.pathname === '/stop' && request.method === 'POST') {
         if (!auth) return json(response, { error: 'Unauthorized' }, 401)
@@ -188,12 +188,13 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
   const signal = () => { if (!record) cancelledBeforeReady = true; else void shutdown().catch(rejectFinish) }
   process.once('SIGINT', signal); process.once('SIGTERM', signal)
   try {
-    await runtime.ready()
+    await runtime.preflight()
     if (cancelledBeforeReady) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')
     await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.removeListener('error', reject); resolve() }) })
     if (cancelledBeforeReady) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')
-    record = { schemaVersion: 1, protocolVersion: 1, pid: process.pid, instanceId, startedAt: lock.startedAt, dataRootHash: digest('data-root', dataRoot), url: `http://127.0.0.1:${(server.address() as { port: number }).port}`, token }
+    record = { schemaVersion: 1, protocolVersion: 1, pid: process.pid, instanceId, startedAt: lock.startedAt, dataRootHash: digest('data-root', dataRoot), url: `http://127.0.0.1:${(server.address() as { port: number }).port}`, token, build: PACKAGE_BUILD }
     await writeJson(descriptorFile, record)
+    void runtime.ready().catch(error => { process.stderr.write(JSON.stringify({ code: 'STARTUP_RECOVERY_FAILED', cause: asHarnessError(error).code }) + '\n') })
     onReady?.(record)
     await done
   } catch (error) {

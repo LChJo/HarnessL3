@@ -8,35 +8,35 @@ specification {
 }
 model {
   app = system "HarnessL3" {
-    description "面向现有AI Agent的项目上下文CLI。本机服务稳定连接与提交一致性优先；此模型覆盖正式主模块、文件型知识与技能、文档留存/证据核验、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
+    description "面向现有AI Agent的项目上下文CLI。本机服务稳定连接、历史恢复与提交一致性优先；安装核对构建来源及适用的旧交接。本模型覆盖正式主模块、文件型知识与技能、文档留存/证据核验、关键静态依赖和冻结原型边界；不声称覆盖每个函数或全部业务语义。"
     metadata {
       harness_id "ad94bb95-82f8-4485-b9ac-e1064fcdfa36"
       brief "以LikeC4文本组织项目上下文与文件型技能，通过CLI交接并在Web追溯任务。"
       source "fact"
       status "verified"
-      evidence "d6250000-0000-4000-8000-000000000001"
-      version "6"
+      evidence "d6250000-0000-4000-8000-000000000001 d6360000-0000-4000-8000-00000000000b d6360000-0000-4000-8000-00000000000c d6360000-0000-4000-8000-00000000000d d6360000-0000-4000-8000-00000000000e d6360000-0000-4000-8000-00000000000f d6360000-0000-4000-8000-000000000011"
+      version "7"
     }
     cli = component "CLI入口 · cli/" {
-      description "解析参数、发现帮助并输出单个结果封套；普通命令直接认证RPC，不依赖独立探活。连接拒绝或执行前拒绝可重读定位并有界重连，保持requestId；响应丢失保留结果未知，不盲目重发写请求。状态查询区分运行、停止、排空、不可用和冲突。保留UTF-8请求文件和上下文返回后输出卡片约定，不启动agent或执行技能。"
+      description "解析参数、发现帮助并输出单个结果封套；静态帮助显示构建来源，服务状态提供受限构建字段及恢复进度。普通命令直接认证RPC，不依赖独立探活；仅确认执行前失败可有界重连并保持requestId，响应丢失不盲目重发写请求。初始化活锁不伪报已停止；保留UTF-8文件、输出卡片及现有agent主动调用边界。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000001"
         brief "harnessl3命令与输入契约、RPC直连/有界恢复及文本/JSON输出。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016 2f63b728-1e83-4ac8-aff3-bd766333ee5e"
-        version "4"
+        evidence "d6250000-0000-4000-8000-000000000002 d6250000-0000-4000-8000-000000000016 2f63b728-1e83-4ac8-aff3-bd766333ee5e d6360000-0000-4000-8000-000000000003"
+        version "5"
       }
     }
     service = component "本机服务 · service/" {
-      description "默认用户数据根共享一份常驻回环HTTP服务，认证CLI/Web访问并提供RPC、视图和SSE。本机连接稳定性优先：健康检查仅用于状态/启动诊断，区分暂时不可用与身份/协议冲突；PID只作恢复线索。业务分派前核对可选实例/数据根头，保留协议1旧客户端；确认退出后在单实例锁下恢复，stop不依赖探活、不强杀未知进程。网页会话及显式数据根隔离边界保持。"
+      description "默认用户数据根共享常驻回环HTTP服务，认证CLI/Web并提供RPC、视图和SSE。路径隔离预检后发布控制端点，档案及显式订阅在后台恢复；健康状态分别报告运行和恢复进度，目标请求仍等待自己的完整资源。活启动锁期间有界等待原所有者，无认证停止端点时返回BUSY。保留协议1、请求身份、未知进程保护、提交排空及网页凭证边界。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000002"
         brief "单用户常驻RPC与分类诊断、单实例恢复、浏览会话及worktree事件流。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000016"
-        version "3"
+        version "4"
       }
     }
     core = component "核心用例 · core/" {
@@ -50,14 +50,14 @@ model {
         version "1"
       }
       runtime = component "用例编排 · runtime.ts" {
-        description "core/runtime.ts中的Runtime按worktree装配资源。命令分派、view构建及只读日志绑定共用这些实例；初始化结果只报告机械接入和当前模型数量。"
+        description "Runtime在监听前预检数据根隔离，后台恢复已有档案和显式订阅，按worktree共享Archive加载Promise与用例资源。目标请求等待自己的验证结果，恢复进度保留失败；订阅恢复与登记变更串行，恢复期间拒绝GC apply，关闭等待在途恢复。初始化仍只报告机械接入和模型数量。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000012"
           brief "解析目标，装配独立worktree资源，并将命令分派到核心用例。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000004"
-          version "1"
+          version "2"
         }
       }
       workspace = component "项目身份 · workspace.ts" {
@@ -94,14 +94,14 @@ model {
         }
       }
       context = component "任务上下文 · context.ts" {
-        description "TaskService处理start/select/query/handoff/read/close及历史。入口规则包含长期文档增删改移后的模型/证据维护、Git归属和本机数据边界；联合选择只记录一次，精确正文和已选技能字节归档，旧回执不改写。"
+        description "TaskService处理start/select/query/handoff/read/close及历史；逐条恢复任务契约，按目标任务的归档引用核对当时字节，事件投影读取提交头而不复制无关任务正文。入口保留文档维护、Git归属和本机边界；联合选择只记录一次，旧回执和60天读取基准不改写。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000006"
           brief "任务建档、一次联合选择、精确查询、归档交接和技能正文读取。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000007"
-          version "3"
+          version "4"
         }
       }
       skills = component "技能文件 · skills.ts" {
@@ -116,14 +116,14 @@ model {
         }
       }
       archive = component "文件历史 · archive.ts" {
-        description "Archive以journal提交为事实，保存内容寻址snapshot/blob和请求回执。幂等重放保留已提交字节；恢复不能用当前模型或技能补造历史。"
+        description "Archive以journal为提交事实，保存内容寻址snapshot/blob和幂等回执。按提交类型/任务派生定位，扫描固定调用边界并返回副本，头和引用查询不复制无关正文；恢复轮次内去重引用校验，解析分段让出事件循环。哈希链、损坏区域和后续请求的原字节核对保持，不永久信任缓存或以当前内容补历史。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000008"
           brief "保存journal提交、幂等回执、快照和技能字节，按已提交事实恢复。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000009"
-          version "1"
+          version "2"
         }
       }
       index = component "派生索引 · index.ts" {
@@ -160,14 +160,14 @@ model {
         }
       }
       maintenance = component "维护 · maintenance.ts" {
-        description "MigrationService显式复制原型档案并保留来源、当时ID和字节；任务格式检查复用所属服务已加载的journal，所请求的归档仍核对字节。GarbageCollector只回收明确可再生/未提交产物，历史和用户技能不作为临时垃圾。"
+        description "MigrationService显式复制原型档案并保留来源、当时ID和字节；普通legacy列表及格式检查复用所属Runtime已验证档案，以提交头定位正式任务。显式迁移和所请求旧归档继续核对原字节。GC只回收明确可再生/未提交产物，保留历史和用户技能，恢复期间不执行apply。"
         metadata {
           harness_id "c6250000-0000-4000-8000-00000000000c"
           brief "显式复制原型档案、只读恢复旧记录，以及保守回收确定可再生数据。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-00000000000e"
-          version "2"
+          version "3"
         }
       }
     }
@@ -183,14 +183,14 @@ model {
       }
     }
     runtimeSkill = artifact "Agent入口 · agent-skills/" {
-      description "harnessl3/SKILL.md及按需参考指导已有agent先组织上下文；独立安装器通过Node主模块标识识别直接调用，兼容临时目录别名和链接入口，作为模块导入时不执行安装；中文JSON优先写入worktree外UTF-8文件，明确字节的stdin仍可用；实际上下文和必要技能正文返回后，取得真实链接，在进度消息中展示一次查看HarnessL3的输出引用卡片，再继续标准工作，最终答复不重复。首次确认后由当前大模型直接建模；源码/文档/知识阶段均维护当前关联与证据，移动保留身份、删除保留历史，区分长期文档和本机task记录。权威上下文随相关源码版本管理，项目技能按真实文件归属纳入，本机数据及外部技能库排除，提交遵守已有授权。"
+      description "harnessl3/SKILL.md及按需参考指导当前agent组织上下文、确认后直接建模并维护文档/证据/Git归属；正文返回后展示一次真实输出卡片。安装按唯一INSTALL指南保留旧包，核对源提交、运行文件指纹及实际服务/RPC；已有L3交接先保存UTF-8原包再只读比较，未提供明确未检查。显式安装和验证工具使用Node主模块标识兼容目录别名与链接；保留机器历史、用户技能及既有提交授权边界。"
       metadata {
         harness_id "c6250000-0000-4000-8000-00000000000e"
         brief "指导当前agent接入、阅读/建模、选择/交接上下文和报告真实进度。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000011 7f0df0da-7a72-47aa-8953-343a7927cb24 c0bf2ca0-ae94-4381-9c25-b72abe3b2f30"
-        version "8"
+        evidence "d6250000-0000-4000-8000-000000000011 7f0df0da-7a72-47aa-8953-343a7927cb24 c0bf2ca0-ae94-4381-9c25-b72abe3b2f30 d6360000-0000-4000-8000-000000000001 d6360000-0000-4000-8000-000000000002 d6360000-0000-4000-8000-000000000003 d6360000-0000-4000-8000-000000000004 d6360000-0000-4000-8000-000000000005"
+        version "9"
       }
     }
     library = artifact "可编辑方法 · skills/" {
@@ -216,14 +216,14 @@ model {
       }
     }
     quality = component "隔离验证 · tests/v1与web验证" {
-      description "Node测试和正式Web验证使用临时Git与隔离数据根；安装消费者经中文链接目录检查真实入口及安装包Schema，兼容路径别名。程序回归覆盖技能安装、链接通知和局部核验，以及本机服务探活不可用但RPC正常、慢响应/状态分类、端点轮转、死亡恢复、实例归属和停止重连；真实临时档案验证提交后丢响应不会重复创建任务，原requestId可回放。保留原型的监听回归通过真实文件及丢通知夹具核对模型更新与有效缓存落盘。每轮/平台结果独立记录，源码中存在测试不代表它本次已运行。"
+      description "Node与Web验证使用临时Git和隔离数据根，覆盖既有连接、提交、技能及原型监听门禁。新增恢复阻塞时控制RPC可用/GC互斥、活锁不伪报停止、单档案恢复与引用去重、已知ID不复制无关正文及后续损坏检查。中文链接目录中的真实安装消费者检查构建/服务指纹、旧交接一致及差异失败；双worktree完整合成历史分别测控制就绪、首次交接总耗时、热读取和RSS，并核对journal不变。每轮/平台独立留证，测试存在不等于本轮已通过。"
       metadata {
         harness_id "c6250000-0000-4000-8000-000000000010"
         brief "通过临时Git、独立数据根、程序/浏览器与安装消费者核对正式契约。"
         source "fact"
         status "verified"
-        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c 1adbda54-d648-4a22-a7b0-cf7f7a7ad845 f3392c10-b6b2-4bfb-aa3a-e7860e44c55a 5adba891-e681-40f9-8340-255671acdb9f"
-        version "8"
+        evidence "d6250000-0000-4000-8000-000000000013 d6250000-0000-4000-8000-000000000017 deda538a-cccc-4f64-9909-86d4445ed1d0 c7e37e35-b20f-45d8-b816-8ad845bdb602 1e950683-1469-49c8-9164-d439932a7bf2 45053a0a-4b0c-446a-b495-f43b34a6486c 1adbda54-d648-4a22-a7b0-cf7f7a7ad845 f3392c10-b6b2-4bfb-aa3a-e7860e44c55a 5adba891-e681-40f9-8340-255671acdb9f d6360000-0000-4000-8000-000000000006 d6360000-0000-4000-8000-000000000007 d6360000-0000-4000-8000-000000000008 d6360000-0000-4000-8000-000000000009 d6360000-0000-4000-8000-00000000000a d6360000-0000-4000-8000-000000000010 d6360000-0000-4000-8000-000000000012"
+        version "9"
       }
     }
     prototype = component "冻结原型参考 · src/server/examples" {

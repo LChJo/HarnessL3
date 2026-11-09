@@ -299,7 +299,7 @@ async function codeFingerprint() {
   for (const directory of ['build/core', 'build/cli', 'build/service']) await visit(directory); files.sort();
   return Object.fromEntries(await Promise.all(files.map(async file => [file, hash(await readFile(path.join(projectRoot, file)))])));
 }
-async function createFixture(base, objects, seed) {
+export async function createFixture(base, objects, seed = DEFAULT_SEED) {
   const dataset = generateDataset({ objects, seed });
   const fixtureBase = path.join(base, `scale-${objects}`), root = path.join(fixtureBase, 'primary worktree'), secondRoot = path.join(fixtureBase, 'second worktree'), dataRoot = path.join(fixtureBase, 'machine-data');
   await mkdir(root, { recursive: true }); await writeDataset(root, dataset);

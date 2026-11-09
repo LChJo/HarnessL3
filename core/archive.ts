@@ -1,6 +1,7 @@
 import { open, readFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { setImmediate } from 'node:timers/promises';
 import { HarnessError } from './errors.js';
 import { canonicalJson, digest, parseJsonStrict, sha256 } from './json.js';
 import { atomicWrite, ensureDir, isErrno } from './io.js';
@@ -37,6 +38,8 @@ export type CommitInput<T> = {
   materializations?: { path: string; content: unknown }[];
 };
 export type CommitResult<T> = { receipt: T; replayed: boolean; seq: number };
+export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[] }
+export interface CommitHeader { seq: number; scope: string; requestId: string; receiptHash: string; kind: string | null; taskId: string | null; operation: string | null; source: string | null }
 
 function corrupt(message: string, details: Record<string, unknown> = {}): HarnessError {
   return new HarnessError('ARCHIVE_CORRUPT', message, details);
@@ -65,6 +68,8 @@ export class Archive {
   private queue: Promise<unknown> = Promise.resolve();
   private commits: CommitRecord[] = [];
   private requests = new Map<string, CommitRecord>();
+  private byKind = new Map<string, CommitRecord[]>();
+  private byTask = new Map<string, CommitRecord[]>();
   private state: 'ready' | 'recovery-required' = 'ready';
   private problems: ArchiveDiagnostic[] = [];
 
@@ -76,8 +81,51 @@ export class Archive {
   get status(): 'ready' | 'recovery-required' { return this.state; }
   get diagnostics(): ArchiveDiagnostic[] { return structuredClone(this.problems); }
   get seq(): number { return this.commits.at(-1)?.seq ?? 0; }
-  records(): CommitRecord[] { return structuredClone(this.commits); }
+  records(filter: RecordFilter = {}): CommitRecord[] { return [...this.scan(filter)]; }
+  scan(filter: RecordFilter = {}): IterableIterator<CommitRecord> {
+    const records = this.matching(filter);
+    return (function* () { for (const record of records) yield structuredClone(record); })();
+  }
+  headers(filter: RecordFilter = {}): CommitHeader[] { return Array.from(this.matching(filter), record => this.header(record)); }
+  references(filter: RecordFilter = {}): ArchiveReference[] {
+    const references = new Map<string, ArchiveReference>();
+    for (const record of this.matching(filter)) for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, { ...reference });
+    return [...references.values()];
+  }
+  hasKind(kind: string): boolean { return this.byKind.has(kind); }
+  hasRequest(scope: string, requestId: string): boolean { return this.requests.has(this.key(scope, requestId)); }
   ready(): Promise<void> { return this.loaded ??= this.load(); }
+
+  private header(record: CommitRecord): CommitHeader {
+    const payload = record.payload as { kind?: unknown; task?: { id?: unknown }; operation?: unknown; source?: unknown } | null;
+    return { seq: record.seq, scope: record.scope, requestId: record.requestId, receiptHash: record.receiptHash,
+      kind: typeof payload?.kind === 'string' ? payload.kind : null,
+      taskId: payload?.kind === 'task' && typeof payload.task?.id === 'string' ? payload.task.id : null,
+      operation: typeof payload?.operation === 'string' ? payload.operation : null, source: typeof payload?.source === 'string' ? payload.source : null };
+  }
+  private matching(filter: RecordFilter): IterableIterator<CommitRecord> {
+    const { kind, taskId } = filter, excluded = new Set(filter.excludeKinds);
+    const records = taskId !== undefined ? this.byTask.get(taskId) ?? [] : kind !== undefined ? this.byKind.get(kind) ?? [] : this.commits;
+    const length = records.length;
+    const header = (record: CommitRecord) => this.header(record);
+    return (function* () {
+      for (let i = 0; i < length; i++) {
+        const record = records[i], meta = header(record);
+        if (kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind)) continue;
+        yield record;
+      }
+    })();
+  }
+  private remember(record: CommitRecord): void {
+    this.commits.push(record);
+    this.requests.set(this.key(record.scope, record.requestId), record);
+    const header = this.header(record);
+    for (const [index, key] of [[this.byKind, header.kind], [this.byTask, header.taskId]] as const) if (key !== null) {
+      let records = index.get(key);
+      if (!records) { records = []; index.set(key, records); }
+      records.push(record);
+    }
+  }
 
   private key(scope: string, requestId: string): string { return `${scope}\0${requestId}`; }
 
@@ -111,14 +159,14 @@ export class Archive {
     const completeEnd = lastNewline + 1;
     let offset = 0;
     let validEnd = 0;
+    let yieldedThrough = 0;
     while (offset < completeEnd) {
       const newline = bytes.indexOf(10, offset);
       const line = bytes.subarray(offset, newline);
       try {
         const record = parseJsonStrict(decode(line)) as CommitRecord;
         this.validateRecord(record);
-        this.commits.push(record);
-        this.requests.set(this.key(record.scope, record.requestId), record);
+        this.remember(record);
         validEnd = newline + 1;
       } catch (error) {
         this.state = 'recovery-required';
@@ -126,6 +174,7 @@ export class Archive {
         break;
       }
       offset = newline + 1;
+      if (offset - yieldedThrough >= 1024 * 1024) { yieldedThrough = offset; await setImmediate(); }
     }
     // Only an unterminated suffix following a fully verified prefix is uncommitted.
     if (this.state === 'ready' && completeEnd < bytes.length && validEnd === completeEnd) {
@@ -139,9 +188,11 @@ export class Archive {
       }
     }
     const latest = new Map<string, Materialization>();
+    // Recovery shares verification work, not decoded bodies or a lifetime trust cache.
+    const verified = new Map<string, Promise<void>>();
     for (const record of this.commits) {
       try {
-        await this.verifyReferences(record);
+        await this.verifyReferences(record, verified);
         for (const materialization of record.materializations) latest.set(materialization.path, materialization);
       } catch (error) {
         this.state = 'recovery-required';
@@ -243,10 +294,18 @@ export class Archive {
     }
   }
 
-  private async verifyReferences(record: CommitRecord): Promise<void> {
+  private async verifyReferences(record: CommitRecord, verified?: Map<string, Promise<void>>): Promise<void> {
     for (const reference of record.archives) {
-      if (reference.kind === 'snapshot') await this.readSnapshot(reference.hash);
-      else await this.readBlob(reference.hash);
+      const key = `${reference.kind}:${reference.hash}`;
+      let pending = verified?.get(key);
+      if (!pending) {
+        pending = (async () => {
+          if (reference.kind === 'snapshot') await this.readSnapshot(reference.hash);
+          else await this.readBlob(reference.hash);
+        })();
+        verified?.set(key, pending);
+      }
+      await pending;
     }
   }
 
@@ -315,8 +374,7 @@ export class Archive {
       this.problems.push({ code: 'JOURNAL_WRITE_FAILED', message: String(error), path: journal, verifiedThrough: this.seq });
       throw new HarnessError('IO_ERROR', 'Journal append did not complete; restart recovery is required.', { requestId: captured.requestId, cause: String(error) });
     } finally { await handle.close(); }
-    this.commits.push(record);
-    this.requests.set(this.key(record.scope, record.requestId), record);
+    this.remember(record);
     try { for (const item of materializations) await this.materialize(item); }
     catch (error) {
       this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), seq: record.seq });

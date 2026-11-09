@@ -67,6 +67,10 @@
 
 `serve start --foreground` 为显式诊断模式，服务就绪后进程长驻直到停止；`--json` 仅在 ready 时输出一个成功封套，此后日志全部 stderr，Ctrl+C 优雅停止且不输出第二个 JSON。未就绪即取消返回 CANCELLED/130；ready 后退出码反映长驻进程结束，不把已输出的 ready 回执改写成服务一直成功运行。
 
+服务描述未发布而活启动锁仍存在时，`serve status`返回`state:unavailable`及`diagnostic.reason:startup-in-progress`，可附锁中的pid/instanceId/startedAt；它们是恢复线索，不是认证成功。`serve start`有界等待原所有者，不再额外spawn；`serve stop`尚无法认证停止时返回BUSY，不能返回stopped。已发布控制端点的健康响应可附`recovery:{state,totalWorktrees,completedWorktrees,failures}`，状态查询保留该诊断；running与后台恢复complete/degraded分开，目标请求仍等待其完整资源。状态/启动诊断仅输出允许的构建字段，不透传描述文件中的未知属性或token。
+
+`--version`保持包版本文字；静态帮助另显示构建源提交，dirty或unknown如实标明。服务管理结果的可选`build`包括packageVersion、sourceCommit/sourceDirty和runtimeHash，来源是服务启动时记录的构建，缺失时为null；普通协议1 RPC不要求此扩展。安装工具核对包内指纹与实际文件、运行服务构建和RPC；有更新前handoff原包时，只读比较packet/skillPlan/binding。未提供原包明确not-requested，失败保留阶段与结果未知，不创建用户任务或自动重发业务请求。使用与回滚步骤以根目录INSTALL为准。
+
 普通命令读取服务描述后直接发送认证RPC，不设独立探活门槛。连接拒绝及服务分派前的401/403/409/503拒绝可在重读定位后有界重连；只有确认未执行业务才自动重发，requestId和请求正文不变。未变化的身份/协议拒绝明确报冲突；暂时不可用耗尽重试返回BUSY且retryable:true。状态查询和启动检查对健康请求做有界重试，PID不是端点可用的前提；serve stop直接请求停止并可跟随更新的定位，不依赖健康检查，也不强杀未知进程。
 
 连接诊断在error.details返回reason、适用时的httpStatus/systemCode及原requestId；RPC额外返回outcome:"not-executed"|"unknown"。响应丢失、损坏或requestId不符时保留unknown，CLI不自动重发；调用方先核对已有回执，再按该操作的幂等契约使用原requestId恢复，不能假设所有管理写操作都支持归档回放。取消仍保留已提交结果。错误诊断不输出本地token或浏览会话凭据。

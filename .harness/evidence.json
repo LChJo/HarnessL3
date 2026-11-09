@@ -4,42 +4,42 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.35 product boundary includes stability-first local RPC, bounded pre-execution recovery, single-writer protection and honest unknown write outcomes.",
+      "claim": "Current v0.36 defines startup-owner diagnostics, separate control/recovery states, verified archive reuse, scoped install verification and representative full-history measurement without changing file authority or unknown-write rules.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "d3e3b59189ccd52d711bb730de53eeb815f8fe4e72676efddcb35fb3cc576e67",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "69e27b7c0aa2672d112f1d5a6b24bc4b69bc717349a8dc0a3563437702b7f712",
+      "observedAt": "2026-11-09T05:37:20.121Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "CLI adapts input and output, sends ordinary authenticated RPC without a health gate, presents classified service status and delegates bounded connection recovery.",
+      "claim": "CLI reports controlled service build metadata and recovery diagnostics, sends ordinary RPC directly and retains existing request/outcome semantics.",
       "location": {
         "path": "cli/main.ts"
       },
-      "hash": "72f26be216a8d98a216a882c8f9c63adb46cae0af8ca44d5f43526a28efeaf40",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "a1acd214e9924eeafc585596e5bedc542b36d0efac0ff63b090ccaf51bc21d9a",
+      "observedAt": "2026-11-09T05:37:20.124Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Loopback HTTP service authenticates CLI/Web requests, rejects supplied instance/data-root/protocol mismatches before dispatch, and preserves existing browser-session reuse rules.",
+      "claim": "Loopback service preflights data-root isolation, publishes the control endpoint before background archive recovery, reports scoped recovery progress and retains authenticated admission, drain and browser boundaries.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "3b233986e4f475b6e3c1e6d2c0807d78270f0bfa35cbac7ec220b937260cb115",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "daba309136a5133c8c2deb2d5666febc463399384ec6d1d887dc062b2dda4fe8",
+      "observedAt": "2026-11-09T05:37:20.125Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime assembles per-worktree task, workspace, model, skills, archive, index, freshness, observation and maintenance resources.",
+      "claim": "Runtime shares verified worktree archives across background recovery and ordinary resources, serializes subscription resumption with registry mutations, exposes recovery progress and blocks GC apply during recovery.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "d1d25ae3cb2002692d0c8d3c2abd5128283bd8bf7925ea82022110a3862eace2",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "eb1d8b32b3451f92039b3c1e789c8d39e31de5b1248d785a15abf290fea04680",
+      "observedAt": "2026-11-09T05:37:20.126Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "Task entry returns reusable document lifecycle and Git boundaries; joint selection, exact reads and immutable archived history retain their existing authority.",
+      "claim": "TaskService restores all committed task contracts incrementally and verifies known-task references without copying unrelated payloads; task-read projection uses commit headers while historical bytes and retention stay unchanged.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "ce5dfc76663648e6922ee00c6afc8c41871e4f865de4d1e23b54fd3416856fc0",
-      "observedAt": "2026-11-07T14:25:11.750Z"
+      "hash": "1fd09bbe5401d324af2eb4baeef57d246d7ad5234741f48d9ca98bfff0dd5da8",
+      "observedAt": "2026-11-09T05:37:20.127Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -84,12 +84,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000009",
       "kind": "source-code",
-      "claim": "Archive persists committed journal facts, snapshots, blobs and replay receipts.",
+      "claim": "File-authoritative Archive derives bounded type/task queries, copies only matching records or reference/header data, yields during large journal parsing and deduplicates references within a recovery pass without a lifetime trust cache.",
       "location": {
         "path": "core/archive.ts"
       },
-      "hash": "dfca5c51238271dc991de55656d77477226ffa1b49bac81bdafc75f1e24eb410",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "bd004f7f9b71588ff21ab3636967b790d3697147ccd3d4c160f923e0a131933d",
+      "observedAt": "2026-11-09T05:37:20.128Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000a",
@@ -118,8 +118,8 @@
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "745575270ea6b68f8cf583315306b0062da343ed9241dbad5d413f1ab0d5f814",
-      "observedAt": "2026-11-07T16:14:32.614Z"
+      "hash": "4e61b293770b092c009048c9ce3d563bdb09b60b97bc39cde49065356a59b97a",
+      "observedAt": "2026-11-09T05:37:20.130Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -128,18 +128,18 @@
       "location": {
         "path": "core/observation.ts"
       },
-      "hash": "f76a32a0f69f5898a794e0a59db7cf47aac684c38de3cc7deb1d12c97331bfbc",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "5ba2c96470a60182f073c760ce71d8cb2767110c423c1fcd50b2945674ddee16",
+      "observedAt": "2026-11-09T05:37:20.131Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000e",
       "kind": "source-code",
-      "claim": "Explicit prototype copying and conservative GC preserve source archives and protected user content.",
+      "claim": "Ordinary legacy discovery uses the owning verified archive and ordered commit metadata; explicit migration/requested legacy bytes and conservative GC retain existing checks and protected content.",
       "location": {
         "path": "core/maintenance.ts"
       },
-      "hash": "eb3ab338d6a5369cc0a38ebebe7ea2be58f3b8595f850ef8d37add5d46a8f4cb",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "b8b691b3e820d8c0f22a752760fa73d16789e3def3e28023fe153bac4d9c9118",
+      "observedAt": "2026-11-09T05:37:20.132Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Formal build, test and distribution entry points are separate from the retained prototype scripts.",
+      "claim": "Formal CLI builds stamp provenance and ship explicit skill-installation and runtime-verification tools; prototype scripts remain separate.",
       "location": {
         "path": "package.json"
       },
-      "hash": "52d05489b711393083c90ee2fc15f1a92e5309912cdaf5c487e5422ab78f2f51",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "9667156dd26b9915638de3c8054356a9de68cb32c6c61ae35206979b286a29f1",
+      "observedAt": "2026-11-09T05:37:20.133Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -214,12 +214,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000016",
       "kind": "source-code",
-      "claim": "Local RPC connects directly, retries only confirmed pre-execution failures with unchanged requestId, refreshes endpoints, classifies health diagnostics and recovers dead daemons under the startup lock; lost responses are not automatically resent.",
+      "claim": "Controller distinguishes live startup ownership from stopped/authenticated endpoints, joins bounded startup without spawning a competitor, sanitizes optional build metadata and preserves pre-execution-only RPC retries.",
       "location": {
         "path": "service/controller.ts"
       },
-      "hash": "cabc0390be3501c6ace6cca162785d75e9359a4198a7ee51998efae462c426d1",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "f0aab01aa5ae95c64d55046b1b7dc8a3dd3ca0cc198adc08f3af4fdfa4467018",
+      "observedAt": "2026-11-09T05:37:20.135Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000017",
@@ -284,12 +284,12 @@
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Storage separates Git authority from local archives and derived data; local connection recovery retains the single-writer lock, original request IDs and commit-based outcome recovery.",
+      "claim": "Storage keeps journal authority, bounded derived record queries and pass-local reference verification, separates build provenance from sourceVersion and protects historical bytes during install or rollback.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "81d344c5389eacdd815fca0e612cd10d7bbd4bd1f433b8ed31884d614c56f5d5",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "d792f8c2dc17eac43799a489243b950be70403432ca7b6d094153ebcdd08a62a",
+      "observedAt": "2026-11-09T05:37:20.136Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -314,12 +314,12 @@
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "CLI help documents classified local service states, direct RPC/stop, transient recovery and checking original requestId outcomes, while retaining UTF-8 file and output-card guidance.",
+      "claim": "Static help exposes the build source without starting the service and retains command/schema discovery and version semantics.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "7ab4539a26845f90e5a2a090a1d3eda5eed981ae813469a085ce7a58bf0dc5c5",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "accc43506fdc8fc39c9773153f7af0f3970b6d904c4f49ec46109250727fc49d",
+      "observedAt": "2026-11-09T05:37:20.137Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation history records the exact latest Actions failure, deterministic missed-notification RED/GREEN, and actual per-platform validation scopes without inferring the underlying macOS event cause or full-project synchronization.",
+      "claim": "Current v0.36 status records implemented startup/history/install changes, actual Windows program/browser/installed-consumer results and separately scoped synthetic performance evidence; native cross-platform CI, real global update and unrelated pending remain unclaimed.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "fc4d947f4380a62f393be6b6b90b959e349163760e9e2a03f47993f02a633dc8",
-      "observedAt": "2026-11-08T15:28:50.764Z"
+      "hash": "38e0672dcff08e6ec58c7e9f6647c29846c8e0648ab045bf35fc718d8efbb1fd",
+      "observedAt": "2026-11-09T05:37:20.139Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,22 +394,22 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "A fresh installed package is exercised through a Unicode directory alias; help must provide an absolute Schema path whose real target matches the expected packaged file, including Windows short-name aliases. Packaged resources, runtime skills, task/archive roundtrips, login and offline assets remain checked.",
+      "claim": "A fresh installed package through a Unicode directory alias exercises runtime fingerprint/service identity, archived handoff comparison and changed-baseline rejection, plus existing skill/task/login/offline checks.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "2ddeaaf9dbe26e8999d3853049901ec1cc1670d1cfffb4f021042ec9c0d5bbcf",
-      "observedAt": "2026-11-08T04:50:29.133Z"
+      "hash": "3c60d50487fb93d53d4c6780f90306743af8719aff168b123ed6645c86278aec",
+      "observedAt": "2026-11-09T05:37:20.140Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
       "kind": "source-code",
-      "claim": "Isolated CLI/HTTP regressions cover unavailable or slow health, PID-independent endpoint checks, classified status, endpoint/stop rotation, safe admission retries, dead-daemon recovery and a real committed task whose lost response must not cause a duplicate write.",
+      "claim": "Isolated HTTP/CLI regressions cover joining an existing startup owner, sanitized metadata and prior classified health, admission, endpoint rotation, death recovery and lost committed responses.",
       "location": {
         "path": "tests/v1/service-stability.test.mjs"
       },
-      "hash": "0d0e89467a8eb48a1ed9d26da3880b6a4b29c1528feed4e9893e465f8ee5c1ba",
-      "observedAt": "2026-11-08T07:56:57.414399Z"
+      "hash": "b91643d58a35579e6df69b0c757530d12a9c87c7e1dc6decfd0f14fb7a546c03",
+      "observedAt": "2026-11-09T05:37:20.141Z"
     },
     {
       "id": "b8b7071a-58e2-4eb5-b66e-72b0dcdf5e49",
@@ -430,6 +430,186 @@
       },
       "hash": "257a7c198431e2309d6e5fdba3e15fd1c21493892463a042e369ccccdeb5bece",
       "observedAt": "2026-11-08T15:21:44.849Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000001",
+      "kind": "source-code",
+      "claim": "Explicit installer verification checks package/runtime provenance, the actual resident build and RPC, optionally compares a saved handoff, and reports completed phases without automatically replaying failed business requests.",
+      "location": {
+        "path": "scripts/verify-install.mjs"
+      },
+      "hash": "2249bca25b26a6a98c8f39a00f794d25767b7d11ddc07ae3e5fb97f0e4ac1c58",
+      "observedAt": "2026-11-09T05:37:20.142Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000002",
+      "kind": "source-code",
+      "claim": "CLI build stamping records actual Git provenance or unknown, dependency-lock bytes and compiled runtime fingerprint without exposing machine paths or credentials.",
+      "location": {
+        "path": "scripts/write-build-info.mjs"
+      },
+      "hash": "8a624dfcb6199c61f1b301c2199a54845de30cc2117b15eef4c3db46c95c3c96",
+      "observedAt": "2026-11-09T05:37:20.143Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Package helpers expose a restricted build projection and fingerprint packaged runtime files; missing provenance remains unknown.",
+      "location": {
+        "path": "core/package.ts"
+      },
+      "hash": "b0cf5253f44991d746784de47b8a2014dc88c06bb649c9899a16a3561f212f91",
+      "observedAt": "2026-11-09T05:37:20.144Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000004",
+      "kind": "document",
+      "claim": "The platform installation flows preserve an old package, verify the expected clean source and running build, and describe explicit saved-handoff checks and data-preserving rollback.",
+      "location": {
+        "path": "INSTALL.md"
+      },
+      "hash": "349d5d44ed19d114f967dddb0989bbe3051763ca5ddabe502c4b8681b4c865af",
+      "observedAt": "2026-11-09T05:37:20.145Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000005",
+      "kind": "document",
+      "claim": "Update guidance saves an actual UTF-8 handoff before stopping the old service, compares it after update and distinguishes copied files, host loading and checked versus unrequested recovery.",
+      "location": {
+        "path": "agent-skills/harnessl3/references/install-update.md"
+      },
+      "hash": "402d501d297fa443727530f911d3f501c7f5c4ecb070057c20bef8868c132e9d",
+      "observedAt": "2026-11-09T05:37:20.146Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000006",
+      "kind": "source-code",
+      "claim": "Isolated real-server tests block archive recovery while checking control readiness/RPC and GC exclusion, and count shared-content reads across startup and first worktree access.",
+      "location": {
+        "path": "tests/v1/history-recovery.test.mjs"
+      },
+      "hash": "1223fc6736ce13e9c08f4f07744ae63d8b2b64c00d395b93119c50b009cc260d",
+      "observedAt": "2026-11-09T05:37:20.147Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000007",
+      "kind": "source-code",
+      "claim": "A separate synthetic two-worktree benchmark seeds full TaskService histories and measures fresh-process control readiness, total first handoff, warm RPC and peak RSS while checking authoritative journal hashes.",
+      "location": {
+        "path": "scripts/v1/history-benchmark.mjs"
+      },
+      "hash": "4fd87d9da029aacadf2539cb9540d03824591f69c45eb0bd64997598363f0419",
+      "observedAt": "2026-11-09T05:37:20.148Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000008",
+      "kind": "source-code",
+      "claim": "Archive regressions exercise single-pass shared-reference validation, later corruption, filtered immutable record/reference queries and invocation-boundary iteration alongside durability checks.",
+      "location": {
+        "path": "tests/v1/archive.test.mjs"
+      },
+      "hash": "6c90f881e5a979ff956e4ee5499992df70a0b642dfbe4ad1dba2994cc4cc9813",
+      "observedAt": "2026-11-09T05:37:20.149Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000009",
+      "kind": "source-code",
+      "claim": "The actual CLI reports a live unpublished startup owner as unavailable, rejects false stop success, and leaves the lock and owner intact.",
+      "location": {
+        "path": "tests/v1/service-recovery.test.mjs"
+      },
+      "hash": "d1b9fcfb8ce63184160121a6c2458d0c2fa1e3807b8c12ff28a6807c2ff2618e",
+      "observedAt": "2026-11-09T05:37:20.151Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000a",
+      "kind": "source-code",
+      "claim": "Known-ID handoff returns the original packet without copying unrelated committed history; existing source/CAS, retention, historical and corrupt-archive checks remain.",
+      "location": {
+        "path": "tests/v1/context.test.mjs"
+      },
+      "hash": "28cc68512beb61c13fbc6d4345a31b131e22f84f0799f79103aaf0c807cf2bdd",
+      "observedAt": "2026-11-09T05:37:20.152Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000b",
+      "kind": "document",
+      "claim": "TC17/22/23/26 define independent complete-history timings, blocked-recovery control availability, honest startup/stop state and installed-build/handoff verification scopes.",
+      "location": {
+        "path": "docs/spec/acceptance.md"
+      },
+      "hash": "7179e0da60be03c33e4de0ca0503f2ff6e51589a6ee179d97036dd064b529635",
+      "observedAt": "2026-11-09T05:37:20.154Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000c",
+      "kind": "document",
+      "claim": "Architecture separates preflight/control availability from background recovery while retaining singleton ownership, full target verification, explicit subscriptions and safe shutdown.",
+      "location": {
+        "path": "docs/spec/architecture.md"
+      },
+      "hash": "3395c181749cea031111fe49ddc59110a477b7140d1f5316890f2bedffc70678",
+      "observedAt": "2026-11-09T05:37:20.155Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000d",
+      "kind": "document",
+      "claim": "Protocol keeps static version and ordinary RPC semantics, adds optional restricted build/recovery diagnostics and documents startup-in-progress and explicit install verification.",
+      "location": {
+        "path": "docs/spec/cli-contract.md"
+      },
+      "hash": "c39c4b84ef44be5074073d32dc8f62650f5400e5168778fb1be9ae409af7a001",
+      "observedAt": "2026-11-09T05:37:20.156Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000e",
+      "kind": "document",
+      "claim": "FR12/14 distinguish control, recovery and install-check state and require independent representative accumulated-history measurements.",
+      "location": {
+        "path": "docs/spec/product.md"
+      },
+      "hash": "dbf874a5c1b60bd92b5c893d99ddfd717d6bb6a7b24e96ec4316b1dbcd150c45",
+      "observedAt": "2026-11-09T05:37:20.157Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-00000000000f",
+      "kind": "document",
+      "claim": "The specification entry points at current baseline v0.36 and its scoped installation/recovery refinements without inheriting old platform verification.",
+      "location": {
+        "path": "docs/spec/README.md"
+      },
+      "hash": "f8c6d09d57bd08ba2436eba29949846ccccd381951e4585877f20bc045fd58e7",
+      "observedAt": "2026-11-09T05:37:20.158Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000010",
+      "kind": "document",
+      "claim": "Performance documentation records a same-history baseline/candidate comparison and a separately sampled candidate steady-read supplement with exact recovery-wait, runtime fingerprint, integrity checks and platform/synthetic limitations; prior small-record results remain independently scoped.",
+      "location": {
+        "path": "docs/implementation/PERFORMANCE.md"
+      },
+      "hash": "53e3b74fc59d11bb20d91f102d5efa3799ed6947b2709777c507e55a711dc5f5",
+      "observedAt": "2026-11-09T05:37:20.160Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000011",
+      "kind": "document",
+      "claim": "Agent maintenance follows baseline v0.36, preserves startup ownership and separates copied files, running build and applicable archived handoff verification.",
+      "location": {
+        "path": "AGENTS.md"
+      },
+      "hash": "a497d595e9c9eedcaec9115c91024b4aaecea966ceb546a612733254a385f38d",
+      "observedAt": "2026-11-09T05:37:20.161Z"
+    },
+    {
+      "id": "d6360000-0000-4000-8000-000000000012",
+      "kind": "source-code",
+      "claim": "The existing synthetic fixture generator is reusable by the full-history benchmark; its prior small-record/core/CLI methodology remains separately scoped.",
+      "location": {
+        "path": "scripts/v1/benchmark.mjs"
+      },
+      "hash": "286605187aac6ffdd229235a20ec135fc1a9832c17cee34610d79653861a468e",
+      "observedAt": "2026-11-09T05:37:20.162Z"
     }
   ]
 }

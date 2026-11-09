@@ -59,6 +59,23 @@ async function fixture(t) {
 }
 const expectError = (response, code) => { assert.equal(response.ok, false, JSON.stringify(response)); assert.equal(response.error.code, code); return response.error }
 
+test('TC17 known-ID handoff does not deep-copy unrelated committed history', async t => {
+  const f = await fixture(t)
+  const entry = await f.start()
+  const before = await f.call('task handoff', entry.data.taskId)
+  await f.archive.commit({ scope: 'synthetic-history', requestId: randomUUID(), request: {}, payload: { kind: 'synthetic-unrelated-history', padding: 'x'.repeat(1024 * 1024) }, receipt: {} })
+  const clone = globalThis.structuredClone
+  let unrelatedCopies = 0
+  t.mock.method(globalThis, 'structuredClone', (value, ...args) => {
+    if (value?.payload?.kind === 'synthetic-unrelated-history' || Array.isArray(value) && value.some(record => record?.payload?.kind === 'synthetic-unrelated-history')) unrelatedCopies++
+    return clone(value, ...args)
+  })
+  const after = await f.call('task handoff', entry.data.taskId)
+  assert.equal(after.ok, true, JSON.stringify(after))
+  assert.deepEqual(after.data, before.data)
+  assert.equal(unrelatedCopies, 0, 'the read boundary must exclude unrelated history bodies')
+})
+
 test('TC06 task entry provides bounded routing material and freezes actual model/C4 snapshot', async t => {
   const f = await fixture(t)
   const entry = await f.start()

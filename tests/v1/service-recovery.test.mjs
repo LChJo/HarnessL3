@@ -7,6 +7,26 @@ import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
 import { fixture, binary } from './helpers.mjs'
 
+test('TC23 a live startup owner is unavailable, and stop cannot claim it has stopped', async t => {
+  const f = await fixture(t)
+  await mkdir(f.dataRoot, { recursive: true })
+  const owner = { schemaVersion: 1, pid: process.pid, instanceId: randomUUID(), startedAt: new Date().toISOString() }
+  const bytes = JSON.stringify(owner)
+  const file = path.join(f.dataRoot, 'service.lock')
+  await writeFile(file, bytes)
+  const status = await f.cli(['serve', 'status'])
+  assert.equal(status.code, 0, status.stdout + status.stderr)
+  assert.equal(status.body.data.result.state, 'unavailable')
+  assert.equal(status.body.data.result.diagnostic.reason, 'startup-in-progress')
+  assert.equal(status.body.data.result.diagnostic.instanceId, owner.instanceId)
+  const stopped = await f.cli(['serve', 'stop'])
+  assert.equal(stopped.body.ok, false, stopped.stdout)
+  assert.equal(stopped.body.error.code, 'BUSY')
+  assert.equal(stopped.body.error.details.reason, 'startup-in-progress')
+  assert.equal(await readFile(file, 'utf8'), bytes)
+  assert.doesNotThrow(() => process.kill(owner.pid, 0))
+})
+
 test('TC23 a dead startup owner is recovered; an unknown live owner is never killed or replaced', async t => {
   const f = await fixture(t)
   await mkdir(f.dataRoot, { recursive: true })

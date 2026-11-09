@@ -31,6 +31,8 @@
     Invoke-L3Step git @('clone', '--depth', '1', '--single-branch', '--branch', $ref, 'https://github.com/LChJo/HarnessL3.git', (Join-Path $stage 'source'))
     Push-Location (Join-Path $stage 'source')
     try {
+        $sourceCommit = (& git rev-parse HEAD).Trim()
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot identify the downloaded source commit' }
         Invoke-L3Step npm.cmd @('ci', '--include=dev', '--ignore-scripts', '--no-audit', '--no-fund')
         Invoke-L3Step npm.cmd @('run', 'build')
         Invoke-L3Step npm.cmd @('pack', '--ignore-scripts', '--pack-destination', $stage)
@@ -38,6 +40,15 @@
         if ($packages.Count -ne 1) { throw 'Expected exactly one HarnessL3 package' }
         $prefix = (& npm.cmd prefix -g).Trim()
         if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve npm global prefix' }
+        $modules = (& npm.cmd root -g).Trim()
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve installed package root' }
+        $installed = Join-Path $modules 'harnessl3'
+        if (Test-Path -LiteralPath (Join-Path $installed 'package.json')) {
+            $previous = Join-Path $stage 'previous'
+            New-Item -ItemType Directory -Path $previous | Out-Null
+            Invoke-L3Step npm.cmd @('pack', $installed, '--ignore-scripts', '--pack-destination', $previous)
+            Write-Host "Previous package: $previous"
+        }
         $binary = Join-Path $prefix 'harnessl3.cmd'
         if (Test-Path -LiteralPath $binary) {
             Invoke-L3Step $binary @('serve', 'stop', '--json')
@@ -45,9 +56,8 @@
         Invoke-L3Step npm.cmd @('install', '-g', $packages[0].FullName, '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund')
         Invoke-L3Step $binary @('--version')
         Invoke-L3Step $binary @('--help')
-        $modules = (& npm.cmd root -g).Trim()
-        if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve installed package root' }
         Invoke-L3Step node @((Join-Path $modules 'harnessl3/scripts/install-agent-skills.mjs'))
+        Invoke-L3Step node @((Join-Path $modules 'harnessl3/scripts/verify-install.mjs'), '--expected-commit', $sourceCommit, '--report', (Join-Path $stage 'verification.json'))
         Write-Host "Installed command: $binary"
     } finally {
         Pop-Location
@@ -69,6 +79,7 @@
     git clone --depth 1 --single-branch --branch "$ref" \
         https://github.com/LChJo/HarnessL3.git "$stage/source"
     cd "$stage/source"
+    source_commit=$(git rev-parse HEAD)
     npm ci --include=dev --ignore-scripts --no-audit --no-fund
     npm run build
     npm pack --ignore-scripts --pack-destination "$stage"
@@ -76,6 +87,12 @@
     test "${#packages[@]}" -eq 1
     test -f "${packages[0]}"
     prefix=$(npm prefix -g)
+    package_root="$(npm root -g)/harnessl3"
+    if test -f "$package_root/package.json"; then
+        mkdir "$stage/previous"
+        npm pack "$package_root" --ignore-scripts --pack-destination "$stage/previous"
+        printf 'Previous package: %s\n' "$stage/previous"
+    fi
     binary="$prefix/bin/harnessl3"
     if test -x "$binary"; then
         "$binary" serve stop --json
@@ -83,13 +100,13 @@
     npm install -g "${packages[0]}" --omit=dev --ignore-scripts --no-audit --no-fund
     "$binary" --version
     "$binary" --help
-    package_root="$(npm root -g)/harnessl3"
     node "$package_root/scripts/install-agent-skills.mjs"
+    node "$package_root/scripts/verify-install.mjs" --expected-commit "$source_commit" --report "$stage/verification.json"
     printf 'Installed command: %s\n' "$binary"
 )
 ```
 
-安装后的命令不依赖临时源码目录。确认安装成功后，可以移除脚本输出的本次临时安装目录。
+安装后的命令不依赖临时源码目录。`verification.json` 记录源提交、依赖锁指纹、实际运行文件指纹、服务构建身份和 RPC 检查结果；`--version` 保留包版本，`--help` 另显示构建源提交。只有验证成功才输出安装完成。需要保留验证凭据和回滚包时，请先将它们存放到项目源码以外的长期位置，再回收本次临时目录。
 
 ## 运行时 skill 的复制与调用
 
@@ -120,10 +137,22 @@ skill 的安装更新、项目接入、运行细节与子任务说明位于 `ref
 
 1. 更新前确认原安装所用的 Node/npm prefix 和数据根。若显式使用多个 `--data-dir`，先分别执行旧 CLI 的 `serve stop --data-dir <绝对路径> --json`；脚本只停止默认或 `HARNESSL3_HOME` 指向的数据根中的服务。
 2. 重新执行本平台脚本，同时更新 CLI 与运行时 skill。更新期间暂缓其它 agent 对同一安装的调用；后续 CLI 调用按需启动新服务。
-3. 在原工作目录执行 `harnessl3 --version` 和 `harnessl3 --help`，确认 PATH 命令与脚本输出一致。Windows 用 `Get-Command harnessl3 -All`，macOS/Linux 用 `type -a harnessl3` 排查多个安装。找不到命令时，将 Windows 的 `npm prefix -g` 或 macOS/Linux 的 `$(npm prefix -g)/bin` 加入 PATH，或使用脚本输出的绝对命令路径。
+3. 在原工作目录执行 `harnessl3 --version` 和 `harnessl3 --help`，确认 PATH 命令与脚本输出一致，构建源提交符合下载记录。Windows 用 `Get-Command harnessl3 -All`，macOS/Linux 用 `type -a harnessl3` 排查多个安装。找不到命令时，将 Windows 的 `npm prefix -g` 或 macOS/Linux 的 `$(npm prefix -g)/bin` 加入 PATH，或使用脚本输出的绝对命令路径。
 4. 检查运行时 skill 复制结果，确认两个宿主都返回成功，再新建或刷新宿主会话。
 
-任一步失败即停止，保留报错和临时目录。下载失败时检查网络和已有 GitHub 认证，构建失败时检查 Node.js 版本。安装失败后，重新检查现有 `harnessl3` 命令是否可用；修复问题后重跑脚本。
+运行时验证会启动或复用当前数据根的服务，确认实际运行的是新构建并执行只读 RPC；默认总等待上限120秒，可通过验证工具的 `--timeout-ms <毫秒>` 调整，最长600秒。该等待上限是故障处理参数。初始化中的活锁显示 `unavailable` 和 `startup-in-progress`，应等待同一启动进程；不要删除锁或强杀未知进程。进度写入 stderr，最终只输出一个 JSON 结果。`checks` 仅列成功阶段；验证失败不意味着包替换或技能复制未发生。
+
+服务运行状态与后台档案恢复进度分别记录。控制端点运行不表示每个工作区都已完成恢复；已知任务的历史交接以原包比较结果为准，失败或未检查范围保留在报告中。
+
+更新前已有明确的 L3 任务时，在停止旧服务前将 `task handoff <实际taskId> --json` 的完整结果以 UTF-8 保存到项目外。更新后回到该任务所属的原工作目录，执行：
+
+```text
+node <已安装harnessl3包绝对路径>/scripts/verify-install.mjs --handoff-before <更新前handoff.json> --report <本机核验结果.json>
+```
+
+显式数据根加上 `--data-dir <原绝对路径>`。工具按该结果中的真实 task/worktree ID 只读恢复并比较上下文包、技能计划与版本绑定，不创建任务、不续期。成功返回 `historyCheck:"matched-before-update"`；未提供旧包时返回 `"not-requested"`，不能据此声称历史交接已核验。响应丢失或归档读取失败会保留错误，不自动重发业务请求。
+
+任一步失败即停止，保留报错和临时目录。下载失败时检查网络和已有 GitHub 认证，构建失败时检查 Node.js 版本。安装失败后，重新检查现有 `harnessl3` 命令是否可用；修复问题后重跑脚本。需要回退时，先确认相应服务已停止，再用 `npm install -g <previous中实际旧包.tgz> --omit=dev --ignore-scripts --no-audit --no-fund` 恢复 CLI；从旧包重新复制运行时 skill，按该版本能力重新核验。回退包不回写或恢复历史数据，旧版本不支持当前格式时保留数据并报告版本错误。
 
 更新程序保留原机器数据根（`HARNESSL3_HOME` 或系统默认位置）、项目 `.harness`、任务/快照/历史和用户技能。不要删除数据根、执行 GC/迁移或重置技能库来完成更新。默认 `skills` 可能是 symlink/junction，同级 `.skills-library-<UUID>` 是活动用户内容，也必须保留；更新包不会覆盖已有技能库。存储边界见[存储规格](docs/spec/storage.md)。
 

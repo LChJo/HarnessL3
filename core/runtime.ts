@@ -23,37 +23,74 @@ import type { Envelope, FileReadRequest, ModelSnapshot, Target, WorktreeRecord }
 
 export function commandResult(operation: string, result: unknown) { return { kind: 'command-result' as const, status: 'complete' as const, operation, result } }
 interface WorktreeResources { worktree: WorktreeRecord; archive: Archive; index: SearchIndex; tasks: TaskService; observation: ObservationManager; freshness: FreshnessManager; migration: MigrationService }
+export interface RecoveryStatus { state: 'not-started' | 'recovering' | 'complete' | 'degraded' | 'stopping'; totalWorktrees: number; completedWorktrees: number; failures: number }
 const archivedOperations = new Set(['task show', 'history show', 'task handoff', 'task list', 'history list', 'task read'])
 const taskOperations = new Set([...archivedOperations, 'task start', 'task prompt', 'task select', 'task close', 'context query'])
 export class Runtime extends EventEmitter {
   readonly dataRoot: string
   private readonly resources = new Map<string, Promise<WorktreeResources>>()
+  private readonly archives = new Map<string, Promise<Archive>>()
   private readonly lastValidModel = new Map<string, ModelSnapshot>()
   private bindingQueue: Promise<unknown> = Promise.resolve()
   private gcApplying = false
   private activeOperations = 0
+  private startup?: Promise<void>
+  private closing = false
+  private readonly recovery: RecoveryStatus = { state: 'not-started', totalWorktrees: 0, completedWorktrees: 0, failures: 0 }
   private bindingSerial<T>(operation: () => Promise<T>): Promise<T> { const next = this.bindingQueue.then(operation); this.bindingQueue = next.catch(() => {}); return next }
   constructor(dataRoot: string) { super(); this.dataRoot = dataRoot }
   registry(request?: CommandRequest): WorkspaceRegistry { return new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot: request?.skillsRoot }) }
-  async ready(): Promise<void> {
-    for (const worktree of await this.registry().worktrees()) {
+  async preflight(): Promise<WorktreeRecord[]> {
+    const worktrees = await this.registry().worktrees()
+    for (const worktree of worktrees) {
       const root = await canonicalPath(worktree.root)
       if (isWithin(root, this.dataRoot) || isWithin(this.dataRoot, root)) throw new HarnessError('INVALID_ARGUMENT', 'The data root overlaps a registered worktree')
-      if (worktree.active && worktree.available) {
-        // Resume explicit subscriptions after restart. No session discovery or log-directory scan occurs.
-        const archive = new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true })
-        try { await lstat(path.join(archive.root, 'journal.jsonl')) } catch (error) { if (isErrno(error, 'ENOENT')) continue; throw error }
-        try {
-          await archive.ready()
-          if (archive.records().some(record => (record.payload as { kind?: string })?.kind === 'observation-state')) await this.worktreeResources(worktree)
-        } catch (error) { this.emit('diagnostic', { worktreeId: worktree.id, code: asHarnessError(error).code }) }
-      }
     }
+    return worktrees
+  }
+  recoveryStatus(): RecoveryStatus { return { ...this.recovery } }
+  ready(): Promise<void> {
+    if (!this.startup) {
+      this.recovery.state = 'recovering'
+      this.startup = this.resume().catch(error => { this.recovery.state = 'degraded'; this.recovery.failures++; throw error })
+    }
+    return this.startup
+  }
+  private async resume(): Promise<void> {
+    const worktrees = (await this.preflight()).filter(worktree => worktree.active && worktree.available)
+    this.recovery.totalWorktrees = worktrees.length
+    for (const worktree of worktrees) {
+      if (this.closing) break
+      try {
+        // Resume explicit subscriptions after restart. No session discovery or log-directory scan occurs.
+        try { await lstat(path.join(this.dataRoot, 'worktrees', worktree.id, 'journal.jsonl')) } catch (error) { if (isErrno(error, 'ENOENT')) continue; throw error }
+        const archive = await this.worktreeArchive(worktree)
+        if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The worktree archive requires recovery')
+        if (!this.closing && archive.hasKind('observation-state')) await this.bindingSerial(async () => {
+          const current = await this.registry().worktree(worktree.id)
+          if (!this.closing && current.active && current.available) await this.worktreeResources(current)
+        })
+      } catch (error) { this.recovery.failures++; this.emit('diagnostic', { worktreeId: worktree.id, code: asHarnessError(error).code }) }
+      finally { this.recovery.completedWorktrees++ }
+    }
+    this.recovery.state = this.closing ? 'stopping' : this.recovery.failures ? 'degraded' : 'complete'
+  }
+  private worktreeArchive(worktree: WorktreeRecord): Promise<Archive> {
+    let pending = this.archives.get(worktree.id)
+    if (!pending) {
+      const archive = new Archive(path.join(this.dataRoot, 'worktrees', worktree.id))
+      pending = archive.ready().then(() => archive)
+      this.archives.set(worktree.id, pending)
+      const captured = pending
+      pending.catch(() => { if (this.archives.get(worktree.id) === captured) this.archives.delete(worktree.id) })
+    }
+    return pending
   }
   async resolve(request: CommandRequest, allowInactive = false): Promise<WorktreeRecord> {
     return this.registry(request).resolve({ cwd: request.cwd, projectId: flag(request, 'project'), worktreeId: flag(request, 'worktree'), allowInactive })
   }
   async worktreeResources(worktree: WorktreeRecord): Promise<WorktreeResources> {
+    if (this.closing) throw new HarnessError('BUSY', 'The runtime is stopping', {}, true)
     let pending = this.resources.get(worktree.id)
     if (!pending) {
       if (this.gcApplying) throw new HarnessError('BUSY', 'GC is applying its verified plan; retry opening this worktree.', {}, true)
@@ -63,7 +100,7 @@ export class Runtime extends EventEmitter {
     }
     let current = await pending
     if (!current.worktree.active && worktree.active) {
-      const replacement = (async () => { await current.observation.close(); await current.freshness.close(); await current.tasks.close(); return this.openWorktree(worktree) })()
+      const replacement = (async () => { await current.observation.close(); await current.freshness.close(); await current.tasks.close(); this.archives.delete(worktree.id); return this.openWorktree(worktree) })()
       this.resources.set(worktree.id, replacement)
       current = await replacement
     }
@@ -74,7 +111,7 @@ export class Runtime extends EventEmitter {
   private async openWorktree(worktree: WorktreeRecord): Promise<WorktreeResources> {
     const record = { ...worktree }
     const root = path.join(this.dataRoot, 'worktrees', record.id)
-    const archive = new Archive(root)
+    const archive = await this.worktreeArchive(worktree)
     const index = new SearchIndex(path.join(root, 'index.sqlite'))
     let freshness: FreshnessManager
     let migration: MigrationService
@@ -139,12 +176,12 @@ export class Runtime extends EventEmitter {
         const identity = `${info.dev}:${info.ino}:${info.birthtimeMs}`
         for (const worktree of await this.registry().worktrees()) {
           if (worktree.id === resource.worktree.id) continue
-          const other = this.resources.has(worktree.id) ? (await this.resources.get(worktree.id)!).archive : new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true })
+          const other = this.archives.has(worktree.id) ? await this.archives.get(worktree.id)! : new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true })
           try { await lstat(path.join(other.root, 'journal.jsonl')) } catch (error) { if (isErrno(error, 'ENOENT')) continue; throw error }
           await other.ready()
           if (other.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Cannot verify session ownership while another worktree journal requires recovery.', { worktreeId: worktree.id })
           const latest = new Map<string, { id: string; active: boolean; agent: string; sessionId: string; logFile: string; cursor: { sourceIdentity: string } }>()
-          for (const record of other.records()) {
+          for (const record of other.scan({ kind: 'observation-state' })) {
             const payload = record.payload as { kind?: string; binding?: ReturnType<typeof latest.get> }
             if (payload?.kind === 'observation-state' && payload.binding) latest.set(payload.binding.id, payload.binding)
           }
@@ -175,7 +212,7 @@ export class Runtime extends EventEmitter {
       validateContract('response', receipt)
       const references = new Map<string, ArchiveReference>()
       const add = (kind: ArchiveReference['kind'], hash: string) => references.set(kind + ':' + hash, { kind, hash })
-      for (const commit of resource.archive.records()) {
+      for (const commit of resource.archive.scan({ kind: 'legacy-migration' })) {
         const payload = commit.payload as { kind?: string; tasks?: { id: string; archiveHash: string; rawRefs: { rawHash: string }[] }[] }
         const archived = payload?.kind === 'legacy-migration' ? payload.tasks?.find(task => task.id === taskId) : undefined
         if (archived) { add('snapshot', archived.archiveHash); for (const raw of archived.rawRefs) add('snapshot', raw.rawHash) }
@@ -271,6 +308,7 @@ export class Runtime extends EventEmitter {
       let result: unknown
       switch (request.operation) {
         case 'gc': {
+          if (request.flags.apply && this.recovery.state === 'recovering') throw new HarnessError('BUSY', 'Archive recovery is still in progress; retry cleanup after recovery', {}, true)
           const collector = new GarbageCollector({ dataRoot: this.dataRoot, worktrees: await registry.worktrees(), isLeased: file => {
             if (this.activeOperations > 1) return true
             for (const id of this.resources.keys()) if (isWithin(path.join(this.dataRoot, 'worktrees', id), file)) return true
@@ -342,11 +380,15 @@ export class Runtime extends EventEmitter {
     } finally { this.activeOperations-- }
   }
   async close(): Promise<void> {
+    this.closing = true
+    this.recovery.state = 'stopping'
+    await this.startup?.catch(() => {})
     await this.bindingQueue.catch(() => {})
     const settled = await Promise.allSettled([...this.resources.values()])
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.observation.close()] : []))
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.freshness.close()] : []))
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.tasks.close()] : []))
     this.resources.clear()
+    this.archives.clear()
   }
 }

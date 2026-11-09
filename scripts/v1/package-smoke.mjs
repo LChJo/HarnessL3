@@ -29,9 +29,9 @@ export async function packageSmoke() {
     const { stdout } = await npm(['pack', '--json', '--ignore-scripts', '--pack-destination', temporary], { cwd: root })
     const [manifest] = JSON.parse(stdout)
     const files = manifest.files.map(file => file.path)
-    for (const required of ['bin/harnessl3.mjs', 'build/cli/main.js', 'build/cli/help.js', 'build/core/index-worker.js', 'build/web/index.html', 'skills/LICENSE', 'agent-skills/harnessl3/SKILL.md', 'agent-skills/harnessl3/references/install-update.md', 'agent-skills/harnessl3/references/project-init.md', 'agent-skills/harnessl3/references/runtime.md', 'agent-skills/harnessl3/references/subagent.md', 'scripts/install-agent-skills.mjs', 'INSTALL.md', 'docs/USAGE.md', 'docs/spec/contracts/response.schema.json', 'docs/spec/contracts/examples/selection.json']) assert.ok(files.includes(required), `Missing packaged resource: ${required}`)
+    for (const required of ['bin/harnessl3.mjs', 'build/build-info.json', 'build/cli/main.js', 'build/cli/help.js', 'build/core/index-worker.js', 'build/web/index.html', 'skills/LICENSE', 'agent-skills/harnessl3/SKILL.md', 'agent-skills/harnessl3/references/install-update.md', 'agent-skills/harnessl3/references/project-init.md', 'agent-skills/harnessl3/references/runtime.md', 'agent-skills/harnessl3/references/subagent.md', 'scripts/install-agent-skills.mjs', 'scripts/verify-install.mjs', 'INSTALL.md', 'docs/USAGE.md', 'docs/spec/contracts/response.schema.json', 'docs/spec/contracts/examples/selection.json']) assert.ok(files.includes(required), `Missing packaged resource: ${required}`)
     assert.equal(files.filter(file => file.endsWith('/SKILL.md') && file.startsWith('skills/')).length, 21)
-    assert.ok(files.every(file => (file === 'scripts/install-agent-skills.mjs' || !/^(?:\.git|\.harness-local|node_modules|src|server|tests|examples|scripts)\//.test(file)) && !file.endsWith('.map')), 'Only the explicit skill installer may ship from development scripts')
+    assert.ok(files.every(file => (['scripts/install-agent-skills.mjs', 'scripts/verify-install.mjs'].includes(file) || !/^(?:\.git|\.harness-local|node_modules|src|server|tests|examples|scripts)\//.test(file)) && !file.endsWith('.map')), 'Only the explicit installation tools may ship from development scripts')
     const tarball = path.join(temporary, manifest.filename)
     const bytes = await readFile(tarball)
     assert.equal('sha512-' + createHash('sha512').update(bytes).digest('base64'), manifest.integrity)
@@ -97,6 +97,32 @@ export async function packageSmoke() {
     const read = await cli(['task', 'read', entry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), files: [{ skillId: skill.id, path: file.path, expectedHash: file.hash }] })
     assert.equal(createHash('sha256').update(read.data.files[0].file.content).digest('hex'), file.hash)
     assert.equal((await cli(['task', 'close', entry.taskId])).ok, true)
+    const baseline = await cli(['task', 'handoff', entry.taskId])
+    const baselineFile = path.join(temporary, 'before-update.json')
+    await writeFile(baselineFile, JSON.stringify(baseline), 'utf8')
+    await cli(['serve', 'stop'])
+    const verifier = path.join(consumer, 'node_modules', 'harnessl3', 'scripts', 'verify-install.mjs')
+    const verification = JSON.parse((await execFile(process.execPath, [verifier, '--data-dir', dataRoot, '--handoff-before', baselineFile, '--report', path.join(temporary, 'verified.json')], { cwd: project, windowsHide: true, maxBuffer: 32 * 1024 * 1024 })).stdout)
+    assert.equal(verification.ok, true)
+    assert.equal(verification.historyCheck, 'matched-before-update')
+    assert.equal(verification.handoff.taskId, entry.taskId)
+    assert.ok(verification.checks.includes('runtime-fingerprint') && verification.checks.includes('service-build'))
+    assert.equal(verification.build.sourceCommit, (await execFile('git', ['-C', root, 'rev-parse', 'HEAD'], { windowsHide: true })).stdout.trim())
+    const alteredBaseline = structuredClone(baseline)
+    alteredBaseline.data.packet.contexts[0].entity.brief = 'Different before-update packet'
+    await writeFile(baselineFile, JSON.stringify(alteredBaseline), 'utf8')
+    const rejected = await execFile(process.execPath, [verifier, '--data-dir', dataRoot, '--handoff-before', baselineFile], { cwd: project, windowsHide: true }).then(() => assert.fail('Changed history must fail verification'), error => JSON.parse(error.stdout))
+    assert.equal(rejected.ok, false)
+    assert.equal(rejected.stage, 'handoff')
+    assert.equal(rejected.error.code, 'HANDOFF_CHANGED')
+    const runtimeFile = path.join(consumer, 'node_modules', 'harnessl3', 'build/core/errors.js')
+    const runtimeBytes = await readFile(runtimeFile)
+    try {
+      await writeFile(runtimeFile, Buffer.concat([runtimeBytes, Buffer.from('\n// Synthetic installed-byte change\n')]))
+      const changedRuntime = await execFile(process.execPath, [verifier, '--data-dir', dataRoot], { cwd: project, windowsHide: true }).then(() => assert.fail('Changed runtime bytes must fail verification'), error => JSON.parse(error.stdout))
+      assert.equal(changedRuntime.error.code, 'RUNTIME_HASH_MISMATCH')
+      assert.equal(changedRuntime.stage, 'package')
+    } finally { await writeFile(runtimeFile, runtimeBytes) }
     const descriptor = JSON.parse(await readFile(path.join(dataRoot, 'service.json'), 'utf8'))
     const html = await fetch(descriptor.url).then(response => response.text())
     assert.ok(html.includes('type="module"'))
@@ -108,7 +134,7 @@ export async function packageSmoke() {
     await mkdir(artifacts, { recursive: true })
     const output = path.join(artifacts, manifest.filename)
     await copyFile(tarball, output)
-    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, tarball: output }
+    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, installedVerification: verification, alteredHandoffRejected: true, tarball: output }
     await writeFile(path.join(artifacts, 'package-smoke-' + process.platform + '.json'), JSON.stringify(report, null, 2) + '\n')
     return report
   } finally {

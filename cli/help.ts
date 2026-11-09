@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { commands, globals, booleanFlags } from './args.js'
-import { PACKAGE_ROOT, PACKAGE_VERSION, SCHEMA_ROOT } from '../core/package.js'
+import { PACKAGE_ROOT, PACKAGE_VERSION, PACKAGE_BUILD, SCHEMA_ROOT } from '../core/package.js'
 import { HarnessError } from '../core/errors.js'
 
 const descriptions: Record<string, string> = {
@@ -107,7 +107,7 @@ export function renderHelp(words: string[]): string {
   const topic = words.join(' ')
   const matches = Object.keys(commands).filter(name => !topic || name.startsWith(topic + ' '))
   if (topic && !operation && !matches.length) throw new HarnessError('INVALID_ARGUMENT', 'Unknown help topic; use harnessl3 --help', { topic })
-  const lines = [`HarnessL3 ${PACKAGE_VERSION}`]
+  const lines = [`HarnessL3 ${PACKAGE_VERSION}`, `Build source: ${PACKAGE_BUILD.sourceCommit ?? 'unknown'}${PACKAGE_BUILD.sourceDirty ? ' (modified source)' : ''}`]
   if (operation) {
     lines.push('Usage: ' + usage(operation) + ' [global options]', '', descriptions[operation], '')
     const definition = commands[operation]

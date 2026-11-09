@@ -92,7 +92,7 @@ export class TaskService {
   }
   private restore(): void {
     const restored = new Map<string, TaskRecord>()
-    for (const record of this.archive.records()) {
+    for (const record of this.archive.scan({ kind: 'task' })) {
       const payload = record.payload as Partial<TaskPayload> | null
       if (payload?.kind !== 'task') continue
       const task = this.checkedTask(payload.task)
@@ -138,14 +138,15 @@ export class TaskService {
   /** Task and generic committed-event documents are safe to rebuild from the verified journal. */
   projection(): IndexDocument[] {
     const documents = [...this.records.values()].flatMap(task => this.taskDocuments(task)).concat(this.externalDocuments?.() ?? [])
-    for (const record of this.archive.records()) {
-      const payload = record.payload as Partial<TaskPayload> | null
-      if (payload?.kind === 'task') {
-        if (payload.operation === 'task read' && payload.task) documents.push(this.fileReceiptDocument(payload.task.id, record.requestId, record.receiptHash, payload.source ?? 'cli'))
-        continue
-      }
-      documents.push({ id: record.operationId, kind: 'event', title: typeof payload?.kind === 'string' ? payload.kind : 'committed-event', text: canonicalJson(record.payload), activityAt: record.committedAt, data: { seq: record.seq, payload: record.payload } })
+    const events: { seq: number; document: IndexDocument }[] = []
+    for (const header of this.archive.headers({ kind: 'task' })) {
+      if (header.operation === 'task read' && header.taskId) events.push({ seq: header.seq, document: this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web') })
     }
+    for (const record of this.archive.scan({ excludeKinds: ['task'] })) {
+      const payload = record.payload as Partial<TaskPayload> | null
+      events.push({ seq: record.seq, document: { id: record.operationId, kind: 'event', title: typeof payload?.kind === 'string' ? payload.kind : 'committed-event', text: canonicalJson(record.payload), activityAt: record.committedAt, data: { seq: record.seq, payload: record.payload } } })
+    }
+    documents.push(...events.sort((a, b) => a.seq - b.seq).map(event => event.document))
     return documents
   }
   private taskDocuments(task: TaskRecord): IndexDocument[] {
@@ -186,11 +187,7 @@ export class TaskService {
   }
   private async verifyTask(task: TaskRecord): Promise<void> {
     const references = new Map<string, ArchiveReference>()
-    for (const record of this.archive.records()) {
-      const payload = record.payload as Partial<TaskPayload> | null
-      if (payload?.kind !== 'task' || payload.task?.id !== task.id) continue
-      for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, reference)
-    }
+    for (const reference of this.archive.references({ kind: 'task', taskId: task.id })) references.set(`${reference.kind}:${reference.hash}`, reference)
     references.set(`snapshot:${task.modelSnapshotHash}`, { kind: 'snapshot', hash: task.modelSnapshotHash })
     for (const reference of references.values()) {
       if (reference.kind === 'snapshot') await this.archive.readSnapshot(reference.hash)
@@ -253,7 +250,7 @@ export class TaskService {
     if (catalog && task.binding.catalogRevision !== current.catalog!.revision) throw new HarnessError('CATALOG_CHANGED', 'The skill catalog changed; refresh this unselected task prompt before selection.')
   }
   private async replay(request: CommandRequest, scope: string, normalized: unknown, readOnly = false): Promise<Envelope | null> {
-    if (readOnly && this.archive.status !== 'ready' && !this.archive.records().some(record => record.scope === scope && record.requestId === request.requestId)) return null
+    if (readOnly && this.archive.status !== 'ready' && !this.archive.hasRequest(scope, request.requestId)) return null
     const replay = await this.archive.replay<Envelope>(scope, request.requestId, normalized)
     if (!replay) return null
     return validateContract<Envelope>('response', { ...replay.receipt, replayed: true })

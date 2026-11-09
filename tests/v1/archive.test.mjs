@@ -13,6 +13,51 @@ async function fixture(t) {
 }
 const operation = (extras = {}) => ({ scope: `task:${randomUUID()}`, requestId: randomUUID(), request: { operation: 'test', value: 1 }, payload: { event: 'created' }, receipt: { answer: 'original' }, ...extras });
 
+test('TC17 recovery validates shared content once per pass and detects later corruption', async t => {
+  const { archive, root } = await fixture(t);
+  const hash = await archive.snapshot('shared-model', { padding: 'x'.repeat(256 * 1024) });
+  const blob = await archive.blob(Buffer.from('shared archived method'));
+  for (let i = 0; i < 16; i++) await archive.commit(operation({ archives: [{ kind: 'snapshot', hash }, { kind: 'blob', hash: blob }] }));
+  const recovered = new Archive(root);
+  const readSnapshot = recovered.readSnapshot, readBlob = recovered.readBlob;
+  let modelReads = 0, blobReads = 0;
+  t.mock.method(recovered, 'readSnapshot', function (requested) { if (requested === hash) modelReads++; return readSnapshot.call(this, requested); });
+  t.mock.method(recovered, 'readBlob', function (requested) { if (requested === blob) blobReads++; return readBlob.call(this, requested); });
+  await recovered.ready();
+  assert.equal(recovered.status, 'ready');
+  assert.equal(modelReads, 1);
+  assert.equal(blobReads, 1);
+  await writeFile(join(root, 'snapshots', `${hash}.json`), '{}');
+  await assert.rejects(recovered.readSnapshot(hash), { code: 'ARCHIVE_CORRUPT' });
+  const nextPass = new Archive(root);
+  await nextPass.ready();
+  assert.equal(nextPass.status, 'recovery-required');
+});
+
+test('TC17 archive queries isolate task records and references without exposing mutable history', async t => {
+  const { archive, root } = await fixture(t);
+  const taskId = randomUUID(), otherId = randomUUID();
+  const hash = await archive.snapshot('model', { title: 'Target' });
+  await archive.commit(operation({ payload: { kind: 'task', task: { id: taskId, title: 'Target' }, operation: 'task start' }, archives: [{ kind: 'snapshot', hash }] }));
+  await archive.commit(operation({ payload: { kind: 'freshness-state', state: { padding: 'unrelated' } } }));
+  await archive.commit(operation({ payload: { kind: 'task', task: { id: otherId, title: 'Other' } } }));
+  const recovered = new Archive(root);
+  await recovered.ready();
+  const selected = recovered.records({ kind: 'task', taskId });
+  assert.deepEqual(selected.map(record => record.seq), [1]);
+  selected[0].payload.task.title = 'Changed by caller';
+  assert.equal(recovered.records({ kind: 'task', taskId })[0].payload.task.title, 'Target');
+  assert.deepEqual(recovered.headers({ kind: 'task' }).map(header => [header.seq, header.taskId]), [[1, taskId], [3, otherId]]);
+  const references = recovered.references({ kind: 'task', taskId });
+  assert.ok(references.some(reference => reference.hash === hash));
+  references[0].hash = '0'.repeat(64);
+  assert.ok(recovered.references({ kind: 'task', taskId }).every(reference => reference.hash !== '0'.repeat(64)));
+  const boundary = recovered.scan({ excludeKinds: ['task'] });
+  await recovered.commit(operation({ payload: { kind: 'late-event' } }));
+  assert.deepEqual([...boundary].map(record => record.seq), [2], 'a scan retains its invocation boundary');
+  assert.equal(recovered.hasKind('late-event'), true);
+});
+
 test('immutable snapshots and blobs validate their original bytes', async t => {
   const { archive, root } = await fixture(t);
   await archive.ready();

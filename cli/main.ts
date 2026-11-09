@@ -14,7 +14,7 @@ import type { Envelope } from '../core/types.js'
 
 const serviceLifetime = { scope: 'user-data-root', lifetime: 'until-stopped' } as const
 function serviceResult(operation: string, record: ServiceDescriptor | null) {
-  return { kind: 'command-result', status: 'complete', operation, result: { state: record ? 'running' : 'stopped', url: record?.url ?? null, instanceId: record?.instanceId ?? null, protocolVersion: 1, startedAt: record?.startedAt ?? null, ...serviceLifetime } }
+  return { kind: 'command-result', status: 'complete', operation, result: { state: record ? 'running' : 'stopped', url: record?.url ?? null, instanceId: record?.instanceId ?? null, protocolVersion: 1, startedAt: record?.startedAt ?? null, build: record?.build ?? null, ...serviceLifetime } }
 }
 function success(request: CommandRequest, data: unknown): Envelope { return { schemaVersion: 1, requestId: request.requestId, target: null, replayed: false, ok: true, data } }
 function output(response: Envelope, jsonMode: boolean): void {
