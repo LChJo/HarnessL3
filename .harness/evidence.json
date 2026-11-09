@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.36 defines startup-owner diagnostics, separate control/recovery states, verified archive reuse, scoped install verification and representative full-history measurement without changing file authority or unknown-write rules.",
+      "claim": "Current v0.37 requires same-goal continuation reuse and actual-task closure; English skill routing connects operation selection to conditional installation/onboarding and result handling, preserving consent, version and history boundaries.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "69e27b7c0aa2672d112f1d5a6b24bc4b69bc717349a8dc0a3563437702b7f712",
-      "observedAt": "2026-11-09T05:37:20.121Z"
+      "hash": "44b01da49f2ff51fef9f3056aa5483f6265e1272e08364e327de9c639037d164",
+      "observedAt": "2026-11-09T10:19:54.750Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -104,12 +104,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Source scanning captures actual Git/file scope and fingerprints without interpreting business semantics.",
+      "claim": "Native Git ignore/filter queries use bounded stdin batches, recheck delayed ancestors and handle stdin errors as unknown; pre/post state, raw double reads, filter refusal, argv limits and historical fingerprint contracts remain.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "e8bee0c1be3af5ff6b3d7b951f3618288c729f10d330dd80ed71099eaa8df6b2",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "ba2d51afe9c0917411088cedec8bf32d1c7afaf9484f926b12a824691829d5ab",
+      "observedAt": "2026-11-09T10:19:54.754Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime entry prioritizes onboarding over generic failure fallback, asks before first setup even with old CLI fields, and retains existing context, document and output-card duties.",
+      "claim": "English instructions route in order: reuse/choose an operation, resolve missing CLI or project setup only when needed, then handle the actual result. Sufficient context skips prerequisite probes; archive recovery does not require current-project initialization. Consent, version, lifecycle and the required localized card remain.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "7581e6c1263ab0b3ff8b330077453ba9aaeee328920be64f503a152865b8e282",
-      "observedAt": "2026-11-09T07:28:53.723Z"
+      "hash": "c0991d64328b8bd53c984198596a742f9dae5a32c3521b3247a795dd26ecfe86",
+      "observedAt": "2026-11-09T10:19:54.755Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -274,12 +274,12 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "Explicit references include .harness and safe in-worktree link targets without expanding source scans; scoped verification handles real paths and native casing while preserving unrelated pending work and history.",
+      "claim": "Source batching preserves raw/current-state checks and link boundaries; explicit evidence references and scoped synchronization retain existing physical-path, anomaly and pending/history rules.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "57cfe0b6323e57fcb569c1e6887b87aef977972944a271e1087b0f462cdcf087",
-      "observedAt": "2026-11-07T15:30:46.328Z"
+      "hash": "15e29cb88be3fce3347a7efc53bd13ba1bc2bcfff7654d0f74f7af8d91328192",
+      "observedAt": "2026-11-09T10:19:54.756Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -304,12 +304,12 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference explains UTF-8 request construction, PowerShell pipeline loss, immutable damaged history and scoped phase maintenance.",
+      "claim": "English runtime guidance preserves continuation/delta reads, actual installed contracts, UTF-8 requests, evidence/document maintenance, scoped synchronization, receipt/history and explicit log boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "f62062cc0599f753a952a2f3924169ae01eb0f121f91266629f2bb0b463c6b73",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "a0c968a56e03fc200de629efd36674a6915b7148b57b33db89fa5f4532bf4151",
+      "observedAt": "2026-11-09T10:19:54.756Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Current status records the first-use consent-routing correction, 34 passing Windows checks, updated host skill files, unchanged installed CLI/service and pending real-host consent verification.",
+      "claim": "Status records English main/reference instructions, ordered missing-CLI/project routing, installed host copies and untested host effects; source batching retains completed targeted checks, interrupted final Windows testing and unrun performance comparisons.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "c0a49e07ed5ff14500ab8a941b374c625fadef2c1375aff26392133d6076bcd3",
-      "observedAt": "2026-11-09T07:28:53.724Z"
+      "hash": "6521bb6e8cbae5756eef087f8400e5e867a93cb701eaca966eefd3795512226b",
+      "observedAt": "2026-11-09T10:19:54.757Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -474,12 +474,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Update guidance saves an actual UTF-8 handoff before stopping the old service, compares it after update and distinguishes copied files, host loading and checked versus unrequested recovery.",
+      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/install-update.md"
       },
-      "hash": "402d501d297fa443727530f911d3f501c7f5c4ecb070057c20bef8868c132e9d",
-      "observedAt": "2026-11-09T05:37:20.146Z"
+      "hash": "cf1572d5b11137683efb43258581f10cfa92d6503d75f3e3bc67ebd902d9241a",
+      "observedAt": "2026-11-09T10:19:54.758Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000006",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC17/22/23/26 retain recovery, installation and archive boundaries; TC23 additionally checks interrupted authentication and confirmation, cookie failures, fresh-fragment recovery, unchanged cookie expiry and task records.",
+      "claim": "TC27 includes English ordered routing for missing CLI/uninitialized or unregistered projects, no unnecessary setup for sufficient context/archive recovery, continuation reuse and actual-task closure; real-host effects require separate observation.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "4c5095f99394801a220f048896f1da04bbb0e969060ffac76cbe240fbf30d9c6",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "c5b0066665650101688e5f73b0225a0519dd2b630879facff5041962de8631af",
+      "observedAt": "2026-11-09T10:19:54.758Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -564,42 +564,42 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR12/14 distinguish control, recovery and install-check state and require independent representative accumulated-history measurements.",
+      "claim": "FR15 workflow first chooses reuse or the needed operation, conditionally handles CLI installation/project consent and preserves archive-only recovery, version binding and actual-task lifecycle.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "dbf874a5c1b60bd92b5c893d99ddfd717d6bb6a7b24e96ec4316b1dbcd150c45",
-      "observedAt": "2026-11-09T05:37:20.157Z"
+      "hash": "e36dff5c7def907d58fff1190c13306cd6304414ebe5ac6655a6c16dde3a2d40",
+      "observedAt": "2026-11-09T10:19:54.759Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The specification entry points at current baseline v0.36 and its scoped installation/recovery refinements without inheriting old platform verification.",
+      "claim": "Specification navigation records v0.37 ordered reuse, conditional CLI/project setup and execution routing while retaining prior stability/history and independently observed host/platform acceptance.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "f8c6d09d57bd08ba2436eba29949846ccccd381951e4585877f20bc045fd58e7",
-      "observedAt": "2026-11-09T05:37:20.158Z"
+      "hash": "0bd5c144de002cf5bde914cd4691faac1ac8950a7eec92e242a2ab272ebc9ddd",
+      "observedAt": "2026-11-09T10:19:54.760Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
       "kind": "document",
-      "claim": "Performance documentation records a same-history baseline/candidate comparison and a separately sampled candidate steady-read supplement with exact recovery-wait, runtime fingerprint, integrity checks and platform/synthetic limitations; prior small-record results remain independently scoped.",
+      "claim": "Performance documentation separates historical measurements from the unrun final source-batching CLI/MGRP comparisons and describes synthetic dimensions, resource scope and reproducible methodology without claiming final latency gains.",
       "location": {
         "path": "docs/implementation/PERFORMANCE.md"
       },
-      "hash": "53e3b74fc59d11bb20d91f102d5efa3799ed6947b2709777c507e55a711dc5f5",
-      "observedAt": "2026-11-09T05:37:20.160Z"
+      "hash": "f02c77833f5d279ab4bf335b2a56ad2f8ba5d3635aca82dbcd31363dd6f8b8ae",
+      "observedAt": "2026-11-09T10:19:54.760Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent maintenance follows baseline v0.36, preserves startup ownership and separates copied files, running build and applicable archived handoff verification.",
+      "claim": "D15 requires continuation reuse, conditional missing-CLI/project guidance with scoped authorization, archive-only recovery without reinitialization, and task-level lifecycle while retaining normal stage synchronization.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "a497d595e9c9eedcaec9115c91024b4aaecea966ceb546a612733254a385f38d",
-      "observedAt": "2026-11-09T05:37:20.161Z"
+      "hash": "f63832ecd9af570a4717f0f9c05a0dee3e767d10c5deffbaed785f84e36198de",
+      "observedAt": "2026-11-09T10:19:54.761Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,22 +654,22 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "First-use routing requires an agent question before setup, reuses authorization, and limits fallback to decline/cancel, including older CLI guidance.",
+      "claim": "English onboarding guidance distinguishes missing config from unregistered existing config, requires actual-path consent and current-agent semantic modeling/coverage, and exempts archive-only recovery from reinitialization.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "87d93dd6e0aed37c9c2d63031b7e2658c21d1215840376ced67360d687930903",
-      "observedAt": "2026-11-09T07:28:53.726Z"
+      "hash": "65eaeb62b82a60087d6b3fde4dd3208e5ff48085f0e2e8ccf45b1ed031f5555f",
+      "observedAt": "2026-11-09T10:19:54.761Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage explains TARGET_REQUIRED onboarding as pending user confirmation, with agent UI or conversational questioning and no automatic initialization.",
+      "claim": "Usage describes the English entry/reference package and connected reuse/prerequisite/execution flow, preserving continuation, archive-only recovery and consent without per-message probes.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "0edb02f754e8c1160c0d73ca286ac94e9d304eb7f3602de1068f633dc4e2fefe",
-      "observedAt": "2026-11-09T07:28:53.726Z"
+      "hash": "e02fd8104ba80173e8dfda21ec7b3567608be73f921ed81b71351a2670b33cd2",
+      "observedAt": "2026-11-09T10:19:54.762Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -680,6 +680,46 @@
       },
       "hash": "983314783eaa22fd9db3443985a2a2d97664d993ccc6eef9c98a8b49df799b4b",
       "observedAt": "2026-11-09T07:28:53.727Z"
+    },
+    {
+      "id": "bf342397-819c-4a86-8c9c-1b9686af9b17",
+      "kind": "source-code",
+      "claim": "Isolated source regressions cover UTF-8 batch bounds, ordinary-byte/ignore mutations, ancestor-link replacement before and after delayed classification, and stdin failure without a process crash.",
+      "location": {
+        "path": "tests/v1/source-batching.test.mjs"
+      },
+      "hash": "2713920e9550560f936ddf22e63e06041ec145777ead641d38546fb43a7703c4",
+      "observedAt": "2026-11-09T10:05:09.164Z"
+    },
+    {
+      "id": "b8983113-8884-4915-a339-4106142e7407",
+      "kind": "source-code",
+      "claim": "Child-process fault injection is confined to fixture files and observes Git calls, linked-descendant queries, source reads and pipe failure without adding production hooks.",
+      "location": {
+        "path": "tests/v1/source-batch-probe.mjs"
+      },
+      "hash": "a90b1c0a03e9c50ee2c66b12914a217cffa60fdb658e27ebfc4576d0ea12fd97",
+      "observedAt": "2026-11-09T10:05:09.164Z"
+    },
+    {
+      "id": "a46727cb-6683-4f87-9993-ad1101d94ceb",
+      "kind": "source-code",
+      "claim": "An unrun isolated synthetic comparator measures cold/warm task entry and daemon lifetime resources, checks returned context/skill bytes and restart handoff, and retains fixture/build provenance; no final performance result is claimed.",
+      "location": {
+        "path": "scripts/v1/source-batching-benchmark.mjs"
+      },
+      "hash": "17e01aa6860feaaa9374ab7b431fe1d71efd35d44408436eb39a71c2aba7d18c",
+      "observedAt": "2026-11-09T10:05:09.165Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000001",
+      "kind": "document",
+      "claim": "English delegated-task instructions reuse actual parent handoffs, fetch only missing material and preserve version, scope, lifecycle and explicit-log boundaries without inventing CLI parent fields or agent scheduling.",
+      "location": {
+        "path": "agent-skills/harnessl3/references/subagent.md"
+      },
+      "hash": "dde4359ff1f866b48481ffd1d11b3d755f228f4444344199811ed9a7f154bbee",
+      "observedAt": "2026-11-09T10:19:54.763Z"
     }
   ]
 }

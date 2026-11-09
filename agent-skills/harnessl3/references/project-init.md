@@ -1,10 +1,10 @@
-# 项目初始化与登记（按需读取）
+# Project initialization and registration
 
-仅在用户要求接入/完善项目结构、缺少 `.harness/project.json`、尚未登记，或当前模型仍是占位模板/明显不完整时读取。已有合适模型的日常任务走主skill，不重复初始化或全面建模。
+Read for an uninitialized/unregistered existing Git worktree, explicit onboarding, or a placeholder/incomplete model. A ready project does not need repeated initialization or whole-project modeling.
 
-## 首次接入已有 Git worktree
+## Identify the actual setup requirement
 
-首次发现未登记，不能只报告错误后结束。先使用终端的工作目录参数进入当前目标，核对已有Git worktree根路径与分支；不猜最近项目，不创建Git或worktree：
+Use the intended existing worktree as the command working directory. If facts are missing, establish them with:
 
 ```text
 git rev-parse --show-toplevel
@@ -12,61 +12,55 @@ git branch --show-current
 harnessl3 worktree list --json
 ```
 
-CLI的`TARGET_REQUIRED`错误若包含`details.onboarding`，其中`worktreeRoot`是实际根目录，`state`区分`initialization-required`和`registration-required`，`command`是建议命令的参数数组；它只提供指引，尚未写入或取得用户同意。`nextAction:"ask-user"`和`question`给出当前agent应展示的询问，按用户语言呈现；`fallbackWhen:["declined","cancelled"]`明确`fallback:"continue-without-l3"`仅在拒绝/取消后适用，不能收到非零退出码就直接回退。旧版只有`confirmationRequired:true`时也先询问。无Git目录、显式目标不全/冲突等错误不能按未登记自行初始化。旧CLI没有指引时，用实际Git根和`.harness/project.json`是否存在核对，不用空登记列表猜目标。
+A missing .harness/project.json requires initialization; an existing config with an unregistered worktree requires registration. Do not guess the most recent project, create Git/worktrees, or infer a target from an empty registry.
 
-没有现成接入授权时，**用当前agent实际可用的通用询问窗口**展示一项明确选择，例如：
+TARGET_REQUIRED with details.onboarding is a request for consent, not a generic CLI outage. Its worktreeRoot is the actual path; state distinguishes initialization-required from registration-required; command is a suggested argument array. nextAction:ask-user and question guide the current agent. fallback:continue-without-l3, including on older CLIs, applies only after decline/cancellation. Older confirmationRequired:true also requires asking. Other missing/conflicting targets do not authorize initialization.
 
-> 是否为当前工作区 `<实际绝对路径>` 初始化 HarnessL3？这会创建缺失的 `.harness` 配置、模型、证据和别名文件，并登记当前已有Git worktree；首次缺失的用户技能库也会创建，已有内容保留。
+## Ask once, then follow the answer
 
-选项为“同意初始化并继续”和“本次不初始化，普通执行”。已有配置时改问是否登记，说明保留配置及模型。询问窗口不可用时在普通对话中明确提问并等待回答，不能声称已显示窗口。不要在CLI的JSON进程里等待终端输入，也不要替用户提交选择。
+Reuse explicit authorization for this path/action. Otherwise use the available general question UI, in the user's language:
 
-- 同意：在该路径执行对应接入命令，保留原任务目的；下方校验通过后继续原任务。
-- 拒绝或取消：本次任务回退agent普通执行，不创建配置/登记/任务，不再调用L3或反复询问。后续同目的消息沿用回退；用户主动要求接入或切换到新任务/工作区时才重新判断。
-- 尚未回复：仅继续不依赖接入的工作，不能初始化；超时不等于同意。接入失败时说明实际错误，仍可按普通方式完成独立工作，不循环初始化或删除用户内容修复。
+> Initialize HarnessL3 for the existing worktree at <actual absolute path>? This creates missing .harness configuration, model, evidence and alias files, registers the worktree, and creates the user skill library only if absent. Existing content is preserved.
 
-用户已经明确授权接入当前路径时，复用授权，不重复询问。在这个目标目录内执行：
+Offer consent-and-continue or work-without-L3-for-this-task. If configuration exists, ask to register instead and state that configuration/model files are preserved. If the UI is unavailable, ask in conversation and wait; do not pretend a window appeared or block the JSON CLI waiting for terminal input.
+
+- Consent: execute the matching operation below, complete semantic review/modeling, then resume the original task.
+- Decline/cancel: ordinary execution; do not create configuration/registration/tasks or ask again for the same goal. Reconsider only when the user requests onboarding or changes task/worktree.
+- Pending: independent work only. Silence/time passing is not consent. On failure, preserve user content, explain the actual gap and avoid initialization loops.
+
+For authorized initialization, in that target directory:
 
 ```text
-harnessl3 init --name "项目名称" --json
+harnessl3 init --name "Project name" --json
 harnessl3 model validate --json
 harnessl3 worktree list --json
 ```
 
-`init`只做确定性的缺失文件建立、身份登记、默认技能库首建和解析校验，保留已有内容。返回`initialization.stage:scaffold-ready`、`semanticStatus:not-assessed`、实际对象/关系/视图数量、`modelCreated`及`nextAction`，提示当前agent继续建模或审核已有模型。它不调用大模型，也不扫描目录推断业务结构。检查实际project/worktree UUID后，继续下方语义建模，不能在这里宣布完整初始化。
-
-生成和维护后的`.harness/model/`（`.c4`/`.likec4`、specification及views）、`project.json`、`evidence.json`和`aliases.json`建议随相关源码提交；引用的项目文档和仓库内真实文件形式的项目技能/附件/许可证也按项目规则版本管理。本机登记、历史/快照/归档技能、索引/缓存、日志、机器路径配置及访问凭证不进Git；不删除这些数据，也不将全局技能入口或外部链接实体复制进仓库。初始化授权不等于Git提交授权。
-
-## 当前大模型完成项目建模
-
-沿用当前agent及其已有文件工具，直接读取并编写项目知识；CLI继续提供机械登记、保存、校验与投影。无需另起模型/agent或新增根据目录猜架构的生成脚本。
-
-1. **阅读项目**：报告开始阅读的进度，读现有说明、目录、关键入口和足以支持模块职责/依赖的源码；明确正式实现、原型/历史及外部来源。检查已有模型与证据，保留有效身份和用户维护内容。
-2. **编写结构**：报告已确认的模块/尚未确定的范围，直接编辑`.harness/model/*.c4`，补充真实组成层次、对象简述、必要关系及结构视图，并在evidence.json保存实际来源/主张/核验范围。文件工具或哈希命令可用于机械读写和指纹；项目理解、语义取舍和建模由当前大模型完成。只读取目录或只生成根节点不足以覆盖已有多模块工程；真实单模块项目按其实际范围建模，不为数量造节点。
-3. **校验与核对**：报告正在校验，运行`model validate`并检查实际返回的对象/关系和可用视图。对照阅读范围核查关键模块/依赖与证据；在Web或同一核心读模型确认结构可见，浏览不计agent正文读取。发现缺失/错误由当前大模型修正文件后复验，不拿解析成功替代语义覆盖。
-
-进度使用实际完成的阶段和事实（如读过哪些入口、已建模哪些模块、当前诊断），不伪造百分比。结束说明已覆盖及未覆盖范围、实际数量和校验结果。模板未补全、关键模块缺失或校验失败时，保留“基础接入就绪/建模未完成”的状态并继续可行工作，不声称项目初始化完整完成。
-
-## 已有配置或另一个已有 worktree
-
-已有 `.harness/project.json` 且只需登记时，使用实际绝对路径：
+For authorized registration of an existing configuration:
 
 ```text
-harnessl3 worktree register <已有worktree绝对路径> --json
+harnessl3 worktree register <actual-existing-worktree-path> --json
 harnessl3 model validate --json
 ```
 
-`model validate` 在刚登记的目标目录执行，或显式传其返回的 `--worktree <UUID>`；不能仍处于另一个已登记 worktree 后强行指定不同目标。另一个已有 worktree 缺少项目上下文时，在该目录执行 `init`，由 CLI 核对 Git common-dir 和项目身份。不要复制其它仓库的 projectId，也不要替换已有配置来绕过冲突。
+Run validation in the registered target directory, or use its returned --worktree UUID without a conflicting registered cwd. Another worktree lacking context uses init in that worktree; never copy another repository's projectId or replace configuration to bypass a conflict.
 
-机器数据根使用原配置：`--data-dir`、`HARNESSL3_HOME` 或系统默认位置，且必须与所有登记 worktree 的目录树互不包含。不要为了绕过报错换一个临时数据根冒充项目已恢复。
+init only creates missing files, registers identity, initially seeds skills and parses the model. initialization.stage:scaffold-ready and semanticStatus:not-assessed are mechanical results, not semantic completion. Inspect actual project/worktree IDs, modelCreated, topology counts and nextAction.
 
-## 验证后开始工作
+## The current agent completes semantic onboarding
 
-确认机械接入、当前大模型建模/已有模型审核、语法校验及覆盖核对均已完成且目标正确后，回到主skill；若仅完成局部，先明确缺口：
+Use existing file tools and the current model; do not launch another agent/model or generate architecture guesses from directory names.
 
-```text
-harnessl3 task start --title "本次实际任务目的" --json
-```
+1. **Read and report progress.** Read project documentation, structure, key entry points and enough source to support component responsibilities/dependencies. Distinguish production, prototype/history and external sources. Preserve valid model/evidence identities and user content.
+2. **Model and report progress.** Edit .harness/model/*.c4 with actual composition, briefs, necessary relations and views; record sources, claims and review scope in evidence.json. Tools can write/hash bytes; the current agent performs semantic judgment. A directory listing or root-only scaffold does not cover a multi-module project. Do not invent nodes for counts.
+3. **Validate and review coverage.** Run model validate, inspect actual topology/views, and compare key components/dependencies/evidence with the read scope. Confirm the structure through Web or the same core read model; browsing is not an agent-body read. Repair gaps through files. Parsing success is not semantic coverage.
 
-按主skill取得本次实际上下文和必要技能正文后，用`web open --no-open --task <实际UUID> --json`取得链接，在进度消息中展示一次“查看HarnessL3的输出”引用卡片，再继续原任务；初始化本身不代替实际上下文返回，不附裸地址或常规有效期说明。建模改变版本时为当前模型建立新任务/绑定，旧任务保留当时组织；不能回写旧历史使它看起来已包含新结构。
+Report real stages, covered/uncovered scope, actual counts and diagnostics, not invented percentages. A placeholder, missing key structure or failed validation remains mechanically ready/modeling incomplete; do not claim completed onboarding.
 
-默认数据根由当前用户所有项目共享一个常驻后台，无空闲退出时限；显式隔离数据根可有独立实例。Web首次登录码5分钟/一次性、登录后会话12小时，与后台寿命分开；入口过期时重新取得链接，不能说服务5分钟后退出。初始化或校验失败时报告实际状态，不通过删除`.harness`、用户技能或历史重试。
+## Resume without losing boundaries
+
+After correct-target setup, semantic modeling/review, parsing and coverage checks, return to the main skill's chosen operation. If current modeling requires a fresh task binding, create it for the actual user goal; retain old snapshots as captured. Onboarding alone is not returned task context. Show the main skill's required output card only after actual context and necessary skill bodies return.
+
+Keep the existing data root (--data-dir, HARNESSL3_HOME or platform default), outside all registered worktrees; do not substitute a temporary root to disguise recovery. Version project model/config/evidence/aliases and referenced project docs/actual skill files with related source. Keep machine settings, credentials, logs, archives and derived indexes separate and preserved; do not copy external skill entities into Git. Initialization consent does not authorize commit/push.
+
+The default user service is persistent with no idle expiry; explicit roots may have separate instances. A login code lasts five minutes/one use and a browser session twelve hours; neither is the process lifetime. Do not delete .harness, skills or history to repair setup. Archive-only handoff/read/history recovery does not require reinitializing today's project.

@@ -4,6 +4,7 @@
 agent-skills/harnessl3/SKILL.md text eol=lf
 agent-skills/harnessl3/references/project-init.md text eol=lf
 agent-skills/harnessl3/references/runtime.md text eol=lf
+agent-skills/harnessl3/references/subagent.md text eol=lf
 cli/help.ts text eol=lf
 cli/main.ts text eol=lf
 core/archive.ts text eol=lf
@@ -17,6 +18,9 @@ core/references.ts text eol=lf
 core/runtime.ts text eol=lf
 core/skills.ts text eol=lf
 core/source.ts text eol=lf
+tests/v1/source-batching.test.mjs text eol=lf
+tests/v1/source-batch-probe.mjs text eol=lf
+scripts/v1/source-batching-benchmark.mjs text eol=lf
 core/workspace.ts text eol=lf
 docs/PROJECT_BASELINE.md text eol=lf
 docs/USAGE.md text eol=lf

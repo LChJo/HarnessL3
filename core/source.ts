@@ -112,6 +112,7 @@ function gitRunner(root: string): GitRun {
       if (input === undefined) return (await execFile('git', arguments_, options)).stdout;
       return await new Promise<Buffer>((resolve, reject) => {
         const child = callbackExecFile('git', arguments_, options, (error, stdout) => error ? reject(error) : resolve(stdout));
+        child.stdin?.on('error', reject);
         child.stdin?.end(input);
       });
     } catch (error) {
@@ -223,7 +224,7 @@ async function rejectExternalFilters(run: GitRun, selected: string[]): Promise<v
     try { return line(await run('config', '--get', key)).trim().length > 0; }
     catch (error) { if (gitCode(error, 1)) return false; throw error; }
   };
-  for (const chunk of argumentChunks(selected)) {
+  for (const chunk of stdinChunks(selected)) {
     const attributes = records(await run.input(['check-attr', '-z', '--stdin', 'filter'], Buffer.from(chunk.join('\0') + '\0')));
     if (attributes.length % 3 !== 0) throw new ScanFailure('SOURCE_GIT_OUTPUT', 'Git returned an invalid filter-attribute record.');
     for (let index = 0; index < attributes.length; index += 3) {
@@ -253,37 +254,69 @@ function argumentChunks(values: string[]): string[][] {
   return chunks;
 }
 
+// stdin bypasses argv limits; bound its UTF-8 payload independently instead.
+const STDIN_BATCH_BYTES = 64 * 1024;
+const IGNORE_BATCH_DIRECTORIES = 32;
+function* stdinChunks(values: Iterable<string>): Generator<string[]> {
+  let current: string[] = [];
+  let bytes = 0;
+  for (const value of values) {
+    const size = Buffer.byteLength(value, 'utf8') + 1;
+    if (current.length && bytes + size > STDIN_BATCH_BYTES) { yield current; current = []; bytes = 0; }
+    current.push(value); bytes += size;
+  }
+  if (current.length) yield current;
+}
+
 async function untrackedEntries(run: GitRun, root: string, tracked: Map<string, Candidate>, included: (relative: string) => boolean): Promise<{ entries: { path: string; directory: boolean }[]; directories: string[]; ignoredDirectoryPrefixes: string[] }> {
-  const queue = [''];
+  let frontier = [''];
   const directories: string[] = [];
   const entries: { path: string; directory: boolean }[] = [];
   const ignoredDirectoryPrefixes: string[] = [];
-  while (queue.length) {
-    const relativeDirectory = queue.shift()!;
-    if (relativeDirectory && !await checkParents(root, relativeDirectory + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during discovery.', relativeDirectory, true);
-    directories.push(relativeDirectory);
-    const children = await readdir(path.join(root, ...relativeDirectory.split('/').filter(Boolean)), { withFileTypes: true, encoding: 'buffer' });
+  while (frontier.length) {
+    const next: string[] = [];
     const selected: { path: string; isDirectory: boolean }[] = [];
-    for (const child of children) {
-      const name = decode(child.name);
-      const relative = validatePath(relativeDirectory ? relativeDirectory + '/' + name : name);
-      if (!included(relative)) continue;
-      if (tracked.has(relative) && !child.isDirectory()) continue;
-      selected.push({ path: relative, isDirectory: child.isDirectory() && !child.isSymbolicLink() });
-    }
-    const ignored = new Set<string>();
-    for (const chunk of argumentChunks(selected.map(child => child.path))) {
-      try { for (const record of records(await run.input(['check-ignore', '--no-index', '-z', '--stdin'], Buffer.from(chunk.join('\0') + '\0')))) ignored.add(validatePath(record)); }
+    let bytes = 0, visited = 0;
+    const flush = async (): Promise<void> => {
+      visited = 0;
+      if (!selected.length) return;
+      const batch = selected.splice(0);
+      bytes = 0;
+      // Siblings may have waited in the batch. Never ask Git to classify a
+      // descendant whose directory has since become a link.
+      for (const child of batch) if (!await checkParents(root, child.path)) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during classification.', child.path, true);
+      const ignored = new Set<string>();
+      try { for (const record of records(await run.input(['check-ignore', '--no-index', '-z', '--stdin'], Buffer.from(batch.map(child => child.path).join('\0') + '\0')))) ignored.add(validatePath(record)); }
       catch (error) { if (!gitCode(error, 1)) throw error; }
+      for (const child of batch) {
+        if (ignored.has(child.path)) { if (child.isDirectory) ignoredDirectoryPrefixes.push(child.path); continue; }
+        if (!child.isDirectory) { entries.push({ path: child.path, directory: false }); continue; }
+        // Classification can wait for sibling directories; recheck before any descent.
+        if (!await checkParents(root, child.path + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during discovery.', child.path, true);
+        let nestedGit = false;
+        try { await lstat(path.join(root, ...child.path.split('/'), '.git')); nestedGit = true; } catch (error) { if (!absent(error)) throw error; }
+        if (nestedGit) entries.push({ path: child.path, directory: true });
+        else next.push(child.path);
+      }
+    };
+    for (const relativeDirectory of frontier) {
+      if (relativeDirectory && !await checkParents(root, relativeDirectory + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during discovery.', relativeDirectory, true);
+      directories.push(relativeDirectory);
+      const children = await readdir(path.join(root, ...relativeDirectory.split('/').filter(Boolean)), { withFileTypes: true, encoding: 'buffer' });
+      for (const child of children) {
+        const name = decode(child.name);
+        const relative = validatePath(relativeDirectory ? relativeDirectory + '/' + name : name);
+        if (!included(relative)) continue;
+        if (tracked.has(relative) && !child.isDirectory()) continue;
+        const size = Buffer.byteLength(relative, 'utf8') + 1;
+        if (selected.length && bytes + size > STDIN_BATCH_BYTES) await flush();
+        selected.push({ path: relative, isDirectory: child.isDirectory() && !child.isSymbolicLink() });
+        bytes += size;
+      }
+      if (++visited >= IGNORE_BATCH_DIRECTORIES) await flush();
     }
-    for (const child of selected) {
-      if (ignored.has(child.path)) { if (child.isDirectory) ignoredDirectoryPrefixes.push(child.path); continue; }
-      if (!child.isDirectory) { entries.push({ path: child.path, directory: false }); continue; }
-      let nestedGit = false;
-      try { await lstat(path.join(root, ...child.path.split('/'), '.git')); nestedGit = true; } catch (error) { if (!absent(error)) throw error; }
-      if (nestedGit) entries.push({ path: child.path, directory: true });
-      else queue.push(child.path);
-    }
+    await flush();
+    frontier = next;
   }
   return { entries, directories, ignoredDirectoryPrefixes: ignoredDirectoryPrefixes.sort(compare) };
 }
