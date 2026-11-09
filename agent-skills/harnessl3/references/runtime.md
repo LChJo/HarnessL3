@@ -41,7 +41,9 @@ Do not treat archived replacement characters/question marks as recoverable origi
 
 ## Interpret actual returns
 
-Parse the single JSON envelope and exit code. On failure inspect error.code/details; on success inspect the actual data kind/status/scope. ok:true can still be partial. Keep successful items and address only the missing ones.
+Keep stdout, stderr and the original CLI exit code separate. Parse the complete stdout envelope and check ok before accessing data. On failure preserve the complete error.code/details; do not index missing data. Do not mix diagnostics into JSON with 2>&1 or truncate errors with head. A successful parser or the last command of a Bash pipeline is not CLI success; save the CLI status even when pipefail is enabled. The usage guide path returned by CLI help contains a guarded result-reader example.
+
+For SCHEMA_INVALID, follow details.diagnostics field pointers, constraints and applicable hints, then consult schemaFile/example for the installed contract. Use the packaged empty selection example instead of inventing cache claims. Known context must be exact bodies actually returned and retained in this task; skill/file/source hashes cannot replace context contentHash or this task's first read. Discover concrete fields through task select/context query help and Schema. ok:true can still be partial: keep successful items, handle only missing ones and preserve exit code 4.
 
 task start/prompt returns routing material; select/query returns exact content. Use handoff to recover accumulated content only when needed. expand gives direct-child briefs; read gives exact bodies. Ancestors, endpoints and references do not imply their bodies were read. routingPrompt carries rules; taskId/binding/directory/catalog come from structured data, not parsing the prompt.
 

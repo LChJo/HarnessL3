@@ -222,11 +222,11 @@ model {
   app.runtimeSkill -[guides]-> app.cli "指导当前agent调用" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000017"
-      brief "文件型入口指导当前agent组织上下文，不代表CLI启动或调度agent。"
+      brief "文件型入口指导当前agent组织上下文、先判ok并保存CLI原退出码和完整错误。"
       source "fact"
       status "verified"
-      evidence "d6250000-0000-4000-8000-000000000011"
-      version "1"
+      evidence "d6250000-0000-4000-8000-000000000011 7f0df0da-7a72-47aa-8953-343a7927cb24"
+      version "2"
     }
   }
   app.runtimeSkill -[guides]-> app.projectModel "当前agent直接建模" {

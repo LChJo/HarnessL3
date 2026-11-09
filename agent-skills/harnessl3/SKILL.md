@@ -72,6 +72,7 @@ One task has one joint skill selection. Own edits use stage synchronization, not
 - After source/long-term document changes, maintain current LikeC4 descriptions, relations, evidence and incoming links; preserve identities/history and verify the actual scope. See [stage synchronization](references/runtime.md#document-maintenance-and-stage-synchronization).
 - Version project .harness authority, related source/docs and actual project skill files with Git. Preserve and isolate machine settings/credentials, derived indexes, history and external skill libraries. This is not authorization to stage/commit/push.
 - A plan, todo list or final reply does not trigger task close. Keep the task open while its work or confirmation is pending; close after actual completion/cancellation and recorded sync state. Closed tasks are read-only; subagents never close a parent task.
+- For JSON calls, keep stdout/stderr separate and save the CLI exit code. Check ok before reading data; preserve complete error.code/details on failure. Parser/head success is not CLI success.
 - Preserve partial/unresolved/unknown states. Selection/read does not prove understanding or execution.
 
 ## Output card: once per actual task

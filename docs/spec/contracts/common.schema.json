@@ -40,7 +40,10 @@
       }
     },
     "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/uuid" } },
-    "known": { "type": "object", "propertyNames": { "$ref": "#/$defs/uuid" }, "additionalProperties": { "$ref": "#/$defs/sha256" } },
+    "known": {
+      "description": "Use {} until exact context bodies have been returned and retained in this task. Otherwise map entity UUIDs to their returned contentHash (SHA-256, 64 lowercase hexadecimal characters). Free text, skill/file hashes and hashes copied from another task cannot replace this task's first read.",
+      "type": "object", "propertyNames": { "$ref": "#/$defs/uuid" }, "additionalProperties": { "$ref": "#/$defs/sha256" }
+    },
     "queryFields": {
       "type": "object", "additionalProperties": false,
       "required": ["expand", "read", "known"],

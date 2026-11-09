@@ -77,11 +77,62 @@ task start返回本次绑定、顶层简述、实际技能轻目录和内置Skil
 
 selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。任务ID可作命令位置参数传入，也可写入selection.json的可选`taskId`字段后省略位置参数；两者都不能缺省。
 
+首次读取通常将`context.known`填为`{}`；后续query的`known`也可为空。非空时，键是实体UUID，值是同任务已返回并仍保留的精确正文`contentHash`（64位小写十六进制SHA-256）。它不是“已经了解”的文字说明，也不使用技能、文件或来源哈希。从另一任务复制哈希不能跳过本任务首次正文读取；只需选择技能、`read:[]`时无需填入缓存条目。具体约束也可从`task select/context query --help`发现。
+
 handoff返回累计实际上下文和版本化技能文件引用。文件正文/附件随后以task read和expectedHash按需读取，见[file-read Schema](spec/contracts/file-read.schema.json)。选择与读取技能都不表示已执行。独立的后续上下文可用context query批量请求，见[query Schema](spec/contracts/query.schema.json)。
 
 请求JSON优先使用明确以UTF-8写入的文件；文件输入支持单个UTF-8 BOM。也可使用`--file -`从保证UTF-8字节的stdin传入。Windows PowerShell的默认原生管道可能把中文替换成`?`，因此含中文的请求应先写入UTF-8文件，再传`--file <实际路径>`；已丢失的文字无法靠重新解码恢复。将请求文件放在工作区之外，避免新建未跟踪请求文件改变来源指纹。CLI不会自动把请求文件加入源码排除。
 
 相同requestId及相同语义请求重试会重放已提交回执；不同内容复用同一个ID会冲突。发生取消时，已提交结果仍保留，不要从客户端未收到响应推断未提交。JSON输出只有一个封套；成功0、参数错误2、冲突3、部分成功4、取消130，其它失败1。
+
+## 可靠读取JSON结果
+
+先保存CLI退出码，分别保存stdout与stderr，再解析完整stdout。只有`ok:true`才读取`data`；`ok:false`应保留完整错误封套及`error.code/details`，不能继续索引不存在的`data`。`SCHEMA_INVALID`的`details.schemaFile/example`指向当前安装包，`diagnostics`提供字段JSON Pointer、约束和适用的修正提示。不要截断诊断，也不要把stderr用`2>&1`混入JSON。Bash中管道末端的`head`或解析器成功不代表CLI成功；`pipefail`也不能代替保存CLI自身退出码。
+
+下面的Node读取示例可保存为工作区外的`read-result.mjs`，参数依次是已保存的CLI退出码和stdout文件路径。它在失败时保留原错误，在部分成功时保留返回数据及退出码4：
+
+```javascript
+import { readFileSync } from 'node:fs';
+const cliCode = Number(process.argv[2]);
+const raw = readFileSync(process.argv[3], 'utf8').replace(/^\uFEFF/, '');
+let response;
+try { response = JSON.parse(raw); }
+catch {
+  process.stderr.write('Invalid CLI JSON; preserve the response and check the original requestId before retrying.\n' + raw + '\n');
+  process.exit(cliCode || 1);
+}
+if (!response || typeof response.ok !== 'boolean' ||
+    (response.ok && !Object.hasOwn(response, 'data')) ||
+    (!response.ok && !Object.hasOwn(response, 'error'))) {
+  process.stderr.write('Invalid CLI envelope\n' + raw + '\n');
+  process.exit(cliCode || 1);
+}
+if (!response.ok) {
+  process.stderr.write(JSON.stringify(response) + '\n');
+  process.exit(cliCode || 1);
+}
+process.stdout.write(JSON.stringify(response.data) + '\n');
+process.exitCode = cliCode;
+```
+
+将下面的任务ID、输入文件和输出路径替换为实际值，输出及读取器文件放在worktree之外。Bash保存方式如下，stderr另存诊断文件：
+
+```bash
+cli_code=0
+harnessl3 task select "$task_id" --file "$request_file" --json >"$response_file" 2>"$diagnostic_file" || cli_code=$?
+node "$reader_file" "$cli_code" "$response_file"
+```
+
+PowerShell保存方式如下，显式写出UTF-8响应，避免默认重定向编码的差异：
+
+```powershell
+$responseText = & harnessl3 task select $taskId --file $requestFile --json 2> $diagnosticFile
+$cliCode = $LASTEXITCODE
+[System.IO.File]::WriteAllText($responseFile, ($responseText -join "`n"), [System.Text.UTF8Encoding]::new($false))
+node $readerFile $cliCode $responseFile
+```
+
+失败按错误字段修正请求；响应缺失、损坏或取消则先核对原requestId回执，不由解析失败推断写入未执行。
 
 ## 更新上下文与关闭阶段
 

@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.37 requires same-goal continuation reuse and actual-task closure; English skill routing connects operation selection to conditional installation/onboarding and result handling, preserving consent, version and history boundaries.",
+      "claim": "Current v0.38 combines v0.37 continuation/setup guidance with actionable request diagnostics and guarded caller parsing while preserving authority, strict hashes, request identity and historical boundaries.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "44b01da49f2ff51fef9f3056aa5483f6265e1272e08364e327de9c639037d164",
-      "observedAt": "2026-11-09T10:19:54.750Z"
+      "hash": "b58a72806ec05a0564fcc0552ed7461a8167b1443d3b06e32c8b3a3977f9715c",
+      "observedAt": "2026-11-09T10:50:45.466Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "English instructions route in order: reuse/choose an operation, resolve missing CLI or project setup only when needed, then handle the actual result. Sufficient context skips prerequisite probes; archive recovery does not require current-project initialization. Consent, version, lifecycle and the required localized card remain.",
+      "claim": "English runtime entry first reuses sufficient same-task material, resolves setup only for necessary operations, and preserves original CLI status, separate streams and complete errors with ok checked before data.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "c0991d64328b8bd53c984198596a742f9dae5a32c3521b3247a795dd26ecfe86",
-      "observedAt": "2026-11-09T10:19:54.755Z"
+      "hash": "1a7ed0a88abfb7fafc78d5590f07a7c48a1ef8dcd4e8d9edfdc08a4fe56c0f3e",
+      "observedAt": "2026-11-09T10:50:45.469Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Text authority defines document identity, current reference lifecycle and read-only Git diagnostics; document bodies still require explicit reading.",
+      "claim": "Text authority and reference lifecycle remain; known uses exact retained bodies from the same task and cannot replace the first read with another task hash.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "3faec2e0be3372fc95381271be520257605907453b7172a6cb89e24330e5e3ae",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "1958cbc653f7c5d4d75fbb1655434a12cc2e314c35071b55aa49d3470b531432",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "English runtime guidance preserves continuation/delta reads, actual installed contracts, UTF-8 requests, evidence/document maintenance, scoped synchronization, receipt/history and explicit log boundaries.",
+      "claim": "English runtime reference preserves continuation, setup, version/history and stage-sync rules and adds guarded JSON parsing, field diagnostics and same-task known guidance without repeated entry.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "a0c968a56e03fc200de629efd36674a6915b7148b57b33db89fa5f4532bf4151",
-      "observedAt": "2026-11-09T10:19:54.756Z"
+      "hash": "131ab2275b75751802f26c16a604f03cd3590868e9ae53dde9572954b80eaa01",
+      "observedAt": "2026-11-09T10:50:45.470Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static help exposes the build source without starting the service and retains command/schema discovery and version semantics.",
+      "claim": "Static command help reads known guidance from the shared schema and explains guarded JSON result handling while retaining contract discovery and no service startup.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "accc43506fdc8fc39c9773153f7af0f3970b6d904c4f49ec46109250727fc49d",
-      "observedAt": "2026-11-09T05:37:20.137Z"
+      "hash": "b52bc4937f060b724221c3543def0557fdea06b501cfe36ca3f992dd6563d468",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status records English main/reference instructions, ordered missing-CLI/project routing, installed host copies and untested host effects; source batching retains completed targeted checks, interrupted final Windows testing and unrun performance comparisons.",
+      "claim": "Status preserves both implementation histories and records v0.38 merge conflict resolution, evidence-ID disambiguation, 16 focused Windows checks, build/contracts/model/link verification and explicit unrun scope.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "6521bb6e8cbae5756eef087f8400e5e867a93cb701eaca966eefd3795512226b",
-      "observedAt": "2026-11-09T10:19:54.757Z"
+      "hash": "98f51ab0ff419a62403a3eed71bf17cdf9fe701e3fff254ff1b99e6450173180",
+      "observedAt": "2026-11-09T10:52:28.594Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC27 includes English ordered routing for missing CLI/uninitialized or unregistered projects, no unnecessary setup for sufficient context/archive recovery, continuation reuse and actual-task closure; real-host effects require separate observation.",
+      "claim": "TC27 preserves continuation/setup lifecycle rules; TC22 adds field-level diagnostics and executable guarded-reader checks, and TC18 retains same-task first-body protection.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "c5b0066665650101688e5f73b0225a0519dd2b630879facff5041962de8631af",
-      "observedAt": "2026-11-09T10:19:54.758Z"
+      "hash": "440a649f95f85ba53cdb356ee4eda4fce0a0ab43835a3add05c7eb444efa896b",
+      "observedAt": "2026-11-09T10:50:45.471Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Protocol preserves existing command semantics and adds explicit ask-user, question and fallbackWhen fields to noninteractive first-use guidance.",
+      "claim": "Protocol retains errors and exit codes, adds schemaFile and precise diagnostics with schema constraints and applicable known hints, and requires guarded caller parsing.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "60b5f31d81e49661fc7b88002d36ea55cae4fa608c2e8607ea8be000a12fb4ac",
-      "observedAt": "2026-11-09T07:28:53.725Z"
+      "hash": "f4b2ed43f19915d0555e31a8a3f801366b58bc66164edffc74732c1310c7febc",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR15 workflow first chooses reuse or the needed operation, conditionally handles CLI installation/project consent and preserves archive-only recovery, version binding and actual-task lifecycle.",
+      "claim": "FR12 retains service/recovery boundaries and specifies guarded result handling and actionable field diagnostics; FR15 reuses continuous task bodies and closes only on actual completion/cancellation.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "e36dff5c7def907d58fff1190c13306cd6304414ebe5ac6655a6c16dde3a2d40",
-      "observedAt": "2026-11-09T10:19:54.759Z"
+      "hash": "820d4919c711b3dcd5eb74b5e73295260928d08a7e21595336926dacc79c8cfd",
+      "observedAt": "2026-11-09T10:50:45.471Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Specification navigation records v0.37 ordered reuse, conditional CLI/project setup and execution routing while retaining prior stability/history and independently observed host/platform acceptance.",
+      "claim": "The specification entry retains v0.37 continuation/setup and adds v0.38 caller/diagnostic refinements with separate actual validation boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "0bd5c144de002cf5bde914cd4691faac1ac8950a7eec92e242a2ab272ebc9ddd",
-      "observedAt": "2026-11-09T10:19:54.760Z"
+      "hash": "2cf765dd2be2e5e18c21b4a44ef2ce865fd50b363e1b34f6c512bcbc81a6d51f",
+      "observedAt": "2026-11-09T10:50:45.472Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "D15 requires continuation reuse, conditional missing-CLI/project guidance with scoped authorization, archive-only recovery without reinitialization, and task-level lifecycle while retaining normal stage synchronization.",
+      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "f63832ecd9af570a4717f0f9c05a0dee3e767d10c5deffbaed785f84e36198de",
-      "observedAt": "2026-11-09T10:19:54.761Z"
+      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
+      "observedAt": "2026-11-09T10:50:45.472Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage describes the English entry/reference package and connected reuse/prerequisite/execution flow, preserving continuation, archive-only recovery and consent without per-message probes.",
+      "claim": "Usage preserves continuation and onboarding guidance, same-task known rules and a guarded Node reader with original CLI status and separate stream capture.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "e02fd8104ba80173e8dfda21ec7b3567608be73f921ed81b71351a2670b33cd2",
-      "observedAt": "2026-11-09T10:19:54.762Z"
+      "hash": "ad151083fa7bc907b4854f1d870924e97ceb11e6694d4bddc36f4a0874752a8c",
+      "observedAt": "2026-11-09T10:50:45.473Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -720,6 +720,56 @@
       },
       "hash": "dde4359ff1f866b48481ffd1d11b3d755f228f4444344199811ed9a7f154bbee",
       "observedAt": "2026-11-09T10:19:54.763Z"
+    },
+    {
+      "id": "800efe39-40f9-47b8-a70b-d1819705009e",
+      "kind": "source-code",
+      "claim": "Contract validation reports precise escaped field pointers, schema constraints and applicable known guidance without returning request values; strict validation remains.",
+      "location": {
+        "path": "core/contract.ts"
+      },
+      "hash": "14a223e955ed75694a8ed31c1d6d041d8cdffe27aac559cb373f3f82996077cb",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000002",
+      "kind": "document",
+      "claim": "Shared known description documents empty/default and exact same-task contentHash usage; UUID/SHA-256 validation is unchanged.",
+      "location": {
+        "path": "docs/spec/contracts/common.schema.json"
+      },
+      "hash": "9e315a26f4fc1f171983fe7747de8009fe16174c161d1bdfd341e75c8bcc1502",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Isolated checks exercise invalid known, exact diagnostic pointers, pre-dispatch CLI failure and the actual documented reader including partial and failure status preservation.",
+      "location": {
+        "path": "tests/v1/contract-diagnostics.test.mjs"
+      },
+      "hash": "2dbb79915d6d97edbe1c3e089556078eebe5da5db7aacede80b226d0b6df8b6f",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000004",
+      "kind": "source-code",
+      "claim": "Static help checks cover installed schema paths, shared known guidance and guarded caller instructions without creating the data root.",
+      "location": {
+        "path": "tests/v1/cli-help.test.mjs"
+      },
+      "hash": "872c8a4af9d3c0739f77cbbcdb51194906f3e307859667a37c9a005a3c9d213e",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000005",
+      "kind": "document",
+      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "location": {
+        "path": "AGENTS.md"
+      },
+      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
+      "observedAt": "2026-11-09T10:50:45.473Z"
     }
   ]
 }
