@@ -261,7 +261,7 @@ export class Runtime extends EventEmitter {
           }
         }
         const observed = resource.freshness.currentState()
-        modelState = { state: observed.modelState === 'invalid' ? 'invalid' : model ? 'valid' : 'unknown', currentRevision: observed.modelRevision, displayRevision: model?.revision ?? null, diagnostics: observed.diagnostics }
+        modelState = { state: observed.modelState === 'invalid' ? 'invalid' : observed.modelState === 'valid' && model ? 'valid' : 'unknown', currentRevision: observed.modelRevision, displayRevision: model?.revision ?? null, diagnostics: observed.diagnostics }
       } catch (error) {
         const failure = asHarnessError(error)
         model = this.lastValidModel.get(worktreeId) ?? null

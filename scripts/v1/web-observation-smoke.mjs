@@ -56,8 +56,62 @@ try {
   await fresh.goto(await fixture.url(null))
   await fresh.waitForFunction(() => !!document.querySelector('[data-task-id]')?.getAttribute('data-task-id') && !document.querySelector('.view-loading'))
   assert.match(await fresh.getByRole('heading', { level: 1 }).innerText(), /New task while reviewing fixed history/)
+  // Keep a valid remembered task outside the first page. Only the list response
+  // is shaped; its task, batch and archive bytes still come from the real service.
+  const rememberedBatch = (await fixture.cli(['task', 'show', fixture.entry.taskId])).data.result.task.batches[0].id
+  let lookupMode = 'visible', targetedLookups = 0, rememberedSummary
+  await page.route('**/rpc', async route => {
+    const command = route.request().postDataJSON()
+    if (!['task list', 'history list'].includes(command.operation) || command.flags.worktree !== fixture.target.worktreeId) { await route.continue(); return }
+    const response = await route.fetch(), envelope = await response.json()
+    assert.equal(envelope.ok, true, JSON.stringify(envelope))
+    const result = envelope.data.result
+    if (!command.flags.query) {
+      result.items = result.items.filter(item => item.id !== fixture.entry.taskId)
+      result.total = 51; result.hasMore = true
+    } else if (command.flags.query === fixture.entry.taskId) {
+      targetedLookups++
+      rememberedSummary ??= result.items.find(item => item.id === fixture.entry.taskId)
+      if (lookupMode === 'paged') {
+        const offset = Number(command.flags.offset)
+        result.items = offset ? [rememberedSummary] : Array.from({ length: 50 }, (_, index) => ({ ...rememberedSummary, id: `60000000-0000-4000-8000-${String(index).padStart(12, '0')}`, title: fixture.entry.taskId }))
+        result.total = 51; result.hasMore = !offset
+      }
+      if (lookupMode === 'unavailable') { result.items = []; result.total = 0; result.hasMore = false }
+      if (lookupMode === 'error') { await route.fulfill({ response, json: { ...envelope, ok: false, error: { code: 'INDEX_UNAVAILABLE', message: 'Injected lookup failure', details: {} } } }); return }
+    }
+    await route.fulfill({ response, json: envelope })
+  })
+  const returnToTarget = async () => {
+    await page.getByRole('combobox', { name: '选择项目', exact: true }).selectOption(fixture.other.projectId)
+    await ready(fixture.other.worktreeId, null)
+    await page.getByRole('combobox', { name: '选择项目', exact: true }).selectOption(fixture.target.projectId)
+  }
+  // Seed the optional browser view state just as opening this recorded batch does.
+  const remember = () => page.evaluate(({ worktree, task, batch }) => {
+    sessionStorage.setItem('harnessl3:worktree:' + worktree.projectId, worktree.worktreeId)
+    sessionStorage.setItem('harnessl3:view:' + worktree.worktreeId, JSON.stringify({ task, batch, frozen: true }))
+  }, { worktree: fixture.target, task: fixture.entry.taskId, batch: rememberedBatch })
+  await remember(); await returnToTarget()
+  await ready(fixture.target.worktreeId, fixture.entry.taskId)
+  assert.equal(new URL(page.url()).searchParams.get('batch'), rememberedBatch)
+  assert.equal(targetedLookups, 1, 'restore checks a remembered task outside page one')
+  assert.deepEqual(await readFile(archivePath), before)
+  lookupMode = 'paged'
+  await remember(); await returnToTarget()
+  await ready(fixture.target.worktreeId, fixture.entry.taskId)
+  assert.equal(targetedLookups, 3, 'title matches must not replace exact task ID matching on later search pages')
+  assert.equal(new URL(page.url()).searchParams.get('batch'), rememberedBatch)
+  lookupMode = 'error'
+  await remember(); await returnToTarget()
+  await page.getByText('INDEX_UNAVAILABLE: Injected lookup failure', { exact: true }).waitFor()
+  assert.equal(await page.evaluate(worktree => JSON.parse(sessionStorage.getItem('harnessl3:view:' + worktree)).task, fixture.target.worktreeId), fixture.entry.taskId, 'temporary failure must preserve the remembered task')
+  lookupMode = 'unavailable'
+  await returnToTarget()
+  await page.waitForFunction(id => !!document.querySelector('[data-task-id]')?.getAttribute('data-task-id') && document.querySelector('[data-task-id]')?.getAttribute('data-task-id') !== id && !document.querySelector('.view-loading'), fixture.entry.taskId)
+  assert.deepEqual(await readFile(archivePath), before)
   assert.deepEqual(errors, [])
-  const result = { platform: process.platform, node: process.version, browser: await browser.version(), returnMs, rememberedTaskRequests: 1, taskListRequests: 1, remembersWorktree: true, emptyWorktree: true, historyUnchanged: true, frozenHistorySignalsOnly: true, defaultsToLatest: true, errors }
+  const result = { platform: process.platform, node: process.version, browser: await browser.version(), returnMs, rememberedTaskRequests: 1, taskListRequests: 1, remembersWorktree: true, emptyWorktree: true, historyUnchanged: true, frozenHistorySignalsOnly: true, defaultsToLatest: true, restoresBeyondFirstPage: true, exactMatchAcrossSearchPages: true, restoresBatch: true, preservesMemoryOnLookupFailure: true, unavailableFallback: true, targetedLookups, errors }
   await writeFile(path.join(output, 'browser.json'), JSON.stringify(result, null, 2) + '\n')
   console.log(JSON.stringify(result))
 } finally { await browser?.close(); await fixture.stop() }

@@ -52,11 +52,11 @@ model {
   app.core.runtime -[uses]-> app.core.model "校验与投影" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000006"
-      brief "Runtime在显式初始化/模型校验读取当前模型；普通视图复用已记录的模型快照。"
+      brief "Runtime在显式初始化/模型校验读取当前模型；普通视图复用已记录快照并保留当前解析或未知状态。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "2"
+      version "3"
     }
   }
   app.core.runtime -[uses]-> app.core.skills "目录与刷新" {

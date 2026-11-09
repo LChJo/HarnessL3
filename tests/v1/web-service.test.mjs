@@ -23,11 +23,11 @@ test('TC17 two coding worktrees observe real edits through one bounded backgroun
     }
     for (const resource of resources) await resource.freshness.status(await runtime.registry().skillsRoot(resource.worktree))
     let active = 0, maximum = 0, firstEntered = false, secondEntered = false
-    for (const [index, resource] of resources.entries()) {
+    for (const resource of resources) {
       const original = resource.freshness.observe.bind(resource.freshness)
       t.mock.method(resource.freshness, 'observe', async root => {
         active++; maximum = Math.max(maximum, active)
-        try { if (index === 0) { firstEntered = true; await gate } else secondEntered = true; return await original(root) }
+        try { if (!firstEntered) { firstEntered = true; await gate } else secondEntered = true; return await original(root) }
         finally { active-- }
       })
     }
@@ -35,7 +35,7 @@ test('TC17 two coding worktrees observe real edits through one bounded backgroun
     await writeFile(path.join(roots[0], 'README.md'), 'First worktree edit\n')
     await until(() => firstEntered)
     await writeFile(path.join(roots[1], 'README.md'), 'Second worktree edit\n')
-    await until(() => !!resources[1].freshness.running)
+    await until(() => resources.every(resource => !!resource.freshness.running))
     assert.equal(secondEntered, false)
     release()
     await Promise.all(resources.map(resource => resource.freshness.running))
@@ -61,6 +61,39 @@ test('TC21 workspace browsing reads recorded state without reconciling live sour
   assert.equal(viewed.freshness.state, 'unknown')
   assert.equal(viewed.model, null, 'no recorded model must remain unknown')
   } finally { await runtime.close() }
+})
+
+test('TC21 pending model parsing keeps the recorded structure visibly non-current without a browsing scan', async t => {
+  const f = await fixture(t, 'harness-v1-model-view-state-')
+  const root = await f.repository()
+  const runtime = new Runtime(f.dataRoot)
+  let release
+  const gate = new Promise(resolve => { release = resolve })
+  try {
+    const initialized = await runtime.execute({ operation: 'init', positionals: [], flags: {}, cwd: root, requestId: randomUUID() })
+    assert.equal(initialized.ok, true)
+    const resource = await runtime.worktreeResources(await runtime.registry().worktree(initialized.target.worktreeId))
+    const baseline = await resource.freshness.status(await runtime.registry().skillsRoot(resource.worktree))
+    assert.equal((await runtime.view(initialized.target.worktreeId)).modelState.state, 'valid')
+    t.mock.method(resource.freshness, 'background', operation => gate.then(operation))
+    await writeFile(path.join(root, '.harness', 'model', 'main.c4'), 'invalid LikeC4 {')
+    const deadline = Date.now() + 15000
+    while (resource.freshness.currentState().modelState !== 'parsing') {
+      assert.ok(Date.now() < deadline, 'model notification timed out')
+      await delay(20)
+    }
+    const status = t.mock.method(resource.freshness, 'status', () => { throw new Error('Browsing must not reconcile source') })
+    const viewed = await runtime.view(initialized.target.worktreeId)
+    assert.equal(viewed.freshness.modelState, 'parsing')
+    assert.equal(viewed.modelState.state, 'unknown')
+    assert.equal(viewed.modelState.displayRevision, baseline.modelRevision)
+    assert.equal(viewed.model.revision, baseline.modelRevision)
+    assert.equal(status.mock.callCount(), 0)
+    const current = resource.freshness.currentState.bind(resource.freshness)
+    const unknown = t.mock.method(resource.freshness, 'currentState', () => ({ ...current(), modelState: 'unknown' }))
+    assert.equal((await runtime.view(initialized.target.worktreeId)).modelState.state, 'unknown')
+    unknown.mock.restore()
+  } finally { release(); await runtime.close() }
 })
 
 test('TC17 non-task commits catch up a compact index without rebuilding or rewriting the journal', async t => {

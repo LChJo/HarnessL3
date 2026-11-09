@@ -34,12 +34,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime preserves user-data-root and archive isolation, bounds background observations and returns recorded Web state without full source scans.",
+      "claim": "Runtime returns recorded Web state without source scans and keeps parsing or unknown current model state distinct from a last valid snapshot.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "03a9022c9878caca373b6a9300c915f456935b9105543821dde31534fb65738b",
-      "observedAt": "2026-11-09T12:40:27.257720Z"
+      "hash": "209fc2e81e3b509b5a22f58864d297f1d33ac5304f1d45d4503e7be280800e4a",
+      "observedAt": "2026-11-09T14:34:41.696Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web restores recorded worktrees/tasks/batches for review, deduplicates covered sequences and preserves fixed history, sign-in and candidate boundaries.",
+      "claim": "Web restores remembered visible task IDs and batches beyond the first list page via paginated history search, preserves memory on query failure, and retains existing read-only and generation boundaries.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "2c1b291adef8ac50d645e1d703bfefe1b78794a4e811ba291f44d26916fd734d",
-      "observedAt": "2026-11-09T12:57:25.794563Z"
+      "hash": "534f05a3c1963e3c2cb94ce4029b3d92dfd28ee9bfd55b69dcdde0a8c7e6e6dd",
+      "observedAt": "2026-11-09T14:34:41.702Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -224,12 +224,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000017",
       "kind": "document",
-      "claim": "Formal Web documentation covers recorded review, sequence deduplication, full omitted-subtree counts and isolated browser checks without unrun platform claims.",
+      "claim": "Web documentation describes visible-history restoration beyond the first page, error fallback and non-current model snapshot labels.",
       "location": {
         "path": "web/README.md"
       },
-      "hash": "d3dc4598546113d775b985b412c3b46b680a13877139f465196b3ed4bdf87367",
-      "observedAt": "2026-11-09T13:39:40.547Z"
+      "hash": "f9d7947d30e14ea167270d7c0e737b2bc19b285d142a55291a48f3c197e6165d",
+      "observedAt": "2026-11-09T14:34:41.702Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status separates v0.41 observation checks and copied-history samples from v0.40 skill-routing and v0.39 count validation, retaining failure corrections and unrun platform/host limits.",
+      "claim": "Status records the v0.41 review fixes for task restoration and current model validity, separating actual checks and remaining platform limits.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "6ba5bb3a22fc49ec0199b130e76c8853fd8e76faef34dd5c74017a89c7c45a5e",
-      "observedAt": "2026-11-09T13:44:32.108Z"
+      "hash": "f4d994a9d20569bca9279dfd0bff08674fb8b7a1b684c670bb7c4bf24e8ad13f",
+      "observedAt": "2026-11-09T14:34:41.703Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -854,22 +854,22 @@
     {
       "id": "d6390000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime regressions exercise no-scan browsing, bounded cross-worktree background edits, compact indexing and intact requested archives.",
+      "claim": "Runtime regressions cover no-scan browsing, pending or unknown current model status with an old snapshot, order-independent bounded background work, compact indexing and archive integrity.",
       "location": {
         "path": "tests/v1/web-service.test.mjs"
       },
-      "hash": "71e51b643801add729112b32b61ab506c4e8a04379aeda2303be6c22622414b6",
-      "observedAt": "2026-11-09T13:35:38.700Z"
+      "hash": "5b8a622f687bccddf289e5a84f5e46d8a8f167d6e136b6dc79f36c45254ddfe0",
+      "observedAt": "2026-11-09T14:34:41.707Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "Isolated browser workflow checks remembered worktrees/tasks, latest-task fallback, empty history, fixed history signals and unchanged task bytes.",
+      "claim": "Isolated browser checks restore task and batch outside page one, exact ID across search pages, query failure memory, unavailable fallback, existing fixed history and unchanged task bytes.",
       "location": {
         "path": "scripts/v1/web-observation-smoke.mjs"
       },
-      "hash": "261c43df8daa885ff88e3731bb3d18e06ec7251180ee259bbb3862c561e1e6fb",
-      "observedAt": "2026-11-09T12:57:25.829979Z"
+      "hash": "5715210c4052c0501326a10de79fbce80bd4764bfe0ddea31a53a3dc6c9284a3",
+      "observedAt": "2026-11-09T14:34:41.708Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000006",

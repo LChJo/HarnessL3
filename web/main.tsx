@@ -182,11 +182,23 @@ function App() {
     const token = generation.current
     if (!route.browse) void loadView(route)
     if (route.listed) return
-    void loadTasks(route.worktree).then(items => {
+    void loadTasks(route.worktree).then(async items => {
       if (!route.browse || token !== generation.current) return
       let remembered: Partial<Route> = {}
       try { const value = JSON.parse(sessionStorage.getItem('harnessl3:view:' + route.worktree) ?? '{}'); if (value && typeof value === 'object') remembered = value } catch { /* Use the latest recorded task. */ }
-      const selected = items?.find(item => item.id === remembered.task) ?? items?.[0]
+      let selected = items.find(item => item.id === remembered.task)
+      if (!selected && typeof remembered.task === 'string' && remembered.task) {
+        // Search the visible history by ID; a remembered task can be beyond page one.
+        let offset = 0
+        while (true) {
+          const result = dataResult(await rpc<{ result: HistoryResult }>('history list', { worktree: route.worktree, flags: { query: remembered.task, limit: '50', offset: String(offset) } }))
+          if (token !== generation.current) return
+          selected = result.items.find(item => item.id === remembered.task)
+          if (selected || !result.hasMore || !result.items.length) break
+          offset += result.items.length
+        }
+      }
+      selected ??= items[0]
       const resume = selected?.id === remembered.task
       chooseRoute({ worktree: route.worktree, task: selected?.id, batch: resume && typeof remembered.batch === 'string' ? remembered.batch : undefined, frozen: !!selected, browse: false, listed: true })
     }).catch(error => { if (token === generation.current) { setViewError(errorMessage(error)); setLoading(false) } })
