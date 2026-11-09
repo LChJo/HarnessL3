@@ -169,7 +169,7 @@ harnessl3 task close <task-id> --json
 
 ## 5. Skill Hub 和迁移兼容
 
-npm另分发文件型运行时接入skill `agent-skills/harnessl3/`，供现有Codex/Claude Code正确调用上述CLI流程。D15约定安装后所有任务默认先经L3，1%可能相关也触发；连续同一有效任务可复用，空选择合法。`SKILL.md`提供触发/子任务分支、调用时机、返回含义、使用判断和少量入口示例；具体参数以当前CLI帮助/契约为准。安装更新、项目初始化、运行细节及子任务交接另放在`references/`，仅命中条件时读取，不自动预读或注入正文。有父交接的子任务复用普通task/handoff/query/read，不重选或关闭父任务；独立范围自行创建/关闭自己的task。此为agent工作约定，CLI未提供父子专用字段/权限隔离，不自动启动子agent或绑定其日志。
+npm另分发文件型运行时接入skill `agent-skills/harnessl3/`，供现有Codex/Claude Code正确调用上述CLI流程。D15约定安装后所有任务默认先经L3，1%可能相关也触发；连续项目上下文可复用，但每轮按当前操作重新判断并task read所选技能正文；同技能/合适版本沿用原选择，技能集合或所需版本变化时使用现有start/select/read建立新阶段任务并仅选择缺失上下文。空选择合法，新task不继承旧packet，不支持在已选择task内重选。`SKILL.md`提供触发/子任务分支、调用时机、返回含义、使用判断和少量入口示例；具体参数以当前CLI帮助/契约为准。安装更新、项目初始化、运行细节及子任务交接另放在`references/`，仅命中条件时读取，不自动预读或注入正文。有父交接的子任务复用普通task/handoff/query/read，不重选或关闭父任务；独立范围自行创建/关闭自己的task。此为agent工作约定，CLI未提供父子专用字段/权限隔离，不自动启动子agent或绑定其日志。
 
 该入口不属于普通方法seed或内置路由原则，与Hub当前21项方法分开。安装指南在安装/更新包后显式调用包内`scripts/install-agent-skills.mjs`，将整个skill及附件复制到Codex的`~/.agents/skills/harnessl3`与Claude Code的用户级skills目录；不使用npm生命周期Hook，不启动agent。相同字节不重写；更新既有主入口或附件先在skills根外按相对路径保存原字节备份，保留其它内容；实际逐文件复制结果与宿主发现/运行验证分开记录。引导恢复不递归，无明确目标或入口能力时真实报告，不伪报调用。默认目录及覆盖方式见[安装指南](../../INSTALL.md)。D13/D14的权威、技能归档和接入边界不变。
 

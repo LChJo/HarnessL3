@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.38 combines v0.37 continuation/setup guidance with actionable request diagnostics and guarded caller parsing while preserving authority, strict hashes, request identity and historical boundaries.",
+      "claim": "Current v0.40 separates per-turn skill routing/body reads from reusable project context while retaining v0.39 omitted-branch counts, one selection per task and immutable history.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "b58a72806ec05a0564fcc0552ed7461a8167b1443d3b06e32c8b3a3977f9715c",
-      "observedAt": "2026-11-09T10:50:45.466Z"
+      "hash": "58bca83b699d13a6dee39162c2b24bd0a4eb95510c654bbb26c2a2cbb5d7effb",
+      "observedAt": "2026-11-09T12:35:44.730Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "English runtime entry first reuses sufficient same-task material, resolves setup only for necessary operations, and preserves original CLI status, separate streams and complete errors with ok checked before data.",
+      "claim": "Compact English entry reassesses and loads skills each user turn before reusing project context; skill/version changes use new stage tasks, with existing setup and guarded result handling preserved.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "1a7ed0a88abfb7fafc78d5590f07a7c48a1ef8dcd4e8d9edfdc08a4fe56c0f3e",
-      "observedAt": "2026-11-09T10:50:45.469Z"
+      "hash": "9b09128089adbc426a645977ad2a493fce771f80f29cf229efab73414fab1746",
+      "observedAt": "2026-11-09T12:35:44.734Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -224,22 +224,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000017",
       "kind": "document",
-      "claim": "Formal Web documentation describes sign-in recovery, precise credential cleanup, isolated program/browser regression commands and existing projection gates without claiming unrun platforms.",
+      "claim": "Formal Web documentation covers full omitted-subtree counts, method-based skill counts, isolated browser verification and existing sign-in/disclosure gates without unrun platform claims.",
       "location": {
         "path": "web/README.md"
       },
-      "hash": "e2593045e5de9797da1b792a503f050a23e12d12a468e9d80fd636415fd1b3b1",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "9027b9bf1d2829d182823d0800a8f7af91c9d7c85eb7d3dc4c7636de29da1109",
+      "observedAt": "2026-11-09T11:50:41.271Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
       "kind": "source-code",
-      "claim": "Context layout keeps hit paths, explicit returned parent-body leaves and unmatched overflows without duplicating entity counts or changing the complete directory.",
+      "claim": "Layout counts every node of each omitted subtree with a temporary stack, keeps visible hit paths and synthetic body leaves out of overflow counts, and preserves bounded disclosure and input trees.",
       "location": {
         "path": "web/canvas-model.ts"
       },
-      "hash": "810e781faa276308cacb547d20f5ac5a49b9c4cbc0a6c7fc1bd26fde3abbea35",
-      "observedAt": "2026-11-07T13:02:35.524Z"
+      "hash": "1fa6f3fc0a24bcc5d7fec0b52a9af609d21c6d0489328f464d9e8da7341dabcd",
+      "observedAt": "2026-11-09T11:50:41.271Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000019",
@@ -304,12 +304,12 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "English runtime reference preserves continuation, setup, version/history and stage-sync rules and adds guarded JSON parsing, field diagnostics and same-task known guidance without repeated entry.",
+      "claim": "Runtime reference specifies same-skill turn reads, skill-only stage selections, empty choices, fresh read request IDs and archive/version/known boundaries without new CLI fields.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "131ab2275b75751802f26c16a604f03cd3590868e9ae53dde9572954b80eaa01",
-      "observedAt": "2026-11-09T10:50:45.470Z"
+      "hash": "7c4b67bf99e389d7567a587ded0208cb9bb6a4a0144c8e99a2057122f84006d0",
+      "observedAt": "2026-11-09T12:35:44.735Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status preserves both implementation histories and records v0.38 merge conflict resolution, evidence-ID disambiguation, 16 focused Windows checks, build/contracts/model/link verification and explicit unrun scope.",
+      "claim": "Status distinguishes v0.40 skill-routing changes and scoped CLI/install/build checks from real-host acceptance while retaining earlier overflow-count verification and platform limits.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "98f51ab0ff419a62403a3eed71bf17cdf9fe701e3fff254ff1b99e6450173180",
-      "observedAt": "2026-11-09T10:52:28.594Z"
+      "hash": "be97f5bdb80fe80296049319a56928f03b0e7ce7bb79a1d8e91f75693472f13c",
+      "observedAt": "2026-11-09T13:34:29.625Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC27 preserves continuation/setup lifecycle rules; TC22 adds field-level diagnostics and executable guarded-reader checks, and TC18 retains same-task first-body protection.",
+      "claim": "TC27 covers ticket-to-implementation stage selection, repeated skill body returns, empty contexts/skills and preserved historical/retention boundaries; TC20/21 full omitted-count criteria remain.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "440a649f95f85ba53cdb356ee4eda4fce0a0ab43835a3add05c7eb444efa896b",
-      "observedAt": "2026-11-09T10:50:45.471Z"
+      "hash": "4f4bbf57cb249efedbfc92650106cbce088110e0ed1cfaabcfb2eb722c35b1ad",
+      "observedAt": "2026-11-09T12:35:44.736Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Protocol retains errors and exit codes, adds schemaFile and precise diagnostics with schema constraints and applicable known hints, and requires guarded caller parsing.",
+      "claim": "The existing one-selection task protocol supports per-turn archived skill reads and new empty-context stage tasks; new tasks do not inherit packets or cross-task known.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "f4b2ed43f19915d0555e31a8a3f801366b58bc66164edffc74732c1310c7febc",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "bf7280d89f6ff1ba0db92dca78bfeb2afc4f76e3783404f4fdd04d3d4c6172d9",
+      "observedAt": "2026-11-09T12:35:44.737Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR12 retains service/recovery boundaries and specifies guarded result handling and actionable field diagnostics; FR15 reuses continuous task bodies and closes only on actual completion/cancellation.",
+      "claim": "FR15 separates per-turn agent skill routing and body loading from reusable project context, preserving FR05 one-selection, history and authorization boundaries.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "820d4919c711b3dcd5eb74b5e73295260928d08a7e21595336926dacc79c8cfd",
-      "observedAt": "2026-11-09T10:50:45.471Z"
+      "hash": "5bca842fc8e60f8351ea1aecf5c97cc891f2e09222ce05ceb9e2803a92aef3df",
+      "observedAt": "2026-11-09T12:35:44.738Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The specification entry retains v0.37 continuation/setup and adds v0.38 caller/diagnostic refinements with separate actual validation boundaries.",
+      "claim": "The current specification introduces v0.40 skill routing and separately marks the superseded v0.37 zero-call continuation rule while retaining prior disclosure and diagnostics requirements.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "2cf765dd2be2e5e18c21b4a44ef2ce865fd50b363e1b34f6c512bcbc81a6d51f",
-      "observedAt": "2026-11-09T10:50:45.472Z"
+      "hash": "6028ed895da8402e75adc8511da141f66d19a728804e066d81e06fa37bfdb9fc",
+      "observedAt": "2026-11-09T12:35:44.739Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "claim": "Agent conventions use baseline v0.40 and require per-turn skill decisions/body reads independently of project-context reuse while preserving maintenance and commit authorization.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
-      "observedAt": "2026-11-09T10:50:45.472Z"
+      "hash": "a830f5efa6dbd3d4d2f339d703fcbd6d325793a07287c7e9fd6ee6e68022b4c4",
+      "observedAt": "2026-11-09T12:35:44.739Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -644,12 +644,12 @@
     {
       "id": "da230000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "Web authentication recovery preserves retry credentials only on transient failures, confirms browser sessions, handles fresh fragments and keeps precise rejection and target boundaries.",
+      "claim": "Web projection counts complete omitted directory subtrees, excludes visible hits/generated body leaves, retains skill method counts and preserves browsing/history/authentication boundaries.",
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "75701b35ed00760f3f0dd2808ee598b17ad8e9ca8f323a4bfec16714c08801d9",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "9de0aa35576aa094967819deaad5e728da53db31e0b57ee3780811038bf6d4c5",
+      "observedAt": "2026-11-09T11:50:41.271Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage preserves continuation and onboarding guidance, same-task known rules and a guarded Node reader with original CLI status and separate stream capture.",
+      "claim": "Usage describes per-turn skills, empty-context stage tasks, same-task known limits and existing onboarding, card and guarded JSON behavior.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "ad151083fa7bc907b4854f1d870924e97ceb11e6694d4bddc36f4a0874752a8c",
-      "observedAt": "2026-11-09T10:50:45.473Z"
+      "hash": "f4750b4a31f646d373c229ac45839381bc390b9a7a13e24dc8c7e5fd60941dc1",
+      "observedAt": "2026-11-09T12:35:44.740Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -714,12 +714,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "English delegated-task instructions reuse actual parent handoffs, fetch only missing material and preserve version, scope, lifecycle and explicit-log boundaries without inventing CLI parent fields or agent scheduling.",
+      "claim": "Delegated instructions preserve parent scope/selection while reading needed skills each user turn; different skill sets require authorized independent scope, with no new CLI parent fields.",
       "location": {
         "path": "agent-skills/harnessl3/references/subagent.md"
       },
-      "hash": "dde4359ff1f866b48481ffd1d11b3d755f228f4444344199811ed9a7f154bbee",
-      "observedAt": "2026-11-09T10:19:54.763Z"
+      "hash": "c8095c7e523af96796250ca1cc6af9de25ce7c055bd4f2a2f163783a4567dbcf",
+      "observedAt": "2026-11-09T12:35:44.741Z"
     },
     {
       "id": "800efe39-40f9-47b8-a70b-d1819705009e",
@@ -764,12 +764,62 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "claim": "Agent conventions use baseline v0.40 and require per-turn skill decisions/body reads independently of project-context reuse while preserving maintenance and commit authorization.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
-      "observedAt": "2026-11-09T10:50:45.473Z"
+      "hash": "a830f5efa6dbd3d4d2f339d703fcbd6d325793a07287c7e9fd6ee6e68022b4c4",
+      "observedAt": "2026-11-09T12:35:44.742Z"
+    },
+    {
+      "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
+      "kind": "source-code",
+      "claim": "Projection checks cover nested object/group counts, disjoint hit/overflow ranges, unchanged trees, bounded rendering and skill method counts independent of attachments.",
+      "location": {
+        "path": "tests/v1/web-projection.test.mjs"
+      },
+      "hash": "c69aae030b9bbb0e48a26b21f0f58e4b013181be7a0184e83a24e6896004c105",
+      "observedAt": "2026-11-09T11:52:04.944Z"
+    },
+    {
+      "id": "16d54795-21a7-4696-9169-3a92cc0e40b5",
+      "kind": "source-code",
+      "claim": "Isolated browser probe compares complete hidden-context counts with directory/filter totals, checks pagination/search and skill counts, and compares native task records before/after browsing.",
+      "location": {
+        "path": "scripts/v1/web-overflow-counts-smoke.mjs"
+      },
+      "hash": "3ea547ff9fc08d2a3bb915d69d076cbca9b8e276178d3fab1efd7958a6fa55b0",
+      "observedAt": "2026-11-09T11:50:41.271Z"
+    },
+    {
+      "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
+      "kind": "document",
+      "claim": "User navigation distinguishes per-turn skill selection/body reads from reusable project context and describes stage tasks on skill changes.",
+      "location": {
+        "path": "README.md"
+      },
+      "hash": "0c8f65c8514117ffc680fd9b3d0a5d442fe4cd1dcc67ebc2da4fbb2dd9e7e06d",
+      "observedAt": "2026-11-09T12:35:44.744Z"
+    },
+    {
+      "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
+      "kind": "document",
+      "claim": "Current responsibility review separates agent skill routing, existing CLI stage operations, context reuse and independent host-effect verification.",
+      "location": {
+        "path": "docs/implementation/CLI_SKILL_REVIEW.md"
+      },
+      "hash": "61003eefdfeae8a74489b59413126e2f18d966cd4ba22f3440b3aa66adb53157",
+      "observedAt": "2026-11-09T12:35:44.745Z"
+    },
+    {
+      "id": "2b9a98f4-94bc-4d27-a3e3-f7ed9b3c712f",
+      "kind": "source-code",
+      "claim": "Isolated CLI stages select ticket and implementation methods, return archived bodies for two distinct turns, accept empty selection and preserve context/retention and earlier task records.",
+      "location": {
+        "path": "tests/v1/task-cli.test.mjs"
+      },
+      "hash": "1156c82b9037ca24f3b1085b9dee81e02e0b3c0a682f8078ca1663ddf7a4546d",
+      "observedAt": "2026-11-09T12:35:44.745Z"
     }
   ]
 }

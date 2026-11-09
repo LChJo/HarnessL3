@@ -6,8 +6,8 @@ For delegated work by existing Codex/Claude Code agents. L3 does not launch, sel
 
 The parent provides the actual worktree/path, taskId, delegated goal/scope, version binding, handoff through a known batch and necessary archived skill references. It may include already-returned bodies with their source and actual reader identified; a parent's read is not an observed child CLI read. Declared parentage is not CLI-observed causality.
 
-1. Reuse complete identifiable material directly. Only lost material or a necessary batch check needs task handoff with the actual taskId/batch; do not repeat the parent's joint selection.
-2. Query only missing context in the authorized target/scope. Read only necessary selected archived skill files with actual references/hashes. Use current command help/contracts when needed.
+1. Reuse complete identifiable project context. Only lost material or a necessary batch check needs task handoff with the actual taskId/batch; preserve the parent's joint selection.
+2. Each user turn, reassess skills within the delegated scope and task read the needed selected bodies with actual references/hashes, even if returned earlier. Query only missing project context. A different skill set needs an authorized independent task, never replacement of the parent's selection. Use current command help/contracts when needed.
 3. Execute only the delegated scope. Return actual results, read/write/review coverage, missing material and relevant task/batch references. Do not close the parent, reselect its skills or expand the assignment. The parent owns overall synthesis, synchronization and closure; a local result is not full-parent verification.
 
 Report a closed task, target mismatch, changed-version need or incomplete handoff as a specific conflict. If an authorized independent current-version context or different skill selection is necessary, create your own task; never append new content to an old binding or replace the parent's archived selection.
