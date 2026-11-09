@@ -55,7 +55,9 @@ try {
     assert.ok(qualityBytes.includes(Buffer.from('\r\n')), 'explicit CRLF fixture must retain CRLF bytes')
     assert.equal(qualityBytes.toString('utf8').replaceAll('\r\n', '').includes('\n'), false, 'explicit CRLF seed has no bare LF')
   }
-  const waitFolder = (group, exists = true) => page.waitForFunction(({ group, exists }) => [...document.querySelectorAll('[data-directory-row]')].some(row => row.getAttribute('data-directory-row').startsWith(group + '/')) === exists, { group, exists }, { timeout: 20000 })
+  // Linux recursive watch can miss a removed child directory; the catalog
+  // cache then expires after 60s rather than on the deletion notification.
+  const waitFolder = (group, exists = true) => page.waitForFunction(({ group, exists }) => [...document.querySelectorAll('[data-directory-row]')].some(row => row.getAttribute('data-directory-row').startsWith(group + '/')) === exists, { group, exists }, { timeout: 65000 })
   const fit = () => page.getByRole('button', { name: '概览全部内容', exact: true }).click()
   const refresh = async () => {
     const response = page.waitForResponse(response => response.url().endsWith('/rpc') && response.request().postDataJSON()?.operation === 'skills refresh')
