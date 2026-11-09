@@ -39,7 +39,9 @@ harnessl3 task select <实际taskId> --file $requestFile --json
 
 ## 使用结果与后续读取
 
-使用 JSON 模式时先解析单个封套和退出码：失败看 `error.code/details`；成功看 `data` 的实际种类、状态和覆盖范围。部分成功保留已返回项，只处理仍需的缺失项，不把 `ok:true` 等同于全部完成。
+使用 JSON 模式时分别保留stdout、stderr和CLI退出码，先解析stdout的单个封套并检查`ok`，再读取成功结果的`data`；失败完整显示`error.code/details`，不能继续索引不存在的`data`。不要用`2>&1`把诊断混入JSON，也不要用`head`截断错误。Bash管道未启用`pipefail`时可能只返回末端命令的状态；即使启用，也应保存CLI本身的退出码，不能用解析器成功代替CLI成功。可按CLI帮助返回的使用说明路径，读取“可靠读取JSON结果”中的示例。
+
+`SCHEMA_INVALID`先按`details.diagnostics`中的字段路径、约束及修正提示改请求，并通过`schemaFile`和示例核对当前契约。空选择沿用包内示例，不为填满字段猜造缓存声明；已知内容只来自同任务实际返回并仍保留的精确正文，技能或来源指纹不能替代正文指纹。具体字段格式从`task select/context query --help`及其Schema读取，不从上一任务拼值。部分成功保留已返回项，只处理仍需的缺失项，不把`ok:true`等同于全部完成。
 
 `task start` / `task prompt` 返回实际任务与筛选材料；选择后用 `task handoff` 取得累计精确上下文和归档文件引用。需要更多简述或正文时用 `context query` 批量读取，已知 UUID 可跨层直达。expand只返回直接子层简述，read只返回精确正文；祖先、端点和引用出现不代表其正文被读取。
 

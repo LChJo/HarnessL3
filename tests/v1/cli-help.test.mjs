@@ -28,6 +28,11 @@ test('TC22 help discovers a command-specific request contract without starting t
   assert.match(selection, /Usage: harnessl3 task select \[<task-id>\] --file <path\|->/)
   assert.match(selection, /--file.*required/i)
   assert.match(selection, /Returns:.*selection/)
+  const common = JSON.parse(await readFile(new URL('../../docs/spec/contracts/common.schema.json', import.meta.url), 'utf8'))
+  assert.ok(common.$defs.known.description)
+  assert.ok(selection.includes('context.known: ' + common.$defs.known.description))
+  assert.match(selection, /Check ok before reading data/)
+  assert.match(selection, /stdout and stderr separate/)
   const schemaPath = selection.match(/^Request schema: (.+)$/m)?.[1]
   const examplePath = selection.match(/^Request example: (.+)$/m)?.[1]
   assert.ok(schemaPath && path.isAbsolute(schemaPath))
@@ -53,6 +58,9 @@ test('TC22 group help narrows discovery and sync help uses its own schema and pa
   assert.match(sync, /Usage: harnessl3 sync verify --file <path\|->/)
   assert.match(sync, /sync-proof\.schema\.json/)
   assert.match(sync, /sourceEpoch/)
+  const query = await f.help('context', 'query')
+  assert.match(query, /known: Use \{\}/)
+  assert.doesNotMatch(sync, /known: Use \{\}/)
   const migration = await f.help('migrate', 'prototype')
   assert.match(migration, /--from.*required/i)
   assert.match(migration, /--worktree.*required/i)

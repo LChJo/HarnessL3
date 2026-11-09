@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.36 defines startup-owner diagnostics, separate control/recovery states, verified archive reuse, scoped install verification and representative full-history measurement without changing file authority or unknown-write rules.",
+      "claim": "Current v0.37 preserves existing product boundaries and adds actionable schema diagnostics, same-task known guidance and guarded result handling with original CLI exit status.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "69e27b7c0aa2672d112f1d5a6b24bc4b69bc717349a8dc0a3563437702b7f712",
-      "observedAt": "2026-11-09T05:37:20.121Z"
+      "hash": "6900eabe4567e73762fea5a739012c42ae55149e2aad5b6f7c503443e6bfd3c8",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime entry prioritizes onboarding over generic failure fallback, asks before first setup even with old CLI fields, and retains existing context, document and output-card duties.",
+      "claim": "Runtime entry preserves onboarding and context duties and requires checking ok before data, separate stdout/stderr and original CLI status with complete errors.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "7581e6c1263ab0b3ff8b330077453ba9aaeee328920be64f503a152865b8e282",
-      "observedAt": "2026-11-09T07:28:53.723Z"
+      "hash": "dca35848118eb4de1be8faea4c5fc549a301fa349c05efbd5f661db7654c0ae3",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Text authority defines document identity, current reference lifecycle and read-only Git diagnostics; document bodies still require explicit reading.",
+      "claim": "Text authority and reference lifecycle remain; known uses exact retained bodies from the same task and cannot replace the first read with another task hash.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "3faec2e0be3372fc95381271be520257605907453b7172a6cb89e24330e5e3ae",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "1958cbc653f7c5d4d75fbb1655434a12cc2e314c35071b55aa49d3470b531432",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference explains UTF-8 request construction, PowerShell pipeline loss, immutable damaged history and scoped phase maintenance.",
+      "claim": "Runtime reference preserves UTF-8 and history boundaries and explains guarded envelope parsing, complete diagnostics, separate streams and saved CLI exit codes.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "f62062cc0599f753a952a2f3924169ae01eb0f121f91266629f2bb0b463c6b73",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "7a9230e7a9320746cd41cbc48d2c9efcf3eb72197a546984a43b8f65781ef27f",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static help exposes the build source without starting the service and retains command/schema discovery and version semantics.",
+      "claim": "Static command help reads known guidance from the shared schema and explains guarded JSON result handling while retaining contract discovery and no service startup.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "accc43506fdc8fc39c9773153f7af0f3970b6d904c4f49ec46109250727fc49d",
-      "observedAt": "2026-11-09T05:37:20.137Z"
+      "hash": "b52bc4937f060b724221c3543def0557fdea06b501cfe36ca3f992dd6563d468",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Current status records the first-use consent-routing correction, 34 passing Windows checks, updated host skill files, unchanged installed CLI/service and pending real-host consent verification.",
+      "claim": "Status records v0.37 implementation, 49 focused and 9 installer checks, contracts/build/package validation and explicit Windows-only, no-global-install or full-suite claims.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "c0a49e07ed5ff14500ab8a941b374c625fadef2c1375aff26392133d6076bcd3",
-      "observedAt": "2026-11-09T07:28:53.724Z"
+      "hash": "433f3d59f3f00853f18ef7c8bddd9c58c828350836bd0c55f4ff9b8bf116935c",
+      "observedAt": "2026-11-09T10:07:57.038Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC17/22/23/26 retain recovery, installation and archive boundaries; TC23 additionally checks interrupted authentication and confirmation, cookie failures, fresh-fragment recovery, unchanged cookie expiry and task records.",
+      "claim": "TC22 adds field-level schema diagnostics and actual documented-reader execution; TC18 retains same-task first-body protection and existing platform boundaries.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "4c5095f99394801a220f048896f1da04bbb0e969060ffac76cbe240fbf30d9c6",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "4c500b51475cf8617175559a1448ce4b76618887148254d2aab890e163ca0fe0",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Protocol preserves existing command semantics and adds explicit ask-user, question and fallbackWhen fields to noninteractive first-use guidance.",
+      "claim": "Protocol retains errors and exit codes, adds schemaFile and precise diagnostics with schema constraints and applicable known hints, and requires guarded caller parsing.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "60b5f31d81e49661fc7b88002d36ea55cae4fa608c2e8607ea8be000a12fb4ac",
-      "observedAt": "2026-11-09T07:28:53.725Z"
+      "hash": "f4b2ed43f19915d0555e31a8a3f801366b58bc66164edffc74732c1310c7febc",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR12/14 distinguish control, recovery and install-check state and require independent representative accumulated-history measurements.",
+      "claim": "FR12 retains service/recovery boundaries and specifies field-level request guidance, complete error handling and original CLI status without changing archived receipts.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "dbf874a5c1b60bd92b5c893d99ddfd717d6bb6a7b24e96ec4316b1dbcd150c45",
-      "observedAt": "2026-11-09T05:37:20.157Z"
+      "hash": "f704a5d0c0590d96acfd4114c90c1e444e05e2af33f5326797bbcfc0ffdfa7f0",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The specification entry points at current baseline v0.36 and its scoped installation/recovery refinements without inheriting old platform verification.",
+      "claim": "The specification entry points at baseline v0.37 and scoped caller/schema refinements without inheriting old platform verification.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "f8c6d09d57bd08ba2436eba29949846ccccd381951e4585877f20bc045fd58e7",
-      "observedAt": "2026-11-09T05:37:20.158Z"
+      "hash": "b6f6cef0c719cefda664e57ae9cb1d37e90d6b365712a6200ba4b36b9e6379a4",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent maintenance follows baseline v0.36, preserves startup ownership and separates copied files, running build and applicable archived handoff verification.",
+      "claim": "Agent conventions follow baseline v0.37 and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "a497d595e9c9eedcaec9115c91024b4aaecea966ceb546a612733254a385f38d",
-      "observedAt": "2026-11-09T05:37:20.161Z"
+      "hash": "6c493ccf92f7d8c641adfcaecf95db0cf33897030592dafa914f4ee893eb9325",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage explains TARGET_REQUIRED onboarding as pending user confirmation, with agent UI or conversational questioning and no automatic initialization.",
+      "claim": "Usage retains onboarding and UTF-8 boundaries, explains empty/same-task known and provides a guarded Node reader with saved CLI status and separate stream capture.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "0edb02f754e8c1160c0d73ca286ac94e9d304eb7f3602de1068f633dc4e2fefe",
-      "observedAt": "2026-11-09T07:28:53.726Z"
+      "hash": "1958f1a610c799822536f9b28bfaf48ef9a6e8e25a4d7909ddf6395fe23118aa",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -680,6 +680,56 @@
       },
       "hash": "983314783eaa22fd9db3443985a2a2d97664d993ccc6eef9c98a8b49df799b4b",
       "observedAt": "2026-11-09T07:28:53.727Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000001",
+      "kind": "source-code",
+      "claim": "Contract validation reports precise escaped field pointers, schema constraints and applicable known guidance without returning request values; strict validation remains.",
+      "location": {
+        "path": "core/contract.ts"
+      },
+      "hash": "14a223e955ed75694a8ed31c1d6d041d8cdffe27aac559cb373f3f82996077cb",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000002",
+      "kind": "document",
+      "claim": "Shared known description documents empty/default and exact same-task contentHash usage; UUID/SHA-256 validation is unchanged.",
+      "location": {
+        "path": "docs/spec/contracts/common.schema.json"
+      },
+      "hash": "9e315a26f4fc1f171983fe7747de8009fe16174c161d1bdfd341e75c8bcc1502",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Isolated checks exercise invalid known, exact diagnostic pointers, pre-dispatch CLI failure and the actual documented reader including partial and failure status preservation.",
+      "location": {
+        "path": "tests/v1/contract-diagnostics.test.mjs"
+      },
+      "hash": "2dbb79915d6d97edbe1c3e089556078eebe5da5db7aacede80b226d0b6df8b6f",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000004",
+      "kind": "source-code",
+      "claim": "Static help checks cover installed schema paths, shared known guidance and guarded caller instructions without creating the data root.",
+      "location": {
+        "path": "tests/v1/cli-help.test.mjs"
+      },
+      "hash": "872c8a4af9d3c0739f77cbbcdb51194906f3e307859667a37c9a005a3c9d213e",
+      "observedAt": "2026-11-09T10:02:55.827Z"
+    },
+    {
+      "id": "d6370000-0000-4000-8000-000000000005",
+      "kind": "document",
+      "claim": "Agent conventions follow baseline v0.37 and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "location": {
+        "path": "AGENTS.md"
+      },
+      "hash": "6c493ccf92f7d8c641adfcaecf95db0cf33897030592dafa914f4ee893eb9325",
+      "observedAt": "2026-11-09T10:02:55.827Z"
     }
   ]
 }

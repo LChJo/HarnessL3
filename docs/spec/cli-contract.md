@@ -16,6 +16,12 @@
 
 `--request-id` 与输入 JSON 的 requestId 同时给出时必须完全相等，否则 `INVALID_ARGUMENT`。raw 文件可只省略 requestId：CLI 从显式 flag 或自动 UUID 补齐，再以 schema 验证规范请求；其他必需字段不猜值。调用方需要可靠重试应预生成并保存 requestId；未保存自动 ID 且丢失响应时，不能宣称可“恰好一次”重试，须查询任务/请求记录，不能盲目用新 ID 二次选择。自动生成的 ID 在封套返回，也可在 stderr 诊断提供，不污染 JSON stdout。
 
+`task select/context query --help`还直接展示共享Schema中`known`的说明：通常使用`{}`，非空映射仅引用同任务已返回并保留的精确正文`contentHash`，不得用自由文本或技能/来源哈希替代。帮助与字段错误提示复用此说明，格式校验继续遵守共享UUID/SHA-256契约，不自动填值或放宽校验。
+
+调用方分别保留stdout、stderr和CLI退出码，先检查`ok`再访问`data`，失败保留完整`error.code/details`。`head`或解析器成功不代表CLI成功，不把stderr混入JSON或截断错误。部分成功仍处理已返回数据并保留退出码4，具体示例见[使用说明](../USAGE.md#可靠读取json结果)。
+
+`SCHEMA_INVALID`保留退出码2、`retryable:false`及错误封套，`details`含逻辑`schema`、安装包内绝对`schemaFile`及适用时的`example`。每条`diagnostics`含字段JSON Pointer `path`、`keyword`、`message`、`schemaPath`和约束参数`params`；缺字段、未知字段及非法映射键定位到具体字段，`~`和`/`按JSON Pointer转义。`known`相关错误另附来自共享Schema的`hint`，其它字段不误加该提示。首条字段诊断摘要放入主message，完整诊断保留；不回显请求值、不改历史回执。CLI已在发送RPC前完成请求Schema校验，不为参数错误启动服务或重发写请求。
+
 ### 目标解析顺序
 
 1. 验证显式 project/worktree UUID；两者都给出时必须互相归属。只给 worktree 可由登记记录取 project；只给 project 且有多个已登记 worktree 时必须补 worktree，不选最近项。

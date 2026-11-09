@@ -118,6 +118,10 @@ export function renderHelp(words: string[]): string {
       const schemaPath = path.join(SCHEMA_ROOT, contract + '.schema.json')
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as { required: string[] }
       lines.push('Request schema: ' + schemaPath, 'Request example: ' + path.join(SCHEMA_ROOT, 'examples', contract + '.json'), 'Normalized required fields: ' + schema.required.join(', '), 'The schema applies after requestId normalization. Raw JSON may omit requestId; save an explicit ID for reliable retries.', 'Read the schema and its local references for nested fields; use real IDs, bindings and hashes returned by this task.', '')
+      if (contract === 'selection' || contract === 'query') {
+        const common = JSON.parse(readFileSync(path.join(SCHEMA_ROOT, 'common.schema.json'), 'utf8')) as { $defs: { known: { description: string } } }
+        lines.push((contract === 'selection' ? 'context.known: ' : 'known: ') + common.$defs.known.description, '')
+      }
     }
     lines.push('Returns: ' + (resultKinds[operation] ?? 'command-result: ' + descriptions[operation]), '')
   } else {
@@ -125,6 +129,6 @@ export function renderHelp(words: string[]): string {
     for (const name of matches) lines.push('  ' + usage(name) + '\n    ' + descriptions[name])
     lines.push('', 'Use harnessl3 <command> --help for its options, request schema/example paths and return meaning.', '')
   }
-  lines.push('Global options:', ...flags(operation ?? '', globals), '', 'Response schema: ' + path.join(SCHEMA_ROOT, 'response.schema.json'), 'Usage guide: ' + path.join(PACKAGE_ROOT, 'docs', 'USAGE.md'), 'Contracts guide: ' + path.join(SCHEMA_ROOT, 'README.md'), '', 'JSON results: ok:true/data or ok:false/error. A successful envelope can still have data.status:"partial".', 'Exit codes: 0 complete; 2 invalid input; 3 conflict; 4 partial; 130 cancelled; 1 other failure.', 'The current agent calls HarnessL3. It does not start agents, run skills, or install Hooks.', '')
+  lines.push('Global options:', ...flags(operation ?? '', globals), '', 'Response schema: ' + path.join(SCHEMA_ROOT, 'response.schema.json'), 'Usage guide: ' + path.join(PACKAGE_ROOT, 'docs', 'USAGE.md'), 'Contracts guide: ' + path.join(SCHEMA_ROOT, 'README.md'), '', 'JSON results: ok:true/data or ok:false/error. Check ok before reading data; preserve error.code/details on failure. A successful envelope can still have data.status:"partial".', 'Keep stdout and stderr separate and save the CLI exit code before parsing or piping output; head/parser success is not CLI success.', 'Exit codes: 0 complete; 2 invalid input; 3 conflict; 4 partial; 130 cancelled; 1 other failure.', 'The current agent calls HarnessL3. It does not start agents, run skills, or install Hooks.', '')
   return lines.join('\n')
 }
