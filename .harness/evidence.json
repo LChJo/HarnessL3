@@ -368,8 +368,8 @@
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "29852f23e46964ca9b8c36f2f30d9180aadaeda198afa47e8ebc888b2066ccb5",
-      "observedAt": "2026-11-09T14:59:54.309000Z"
+      "hash": "ef67acd91405ed5dede8a0b5f02a51c8f91314f619fab0de54243bf7a1e51ba3",
+      "observedAt": "2026-11-09T15:23:32.072000Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",

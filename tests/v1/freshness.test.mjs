@@ -101,11 +101,15 @@ function proof(state, worktree, overrides = {}) {
 }
 
 test('TC07 background observation hashes changed leaves without promoting its baseline to a current full scan', async t => {
-  const f = await fixture(t, { extraSource: true });
+  const f = await fixture(t, { extraSource: true, warm: true });
   const baseline = await f.manager.status(f.skillsRoot);
   const capture = t.mock.method(f.manager, 'capture', () => { throw new Error('Unexpected complete source scan'); });
   await writeFile(path.join(f.checkout, 'README.md'), 'Changed source\n');
   await until(() => f.manager.currentState().sourceEpoch > baseline.sourceEpoch, 'source notification');
+  // Let any replayed or duplicate native notification finish so the scheduled
+  // background observation cannot race this explicit call into returning a
+  // state without an incremental observation.
+  await settle(f.manager);
   const observed = await f.manager.observe(f.skillsRoot);
   assert.equal(observed.state, 'pending');
   assert.equal(observed.scanPending, true);
