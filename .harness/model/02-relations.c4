@@ -52,21 +52,21 @@ model {
   app.core.runtime -[uses]-> app.core.model "校验与投影" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000006"
-      brief "Runtime读取模型用于初始化校验、模型校验和视图响应。"
+      brief "Runtime在显式初始化/模型校验读取当前模型；普通视图复用已记录的模型快照。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.skills "目录与刷新" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000007"
-      brief "Runtime按实际技能路径执行目录扫描与刷新。"
+      brief "Runtime按实际技能路径复用浏览目录观测，显式刷新重新扫描；严格任务捕获独立进行。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.source "来源与同步" {

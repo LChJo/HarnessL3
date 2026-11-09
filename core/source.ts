@@ -40,6 +40,32 @@ export interface SourceScan {
   ignoredDirectoryPrefixes?: string[];
 }
 
+export interface SourceObservation {
+  checkedAt: string; sourceEpoch: number; paths: string[]; entries: SourceEntry[];
+  requiresFullScan: boolean; diagnostics: Diagnostic[];
+}
+
+/** Targeted observation only: never a complete source version or a task binding. */
+export async function observeSourcePaths(worktree: WorktreeRecord, paths: string[], sourceEpoch: number): Promise<SourceObservation> {
+  const result: SourceObservation = { checkedAt: new Date().toISOString(), sourceEpoch, paths: [...new Set(paths)].sort(compare), entries: [], requiresFullScan: false, diagnostics: [] };
+  for (const relative of result.paths) {
+    try {
+      validatePath(relative);
+      const root = await canonicalPath(worktree.root);
+      if (!samePath(root, worktree.root) || (await lstat(worktree.root)).isSymbolicLink()) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The observed worktree root changed identity.', relative);
+      const candidate: Candidate = { path: relative, tracked: true, modes: new Set(), stages: new Set([0]), directory: false };
+      const first = await sourceEntry(worktree.root, candidate);
+      const second = await sourceEntry(worktree.root, candidate);
+      if (canonicalJson(first) !== canonicalJson(second)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Observed source bytes changed during capture.', relative, true);
+      result.entries.push(first);
+    } catch (error) {
+      result.requiresFullScan = true;
+      result.diagnostics.push(error instanceof ScanFailure ? error.diagnostic() : { code: 'SOURCE_OBSERVATION_UNAVAILABLE', severity: 'error', file: relative, message: 'The changed path requires complete source reconciliation.' });
+    }
+  }
+  return result;
+}
+
 class ScanFailure extends Error {
   constructor(readonly code: string, message: string, readonly file?: string, readonly race = false) { super(message); }
   diagnostic(): Diagnostic { return { code: this.code, message: this.message, severity: 'error', ...(this.file === undefined ? {} : { file: this.file }) }; }

@@ -24,7 +24,7 @@ export interface TaskSummary {
   retentionBasisAt: string | null; expiresAt: string | null; closedAt: string | null; contextCount: number; skillCount: number
   completeness: string; format: string
 }
-export interface HistoryResult { items: TaskSummary[]; total: number; limit: number; offset: number; hasMore: boolean; retentionDays: 60 }
+export interface HistoryResult { items: TaskSummary[]; total: number; limit: number; offset: number; hasMore: boolean; retentionDays: 60; seq?: number }
 export interface C4View {
   id: string; title?: string | null; description?: string | { txt?: string; md?: string } | null
   bounds: { x: number; y: number; width: number; height: number }

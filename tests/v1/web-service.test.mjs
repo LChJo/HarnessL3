@@ -3,9 +3,91 @@ import assert from 'node:assert/strict'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 import { fixture } from './helpers.mjs'
 import { Runtime } from '../../build/core/runtime.js'
 import { Archive } from '../../build/core/archive.js'
+
+test('TC17 two coding worktrees observe real edits through one bounded background queue', async t => {
+  const f = await fixture(t, 'harness-v1-observe-queue-')
+  const roots = [await f.repository(), await f.repository()]
+  const runtime = new Runtime(f.dataRoot)
+  let release
+  const gate = new Promise(resolve => { release = resolve })
+  try {
+    const resources = []
+    for (const root of roots) {
+      const initialized = await runtime.execute({ operation: 'init', positionals: [], flags: {}, cwd: root, requestId: randomUUID() })
+      assert.equal(initialized.ok, true)
+      resources.push(await runtime.worktreeResources(await runtime.registry().worktree(initialized.target.worktreeId)))
+    }
+    for (const resource of resources) await resource.freshness.status(await runtime.registry().skillsRoot(resource.worktree))
+    let active = 0, maximum = 0, firstEntered = false, secondEntered = false
+    for (const [index, resource] of resources.entries()) {
+      const original = resource.freshness.observe.bind(resource.freshness)
+      t.mock.method(resource.freshness, 'observe', async root => {
+        active++; maximum = Math.max(maximum, active)
+        try { if (index === 0) { firstEntered = true; await gate } else secondEntered = true; return await original(root) }
+        finally { active-- }
+      })
+    }
+    const until = async predicate => { const deadline = Date.now() + 15000; while (!predicate()) { assert.ok(Date.now() < deadline, 'observation queue timed out'); await delay(20) } }
+    await writeFile(path.join(roots[0], 'README.md'), 'First worktree edit\n')
+    await until(() => firstEntered)
+    await writeFile(path.join(roots[1], 'README.md'), 'Second worktree edit\n')
+    await until(() => !!resources[1].freshness.running)
+    assert.equal(secondEntered, false)
+    release()
+    await Promise.all(resources.map(resource => resource.freshness.running))
+    assert.equal(secondEntered, true)
+    assert.equal(maximum, 1)
+    assert.ok(resources.every(resource => resource.freshness.currentState().sourceObservation?.entries.some(entry => entry.path === 'README.md')))
+  } finally { release(); await runtime.close() }
+})
+
+test('TC21 workspace browsing reads recorded state without reconciling live source or appending history', async t => {
+  const f = await fixture(t, 'harness-v1-observe-view-')
+  const root = await f.repository()
+  const runtime = new Runtime(f.dataRoot)
+  try {
+  const initialized = await runtime.execute({ operation: 'init', positionals: [], flags: {}, cwd: root, requestId: randomUUID() })
+  assert.equal(initialized.ok, true)
+  const resource = await runtime.worktreeResources(await runtime.registry().worktree(initialized.target.worktreeId))
+  t.mock.method(resource.freshness, 'status', () => { throw new Error('Browsing must not start a source scan') })
+  const seq = resource.archive.seq
+  const viewed = await runtime.view(initialized.target.worktreeId)
+  assert.equal(viewed.task, null)
+  assert.equal(resource.archive.seq, seq)
+  assert.equal(viewed.freshness.state, 'unknown')
+  assert.equal(viewed.model, null, 'no recorded model must remain unknown')
+  } finally { await runtime.close() }
+})
+
+test('TC17 non-task commits catch up a compact index without rebuilding or rewriting the journal', async t => {
+  const f = await fixture(t, 'harness-v1-compact-events-')
+  const root = await f.repository()
+  const runtime = new Runtime(f.dataRoot)
+  try {
+    const call = operation => runtime.execute({ operation, positionals: [], flags: {}, cwd: root, requestId: randomUUID() })
+    const initialized = await call('init')
+    assert.equal(initialized.ok, true)
+    const resource = await runtime.worktreeResources(await runtime.registry().worktree(initialized.target.worktreeId))
+    const rebuild = t.mock.method(resource.index, 'rebuild', () => { throw new Error('Unexpected complete index rebuild') })
+    for (let i = 0; i < 3; i++) await resource.archive.commit({ scope: 'compact-fixture', requestId: randomUUID(), request: {}, payload: { kind: 'diagnostic-fixture', large: 'x'.repeat(100_000) }, receipt: { i } })
+    const before = await readFile(path.join(resource.archive.root, 'journal.jsonl'))
+    const listed = await call('task list')
+    assert.equal(listed.ok, true, JSON.stringify(listed))
+    assert.equal(resource.index.status.seq, resource.archive.seq)
+    const events = await resource.index.search({ kind: 'event', limit: 20, offset: 0, now: new Date().toISOString() })
+    assert.equal(events.items.length, 3)
+    assert.ok(JSON.stringify(events.items).length < 4000)
+    assert.ok(events.items.every(item => item.data.receiptHash && !item.data.payload))
+    assert.deepEqual(await readFile(path.join(resource.archive.root, 'journal.jsonl')), before)
+    rebuild.mock.restore()
+    await resource.index.rebuild(resource.tasks.projection(), resource.archive.seq, { eventProjection: 'compact-headers/1' })
+    assert.deepEqual(await resource.index.search({ kind: 'event', limit: 20, offset: 0, now: new Date().toISOString() }), events)
+  } finally { await runtime.close() }
+})
 
 test('TC21 opening a recorded task reuses its loaded journal and still checks its snapshot bytes', async t => {
   const f = await fixture(t, 'harness-v1-web-loading-')

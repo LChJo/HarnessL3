@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import path from 'node:path'
-import { Archive, type ArchiveReference, type CommitRecord } from './archive.js'
+import { Archive, type ArchiveReference, type CommitRecord, type CommitHeader } from './archive.js'
 import { SearchIndex, type IndexDocument } from './index.js'
 import { loadModel, modelBody, modelDirectory } from './model.js'
 import { captureSkills, scanSkills } from './skills.js'
@@ -14,6 +14,7 @@ import type { BatchResult, Binding, Envelope, FileReadRequest, ItemError, ModelS
 
 const RETENTION = 60 * 86400000
 const ROUTER_VERSION = 'skill-hub/1'
+const projectionRevisions = { eventProjection: 'compact-headers/1' }
 const hashPattern = /^[a-f0-9]{64}$/
 interface SourceState { sourceVersion: SourceVersion; sourceScanRevision: string; archives?: ArchiveReference[] }
 interface FrozenTask extends TaskRecord { sourceArchives?: ArchiveReference[] }
@@ -87,7 +88,7 @@ export class TaskService {
     if (this.archive.status !== 'ready') { this.indexProblem = new HarnessError('INDEX_UNAVAILABLE', 'The journal has an unverified region; history search is unavailable.', { diagnostics: this.archive.diagnostics }, true); return }
     try {
       await this.index.ready()
-      if (this.index.status.state !== 'ready' || this.index.status.seq !== this.archive.seq) await this.index.rebuild(this.projection(), this.archive.seq)
+      await this.ensureIndex()
     } catch (error) { this.indexProblem = error }
   }
   private restore(): void {
@@ -142,12 +143,14 @@ export class TaskService {
     for (const header of this.archive.headers({ kind: 'task' })) {
       if (header.operation === 'task read' && header.taskId) events.push({ seq: header.seq, document: this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web') })
     }
-    for (const record of this.archive.scan({ excludeKinds: ['task'] })) {
-      const payload = record.payload as Partial<TaskPayload> | null
-      events.push({ seq: record.seq, document: { id: record.operationId, kind: 'event', title: typeof payload?.kind === 'string' ? payload.kind : 'committed-event', text: canonicalJson(record.payload), activityAt: record.committedAt, data: { seq: record.seq, payload: record.payload } } })
+    for (const header of this.archive.headers({ excludeKinds: ['task'] })) {
+      events.push({ seq: header.seq, document: this.eventDocument(header) })
     }
     documents.push(...events.sort((a, b) => a.seq - b.seq).map(event => event.document))
     return documents
+  }
+  private eventDocument(header: CommitHeader): IndexDocument {
+    return { id: header.operationId, kind: 'event', title: header.kind ?? 'committed-event', text: [header.kind, header.scope].filter(Boolean).join('\n'), activityAt: header.committedAt, data: { seq: header.seq, kind: header.kind, receiptHash: header.receiptHash, scope: header.scope } }
   }
   private taskDocuments(task: TaskRecord): IndexDocument[] {
     const documents: IndexDocument[] = [{ id: task.id, kind: 'task', title: task.title, text: [task.id, task.title, task.declaredSession ?? '', task.binding.modelRevision].join('\n'), activityAt: task.retentionBasisAt, expiresAt: task.expiresAt, data: this.summary(task) }]
@@ -175,7 +178,24 @@ export class TaskService {
     if (this.archive.status !== 'ready') throw new HarnessError('INDEX_UNAVAILABLE', 'The journal requires recovery; history discovery cannot claim full coverage.', { diagnostics: this.archive.diagnostics }, true)
     try {
       await this.index.ready()
-      if (this.index.status.state !== 'ready' || this.index.status.seq !== this.archive.seq) await this.index.rebuild(this.projection(), this.archive.seq)
+      if (this.index.status.state !== 'ready' || this.index.status.seq > this.archive.seq || this.index.status.inputRevisions?.eventProjection !== projectionRevisions.eventProjection) {
+        await this.index.rebuild(this.projection(), this.archive.seq, projectionRevisions)
+      } else if (this.index.status.seq < this.archive.seq) {
+        const fromSeq = this.index.status.seq + 1
+        const headers = this.archive.headers({ afterSeq: fromSeq - 1 })
+        if (headers.length !== this.archive.seq - fromSeq + 1 || headers.some((header, i) => header.seq !== fromSeq + i)) throw new HarnessError('INDEX_SEQUENCE_GAP', 'The verified archive cannot cover the index cursor.')
+        const documents = new Map<string, IndexDocument>()
+        const add = (document: IndexDocument) => documents.set(document.kind + ':' + document.id, document)
+        for (const header of headers) {
+          if (header.kind === 'legacy-migration') { await this.index.rebuild(this.projection(), this.archive.seq, projectionRevisions); this.indexProblem = undefined; return }
+          if (header.kind === 'task' && header.taskId) {
+            const task = this.records.get(header.taskId)
+            if (task) for (const document of this.taskDocuments(task)) add(document)
+            if (header.operation === 'task read') add(this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web'))
+          } else add(this.eventDocument(header))
+        }
+        await this.index.catchUp(fromSeq, headers.at(-1)!.seq, [...documents.values()])
+      }
       this.indexProblem = undefined
     } catch (error) { this.indexProblem = error; throw new HarnessError('INDEX_UNAVAILABLE', 'The derived history index is unavailable; tasks remain accessible by known ID.', { cause: String(error) }, true) }
   }
@@ -275,7 +295,7 @@ export class TaskService {
       throw error
     }
     try {
-      if (this.index.status.state !== 'ready' || this.index.status.seq + 1 !== seq) await this.index.rebuild(this.projection(), this.archive.seq)
+      if (this.index.status.state !== 'ready' || this.index.status.seq + 1 !== seq) await this.ensureIndex()
       else await this.index.project(seq, [...this.taskDocuments(task), ...(request.operation === 'task read' ? [this.fileReceiptDocument(task.id, request.requestId, digest('receipt', receipt), request.source ?? 'cli')] : [])])
       this.indexProblem = undefined
     } catch (error) { this.indexProblem = error }
@@ -448,7 +468,7 @@ export class TaskService {
     const limit = Number(flag(request, 'limit') ?? (request.operation === 'task list' ? 50 : 20))
     const offset = Number(flag(request, 'offset') ?? 0)
     const results = await this.index.search({ kind: 'task', query: flag(request, 'query'), from: flag(request, 'from'), to: flag(request, 'to'), limit, offset, now: this.instant().toISOString() })
-    return this.envelope(request, commandResult(request.operation, { items: results.items.map(item => item.data), total: results.total, limit, offset, hasMore: results.hasMore, retentionDays: 60 }))
+    return this.envelope(request, commandResult(request.operation, { items: results.items.map(item => item.data), total: results.total, limit, offset, hasMore: results.hasMore, retentionDays: 60, seq: results.seq }))
   }
   private async readFiles(request: CommandRequest, normalized: ReturnType<TaskService['normalized']>, _skillsRoot: string): Promise<Envelope> {
     const original = this.task(request.positionals[0])

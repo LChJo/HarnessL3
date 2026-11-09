@@ -83,6 +83,70 @@ function proof(state, worktree, overrides = {}) {
   };
 }
 
+test('TC07 background observation hashes changed leaves without promoting its baseline to a current full scan', async t => {
+  const f = await fixture(t, { extraSource: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const capture = t.mock.method(f.manager, 'capture', () => { throw new Error('Unexpected complete source scan'); });
+  await writeFile(path.join(f.checkout, 'README.md'), 'Changed source\n');
+  await until(() => f.manager.currentState().sourceEpoch > baseline.sourceEpoch, 'source notification');
+  const observed = await f.manager.observe(f.skillsRoot);
+  assert.equal(observed.state, 'pending');
+  assert.equal(observed.scanPending, true);
+  assert.deepEqual(observed.sourceVersion, baseline.sourceVersion);
+  assert.ok(observed.sourceObservation.entries.some(entry => entry.path === 'README.md' && entry.contentHash === sha256(Buffer.from('Changed source\n'))));
+  assert.ok(!observed.sourceObservation.entries.some(entry => entry.path === 'other.ts'));
+  assert.equal(capture.mock.callCount(), 0);
+  capture.mock.restore();
+  const complete = await f.manager.status(f.skillsRoot);
+  assert.notEqual(complete.sourceVersion.treeHash, baseline.sourceVersion.treeHash);
+});
+
+test('TC07 concurrent status callers share one complete reconciliation but a later call rechecks bytes', async t => {
+  const f = await fixture(t);
+  const original = f.manager.capture.bind(f.manager);
+  const capture = t.mock.method(f.manager, 'capture', original);
+  const results = await Promise.all([f.manager.status(f.skillsRoot), f.manager.status(f.skillsRoot), f.manager.status(f.skillsRoot)]);
+  assert.equal(capture.mock.callCount(), 1);
+  assert.ok(results.every(state => state.sourceVersion.treeHash === results[0].sourceVersion.treeHash));
+  await f.manager.status(f.skillsRoot);
+  assert.equal(capture.mock.callCount(), 2);
+});
+
+test('TC16 compact state references share receipt bytes and restore alongside unchanged inline history', async t => {
+  const f = await fixture(t);
+  const baseline = await f.manager.status(f.skillsRoot);
+  const rows = f.archive.records({ kind: 'freshness-state' });
+  assert.ok(rows.length);
+  for (const row of rows) {
+    assert.equal(row.payload.state, undefined);
+    assert.equal(row.payload.stateHash, row.receiptHash);
+    assert.deepEqual(await f.archive.readSnapshot(row.payload.stateHash), baseline);
+  }
+  await f.manager.close();
+  const old = await f.archive.commit({ scope: 'old-inline-state', requestId: randomUUID(), request: {}, payload: { kind: 'freshness-state', state: baseline }, receipt: baseline, archives: f.archive.references() });
+  const before = await readFile(path.join(f.archive.root, 'journal.jsonl'));
+  const restored = await f.create();
+  assert.equal(restored.archive.seq, old.seq);
+  assert.deepEqual(restored.manager.currentState().sourceVersion, baseline.sourceVersion);
+  assert.equal(restored.manager.currentState().scanPending, true);
+  assert.deepEqual(await readFile(path.join(f.archive.root, 'journal.jsonl')), before);
+});
+
+test('TC07 watcher failure invalidates the old epoch and a complete status can restore coverage', async t => {
+  const f = await fixture(t);
+  const baseline = await f.manager.status(f.skillsRoot);
+  const oldProof = proof(baseline, f.initialized.worktree);
+  f.manager.watcher.emit('error', new Error('Injected coverage failure'));
+  const gap = f.manager.currentState();
+  assert.equal(gap.state, 'unknown');
+  assert.ok(gap.sourceEpoch > baseline.sourceEpoch);
+  assert.equal(gap.scanPending, true);
+  assert.ok(gap.diagnostics.some(item => item.code === 'SOURCE_WATCH_ERROR'));
+  const recovered = await f.manager.status(f.skillsRoot);
+  assert.equal(recovered.scanPending, false);
+  await assert.rejects(f.manager.verify(oldProof, f.skillsRoot), { code: 'SYNC_RACE' });
+});
+
 async function referencedDocument(t, { relative = 'decision.md' } = {}) {
   const f = await fixture(t, { extraSource: true });
   const document = path.join(f.checkout, relative);

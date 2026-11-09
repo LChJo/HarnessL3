@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.38 combines v0.37 continuation/setup guidance with actionable request diagnostics and guarded caller parsing while preserving authority, strict hashes, request identity and historical boundaries.",
+      "claim": "Current v0.39 separates observation/review, incremental path capture and strict source validation while preserving text authority, retention and historical bytes.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "b58a72806ec05a0564fcc0552ed7461a8167b1443d3b06e32c8b3a3977f9715c",
-      "observedAt": "2026-11-09T10:50:45.466Z"
+      "hash": "e338c9801d191608b0542b371125703fbbeecc910f57feeef2ca50d86b7c097a",
+      "observedAt": "2026-11-09T12:40:27.256698Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -34,12 +34,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime shares verified worktree archives across background recovery and ordinary resources, serializes subscription resumption with registry mutations, exposes recovery progress and blocks GC apply during recovery.",
+      "claim": "Runtime preserves user-data-root and archive isolation, bounds background observations and returns recorded Web state without full source scans.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "eb1d8b32b3451f92039b3c1e789c8d39e31de5b1248d785a15abf290fea04680",
-      "observedAt": "2026-11-09T05:37:20.126Z"
+      "hash": "03a9022c9878caca373b6a9300c915f456935b9105543821dde31534fb65738b",
+      "observedAt": "2026-11-09T12:40:27.257720Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService restores all committed task contracts incrementally and verifies known-task references without copying unrelated payloads; task-read projection uses commit headers while historical bytes and retention stay unchanged.",
+      "claim": "TaskService preserves frozen bindings and exact archives while projecting compact event references and catching up continuous index ranges transactionally.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "1fd09bbe5401d324af2eb4baeef57d246d7ad5234741f48d9ca98bfff0dd5da8",
-      "observedAt": "2026-11-09T05:37:20.127Z"
+      "hash": "6e48236e032f1581808abace6d8d930452095bb47c1800f20737cb79a65abe21",
+      "observedAt": "2026-11-09T12:40:27.258867Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -84,12 +84,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000009",
       "kind": "source-code",
-      "claim": "File-authoritative Archive derives bounded type/task queries, copies only matching records or reference/header data, yields during large journal parsing and deduplicates references within a recovery pass without a lifetime trust cache.",
+      "claim": "File-authoritative Archive supports bounded stable-ID/header and sequence queries; recovery and requested reference integrity remain checked.",
       "location": {
         "path": "core/archive.ts"
       },
-      "hash": "bd004f7f9b71588ff21ab3636967b790d3697147ccd3d4c160f923e0a131933d",
-      "observedAt": "2026-11-09T05:37:20.128Z"
+      "hash": "dab6ea0c6af4fd4ba914cb4e1a3b7c47c9e0dd877c4e6f3e032c1abdf8ec3d94",
+      "observedAt": "2026-11-09T12:40:27.259852Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000a",
@@ -98,28 +98,28 @@
       "location": {
         "path": "core/index.ts"
       },
-      "hash": "93019992673703e0b074ffd73053761d4ff77f608efe08eea044f02067a51b54",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "e41d8be6b595d744c9d0514f2bfbc36f10e4c193bbb6f9518f0e7f00eff7e0ba",
+      "observedAt": "2026-11-09T12:40:27.260293Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Native Git ignore/filter queries use bounded stdin batches, recheck delayed ancestors and handle stdin errors as unknown; pre/post state, raw double reads, filter refusal, argv limits and historical fingerprint contracts remain.",
+      "claim": "Strict scans retain full double-byte and Git-state checks; targeted observation reads only requested leaves, refuses ancestor links and never returns a full source binding.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "ba2d51afe9c0917411088cedec8bf32d1c7afaf9484f926b12a824691829d5ab",
-      "observedAt": "2026-11-09T10:19:54.754Z"
+      "hash": "cea306cd5a715c76a06a14368a1df135e75fde4aaf8e75d02d06b74b1ca93b3f",
+      "observedAt": "2026-11-09T12:40:27.260766Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "FreshnessManager observes declared and boundary-checked real reference paths before exclusions, maps directory notifications to affected evidence files, rejects stale epochs, and preserves unrelated pending scope during verification.",
+      "claim": "FreshnessManager separates pending path observation from full reconciliation/proof, coalesces in-flight status, compensates gaps and restores compact state references alongside original inline history.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "4e61b293770b092c009048c9ce3d563bdb09b60b97bc39cde49065356a59b97a",
-      "observedAt": "2026-11-09T05:37:20.130Z"
+      "hash": "52cbc4e879a135a0a778173afdcb4fb4401b29802ba8ec8467f8b870f0b9bb2e",
+      "observedAt": "2026-11-09T12:47:29.403191Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Formal Web preserves task targets and archived projections; interrupted sign-in has an explicit retry state, and fresh login fragments arriving in the same document reload authentication.",
+      "claim": "Web restores recorded worktrees/tasks/batches for review, deduplicates covered sequences and preserves fixed history, sign-in and candidate boundaries.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "238b7bec815784991c4d421a6b4942d8ce60cde36ba7eb34a4528271858f7d3c",
-      "observedAt": "2026-11-09T06:42:45.220Z"
+      "hash": "2c1b291adef8ac50d645e1d703bfefe1b78794a4e811ba291f44d26916fd734d",
+      "observedAt": "2026-11-09T12:57:25.794563Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -228,8 +228,8 @@
       "location": {
         "path": "web/README.md"
       },
-      "hash": "e2593045e5de9797da1b792a503f050a23e12d12a468e9d80fd636415fd1b3b1",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "a73b117ee2be317ae435cd57bb7313179ac65d5811bd93061a1aa88a437d969b",
+      "observedAt": "2026-11-09T12:47:29.408931Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
@@ -278,18 +278,18 @@
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "15e29cb88be3fce3347a7efc53bd13ba1bc2bcfff7654d0f74f7af8d91328192",
-      "observedAt": "2026-11-09T10:19:54.756Z"
+      "hash": "233e3f24c00bc3b28eb6888dfb6783ed6255de980164b0d1ea24d4621a0d2187",
+      "observedAt": "2026-11-09T12:57:25.800309Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Storage keeps journal authority, bounded derived record queries and pass-local reference verification, separates build provenance from sourceVersion and protects historical bytes during install or rollback.",
+      "claim": "Storage preserves original journals and snapshots; new freshness rows reference receipt state bytes, and compact derived indexes catch up continuous commits.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "d792f8c2dc17eac43799a489243b950be70403432ca7b6d094153ebcdd08a62a",
-      "observedAt": "2026-11-09T05:37:20.136Z"
+      "hash": "2e716fdcb26b9bc44e70f319f8f48213c64c3239a6d43d41fe95f15cb44834eb",
+      "observedAt": "2026-11-09T12:57:25.800816Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -368,18 +368,18 @@
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "f2356e3525d57d44bd3995972902e418263a086eec856972b14e85219921f0c9",
-      "observedAt": "2026-11-07T16:14:32.614Z"
+      "hash": "a748b7953a42f3d7a0805ae67d318e2ecbe1aad072d6a1c54a62a43fc6626a14",
+      "observedAt": "2026-11-09T12:47:29.417449Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status preserves both implementation histories and records v0.38 merge conflict resolution, evidence-ID disambiguation, 16 focused Windows checks, build/contracts/model/link verification and explicit unrun scope.",
+      "claim": "Status records v0.39 observation changes, actual Windows regressions and failure corrections, Edge review checks, read-only copied-history samples and unrun platform/service-update scope.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "98f51ab0ff419a62403a3eed71bf17cdf9fe701e3fff254ff1b99e6450173180",
-      "observedAt": "2026-11-09T10:52:28.594Z"
+      "hash": "776d9919d34aadfb5cc87041cd74eb2cab33a7f9518460436b305bf6c4d93ef8",
+      "observedAt": "2026-11-09T12:57:25.805596Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -538,8 +538,8 @@
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "440a649f95f85ba53cdb356ee4eda4fce0a0ab43835a3add05c7eb444efa896b",
-      "observedAt": "2026-11-09T10:50:45.471Z"
+      "hash": "a59487489e1541c9da5cb09a992d7ab66fe3179936447b7be68173f44a7be4d9",
+      "observedAt": "2026-11-09T12:40:27.280345Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -548,8 +548,8 @@
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "3395c181749cea031111fe49ddc59110a477b7140d1f5316890f2bedffc70678",
-      "observedAt": "2026-11-09T05:37:20.155Z"
+      "hash": "5353d11fb25c10865c6a99ae6c067865cbdceeafb5426f5223721b2c3dbd2e41",
+      "observedAt": "2026-11-09T12:40:27.280674Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
@@ -568,8 +568,8 @@
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "820d4919c711b3dcd5eb74b5e73295260928d08a7e21595336926dacc79c8cfd",
-      "observedAt": "2026-11-09T10:50:45.471Z"
+      "hash": "1679f81131e4c2f316c54535ba93350bb7cf12c4b8b5523671de1a3e57985897",
+      "observedAt": "2026-11-09T12:40:27.281313Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "2cf765dd2be2e5e18c21b4a44ef2ce865fd50b363e1b34f6c512bcbc81a6d51f",
-      "observedAt": "2026-11-09T10:50:45.472Z"
+      "hash": "7d89440b221528ffe4138c8bfd21609c54d85909cce3549e8c11d791a053cd18",
+      "observedAt": "2026-11-09T12:40:27.281622Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -598,8 +598,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
-      "observedAt": "2026-11-09T10:50:45.472Z"
+      "hash": "d82a954bb8e9730d406ad608630564a97a23f20fc53fa10551d245a7fb4efb7a",
+      "observedAt": "2026-11-09T12:40:27.282253Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -644,12 +644,12 @@
     {
       "id": "da230000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "Web authentication recovery preserves retry credentials only on transient failures, confirms browser sessions, handles fresh fragments and keeps precise rejection and target boundaries.",
+      "claim": "Web review restores recorded targets, reads observed state without source reconciliation and deduplicates covered events while preserving login and historical boundaries.",
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "75701b35ed00760f3f0dd2808ee598b17ad8e9ca8f323a4bfec16714c08801d9",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "a32559d4c51b2f67b28f9b6fe169a23d33f8e2c6f951b7fa3476d86f8f1b0aee",
+      "observedAt": "2026-11-09T12:40:27.283897Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
@@ -768,8 +768,78 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
-      "observedAt": "2026-11-09T10:50:45.473Z"
+      "hash": "d82a954bb8e9730d406ad608630564a97a23f20fc53fa10551d245a7fb4efb7a",
+      "observedAt": "2026-11-09T12:40:27.287831Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000001",
+      "kind": "source-code",
+      "claim": "Browsing catalogs coalesce in-flight scans, invalidate native file changes, retain last checked times and support explicit refresh; strict task capture remains separate.",
+      "location": {
+        "path": "core/catalog.ts"
+      },
+      "hash": "2fb529b4f76b48989c5645f4ed608483802b069c64601be49ed7638fd2565e77",
+      "observedAt": "2026-11-09T12:47:29.441720Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000002",
+      "kind": "source-code",
+      "claim": "Continuous catch-up validates its sequence range and commits document changes and the cursor in one transaction.",
+      "location": {
+        "path": "core/index-worker.ts"
+      },
+      "hash": "e97f163a656df1baaea4dce525bcd54a88e9108900501a4e99ee823a3c3b3284",
+      "observedAt": "2026-11-09T13:35:38.699Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000003",
+      "kind": "source-code",
+      "claim": "Scoped source observation regressions check exact opened leaves, full-scan entry equality, byte rollback and ancestor-link refusal.",
+      "location": {
+        "path": "tests/v1/source-observation.test.mjs"
+      },
+      "hash": "b2ae2176fcd1cb508cbf287aaaf7c85f3807da193890392beae3e7dea4eadbab",
+      "observedAt": "2026-11-09T12:40:27.288753Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000004",
+      "kind": "source-code",
+      "claim": "Runtime regressions exercise no-scan browsing, bounded cross-worktree background edits, compact indexing and intact requested archives.",
+      "location": {
+        "path": "tests/v1/web-service.test.mjs"
+      },
+      "hash": "71e51b643801add729112b32b61ab506c4e8a04379aeda2303be6c22622414b6",
+      "observedAt": "2026-11-09T13:35:38.700Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000005",
+      "kind": "source-code",
+      "claim": "Isolated browser workflow checks remembered worktrees/tasks, latest-task fallback, empty history, fixed history signals and unchanged task bytes.",
+      "location": {
+        "path": "scripts/v1/web-observation-smoke.mjs"
+      },
+      "hash": "261c43df8daa885ff88e3731bb3d18e06ec7251180ee259bbb3862c561e1e6fb",
+      "observedAt": "2026-11-09T12:57:25.829979Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000006",
+      "kind": "source-code",
+      "claim": "Opt-in benchmark copies only regular archive files into an owned isolated root, measures cold/warm reads and compact indexing, and compares original/copy journal fingerprints.",
+      "location": {
+        "path": "scripts/v1/observe-benchmark.mjs"
+      },
+      "hash": "b9c4154a43486976411d1a8d48994d4eb52e3dc9e15d7af37f3d3e601580fb28",
+      "observedAt": "2026-11-09T12:40:27.291075Z"
+    },
+    {
+      "id": "d6390000-0000-4000-8000-000000000007",
+      "kind": "source-code",
+      "claim": "Browsing catalog regressions wait for real seed notifications to settle, check quiet reuse, drop invalid candidates, refresh edits and recover from watcher errors.",
+      "location": {
+        "path": "tests/v1/catalog-observer.test.mjs"
+      },
+      "hash": "cc445cf971bfa21afc3f6e051273236058bf31cde393cdf68ec63766d5d022d9",
+      "observedAt": "2026-11-09T12:47:29.443994Z"
     }
   ]
 }

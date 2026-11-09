@@ -38,8 +38,8 @@ export type CommitInput<T> = {
   materializations?: { path: string; content: unknown }[];
 };
 export type CommitResult<T> = { receipt: T; replayed: boolean; seq: number };
-export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[] }
-export interface CommitHeader { seq: number; scope: string; requestId: string; receiptHash: string; kind: string | null; taskId: string | null; operation: string | null; source: string | null }
+export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[]; afterSeq?: number }
+export interface CommitHeader { seq: number; operationId: string; committedAt: string; scope: string; requestId: string; receiptHash: string; kind: string | null; taskId: string | null; operation: string | null; source: string | null }
 
 function corrupt(message: string, details: Record<string, unknown> = {}): HarnessError {
   return new HarnessError('ARCHIVE_CORRUPT', message, details);
@@ -98,7 +98,7 @@ export class Archive {
 
   private header(record: CommitRecord): CommitHeader {
     const payload = record.payload as { kind?: unknown; task?: { id?: unknown }; operation?: unknown; source?: unknown } | null;
-    return { seq: record.seq, scope: record.scope, requestId: record.requestId, receiptHash: record.receiptHash,
+    return { seq: record.seq, operationId: record.operationId, committedAt: record.committedAt, scope: record.scope, requestId: record.requestId, receiptHash: record.receiptHash,
       kind: typeof payload?.kind === 'string' ? payload.kind : null,
       taskId: payload?.kind === 'task' && typeof payload.task?.id === 'string' ? payload.task.id : null,
       operation: typeof payload?.operation === 'string' ? payload.operation : null, source: typeof payload?.source === 'string' ? payload.source : null };
@@ -111,7 +111,7 @@ export class Archive {
     return (function* () {
       for (let i = 0; i < length; i++) {
         const record = records[i], meta = header(record);
-        if (kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind)) continue;
+        if (record.seq <= (filter.afterSeq ?? 0) || kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind)) continue;
         yield record;
       }
     })();

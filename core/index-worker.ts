@@ -109,12 +109,13 @@ function upsert(document: IndexDocument): void {
   const row = connection.prepare('SELECT rowid FROM documents WHERE kind=? AND id=?').get(document.kind, document.id)!;
   connection.prepare('INSERT INTO document_fts(rowid,id,title,text) VALUES(?,?,?,?)').run(row.rowid, document.id, document.title ?? '', document.text ?? '');
 }
-function project(args: { documents: unknown; seq: unknown; inputRevisions?: unknown }, replace: boolean): void {
+function project(args: { documents: unknown; seq: unknown; inputRevisions?: unknown; fromSeq?: unknown }, replace: boolean): void {
   documents(args.documents); sequence(args.seq); revisions(args.inputRevisions);
   const connection = database();
   if (!replace && state.state !== 'ready') throw new HarnessError('INDEX_UNAVAILABLE', 'Index rebuild is required before incremental projection.', { state: state.state }, true);
   if (!replace && args.seq <= state.seq) return;
-  if (!replace && args.seq !== state.seq + 1) throw new HarnessError('INDEX_SEQUENCE_GAP', 'Index projection missed a commit; rebuild from authoritative records.', { expected: state.seq + 1, received: args.seq }, true);
+  if (args.fromSeq !== undefined) { sequence(args.fromSeq); if (args.fromSeq > args.seq) invalid('The catch-up range is reversed.'); }
+  if (!replace && (args.fromSeq ?? args.seq) !== state.seq + 1) throw new HarnessError('INDEX_SEQUENCE_GAP', 'Index projection missed a commit; rebuild from authoritative records.', { expected: state.seq + 1, received: args.fromSeq ?? args.seq }, true);
   connection.exec('BEGIN IMMEDIATE');
   try {
     if (replace) connection.exec('DELETE FROM document_fts; DELETE FROM documents;');
@@ -172,6 +173,7 @@ parentPort.on('message', (message: { id: number; type: string; args: any }) => {
         case 'open': await openIndex(message.args.file); break;
         case 'rebuild': project(message.args, true); break;
         case 'project': project(message.args, false); break;
+        case 'catch-up': if (message.args.fromSeq === undefined) invalid('A catch-up range is required.'); project(message.args, false); break;
         case 'search': result = search(message.args); break;
         case 'close': db?.close(); db = undefined; state = { ...state, state: 'closed' }; break;
         default: invalid('Unknown SQLite worker operation.');
