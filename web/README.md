@@ -2,6 +2,10 @@
 
 The approved Slate canvas is preserved here. `src/` remains the frozen prototype reference.
 
+## Remaining-item counts
+
+The context overflow label counts every directory node covered by the omitted branches, including their roots and descendants. It excludes visible hit paths and generated body leaves; canvas disclosure remains bounded. Skill overflow labels continue to count unselected methods across their actual folders, excluding folder and attachment counts. `node scripts/v1/web-overflow-counts-smoke.mjs` checks nested objects and grouped relations/sources/evidence against directory totals, pagination/search, skill counts and unchanged native task records using a synthetic render payload on an isolated service. Reports and inspected screenshots go to `.harness-local/validation/overflow-counts/`.
+
 ## Sign-in recovery
 
 The entry keeps its one-time code until sign-in succeeds and a second same-origin request confirms the browser session, or authentication is explicitly rejected with HTTP 401. Interrupted requests and malformed or temporary responses show a retry action without losing the link or target. Rejected credentials are removed while preserving the target. A lost confirmation response can reuse the cookie already issued; a missing cookie is reported separately. A fresh code arriving through a same-document fragment navigation reloads authentication instead of leaving the old error visible. Cleaned URLs only verify their existing session. The server distinguishes missing sessions, expired codes and invalid/used codes without extending the five-minute code or twelve-hour session lifetime. Codes are not written to storage or logs, and no business mutation is retried by sign-in.

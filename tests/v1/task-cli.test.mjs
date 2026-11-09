@@ -110,6 +110,75 @@ test('TC06 CLI selects context and file references, reads archived bytes, and re
   assert.ok(!journal.includes('NEW METHOD'))
 })
 
+test('TC27 consecutive skill stages reuse conversation context, return each turns skill and preserve earlier archives', async t => {
+  const f = await setup(t)
+  const methods = [
+    { id: 'planning/to-tickets', body: 'TICKET WRITING METHOD' },
+    { id: 'development/implement', body: 'IMPLEMENTATION METHOD' },
+  ]
+  for (const method of methods) {
+    await mkdir(path.join(f.skills, method.id), { recursive: true })
+    await writeFile(path.join(f.skills, method.id, 'SKILL.md'), `---\nname: ${method.id.split('/')[1]}\ndescription: A stage-specific method\n---\n${method.body}\n`)
+  }
+  const select = (entry, skills, read = []) => f.json('task select', entry.taskId, {
+    schemaVersion: 1, requestId: randomUUID(), binding: entry.binding,
+    context: { expand: [], read, known: {} }, skills: skills.map(id => ({ id, reason: 'Required by this turn' })),
+  })
+  const readMethod = async (selected, method) => {
+    const reference = selected.skillPlan.skills.find(skill => skill.id === method.id).files.find(file => file.path === 'SKILL.md')
+    const response = await f.json('task read', selected.taskId, {
+      schemaVersion: 1, requestId: randomUUID(),
+      files: [{ skillId: method.id, path: reference.path, expectedHash: reference.hash }],
+    })
+    assert.equal(response.code, 0, response.stdout)
+    assert.equal(response.body.replayed, false)
+    assert.ok(response.body.data.files[0].file.content.includes(method.body))
+    assert.ok(!response.stdout.includes('EXACT WORKER CONTEXT'))
+    return response.body
+  }
+  const ticketsEntry = (await f.start()).body.data
+  const tickets = await select(ticketsEntry, [methods[0].id], [leafId])
+  assert.equal(tickets.code, 0, tickets.stdout)
+  const retainedContext = tickets.body.data.packet.contexts[0]
+  assert.equal(retainedContext.entity.description, 'EXACT WORKER CONTEXT')
+  await readMethod(tickets.body.data, methods[0])
+  const original = (await f.call(['task', 'show', ticketsEntry.taskId])).body.data.result.task
+
+  const rejected = await select(ticketsEntry, [methods[1].id])
+  assert.equal(rejected.body.error.code, 'SELECTION_EXISTS', rejected.stdout)
+  const started = await f.call(['task', 'start', '--title', 'Implement approved ticket'])
+  assert.equal(started.code, 0, started.stdout)
+  assert.ok(!started.stdout.includes('EXACT WORKER CONTEXT'))
+  const implementEntry = started.body.data
+  assert.notEqual(implementEntry.taskId, ticketsEntry.taskId)
+  assert.equal(implementEntry.binding.worktreeId, ticketsEntry.binding.worktreeId)
+  const implement = await select(implementEntry, [methods[1].id])
+  assert.equal(implement.code, 0, implement.stdout)
+  assert.deepEqual(implement.body.data.result.contexts, [])
+  assert.deepEqual(implement.body.data.result.directories, [])
+  assert.deepEqual(implement.body.data.packet.contexts, [])
+  assert.deepEqual(implement.body.data.skillPlan.skills.map(skill => skill.id), [methods[1].id])
+  assert.ok(!implement.stdout.includes('EXACT WORKER CONTEXT'))
+  const before = (await f.call(['task', 'show', implementEntry.taskId])).body.data.result.task
+  const firstTurn = await readMethod(implement.body.data, methods[1])
+  const nextTurn = await readMethod(implement.body.data, methods[1])
+  assert.notEqual(nextTurn.requestId, firstTurn.requestId)
+  assert.deepEqual(nextTurn.data.files, firstTurn.data.files)
+  const after = (await f.call(['task', 'show', implementEntry.taskId])).body.data.result.task
+  for (const field of ['binding', 'packet', 'skillPlan', 'batches', 'lastReadAt', 'retentionBasisAt', 'expiresAt', 'closedAt']) {
+    assert.deepEqual(after[field], before[field], field)
+  }
+
+  const emptyEntry = (await f.call(['task', 'start', '--title', 'No additional skill needed'])).body.data
+  const empty = await select(emptyEntry, [])
+  assert.equal(empty.code, 0, empty.stdout)
+  assert.deepEqual(empty.body.data.skillPlan.skills, [])
+  assert.deepEqual(empty.body.data.packet.contexts, [])
+  assert.equal(retainedContext.entity.description, 'EXACT WORKER CONTEXT', 'the caller can retain earlier returned context')
+  const preserved = (await f.call(['task', 'show', ticketsEntry.taskId])).body.data.result.task
+  assert.deepEqual(preserved, original, 'later skill stages cannot rewrite the earlier task')
+})
+
 test('TC02 two worktrees keep task identity, source versions and reads isolated', async t => {
   const f = await setup(t)
   const second = path.join(f.directory, 'second worktree')

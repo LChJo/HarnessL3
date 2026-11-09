@@ -2,11 +2,23 @@
 
 Read only when current CLI help is insufficient, or for complex requests, synchronization, retries/history or explicit read-only log binding. The installed CLI and its JSON Schemas define fields and commands.
 
-## Continuation and missing material
+## Continuation and skill routing
 
-Execute earlier todos, implement the agreed plan, and handle clarifications under the same actual goal. With an identifiable task, matching target/binding, recorded selection and sufficient returned bodies, work directly: no entry/status/handoff probes or repeated reads/cards. Reuse is not a new observed read.
+At every user turn, reassess the current action against the available skill descriptions. Project context and skill routing are separate: retain sufficient project bodies, but return the chosen skill bodies through task read for this turn even if an earlier turn read them. The agent chooses skills; the CLI records selection and returns bytes, without routing or executing a model itself.
 
-Recover lost material once with the actual taskId and task handoff. Query only missing context bodies, and task read only missing selected skill bytes. Old/closed bindings describe captured versions; create a new task only when current-version material or a different skill selection requires it. Own edits still need stage synchronization, not per-message entry. Plans, todos and replies do not close tasks; actual completion/cancellation plus recorded sync state does. Closed tasks remain read-only.
+| Current turn | Operations |
+| --- | --- |
+| Same goal/target, suitable captured versions, matching selected skill set | task read the required selected SKILL.md files with their archived paths/hashes; read attachments only when needed |
+| Changed skill set (including a change to empty), new goal, or required current versions unavailable in the old binding | task start, then one task select for this stage's skills and missing project context, then task read chosen bodies |
+| No applicable skill and a reusable recorded empty selection | Keep the empty selection; no skill-file request is needed |
+| Lost bodies or file references | Recover once with task handoff using the actual taskId; then perform this turn's skill reads |
+| Missing project context | context query only the missing targets under a suitable binding |
+
+For example, a ticket-writing turn may select planning/to-tickets and the next implementation turn development/implement. Keep project context already available in the conversation. On the new task, select context as {"expand":[],"read":[],"known":{}} when no project material is missing. task start still returns briefs/catalog; the new packet is empty, not an inherited copy. Do not put another task's hashes in known or claim its bodies were returned by the new task. A second selection on the old task is rejected with SELECTION_EXISTS; preserve its original plan, group/IDs and archived bytes. Stage tasks use ordinary task IDs/titles; no parentTaskId or stage-specific CLI field exists.
+
+Use a fresh requestId for each intentional turn's skill read; retain it for retries of that read. Same-request replay is not a new observed read. Reused context is likewise not a new read and skill reads do not renew context retention. An old/closed task can supply its captured skill bytes, but cannot supply today's edited skill under an old hash. Refresh the catalog through a new task when current skill descriptions/bytes are needed; task prompt can refresh only an unselected task.
+
+Own edits still need stage synchronization, not automatic task creation. Plans, todos and replies do not close tasks; actual completion/cancellation of the recorded scope plus recorded sync state does. A skill switch alone does not close another unfinished task. Closed tasks remain read-only. Each new task follows the main skill's once-per-task card; repeated skill reads on an existing task do not repeat it.
 
 Use the main skill's ordered routing for missing CLI or project setup. Do not initialize a current project just to restore historical handoff/skill bytes. Declined/cancelled onboarding stays ordinary execution for the same task; valid parent handoffs inherit scope and selection.
 

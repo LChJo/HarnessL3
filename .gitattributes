@@ -1,5 +1,8 @@
 # Keep project knowledge and its referenced text byte-stable across platforms.
 .gitattributes text eol=lf
+README.md text eol=lf
+docs/implementation/CLI_SKILL_REVIEW.md text eol=lf
+tests/v1/task-cli.test.mjs text eol=lf
 .harness/** text eol=lf
 agent-skills/harnessl3/SKILL.md text eol=lf
 agent-skills/harnessl3/references/project-init.md text eol=lf
@@ -44,6 +47,8 @@ web/README.md text eol=lf
 web/SkillReason.tsx text eol=lf
 web/api.ts text eol=lf
 web/canvas-model.ts text eol=lf
+tests/v1/web-projection.test.mjs text eol=lf
+scripts/v1/web-overflow-counts-smoke.mjs text eol=lf
 web/main.tsx text eol=lf
 web/skill-layout.ts text eol=lf
 web/skill-reason.ts text eol=lf

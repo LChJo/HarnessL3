@@ -27,7 +27,32 @@ test('TC21 an entirely unmatched context branch opens only its directory overflo
   assert.equal(layoutMindmap(roots, []).nodes.length, 1)
   const layout = layoutMindmap(roots, ['category:objects', 'unread-root'])
   assert.deepEqual(layout.nodes.map(node => node.kind), ['object', 'overflow'])
-  assert.equal(layout.nodes[1].hiddenCount, 1)
+  assert.equal(layout.nodes[1].hiddenCount, 2, 'Include the hidden branch root and all its descendants')
+})
+
+test('TC21 each overflow counts the complete omitted subtree, not its immediate groups', () => {
+  const roots = [
+    { ...item('category:objects', false, [item('app', false, [item('module', false, [item('leaf-a'), item('leaf-b')])])]), kind: 'category' },
+    { ...item('category:relations', false, [item('relation-group', false, [item('relation-a'), item('relation-b')])]), category: 'relations', kind: 'category' },
+    { ...item('category:sources', false, [item('source-group', false, [item('owner-group', false, [item('fact-a'), item('fact-b')])])]), category: 'sources', kind: 'category' },
+    { ...item('category:evidence', false, [item('code-group', false, [item('code-a'), item('code-b')]), item('document-group', false, [item('document-a')])]), category: 'evidence', kind: 'category' },
+  ]
+  const before = structuredClone(roots)
+  const layout = layoutMindmap(roots, roots.map(root => root.id))
+  assert.deepEqual(layout.nodes.filter(node => node.kind === 'overflow').map(node => node.hiddenCount), [4, 3, 4, 5])
+  assert.deepEqual(layout.nodes.filter(node => node.kind === 'overflow').map(node => node.brief), ['其余 4 项', '其余 3 项', '其余 4 项', '其余 5 项'])
+  assert.equal(layout.nodes.length, 8, 'Counting the directory must not materialize omitted canvas nodes')
+  assert.deepEqual(roots, before, 'Counts are a view projection, not a change to archived facts')
+})
+
+test('TC21 nested overflow counts stay disjoint from hit paths and synthetic body leaves', () => {
+  const parent = { ...item('returned', true, [item('hidden-a', false, [item('hidden-a-child')])]), entityId: 'returned-id' }
+  const root = { ...item('category:objects', true, [parent, item('hidden-b', false, [item('hidden-b-child'), item('hidden-b-grandparent', false, [item('hidden-b-grandchild')])])]), kind: 'category', state: 'aggregate' }
+  const layout = layoutMindmap([root], [root.id, parent.id, 'hidden-b'])
+  const counts = Object.fromEntries(layout.nodes.filter(node => node.kind === 'overflow').map(node => [node.overflowFor, node.hiddenCount]))
+  assert.deepEqual(counts, { returned: 2, 'category:objects': 4 })
+  assert.equal(layout.nodes.filter(node => node.kind === 'body').length, 1)
+  assert.ok(!layout.nodes.some(node => node.id === 'hidden-b'), 'Saved expansion must not reveal an unmatched branch')
 })
 
 test('TC21 returning a parent body keeps a hit leaf and output path when all descendants are unmatched', () => {
@@ -81,6 +106,14 @@ test('TC20/21 a large unselected skill library remains one overflow and keeps th
   assert.equal(selected.nodes.filter(node => node.skillId === saved.id).length, 1)
   assert.equal(selected.nodes.find(node => node.kind === 'folder').group, 'archived')
   assert.equal(selected.nodes.find(node => node.kind === 'selected').reason, 'Original reason')
+})
+
+test('TC20/21 skill overflow counts methods across hidden folders, excluding folders and attachments', () => {
+  const catalog = [skill('quality/chosen'), skill('quality/unused-a'), skill('quality/unused-b'), ...Array.from({ length: 9 }, (_, i) => skill(`folder-${i % 3}/method-${i}`, `folder-${i % 3}`))]
+  catalog[1].files.push({ path: 'attachment.md', hash: 'c'.repeat(64), bytes: 12, encoding: 'utf8' })
+  const layout = layoutSkills({ ...bounds, catalog, plan: { id: 'plan', skills: [{ ...catalog[0], reason: 'Requested method' }] }, expanded: true, expandedFolders: new Set(['quality']) })
+  const counts = Object.fromEntries(layout.nodes.filter(node => node.kind === 'overflow').map(node => [node.group ?? '*', node.hiddenCount]))
+  assert.deepEqual(counts, { quality: 2, '*': 9 })
 })
 
 test('TC19/21 explicit empty selection keeps a directory entry without lighting any catalog node', () => {
