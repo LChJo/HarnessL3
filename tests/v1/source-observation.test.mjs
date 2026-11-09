@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
-import { writeFile, mkdir, symlink } from 'node:fs/promises'
+import { writeFile, mkdir, symlink, realpath } from 'node:fs/promises'
 import { fixture, execFile, projectRoot } from './helpers.mjs'
 import { observeSourcePaths, scanSource } from '../../build/core/source.js'
 import { WorkspaceRegistry } from '../../build/core/workspace.js'
@@ -18,7 +18,10 @@ test('TC07 incremental leaf observation reads only requested bytes and matches t
   await writeFile(input, JSON.stringify({ worktree: initialized.worktree, paths: ['README.md'] }))
   const { stdout } = await execFile(process.execPath, [path.join(projectRoot, 'tests/v1/source-observation-probe.mjs'), input], { windowsHide: true })
   const { result, opened } = JSON.parse(stdout)
-  assert.deepEqual(opened, [path.join(root, 'README.md'), path.join(root, 'README.md')])
+  // The registered worktree root is canonical, so byte capture opens the
+  // resolved path rather than the caller's native temp spelling.
+  const observedRoot = initialized.worktree.root
+  assert.deepEqual(opened, [path.join(observedRoot, 'README.md'), path.join(observedRoot, 'README.md')])
   assert.equal(result.requiresFullScan, false)
   assert.equal(result.sourceEpoch, 7)
   const scan = await scanSource(initialized.worktree, await registry.readConfig(root), await registry.skillsRoot(initialized.worktree))
@@ -28,7 +31,9 @@ test('TC07 incremental leaf observation reads only requested bytes and matches t
 test('TC07 incremental additions, deletion and byte rollback remain scoped observations', async t => {
   const f = await fixture(t, 'harness-v1-source-leaves-')
   const root = await f.repository()
-  const worktree = { root }
+  // Registered worktrees always carry canonical paths; native temp aliases
+  // (macOS /var, Windows 8.3 names) must not change the observation result.
+  const worktree = { root: await realpath(root) }
   const file = path.join(root, 'new.ts')
   await writeFile(file, 'A')
   const a = await observeSourcePaths(worktree, ['new.ts'], 1)
@@ -55,7 +60,7 @@ test('TC07 changed paths behind an ancestor link never read outside the worktree
   await writeFile(path.join(outside, 'private.ts'), 'Do not read')
   await symlink(outside, path.join(root, 'linked'), process.platform === 'win32' ? 'junction' : 'dir')
   const input = path.join(f.directory, 'request.json')
-  await writeFile(input, JSON.stringify({ worktree: { root }, paths: ['linked/private.ts'] }))
+  await writeFile(input, JSON.stringify({ worktree: { root: await realpath(root) }, paths: ['linked/private.ts'] }))
   const { stdout } = await execFile(process.execPath, [path.join(projectRoot, 'tests/v1/source-observation-probe.mjs'), input], { windowsHide: true })
   const { result, opened } = JSON.parse(stdout)
   assert.deepEqual(opened, [])

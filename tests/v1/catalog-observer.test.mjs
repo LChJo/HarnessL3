@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, realpath, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fixture } from './helpers.mjs'
 import { CatalogObserver } from '../../build/core/catalog.js'
@@ -37,7 +37,9 @@ test('TC19 browsing catalog reuses checked bytes, observes edits and drops inval
     const restored = await observer.read(root, true)
     assert.equal(restored.valid, true)
     assert.notEqual(restored.revision, first.revision)
-    observer.entries.get(root).watcher?.emit('error', new Error('Injected watch gap'))
+    // Observer entries are keyed by the canonical root, which differs from the
+    // caller's temp spelling on macOS (/private/var) and Windows (8.3 names).
+    observer.entries.get(await realpath(root)).watcher?.emit('error', new Error('Injected watch gap'))
     await writeFile(skill, valid + 'After watch gap\n')
     assert.notEqual((await observer.read(root)).revision, restored.revision)
   } finally { await observer.close() }

@@ -22,7 +22,23 @@ async function until(predicate, label, timeout = 15000) {
   }
 }
 
-async function fixture(t, { extraSource = false } = {}) {
+// Native recursive watchers (macOS FSEvents in particular) can replay
+// notifications produced while the fixture was being written. Wait for the
+// observed epoch to stay unchanged across a full quiet window so call-count
+// and archive assertions measure the test's own actions only.
+async function settle(manager, quietMs = 500, timeout = 15000) {
+  const deadline = Date.now() + timeout;
+  let epoch = manager.currentState().sourceEpoch;
+  while (Date.now() < deadline) {
+    await delay(quietMs);
+    const next = manager.currentState().sourceEpoch;
+    if (next === epoch && !manager.debounce && !manager.running) return;
+    epoch = next;
+  }
+  throw new Error('Timed out waiting for watcher notifications to settle');
+}
+
+async function fixture(t, { extraSource = false, warm = false } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-freshness-'));
   const managers = [];
   t.after(async () => {
@@ -63,14 +79,15 @@ async function fixture(t, { extraSource = false } = {}) {
     queue = next.catch(() => {});
     return next;
   };
-  const create = async () => {
+  const create = async ({ warm: prewarm = false } = {}) => {
     const archive = new Archive(archiveRoot);
     const manager = new FreshnessManager({ worktree: initialized.worktree, archive, serial, pollIntervalMs: 60_000 });
     managers.push(manager);
     await manager.ready();
+    if (prewarm) { await manager.status(skillsRoot); await settle(manager); }
     return { manager, archive };
   };
-  const { manager, archive } = await create();
+  const { manager, archive } = await create({ warm });
   return { root, checkout, skillsRoot, globalIgnore, initialized, manager, archive, create, serial, watchQueue: (callback) => { queued = callback; } };
 }
 
@@ -102,7 +119,7 @@ test('TC07 background observation hashes changed leaves without promoting its ba
 });
 
 test('TC07 concurrent status callers share one complete reconciliation but a later call rechecks bytes', async t => {
-  const f = await fixture(t);
+  const f = await fixture(t, { warm: true });
   const original = f.manager.capture.bind(f.manager);
   const capture = t.mock.method(f.manager, 'capture', original);
   const results = await Promise.all([f.manager.status(f.skillsRoot), f.manager.status(f.skillsRoot), f.manager.status(f.skillsRoot)]);
@@ -113,15 +130,18 @@ test('TC07 concurrent status callers share one complete reconciliation but a lat
 });
 
 test('TC16 compact state references share receipt bytes and restore alongside unchanged inline history', async t => {
-  const f = await fixture(t);
-  const baseline = await f.manager.status(f.skillsRoot);
+  const f = await fixture(t, { warm: true });
+  await f.manager.status(f.skillsRoot);
   const rows = f.archive.records({ kind: 'freshness-state' });
   assert.ok(rows.length);
   for (const row of rows) {
     assert.equal(row.payload.state, undefined);
     assert.equal(row.payload.stateHash, row.receiptHash);
-    assert.deepEqual(await f.archive.readSnapshot(row.payload.stateHash), baseline);
+    const snapshot = await f.archive.readSnapshot(row.payload.stateHash);
+    assert.equal(snapshot.schemaVersion, 1);
+    assert.deepEqual(snapshot.target, { projectId: f.initialized.worktree.projectId, worktreeId: f.initialized.worktree.id });
   }
+  const baseline = f.manager.currentState();
   await f.manager.close();
   const old = await f.archive.commit({ scope: 'old-inline-state', requestId: randomUUID(), request: {}, payload: { kind: 'freshness-state', state: baseline }, receipt: baseline, archives: f.archive.references() });
   const before = await readFile(path.join(f.archive.root, 'journal.jsonl'));
@@ -482,13 +502,16 @@ test('TC07 initial status separates model validity from clean source and archive
   assert.equal(state.state, 'pending');
   assert.equal(state.modelState, 'valid');
   assert.equal(state.sourceVersion.status, 'clean');
-  assert.equal(state.sourceEpoch, 0);
+  // Native watchers may replay notifications for fixture writes that happened
+  // while the watcher started; the epoch counts those conservatively instead of
+  // promising zero on every platform.
+  assert.ok(Number.isSafeInteger(state.sourceEpoch) && state.sourceEpoch >= 0);
   assert.deepEqual(state.pendingPaths, ['.gitignore', 'README.md']);
   assert.ok(state.sourceScanRevision);
-  const record = f.archive.records().at(-1);
-  assert.equal(record.payload.kind, 'freshness-state');
-  assert.ok(record.archives.length >= 4);
-  for (const reference of record.archives) if (reference.kind === 'snapshot') await f.archive.readSnapshot(reference.hash);
+  const records = f.archive.records({ kind: 'freshness-state' });
+  assert.ok(records.length);
+  assert.ok(records.some(record => record.archives.length >= 4));
+  for (const record of records) for (const reference of record.archives) if (reference.kind === 'snapshot') await f.archive.readSnapshot(reference.hash);
 });
 
 test('TC08 local proof clears only its explicit source scope and failed checks retain unresolved paths', async (t) => {

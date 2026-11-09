@@ -368,8 +368,8 @@
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "a748b7953a42f3d7a0805ae67d318e2ecbe1aad072d6a1c54a62a43fc6626a14",
-      "observedAt": "2026-11-09T12:47:29.417449Z"
+      "hash": "29852f23e46964ca9b8c36f2f30d9180aadaeda198afa47e8ebc888b2066ccb5",
+      "observedAt": "2026-11-09T14:59:54.309000Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
@@ -848,8 +848,8 @@
       "location": {
         "path": "tests/v1/source-observation.test.mjs"
       },
-      "hash": "b2ae2176fcd1cb508cbf287aaaf7c85f3807da193890392beae3e7dea4eadbab",
-      "observedAt": "2026-11-09T12:40:27.288753Z"
+      "hash": "f41d5a8ef546622209db0744326029f801b6f86a53bc9d75222b3341b5416032",
+      "observedAt": "2026-11-09T14:59:54.309000Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000004",
@@ -888,8 +888,8 @@
       "location": {
         "path": "tests/v1/catalog-observer.test.mjs"
       },
-      "hash": "cc445cf971bfa21afc3f6e051273236058bf31cde393cdf68ec63766d5d022d9",
-      "observedAt": "2026-11-09T12:47:29.443994Z"
+      "hash": "7e4200174a8ec47e97589d850e3e5fc1d0b459a38374dd6d5f3a1bfe129a4b59",
+      "observedAt": "2026-11-09T14:59:54.309000Z"
     }
   ]
 }
