@@ -6,9 +6,9 @@
 
 从 GitHub 安装或更新时，执行[安装指南](../INSTALL.md)中的脚本。在源码仓库开发时，可执行`npm ci`、`npm run build`，通过`node bin/harnessl3.mjs --help`查看命令。
 
-从GitHub安装/更新及复制宿主skill见根目录[安装指南](../INSTALL.md)。包内另有`agent-skills/harnessl3/SKILL.md`：用于Codex/Claude Code运行时调用本CLI，与下文Skill Hub的21项方法分开。安装指南在程序安装后显式运行`node <安装包绝对路径>/scripts/install-agent-skills.mjs`，将整个skill目录（含安装更新、项目初始化、运行细节、subagent接入四份按需参考MD）复制到Codex的`~/.agents/skills/harnessl3`和Claude Code的`~/.claude/skills/harnessl3`（支持自定义目录）；不装Hooks，不启动宿主。主入口聚焦全任务触发/子任务分支、返回含义及使用判断，参考正文不预读。新会话可分别用`$harnessl3`与`/harnessl3`调用。
+从GitHub安装/更新及复制宿主skill见根目录[安装指南](../INSTALL.md)。包内另有`agent-skills/harnessl3/SKILL.md`：用于Codex/Claude Code运行时调用本CLI，与下文Skill Hub的21项方法分开。安装指南在程序安装后显式运行`node <安装包绝对路径>/scripts/install-agent-skills.mjs`，将整个skill目录（含安装更新、项目初始化、运行细节、subagent接入四份按需参考MD）复制到Codex的`~/.agents/skills/harnessl3`和Claude Code的`~/.claude/skills/harnessl3`（支持自定义目录）；不装Hooks，不启动宿主。主入口及四份参考使用英文；先决定复用/所需请求，仅需CLI时才处理缺失安装和项目初始化/登记，再执行请求/处理返回。已有正文足够时不做前提探测，归档恢复不要求当前工程重初始化；参考正文不预读。新会话可分别用`$harnessl3`与`/harnessl3`调用。
 
-安装后所有任务默认先尝试L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发；不因轻量/只读跳过。有效的连续任务可复用，完全不需材料时用明确空选择。已有父交接的subagent核对并复用，不再联合选技能或关闭父任务；独立范围新建自己的任务。安装/初始化等入口恢复不递归，缺有效已有worktree或工具能力时如实说明并继续可独立完成的工作。
+安装后所有任务默认先尝试L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发；不因轻量/只读跳过。先判断实际任务是否连续：执行上一轮待办、规划转实现和确认继续复用已有有效任务及已返回正文，材料足够时不再调用CLI或重复卡片；材料丢失才恢复handoff，缺新内容才差量获取，新版本/新技能集合按实际绑定处理。新入口完全不需材料时用明确空选择，连续消息不重复空选；给出待办或结束回复不自动关闭任务。已有父交接的subagent核对并复用，不再联合选技能或关闭父任务；独立范围新建自己的任务。安装/初始化等入口恢复不递归，缺有效已有worktree或工具能力时如实说明并继续可独立完成的工作。
 
 首次发现当前Git工作区未登记，`TARGET_REQUIRED`及`error.details.onboarding`表示需要接入确认。agent应使用通用询问窗口展示路径和初始化影响；窗口不可用则在对话中询问。同意后先创建缺失配置/登记，再由当前大模型读取项目、直接编写LikeC4对象/关系/证据与结构视图，报告阅读、建模和校验进度；完成覆盖核对后继续原任务。只有拒绝或取消才普通执行，本任务内不重问。已有授权复用，无回复不算同意。CLI的`nextAction:ask-user`与询问内容是给当前agent的指引，不自动初始化，也不在JSON进程内提问；不能因非零退出码直接跳过询问。
 

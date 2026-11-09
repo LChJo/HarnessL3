@@ -1,8 +1,10 @@
-# HarnessL3 安装与更新（按需读取）
+# Installation and updates
 
-仅在 CLI 缺失、版本不兼容或用户要求安装/更新时读取本文件。日常 `task` / `context` / `sync` 调用无需读取。
+Read only for a missing/incompatible CLI or a requested install/update. Ordinary task/context/sync calls do not require this reference.
 
-## 确认当前状态
+## Establish what is missing
+
+When not already known, check the relevant prerequisites:
 
 ```text
 node --version
@@ -11,31 +13,31 @@ git --version
 harnessl3 --version
 ```
 
-需要 Node.js >=24.12.0 且 <25、npm 和 Git。CLI 未安装时，最后一条命令会提示找不到命令。
+Requires Node.js >=24.12.0 and <25, npm and Git. A missing command is an installation issue, not an uninitialized project. If installation was not authorized, explain what is missing and offer to install; do not change the machine silently. While awaiting an answer, do independent work only. Reuse existing explicit authorization.
 
-## 取得并执行安装流程
+## Use the maintained installation guide
 
-完整的一次执行脚本以仓库根目录 `INSTALL.md` 为唯一维护入口，避免在附件中复制另一套安装命令。
+The repository-root INSTALL.md is the single maintained procedure; do not maintain a second installer here.
 
-- 已有 npm 全局安装时，用 `npm root -g` 找到其下 `harnessl3/INSTALL.md`，仅在安装流程仍与目标 GitHub 来源一致时使用。更新以目标来源的最新指南为准。
-- 没有 CLI 或本地文档过旧时，使用现有网页/文件下载工具取得 [GitHub 安装指南](https://github.com/LChJo/HarnessL3/blob/main/INSTALL.md) 并读取正文。需要原文时使用 [Raw Markdown](https://raw.githubusercontent.com/LChJo/HarnessL3/main/INSTALL.md)，下载到用户项目外的临时目录。
-- 根据实际平台执行指南中的 PowerShell 或 Bash 整段脚本。首次安装与更新共用流程：独立临时克隆 → `npm ci` → 构建 → 打包 `.tgz` → 全局安装 → 复制整个运行时 skill 目录及参考附件。
+- For an existing global package, locate harnessl3/INSTALL.md with npm root -g. Use it only if its procedure still matches the intended GitHub source; updates use that source's current guide.
+- If unavailable or outdated, retrieve and read the [GitHub guide](https://github.com/LChJo/HarnessL3/blob/main/INSTALL.md), or its [raw Markdown](https://raw.githubusercontent.com/LChJo/HarnessL3/main/INSTALL.md), with available web/file tools. Download outside the user's project.
+- Run the guide's complete PowerShell or Bash procedure for the actual platform: isolated temporary clone, npm ci, build, package, global installation, and copying the entire runtime skill with references.
 
-安装和更新均执行最新 GitHub 指南中的脚本。用户仅要求完成开发任务且尚未授权安装时，说明入口缺失，不据此自动更改本机环境。
-
-已有 `.tgz` 且用户要求安装该包时可执行：
+For an existing package explicitly chosen by the user:
 
 ```text
-npm install -g <harnessl3包绝对路径.tgz> --omit=dev --ignore-scripts --no-audit --no-fund
-node <已安装harnessl3包绝对路径>/scripts/install-agent-skills.mjs
+npm install -g <absolute-package.tgz> --omit=dev --ignore-scripts --no-audit --no-fund
+node <actual-installed-package>/scripts/install-agent-skills.mjs
 ```
 
-安装包路径由实际 npm prefix/root 确认，不能把占位符原样执行。Codex 使用 `~/.agents/skills/harnessl3`，Claude Code 使用 `~/.claude/skills/harnessl3`（或 `CLAUDE_CONFIG_DIR/skills/harnessl3`）；安装复制结果和宿主实际加载分开验证。不要自动启动宿主。
+Resolve real paths through npm prefix/root; never execute placeholders. Default targets are ~/.agents/skills/harnessl3 for Codex and ~/.claude/skills/harnessl3 for Claude Code, or CLAUDE_CONFIG_DIR/skills/harnessl3. Copying files and the host actually loading them are separate observations. Do not launch the host.
 
-## 更新与验证边界
+## Preserve data and check the actual update
 
-更新前按实际数据根停止旧服务：`harnessl3 serve stop --json`；多个显式 `--data-dir` 分别停止。保留 npm prefix、机器数据根、项目 `.harness`、用户技能及 `.skills-library-<UUID>` 实体和全部历史。更新不需要 GC、迁移或重建项目。
+Before updating, capture any existing task handoff while the old service is reachable, using its actual taskId. Write the full response as UTF-8 outside the worktree; preserve it as the before-update original. An envelope requestId or timestamp is not a taskId.
 
-更新由已有 L3 任务发起时，先在旧服务仍可访问时，取得 `task handoff <实际taskId> --json`，明确以 UTF-8 写入 worktree 外文件；不要把封套中的 requestId 或当前时间当成 taskId。该文件是更新后只读比较的依据，不能以新返回覆盖原件。
+Stop the old service for the actual data root with harnessl3 serve stop --json; handle explicit --data-dir roots separately. Preserve npm prefix, machine data, project .harness, all user skills, the active .skills-library-<UUID> entity and all history. Updates do not require GC, migration or project reinitialization. BUSY/startup-in-progress means wait for the same owner, not successful stop; do not remove a live lock or force unknown processes.
 
-更新后核对 `harnessl3 --version` / `--help` 的版本/构建源提交和两个宿主的 skill 复制结果；安装指南中的验证工具检查实际运行文件、服务构建身份与 RPC。回到旧任务所属 worktree，用已安装的 `scripts/verify-install.mjs --handoff-before <实际UTF-8文件>` 对照原包；显式数据根继续传原 `--data-dir`。只有 `historyCheck:matched-before-update` 才表示此交接比较成功，未提供原包为 not-requested。初始化活锁期间等待同一所有者，不能将 BUSY 当作已停止或删除锁；未知业务结果不自动重发。CLI旧包在安装临时目录的 previous 中，skill备份路径在各变更文件的 backup 中。失败时保留错误和实际完成范围。更新 skill 后，请新建或刷新宿主会话。
+After installation, check version/help build source and skill-copy results. The guide's verification tool checks actual runtime files, service build identity and RPC. In the original task worktree, compare the saved handoff using the installed scripts/verify-install.mjs --handoff-before <actual-UTF-8-file>; keep the original --data-dir if any. Only historyCheck:matched-before-update confirms that comparison; missing input means not-requested. Do not replace the original with the new response or resend unknown business writes.
+
+Retain failures and actual completed scope. The installer retains the previous package in its temporary previous directory and reports per-file skill backup paths. Refresh or start a new host session to load updated skill instructions, then resume the original operation without recursively starting a setup task.

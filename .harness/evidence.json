@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.37 preserves existing product boundaries and adds actionable schema diagnostics, same-task known guidance and guarded result handling with original CLI exit status.",
+      "claim": "Current v0.38 combines v0.37 continuation/setup guidance with actionable request diagnostics and guarded caller parsing while preserving authority, strict hashes, request identity and historical boundaries.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "6900eabe4567e73762fea5a739012c42ae55149e2aad5b6f7c503443e6bfd3c8",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "b58a72806ec05a0564fcc0552ed7461a8167b1443d3b06e32c8b3a3977f9715c",
+      "observedAt": "2026-11-09T10:50:45.466Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -104,12 +104,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Source scanning captures actual Git/file scope and fingerprints without interpreting business semantics.",
+      "claim": "Native Git ignore/filter queries use bounded stdin batches, recheck delayed ancestors and handle stdin errors as unknown; pre/post state, raw double reads, filter refusal, argv limits and historical fingerprint contracts remain.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "e8bee0c1be3af5ff6b3d7b951f3618288c729f10d330dd80ed71099eaa8df6b2",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "ba2d51afe9c0917411088cedec8bf32d1c7afaf9484f926b12a824691829d5ab",
+      "observedAt": "2026-11-09T10:19:54.754Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime entry preserves onboarding and context duties and requires checking ok before data, separate stdout/stderr and original CLI status with complete errors.",
+      "claim": "English runtime entry first reuses sufficient same-task material, resolves setup only for necessary operations, and preserves original CLI status, separate streams and complete errors with ok checked before data.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "dca35848118eb4de1be8faea4c5fc549a301fa349c05efbd5f661db7654c0ae3",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "1a7ed0a88abfb7fafc78d5590f07a7c48a1ef8dcd4e8d9edfdc08a4fe56c0f3e",
+      "observedAt": "2026-11-09T10:50:45.469Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -274,12 +274,12 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "Explicit references include .harness and safe in-worktree link targets without expanding source scans; scoped verification handles real paths and native casing while preserving unrelated pending work and history.",
+      "claim": "Source batching preserves raw/current-state checks and link boundaries; explicit evidence references and scoped synchronization retain existing physical-path, anomaly and pending/history rules.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "57cfe0b6323e57fcb569c1e6887b87aef977972944a271e1087b0f462cdcf087",
-      "observedAt": "2026-11-07T15:30:46.328Z"
+      "hash": "15e29cb88be3fce3347a7efc53bd13ba1bc2bcfff7654d0f74f7af8d91328192",
+      "observedAt": "2026-11-09T10:19:54.756Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -304,12 +304,12 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference preserves UTF-8 and history boundaries and explains guarded envelope parsing, complete diagnostics, separate streams and saved CLI exit codes.",
+      "claim": "English runtime reference preserves continuation, setup, version/history and stage-sync rules and adds guarded JSON parsing, field diagnostics and same-task known guidance without repeated entry.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "7a9230e7a9320746cd41cbc48d2c9efcf3eb72197a546984a43b8f65781ef27f",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "131ab2275b75751802f26c16a604f03cd3590868e9ae53dde9572954b80eaa01",
+      "observedAt": "2026-11-09T10:50:45.470Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status records v0.37 implementation, 49 focused and 9 installer checks, contracts/build/package validation and explicit Windows-only, no-global-install or full-suite claims.",
+      "claim": "Status preserves both implementation histories and records v0.38 merge conflict resolution, evidence-ID disambiguation, 16 focused Windows checks, build/contracts/model/link verification and explicit unrun scope.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "433f3d59f3f00853f18ef7c8bddd9c58c828350836bd0c55f4ff9b8bf116935c",
-      "observedAt": "2026-11-09T10:07:57.038Z"
+      "hash": "98f51ab0ff419a62403a3eed71bf17cdf9fe701e3fff254ff1b99e6450173180",
+      "observedAt": "2026-11-09T10:52:28.594Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -474,12 +474,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Update guidance saves an actual UTF-8 handoff before stopping the old service, compares it after update and distinguishes copied files, host loading and checked versus unrequested recovery.",
+      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/install-update.md"
       },
-      "hash": "402d501d297fa443727530f911d3f501c7f5c4ecb070057c20bef8868c132e9d",
-      "observedAt": "2026-11-09T05:37:20.146Z"
+      "hash": "cf1572d5b11137683efb43258581f10cfa92d6503d75f3e3bc67ebd902d9241a",
+      "observedAt": "2026-11-09T10:19:54.758Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000006",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC22 adds field-level schema diagnostics and actual documented-reader execution; TC18 retains same-task first-body protection and existing platform boundaries.",
+      "claim": "TC27 preserves continuation/setup lifecycle rules; TC22 adds field-level diagnostics and executable guarded-reader checks, and TC18 retains same-task first-body protection.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "4c500b51475cf8617175559a1448ce4b76618887148254d2aab890e163ca0fe0",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "440a649f95f85ba53cdb356ee4eda4fce0a0ab43835a3add05c7eb444efa896b",
+      "observedAt": "2026-11-09T10:50:45.471Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -564,42 +564,42 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR12 retains service/recovery boundaries and specifies field-level request guidance, complete error handling and original CLI status without changing archived receipts.",
+      "claim": "FR12 retains service/recovery boundaries and specifies guarded result handling and actionable field diagnostics; FR15 reuses continuous task bodies and closes only on actual completion/cancellation.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "f704a5d0c0590d96acfd4114c90c1e444e05e2af33f5326797bbcfc0ffdfa7f0",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "820d4919c711b3dcd5eb74b5e73295260928d08a7e21595336926dacc79c8cfd",
+      "observedAt": "2026-11-09T10:50:45.471Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The specification entry points at baseline v0.37 and scoped caller/schema refinements without inheriting old platform verification.",
+      "claim": "The specification entry retains v0.37 continuation/setup and adds v0.38 caller/diagnostic refinements with separate actual validation boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "b6f6cef0c719cefda664e57ae9cb1d37e90d6b365712a6200ba4b36b9e6379a4",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "2cf765dd2be2e5e18c21b4a44ef2ce865fd50b363e1b34f6c512bcbc81a6d51f",
+      "observedAt": "2026-11-09T10:50:45.472Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
       "kind": "document",
-      "claim": "Performance documentation records a same-history baseline/candidate comparison and a separately sampled candidate steady-read supplement with exact recovery-wait, runtime fingerprint, integrity checks and platform/synthetic limitations; prior small-record results remain independently scoped.",
+      "claim": "Performance documentation separates historical measurements from the unrun final source-batching CLI/MGRP comparisons and describes synthetic dimensions, resource scope and reproducible methodology without claiming final latency gains.",
       "location": {
         "path": "docs/implementation/PERFORMANCE.md"
       },
-      "hash": "53e3b74fc59d11bb20d91f102d5efa3799ed6947b2709777c507e55a711dc5f5",
-      "observedAt": "2026-11-09T05:37:20.160Z"
+      "hash": "f02c77833f5d279ab4bf335b2a56ad2f8ba5d3635aca82dbcd31363dd6f8b8ae",
+      "observedAt": "2026-11-09T10:19:54.760Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.37 and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "6c493ccf92f7d8c641adfcaecf95db0cf33897030592dafa914f4ee893eb9325",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
+      "observedAt": "2026-11-09T10:50:45.472Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,22 +654,22 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "First-use routing requires an agent question before setup, reuses authorization, and limits fallback to decline/cancel, including older CLI guidance.",
+      "claim": "English onboarding guidance distinguishes missing config from unregistered existing config, requires actual-path consent and current-agent semantic modeling/coverage, and exempts archive-only recovery from reinitialization.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "87d93dd6e0aed37c9c2d63031b7e2658c21d1215840376ced67360d687930903",
-      "observedAt": "2026-11-09T07:28:53.726Z"
+      "hash": "65eaeb62b82a60087d6b3fde4dd3208e5ff48085f0e2e8ccf45b1ed031f5555f",
+      "observedAt": "2026-11-09T10:19:54.761Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage retains onboarding and UTF-8 boundaries, explains empty/same-task known and provides a guarded Node reader with saved CLI status and separate stream capture.",
+      "claim": "Usage preserves continuation and onboarding guidance, same-task known rules and a guarded Node reader with original CLI status and separate stream capture.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "1958f1a610c799822536f9b28bfaf48ef9a6e8e25a4d7909ddf6395fe23118aa",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "ad151083fa7bc907b4854f1d870924e97ceb11e6694d4bddc36f4a0874752a8c",
+      "observedAt": "2026-11-09T10:50:45.473Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -682,7 +682,47 @@
       "observedAt": "2026-11-09T07:28:53.727Z"
     },
     {
+      "id": "bf342397-819c-4a86-8c9c-1b9686af9b17",
+      "kind": "source-code",
+      "claim": "Isolated source regressions cover UTF-8 batch bounds, ordinary-byte/ignore mutations, ancestor-link replacement before and after delayed classification, and stdin failure without a process crash.",
+      "location": {
+        "path": "tests/v1/source-batching.test.mjs"
+      },
+      "hash": "2713920e9550560f936ddf22e63e06041ec145777ead641d38546fb43a7703c4",
+      "observedAt": "2026-11-09T10:05:09.164Z"
+    },
+    {
+      "id": "b8983113-8884-4915-a339-4106142e7407",
+      "kind": "source-code",
+      "claim": "Child-process fault injection is confined to fixture files and observes Git calls, linked-descendant queries, source reads and pipe failure without adding production hooks.",
+      "location": {
+        "path": "tests/v1/source-batch-probe.mjs"
+      },
+      "hash": "a90b1c0a03e9c50ee2c66b12914a217cffa60fdb658e27ebfc4576d0ea12fd97",
+      "observedAt": "2026-11-09T10:05:09.164Z"
+    },
+    {
+      "id": "a46727cb-6683-4f87-9993-ad1101d94ceb",
+      "kind": "source-code",
+      "claim": "An unrun isolated synthetic comparator measures cold/warm task entry and daemon lifetime resources, checks returned context/skill bytes and restart handoff, and retains fixture/build provenance; no final performance result is claimed.",
+      "location": {
+        "path": "scripts/v1/source-batching-benchmark.mjs"
+      },
+      "hash": "17e01aa6860feaaa9374ab7b431fe1d71efd35d44408436eb39a71c2aba7d18c",
+      "observedAt": "2026-11-09T10:05:09.165Z"
+    },
+    {
       "id": "d6370000-0000-4000-8000-000000000001",
+      "kind": "document",
+      "claim": "English delegated-task instructions reuse actual parent handoffs, fetch only missing material and preserve version, scope, lifecycle and explicit-log boundaries without inventing CLI parent fields or agent scheduling.",
+      "location": {
+        "path": "agent-skills/harnessl3/references/subagent.md"
+      },
+      "hash": "dde4359ff1f866b48481ffd1d11b3d755f228f4444344199811ed9a7f154bbee",
+      "observedAt": "2026-11-09T10:19:54.763Z"
+    },
+    {
+      "id": "800efe39-40f9-47b8-a70b-d1819705009e",
       "kind": "source-code",
       "claim": "Contract validation reports precise escaped field pointers, schema constraints and applicable known guidance without returning request values; strict validation remains.",
       "location": {
@@ -724,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.37 and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
+      "claim": "Agent conventions follow baseline v0.38, reuse sufficient continuous-task content and require guarded JSON parsing, separate streams, saved CLI status and current-contract known usage.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "6c493ccf92f7d8c641adfcaecf95db0cf33897030592dafa914f4ee893eb9325",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "66f5d1e84d8ba9bd032339124fce135d0ba97d028fe620fb59fcfc863b903c24",
+      "observedAt": "2026-11-09T10:50:45.473Z"
     }
   ]
 }
