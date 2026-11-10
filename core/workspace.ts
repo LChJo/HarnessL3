@@ -21,10 +21,11 @@ interface RegistryFile {
   worktrees: WorktreeRecord[];
 }
 
-interface GitIdentity {
+interface WorkspaceIdentity {
+  kind: 'git' | 'directory';
   root: string;
-  gitCommonDir: string;
-  gitDir: string;
+  gitCommonDir: string | null;
+  gitDir: string | null;
   branch: string | null;
 }
 
@@ -51,7 +52,25 @@ async function exists(file: string): Promise<boolean> {
   try { await lstat(file); return true; } catch (error) { if (isErrno(error, 'ENOENT')) return false; throw error; }
 }
 
-async function gitIdentity(location: string): Promise<GitIdentity> {
+const sameCommon = (left: string | null, right: string | null): boolean => left === null || right === null ? left === right : samePath(left, right);
+const validCommon = (value: ProjectRecord | WorktreeRecord): boolean => value.kind === 'directory' ? value.gitCommonDir === null : value.kind === 'git' && typeof value.gitCommonDir === 'string' && path.isAbsolute(value.gitCommonDir);
+export const DIRECTORY_EXCLUDES = ['**/node_modules', '**/.venv', '**/__pycache__', '**/.cache', '**/dist', '**/build', '**/coverage', '**/target'];
+
+/** The nearest explicit project or repository boundary owns the target. No Git process is needed for plain directories. */
+async function workspaceIdentity(location: string): Promise<WorkspaceIdentity> {
+  const requested = await canonicalPath(location);
+  if (!(await stat(requested)).isDirectory()) throw new HarnessError('INVALID_ARGUMENT', 'The workspace path must be a directory.', { path: location });
+  let current = requested;
+  while (true) {
+    if (await exists(path.join(current, '.git'))) return gitIdentity(current);
+    if (await exists(path.join(current, '.harness', 'project.json'))) return { kind: 'directory', root: current, gitCommonDir: null, gitDir: null, branch: null };
+    const parent = path.dirname(current);
+    if (parent === current) return { kind: 'directory', root: requested, gitCommonDir: null, gitDir: null, branch: null };
+    current = parent;
+  }
+}
+
+async function gitIdentity(location: string): Promise<WorkspaceIdentity> {
   const workingDirectory = await canonicalPath(location);
   try {
     if (!(await stat(workingDirectory)).isDirectory()) throw new Error('Not a directory');
@@ -74,10 +93,11 @@ async function gitIdentity(location: string): Promise<GitIdentity> {
     ]);
     if (insideWorktree !== 'true') throw new Error('Not a Git worktree');
     const [root, gitCommonDir, gitDir] = await Promise.all([canonicalPath(rootPath), canonicalPath(commonPath), canonicalPath(directoryPath)]);
-    return { root, gitCommonDir, gitDir, branch };
+    if (!samePath(root, workingDirectory)) throw new Error('Invalid Git boundary');
+    return { kind: 'git', root, gitCommonDir, gitDir, branch };
   } catch (error) {
     if (error instanceof HarnessError) throw error;
-    throw new HarnessError('INVALID_ARGUMENT', 'The path must be inside an existing Git worktree.', { path: location });
+    throw new HarnessError('INVALID_ARGUMENT', 'The Git boundary could not be inspected. Check Git installation and repository integrity; it cannot be used as a plain directory.', { path: location });
   }
 }
 
@@ -138,13 +158,15 @@ export class WorkspaceRegistry {
     const roots: string[] = [];
     const ids = new Set<string>();
     for (const project of data.projects) {
-      if (!project || !uuidPattern.test(project.id) || projects.has(project.id) || typeof project.active !== 'boolean' || typeof project.name !== 'string' || typeof project.gitCommonDir !== 'string' || typeof project.configPath !== 'string' || !path.isAbsolute(project.gitCommonDir) || !path.isAbsolute(project.configPath) || [...projects.values()].some((item) => samePath(item.gitCommonDir, project.gitCommonDir))) {
+      if (project && project.kind === undefined) project.kind = 'git';
+      if (!project || !uuidPattern.test(project.id) || projects.has(project.id) || typeof project.active !== 'boolean' || typeof project.name !== 'string' || !validCommon(project) || typeof project.configPath !== 'string' || !path.isAbsolute(project.configPath) || project.gitCommonDir !== null && [...projects.values()].some((item) => sameCommon(item.gitCommonDir, project.gitCommonDir))) {
         throw new HarnessError('ARCHIVE_CORRUPT', 'The machine project registry is invalid.', { path: file });
       }
       projects.set(project.id, project);
     }
     for (const worktree of data.worktrees) {
-      if (!worktree || !uuidPattern.test(worktree.id) || ids.has(worktree.id) || !projects.has(worktree.projectId) || typeof worktree.active !== 'boolean' || typeof worktree.available !== 'boolean' || !(worktree.branch === null || typeof worktree.branch === 'string') || typeof worktree.root !== 'string' || typeof worktree.gitCommonDir !== 'string' || !path.isAbsolute(worktree.root) || !path.isAbsolute(worktree.gitCommonDir) || roots.some((root) => samePath(root, worktree.root)) || !samePath(projects.get(worktree.projectId)!.gitCommonDir, worktree.gitCommonDir)) {
+      if (worktree && worktree.kind === undefined) worktree.kind = 'git';
+      if (!worktree || !uuidPattern.test(worktree.id) || ids.has(worktree.id) || !projects.has(worktree.projectId) || typeof worktree.active !== 'boolean' || typeof worktree.available !== 'boolean' || !(worktree.branch === null || typeof worktree.branch === 'string') || !validCommon(worktree) || worktree.kind === 'directory' && worktree.branch !== null || typeof worktree.root !== 'string' || !path.isAbsolute(worktree.root) || roots.some((root) => samePath(root, worktree.root)) || projects.get(worktree.projectId)!.kind !== worktree.kind || !sameCommon(projects.get(worktree.projectId)!.gitCommonDir, worktree.gitCommonDir) || worktree.kind === 'directory' && data.worktrees.some(item => item !== worktree && item.projectId === worktree.projectId)) {
         throw new HarnessError('ARCHIVE_CORRUPT', 'The machine worktree registry is invalid.', { path: file });
       }
       ids.add(worktree.id);
@@ -177,7 +199,7 @@ export class WorkspaceRegistry {
     }
   }
 
-  private async checkedSkillsRoot(identity: GitIdentity, config: ProjectConfig, registered: WorktreeRecord[]): Promise<string> {
+  private async checkedSkillsRoot(identity: WorkspaceIdentity, config: ProjectConfig, registered: WorktreeRecord[]): Promise<string> {
     const projectConfigured = this.overrideSkillsRoot === undefined && config.skills !== undefined;
     const requested = this.overrideSkillsRoot ?? (config.skills ? path.resolve(identity.root, config.skills.root) : path.join(this.dataRoot, 'skills'));
     const skillsRoot = await canonicalPath(requested);
@@ -202,6 +224,7 @@ export class WorkspaceRegistry {
       protectedPaths.add(path.join(actual, '.harness'));
     }
     for (const candidate of protectedPaths) {
+      if (candidate === null) continue;
       const actual = await canonicalPath(candidate);
       if (isWithin(actual, skillsRoot) || isWithin(skillsRoot, actual)) throw new HarnessError('INVALID_ARGUMENT', 'Skills must not overlap Git metadata or the managed model.', { path: requested, protectedPath: actual });
     }
@@ -210,9 +233,9 @@ export class WorkspaceRegistry {
 
   /** The selected root is a source; this method neither scans nor executes skills. */
   async skillsRoot(worktree: WorktreeRecord): Promise<string> {
-    const [identity, data] = await Promise.all([gitIdentity(worktree.root), this.load()]);
+    const [identity, data] = await Promise.all([workspaceIdentity(worktree.root), this.load()]);
     const config = await readConfig(identity.root);
-    if (!samePath(identity.root, worktree.root) || !samePath(identity.gitCommonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) {
+    if (!samePath(identity.root, worktree.root) || identity.kind !== (worktree.kind ?? 'git') || !sameCommon(identity.gitCommonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) {
       throw new HarnessError('WORKTREE_MOVED', 'The worktree no longer matches its registered identity.', { worktreeId: worktree.id });
     }
     return this.checkedSkillsRoot(identity, config, data.worktrees);
@@ -224,37 +247,40 @@ export class WorkspaceRegistry {
     return seedSkills(this.seedRoot, path.join(this.dataRoot, 'skills'));
   }
 
-  private async registerIdentity(data: RegistryFile, identity: GitIdentity, config: ProjectConfig): Promise<WorkspaceRegistration> {
+  private checkIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig): void {
+    const existing = data.worktrees.find(item => samePath(item.root, identity.root));
+    const upgrade = existing?.kind === 'directory' && identity.kind === 'git';
+    if (existing && (existing.projectId !== config.projectId || !upgrade && (existing.kind !== identity.kind || !sameCommon(existing.gitCommonDir, identity.gitCommonDir)))) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
+    const common = identity.gitCommonDir === null ? undefined : data.projects.find(item => sameCommon(item.gitCommonDir, identity.gitCommonDir));
+    if (common && common.id !== config.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'This Git common directory belongs to another project.', { projectId: config.projectId });
+    const project = data.projects.find(item => item.id === config.projectId);
+    if (project && (project.kind === 'directory' ? !existing || existing.projectId !== project.id : identity.kind !== 'git' || !sameCommon(project.gitCommonDir, identity.gitCommonDir))) throw new HarnessError('PROJECT_ID_CONFLICT', 'This project ID belongs to another workspace.', { projectId: config.projectId });
+  }
+
+  private async registerIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig): Promise<WorkspaceRegistration> {
     await this.checkDataRoot(identity.root, data.worktrees);
     await this.checkMetadataRoot(identity.root);
     await this.checkedSkillsRoot(identity, config, data.worktrees);
     const existingRoot = data.worktrees.find((item) => samePath(item.root, identity.root));
-    if (existingRoot && (existingRoot.projectId !== config.projectId || !samePath(existingRoot.gitCommonDir, identity.gitCommonDir))) {
-      throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different worktree or project.', { worktreeId: existingRoot.id });
-    }
+    this.checkIdentity(data, identity, config);
     let project = data.projects.find((item) => item.id === config.projectId);
-    const commonProject = data.projects.find((item) => samePath(item.gitCommonDir, identity.gitCommonDir));
-    if (commonProject && commonProject.id !== config.projectId) {
-      throw new HarnessError('PROJECT_ID_CONFLICT', 'This Git common directory is already registered with another project ID.', { projectId: config.projectId, registeredProjectId: commonProject.id });
-    }
-    if (project && !samePath(project.gitCommonDir, identity.gitCommonDir)) {
-      throw new HarnessError('PROJECT_ID_CONFLICT', 'This project ID is already bound to a different Git common directory.', { projectId: config.projectId, registeredCommonDir: project.gitCommonDir, actualCommonDir: identity.gitCommonDir });
-    }
     const configPath = path.join(identity.root, '.harness', 'project.json');
     if (!project) {
-      project = { id: config.projectId, name: config.name, gitCommonDir: identity.gitCommonDir, active: true, configPath };
+      project = { id: config.projectId, name: config.name, kind: identity.kind, gitCommonDir: identity.gitCommonDir, active: true, configPath };
       data.projects.push(project);
     } else {
       project.active = true;
       project.name = config.name;
+      project.kind = identity.kind;
+      project.gitCommonDir = identity.gitCommonDir;
       // Keep a reachable configuration as the project's navigation hint.
       if (!(await exists(project.configPath))) project.configPath = configPath;
     }
     let worktree = existingRoot;
     if (!worktree) {
-      worktree = { id: randomUUID(), projectId: project.id, root: identity.root, gitCommonDir: identity.gitCommonDir, branch: identity.branch, available: true, active: true };
+      worktree = { id: randomUUID(), projectId: project.id, kind: identity.kind, root: identity.root, gitCommonDir: identity.gitCommonDir, branch: identity.branch, available: true, active: true };
       data.worktrees.push(worktree);
-    } else Object.assign(worktree, { active: true, available: true, branch: identity.branch });
+    } else Object.assign(worktree, { kind: identity.kind, gitCommonDir: identity.gitCommonDir, active: true, available: true, branch: identity.branch });
     await this.save(data);
     return { project: { ...project }, worktree: { ...worktree }, paths: { config: configPath } };
   }
@@ -262,7 +288,7 @@ export class WorkspaceRegistry {
   async register(location: string): Promise<WorkspaceRegistration> {
     return this.locked(async () => {
       const data = await this.load();
-      const identity = await gitIdentity(location);
+      const identity = await workspaceIdentity(location);
       await this.checkDataRoot(identity.root, data.worktrees);
       await this.checkMetadataRoot(identity.root);
       return this.registerIdentity(data, identity, await readConfig(identity.root));
@@ -273,22 +299,16 @@ export class WorkspaceRegistry {
     if (name !== undefined && !name.trim()) throw new HarnessError('INVALID_ARGUMENT', 'Project name must contain visible text.');
     return this.locked(async () => {
       const data = await this.load();
-      const identity = await gitIdentity(cwd);
+      const identity = await workspaceIdentity(cwd);
       await this.checkDataRoot(identity.root, data.worktrees);
       await this.checkMetadataRoot(identity.root);
       const configPath = path.join(identity.root, '.harness', 'project.json');
-      const commonProject = data.projects.find((item) => samePath(item.gitCommonDir, identity.gitCommonDir));
+      const commonProject = identity.gitCommonDir === null ? undefined : data.projects.find((item) => sameCommon(item.gitCommonDir, identity.gitCommonDir));
       const config: ProjectConfig = await exists(configPath) ? await readConfig(identity.root) : {
-        schemaVersion: 1, projectId: commonProject?.id ?? randomUUID(), name: name ?? commonProject?.name ?? path.basename(identity.root), source: { excludePatterns: [] },
+        schemaVersion: 1, projectId: commonProject?.id ?? randomUUID(), name: name ?? commonProject?.name ?? path.basename(identity.root), source: { excludePatterns: identity.kind === 'directory' ? [...DIRECTORY_EXCLUDES] : [] },
       };
       await this.checkedSkillsRoot(identity, config, data.worktrees);
-      const known = data.worktrees.find((item) => samePath(item.root, identity.root));
-      if (known && (known.projectId !== config.projectId || !samePath(known.gitCommonDir, identity.gitCommonDir))) {
-        throw new HarnessError('WORKTREE_MOVED', 'The registered path no longer identifies the same worktree.', { worktreeId: known.id });
-      }
-      const project = data.projects.find((item) => item.id === config.projectId);
-      if (commonProject && commonProject.id !== config.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'The existing configuration uses a different project ID for this Git common directory.', { projectId: config.projectId, registeredProjectId: commonProject.id });
-      if (project && !samePath(project.gitCommonDir, identity.gitCommonDir)) throw new HarnessError('PROJECT_ID_CONFLICT', 'The copied project ID belongs to a different Git repository.', { projectId: config.projectId });
+      this.checkIdentity(data, identity, config);
       const createdFiles: string[] = [];
       const create = async (relative: string, contents: string): Promise<void> => {
         const destination = await resolveInside(identity.root, relative, { allowMissing: true, noSymlinks: true });
@@ -326,11 +346,29 @@ export class WorkspaceRegistry {
     return { ...result };
   }
 
-  private async inspectRecord(record: WorktreeRecord, observedIdentity?: GitIdentity): Promise<{ record: WorktreeRecord; identity?: GitIdentity; config?: ProjectConfig }> {
+  private async inspectRecord(record: WorktreeRecord, observedIdentity?: WorkspaceIdentity): Promise<{ record: WorktreeRecord; identity?: WorkspaceIdentity; config?: ProjectConfig }> {
     try {
-      const identity = observedIdentity ?? await gitIdentity(record.root);
+      const identity = observedIdentity ?? await workspaceIdentity(record.root);
       const config = await readConfig(identity.root);
-      const available = samePath(identity.root, record.root) && samePath(identity.gitCommonDir, record.gitCommonDir) && config.projectId === record.projectId;
+      if (record.kind === 'directory' && identity.kind === 'git' && samePath(identity.root, record.root) && config.projectId === record.projectId) {
+        return await this.locked(async () => {
+          const data = await this.load();
+          const actual = await workspaceIdentity(record.root);
+          const currentConfig = await readConfig(actual.root);
+          if (actual.kind !== 'git' || !samePath(actual.root, record.root) || currentConfig.projectId !== record.projectId) throw new HarnessError('WORKTREE_MOVED', 'The workspace identity changed during Git adoption.', { worktreeId: record.id });
+          this.checkIdentity(data, actual, currentConfig);
+          await this.checkDataRoot(actual.root, data.worktrees);
+          await this.checkMetadataRoot(actual.root);
+          await this.checkedSkillsRoot(actual, currentConfig, data.worktrees);
+          const current = data.worktrees.find(item => item.id === record.id)!;
+          const project = data.projects.find(item => item.id === current.projectId)!;
+          Object.assign(current, { kind: actual.kind, gitCommonDir: actual.gitCommonDir, branch: actual.branch });
+          Object.assign(project, { kind: actual.kind, gitCommonDir: actual.gitCommonDir });
+          await this.save(data);
+          return { record: { ...current, available: true }, identity: actual, config: currentConfig };
+        });
+      }
+      const available = samePath(identity.root, record.root) && identity.kind === record.kind && sameCommon(identity.gitCommonDir, record.gitCommonDir) && config.projectId === record.projectId;
       return { record: { ...record, branch: available ? identity.branch : record.branch, available }, identity, config };
     } catch { return { record: { ...record, available: false } }; }
   }
@@ -392,14 +430,17 @@ export class WorkspaceRegistry {
     const cwd = await canonicalPath(options.cwd);
     // Match the Git root, rather than a directory prefix, so nested unregistered
     // repositories cannot silently borrow an outer registered target.
-    let cwdIdentity: GitIdentity | undefined;
-    try { cwdIdentity = await gitIdentity(cwd); } catch { /* An unregistered/non-Git cwd requires an explicit worktree. */ }
+    let cwdIdentity: WorkspaceIdentity | undefined;
+    try { cwdIdentity = await workspaceIdentity(cwd); }
+    catch (error) { if (!(options.allowInactive && explicitWorktree)) throw error; }
     const cwdRecord = cwdIdentity ? data.worktrees.find((item) => samePath(item.root, cwdIdentity!.root)) : undefined;
     if (cwdRecord && (explicitWorktree && explicitWorktree.id !== cwdRecord.id || explicitProject && explicitProject.id !== cwdRecord.projectId)) {
       throw new HarnessError('TARGET_CONFLICT', 'The explicit target conflicts with the registered current worktree.', { cwdWorktreeId: cwdRecord.id });
     }
     if (!cwdRecord && !explicitWorktree) {
       if (cwdIdentity && !options.projectId) {
+        const dataRoot = await canonicalPath(this.dataRoot);
+        if (isWithin(cwdIdentity.root, dataRoot) || isWithin(dataRoot, cwdIdentity.root)) throw new HarnessError('TARGET_REQUIRED', 'Choose a workspace disjoint from the machine data root.', { dataRoot, worktreeRoot: cwdIdentity.root });
         const configured = await exists(path.join(cwdIdentity.root, '.harness', 'project.json'));
         throw new HarnessError('TARGET_REQUIRED', 'HarnessL3 setup needs user confirmation. Ask the onboarding.question in the agent question UI before proceeding; continue without L3 only if the user declines or cancels.', {
           onboarding: {
@@ -408,8 +449,8 @@ export class WorkspaceRegistry {
             confirmationRequired: true,
             nextAction: 'ask-user',
             question: configured
-              ? `Register this existing Git worktree with HarnessL3 at ${cwdIdentity.root}? This preserves its existing configuration and model.`
-              : `Initialize HarnessL3 in this existing Git worktree at ${cwdIdentity.root}? This creates missing .harness configuration, model, evidence and alias files, registers the worktree, and creates the user skill library only if it is missing; existing content is preserved.`,
+              ? `Register this workspace with HarnessL3 at ${cwdIdentity.root}? This preserves its existing configuration and model.`
+              : `Initialize HarnessL3 in this workspace at ${cwdIdentity.root}? This creates missing .harness configuration, model, evidence and alias files, registers the worktree, and creates the user skill library only if it is missing; existing content is preserved.`,
             command: configured ? ['worktree', 'register', cwdIdentity.root] : ['init'],
             fallback: 'continue-without-l3',
             fallbackWhen: ['declined', 'cancelled'],
@@ -420,6 +461,7 @@ export class WorkspaceRegistry {
     }
     const selected = explicitWorktree ?? cwdRecord;
     if (!selected) throw new HarnessError('TARGET_REQUIRED', 'A worktree target is required.');
+    if (cwdIdentity && !samePath(cwdIdentity.root, selected.root) && isWithin(selected.root, cwdIdentity.root, false)) throw new HarnessError('TARGET_CONFLICT', 'A nested project/repository cannot use its outer workspace as the target.', { worktreeRoot: cwdIdentity.root, selectedRoot: selected.root });
     const project = data.projects.find((item) => item.id === selected.projectId)!;
     if ((!selected.active || !project.active) && !(options.allowInactive && explicitWorktree)) {
       throw new HarnessError('TARGET_CONFLICT', 'This target is inactive; register it again before starting active operations.', { worktreeId: selected.id });

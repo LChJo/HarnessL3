@@ -1,5 +1,7 @@
 # 本机存储、事务与历史恢复
 
+v0.44身份：项目及工作区登记的`kind`为`git|directory`，缺失按旧Git读取；directory的`gitCommonDir`及`branch`为空。projectId仍在项目内，worktreeId仍在本机登记/档案路径中。普通目录的`.harness`与源码共同备份，本机历史与凭证保持隔离。原地出现有效Git仓库时在同一原子registry替换中更新项目/工作区类型及Git common-dir，保留两个UUID、停用状态及所有历史字节。当前来源策略/版本重新待核验，旧任务绑定不改写；当前新内容需新任务。复制/搬家身份冲突仍显式处理，不自动合并历史。
+
 v0.41新写入的freshness-state日志以stateHash引用内容寻址的完整状态；普通状态与原有receipt共用同一份字节，恢复同时兼容旧inline state并校验引用、身份及代次。不改写旧journal/snapshot。兼容方向为新实现读取旧inline记录；旧实现不识别新stateHash记录，更新后不能把旧读取实现直接混用于新增记录。
 
 v0.41派生索引：通用提交事件只索引提交头、类型、时间与receiptHash等定位引用，不重复复制freshness等大payload；原journal/snapshot保留且按原要求核对。索引投影格式以inputRevisions标记，旧格式仅重建派生索引；连续提交缺口按原序号增量追赶，任务/技能/批次与事件以同一事务推进索引游标。索引不成为第二套权威，不改写历史或垃圾回收用户内容。
@@ -19,7 +21,7 @@ Git项目的入口筛选提示应建议将`.harness/model/`内的`.c4`/`.likec4`
 
 项目任务Markdown、长期交接、规格/决策/研究材料与本机task历史属于不同内容。前者按既有项目约定留存；被当前模型引用的本地长期材料应与模型、证据及相关源码共同审阅和提交。临时草稿和实验输出按用途判断，`.scratch`目录名不构成忽略或删除依据。文档移动/删除/替代只修复当前引用，历史仍保留原组织与字节。`model validate`/`sync status`的Git未跟踪、被忽略或无法核查提示是只读建议，不自动修改索引/ignore、不复制外部目标、不成为暂存前置条件。
 
-项目使用随 Git 保存的 `projectId` UUID；本机登记为每个已有 worktree 分配 `worktreeId` UUID，并绑定解析后的绝对路径和 Git common directory。分支名、HEAD、目录拼写均不是主键。分支变化保留 worktree 身份，但重新计算版本并将已有任务保留为原绑定；路径移动必须通过登记流程显式重新定位，不能自动把另一目录的记录接上。取消登记只停用本机绑定，不删除源码目录、任务和快照。
+项目使用保存在项目内的 `projectId` UUID（Git版本管理或随目录备份）；本机登记为每个已有 worktree 分配 `worktreeId` UUID，并绑定解析后的绝对路径及类型；Git类型同时绑定Git common directory，directory为空。分支名、HEAD、目录拼写均不是主键。分支变化保留 worktree 身份，但重新计算版本并将已有任务保留为原绑定；路径移动必须通过登记流程显式重新定位，不能自动把另一目录的记录接上。取消登记只停用本机绑定，不删除源码目录、任务和快照。
 
 已停用登记仍保留其 UUID 归属和档案定位，显式 worktree UUID 可执行 history list/show、task show/handoff/read；只读档案不要求原目录、HEAD 或当前模型仍存在，仍校验目标归属和完整性。停用目标不能 prompt/select/query/sync 或重新开始活动任务；需重新核验登记后才能处理当前源码。
 

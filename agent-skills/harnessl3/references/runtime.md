@@ -80,7 +80,7 @@ Mechanical evidence anomalies cannot be cleared with a blanket passed claim. A h
 
 For SOURCE_NESTED_REPOSITORY or unsupported source entries, inspect the reported boundary and intended coverage. Do not silently exclude it, delete its .git, or rewrite ignore rules. An explicitly chosen project source exclusion changes coverage and never clears a referenced evidence failure. For SYNC_RACE, inspect error.details.conflicts and the original receipt; run sync status again, review the fresh scope and submit a new declaration with a new requestId. Equal source/model hashes do not override a changed epoch. Do not automatically copy only the new epoch into the old proof.
 
-Version authoritative .harness model/config/evidence/aliases, related source/docs and actual project skill files together. Keep machine settings/credentials, logs, history/snapshots/archived skills, indexes/caches/layouts separate and preserved. Do not copy global libraries or external link entities. Ignored/untracked/uncheckable Git ownership is diagnostic, not permission to stage, change ignores or delete files. Review actual diff and existing commit authorization.
+Keep authoritative .harness model/config/evidence/aliases, related source/docs and actual project skill files together: version them in Git projects; back them up with plain-directory projects. Keep machine settings/credentials, logs, history/snapshots/archived skills, indexes/caches/layouts separate and preserved. Do not copy global libraries or external link entities. Ignored/untracked/uncheckable Git ownership is diagnostic, not permission to stage, change ignores or delete files. Review actual diff and existing commit authorization.
 
 ## Retries, history and observation
 

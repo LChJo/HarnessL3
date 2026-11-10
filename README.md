@@ -23,7 +23,7 @@
 3. [实施顺序](docs/spec/implementation.md)：从M1开始，按失败测试→实现→验证推进。
 4. [Agent维护约定](AGENTS.md)：工作区、同步与状态记录义务。
 
-正式首版采用Node.js+TypeScript/npm，面向Windows/macOS/Linux；现有agent主动调用，首批只读观测Codex和Claude Code；只登记已有worktree；文件保存任务/事件/快照，SQLite为可重建派生索引。不安装Hooks、不启动agent，不把技能选择当执行。
+正式首版采用Node.js+TypeScript/npm，面向Windows/macOS/Linux；现有agent主动调用，首批只读观测Codex和Claude Code；登记已有普通目录或Git worktree；普通目录无需Git，原地启用Git保留身份和历史；文件保存任务/事件/快照，SQLite为可重建派生索引。不安装Hooks、不启动agent，不把技能选择当执行。
 
 ## 原型与技能
 

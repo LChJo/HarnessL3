@@ -3,6 +3,7 @@ import { constants } from 'node:fs';
 import { lstat, open, readdir, readlink, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import ignore from 'ignore';
 import { canonicalJson, digest, parseJsonStrict, sha256, validUnicode } from './json.js';
 import { canonicalPath, isWithin, samePath, safeRelative } from './paths.js';
 import { isErrno } from './io.js';
@@ -22,9 +23,9 @@ export interface SourcePolicy {
   schemaVersion: 1;
   kind: 'source-scan-policy';
   content: {
-    scannerVersion: 'source-scanner/1'; candidateSet: 'head-index-and-untracked'; pathOrder: 'utf16-code-unit';
+    scannerVersion: 'source-scanner/1' | 'directory-scanner/1'; candidateSet: 'head-index-and-untracked' | 'filesystem'; pathOrder: 'utf16-code-unit';
     ruleDialect: 'posix-glob-v1'; caseSensitive: true; includePatterns: ['**']; fixedExcludePrefixes: ['.git', '.harness'];
-    projectExcludePatterns: string[]; gitIgnoreMode: 'untracked-only'; gitIgnoreRevision: string;
+    projectExcludePatterns: string[]; gitIgnoreMode: 'untracked-only' | 'directory-files'; gitIgnoreRevision: string;
     skillRootExcludePrefixes: string[]; linkHandling: 'record-readlink-utf8-no-follow'; unsupportedEntryHandling: 'unknown';
   };
 }
@@ -157,7 +158,7 @@ const gitCode = (error: unknown, expected: number): boolean => !!error && typeof
 async function gitState(run: GitRun, worktree: WorktreeRecord, config: ProjectConfig, prefixes: string[]): Promise<GitState> {
   const root = await canonicalPath(line(await run('rev-parse', '--show-toplevel')));
   const commonDir = await canonicalPath(line(await run('rev-parse', '--path-format=absolute', '--git-common-dir')));
-  if (!samePath(root, worktree.root) || !samePath(commonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The current Git/project identity does not match the registered target.');
+  if (!samePath(root, worktree.root) || worktree.gitCommonDir === null || !samePath(commonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The current Git/project identity does not match the registered target.');
   let head: string | null = null;
   try { head = line(await run('rev-parse', '--verify', '--quiet', 'HEAD')); } catch (error) { if (!gitCode(error, 1)) throw error; }
   if (head !== null && !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(head)) throw new ScanFailure('SOURCE_GIT_OUTPUT', 'Git returned an invalid commit identifier.');
@@ -321,6 +322,7 @@ async function untrackedEntries(run: GitRun, root: string, tracked: Map<string, 
         if (!await checkParents(root, child.path + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during discovery.', child.path, true);
         let nestedGit = false;
         try { await lstat(path.join(root, ...child.path.split('/'), '.git')); nestedGit = true; } catch (error) { if (!absent(error)) throw error; }
+        if (await nestedProject(root, child.path)) throw new ScanFailure('SOURCE_NESTED_PROJECT', 'A nested HarnessL3 project is an independent source boundary. Review and explicitly exclude its relative path in source.excludePatterns.', child.path);
         if (nestedGit) entries.push({ path: child.path, directory: true });
         else next.push(child.path);
       }
@@ -408,6 +410,115 @@ async function sourceEntry(root: string, candidate: Candidate): Promise<SourceEn
 }
 
 interface CapturedRules { rules: IgnoreRules; files: IgnoreRuleFile[]; token: string }
+
+async function nestedProject(root: string, relative: string): Promise<boolean> {
+  const metadata = path.join(root, ...relative.split('/'), '.harness');
+  try {
+    const directory = await lstat(metadata);
+    if (!directory.isDirectory() || directory.isSymbolicLink()) return false;
+    await lstat(path.join(metadata, 'project.json'));
+    return true;
+  } catch (error) { if (absent(error)) return false; throw error; }
+}
+
+interface DirectoryRule { base: string; matcher: ReturnType<typeof ignore> }
+function directoryRule(relative: string, bytes: Buffer): DirectoryRule {
+  const slash = relative.lastIndexOf('/');
+  return { base: slash < 0 ? '' : relative.slice(0, slash + 1), matcher: ignore({ ignorecase: false }).add(decode(bytes, 'SOURCE_IGNORE_ENCODING')) };
+}
+
+/** Apply each ancestor's rules in order, without resurrecting excluded parents. */
+function directoryIgnored(relative: string, directory: boolean, rules: DirectoryRule[]): boolean {
+  const parts = relative.split('/');
+  for (let index = 1; index <= parts.length; index++) {
+    const target = parts.slice(0, index).join('/') + (index < parts.length || directory ? '/' : '');
+    let ignored = false;
+    for (const rule of rules) {
+      if (!target.startsWith(rule.base) || target === rule.base) continue;
+      const result = rule.matcher.test(target.slice(rule.base.length));
+      if (result.ignored) ignored = true;
+      else if (result.unignored) ignored = false;
+    }
+    if (ignored) return true;
+  }
+  return false;
+}
+
+async function captureDirectoryRule(root: string, relative: string): Promise<{ rule: DirectoryRule; source: IgnoreSource; file: IgnoreRuleFile; token: string } | null> {
+  if (!await checkParents(root, relative)) throw new ScanFailure('SOURCE_SCAN_RACE', 'An ignore-rule ancestor disappeared.', relative, true);
+  try {
+    const file = path.join(root, ...relative.split('/'));
+    const metadata = await lstat(file);
+    if (metadata.isSymbolicLink()) return null;
+    const captured = await ordinaryBytes(file, relative);
+    const hash = sha256(captured.bytes);
+    return { rule: directoryRule(relative, captured.bytes), source: { origin: 'worktree', path: relative, hash }, file: { origin: 'worktree', path: relative, bytesBase64: captured.bytes.toString('base64') }, token: relative + ':' + captured.token + ':' + hash };
+  } catch (error) { if (absent(error)) return null; throw error; }
+}
+
+/** Watcher classification reads only the applicable rule chain, using the scan's matcher. */
+export async function isDirectoryPathIgnored(root: string, relative: string, directory: boolean): Promise<boolean> {
+  validatePath(relative);
+  const rules: DirectoryRule[] = [];
+  const parts = relative.split('/');
+  for (let index = 0; index < parts.length; index++) {
+    const base = parts.slice(0, index).join('/');
+    if (base && directoryIgnored(base, true, rules)) return true;
+    const captured = await captureDirectoryRule(root, (base ? base + '/' : '') + '.gitignore');
+    if (captured) rules.push(captured.rule);
+  }
+  return directoryIgnored(relative, directory, rules);
+}
+
+async function directoryState(root: string, config: ProjectConfig, prefixes: string[]): Promise<{ candidates: Candidate[]; rules: CapturedRules; token: string; ignoredDirectoryPrefixes: string[]; verify: () => Promise<void> }> {
+  try { await lstat(path.join(root, '.git')); throw new ScanFailure('SOURCE_TARGET_CHANGED', 'Git metadata appeared; resolve the workspace again before scanning.'); }
+  catch (error) { if (!absent(error)) throw error; }
+  const candidates: Candidate[] = [], sources: IgnoreSource[] = [], files: IgnoreRuleFile[] = [], tokens: string[] = [], directories: string[] = [], ignored: string[] = [];
+  const directoryTokens = new Map<string, string>();
+  const visit = async (relative: string, inherited: DirectoryRule[]): Promise<void> => {
+    if (relative && !await checkParents(root, relative + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared.', relative, true);
+    directories.push(relative);
+    directoryTokens.set(relative, identity(await lstat(path.join(root, ...relative.split('/').filter(Boolean)))));
+    const captured = await captureDirectoryRule(root, (relative ? relative + '/' : '') + '.gitignore');
+    const rules = captured ? [...inherited, captured.rule] : inherited;
+    if (captured) { sources.push(captured.source); files.push(captured.file); tokens.push(captured.token); }
+    const children = await readdir(path.join(root, ...relative.split('/').filter(Boolean)), { withFileTypes: true, encoding: 'buffer' });
+    for (const child of children) {
+      const name = decode(child.name);
+      const candidate = validatePath(relative ? relative + '/' + name : name);
+      if (!isSourcePathIncluded(candidate, config, prefixes)) continue;
+      const directory = child.isDirectory() && !child.isSymbolicLink();
+      if (directoryIgnored(candidate, directory, rules)) { if (directory) ignored.push(candidate); continue; }
+      if (directory) {
+        if (!await checkParents(root, candidate + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared.', candidate, true);
+        // A .git link is also a boundary; never traverse its target.
+        try { await lstat(path.join(root, ...candidate.split('/'), '.git')); throw new ScanFailure('SOURCE_NESTED_REPOSITORY', 'A nested repository is an independent source boundary. Review and explicitly exclude its relative path in source.excludePatterns to proceed.', candidate); }
+        catch (error) { if (!absent(error)) throw error; }
+        if (await nestedProject(root, candidate)) throw new ScanFailure('SOURCE_NESTED_PROJECT', 'A nested project is an independent source boundary. Review and explicitly exclude its relative path in source.excludePatterns to proceed.', candidate);
+        await visit(candidate, rules);
+      } else candidates.push({ path: candidate, tracked: false, modes: new Set(), stages: new Set([0]), directory: false });
+    }
+  };
+  await visit('', []);
+  candidates.sort((a, b) => compare(a.path, b.path));
+  sources.sort((a, b) => compare(a.path!, b.path!)); files.sort((a, b) => compare(a.path!, b.path!));
+  const rules: CapturedRules = { rules: { schemaVersion: 1, kind: 'git-ignore-rules', content: { ignoreCase: false, sources } }, files, token: canonicalJson(tokens.sort(compare)) };
+  const verify = async (): Promise<void> => {
+    // These tokens only detect late enumeration races; both complete byte passes remain mandatory.
+    const currentRules: string[] = [];
+    for (const relative of directories) {
+      if (relative && !await checkParents(root, relative + '/.probe')) throw new ScanFailure('SOURCE_SCAN_RACE', 'A source directory disappeared during verification.', relative, true);
+      const directory = await lstat(path.join(root, ...relative.split('/').filter(Boolean)));
+      if (directory.isSymbolicLink() || !directory.isDirectory() || identity(directory) !== directoryTokens.get(relative)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Directory entries changed during source capture.', relative || undefined, true);
+      const captured = await captureDirectoryRule(root, (relative ? relative + '/' : '') + '.gitignore');
+      if (captured) currentRules.push(captured.token);
+    }
+    if (canonicalJson(currentRules.sort(compare)) !== rules.token) throw new ScanFailure('SOURCE_SCAN_RACE', 'Ignore rules changed during byte verification.', undefined, true);
+  };
+  await verify();
+  return { candidates, rules, ignoredDirectoryPrefixes: ignored.sort(compare), verify, token: canonicalJson({ candidates: candidates.map(item => item.path), directories: [...directoryTokens].sort((a, b) => compare(a[0], b[0])) }) };
+}
+
 async function ignoreRules(run: GitRun, root: string, state: GitState): Promise<CapturedRules> {
   const ignoreCaseValue = line(await run('config', '--bool', '--default', 'false', '--get', 'core.ignorecase'));
   if (ignoreCaseValue !== 'true' && ignoreCaseValue !== 'false') throw new ScanFailure('SOURCE_IGNORE_UNAVAILABLE', 'The effective Git ignore-case setting could not be read.');
@@ -484,6 +595,28 @@ export async function scanSource(worktree: WorktreeRecord, config: ProjectConfig
       const actualSkills = await canonicalPath(skillsRoot);
       const prefixes = isWithin(root, actualSkills, false) ? [path.relative(root, actualSkills).split(path.sep).join('/')] : [];
       const configToken = await currentConfig(root, config);
+      if (worktree.kind === 'directory') {
+        if (!samePath(root, worktree.root) || config.projectId !== worktree.projectId) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The directory/project identity changed.');
+        const before = await directoryState(root, config, prefixes);
+        result.ignoreRules = before.rules.rules; result.ignoreRuleFiles = before.rules.files;
+        result.ignoredDirectoryPrefixes = before.ignoredDirectoryPrefixes;
+        result.policy = policy(config, prefixes, before.rules.rules);
+        Object.assign(result.policy.content, { scannerVersion: 'directory-scanner/1', candidateSet: 'filesystem', gitIgnoreMode: 'directory-files' });
+        result.sourceScanRevision = digest('source-scan-policy', result.policy.content);
+        const entries: SourceEntry[] = [];
+        for (const candidate of before.candidates) entries.push(await sourceEntry(root, candidate));
+        const after = await directoryState(root, config, prefixes);
+        if (before.token !== after.token || before.rules.token !== after.rules.token || configToken !== await currentConfig(root, config)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Directory entries or rules changed during scanning.', undefined, true);
+        const verified: SourceEntry[] = [];
+        for (const candidate of after.candidates) verified.push(await sourceEntry(root, candidate));
+        if (canonicalJson(entries) !== canonicalJson(verified)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Source bytes changed during scanning.', undefined, true);
+        await after.verify();
+        if (configToken !== await currentConfig(root, config)) throw new ScanFailure('SOURCE_CONFIG_CHANGED', 'The source configuration changed during byte verification.', '.harness/project.json', true);
+        result.manifest = { schemaVersion: 1, kind: 'source-manifest', content: { entries } };
+        result.sourceVersion = { head: null, treeHash: digest('source-manifest', result.manifest.content), status: 'unversioned' };
+        result.diagnostics = [];
+        return result;
+      }
       const run = gitRunner(root);
       const before = await gitState(run, worktree, config, prefixes);
       result.sourceVersion.head = before.head;

@@ -5,12 +5,12 @@ import { PACKAGE_ROOT, PACKAGE_VERSION, PACKAGE_BUILD, SCHEMA_ROOT } from '../co
 import { HarnessError } from '../core/errors.js'
 
 const descriptions: Record<string, string> = {
-  init: 'Create missing context files and register this Git worktree; the current agent authors/reviews its project model and reports progress.',
+  init: 'Create missing context files and register this directory or Git worktree; the current agent authors/reviews its project model and reports progress.',
   'project register': 'Register an existing configured project without creating its model.',
   'project list': 'List registered projects from any directory.',
   'project show': 'Show a registered project by its stable ID.',
   'project unregister': 'Deactivate registration; retain source, skills and archives.',
-  'worktree register': 'Register an existing configured Git worktree; never create or switch branches.',
+  'worktree register': 'Register an existing configured directory or Git worktree; never create or switch branches.',
   'worktree list': 'List registered worktrees, optionally filtered by project.',
   'worktree show': 'Show the exact worktree path and availability.',
   'worktree unregister': 'Deactivate this worktree registration while retaining its files and history.',

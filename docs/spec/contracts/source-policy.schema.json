@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/source-policy.schema.json",
+  "title": "Archived source scanner policy",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "content"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "kind": { "const": "source-scan-policy" },
+    "content": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scannerVersion", "candidateSet", "pathOrder", "ruleDialect", "caseSensitive", "includePatterns", "fixedExcludePrefixes", "projectExcludePatterns", "gitIgnoreMode", "gitIgnoreRevision", "skillRootExcludePrefixes", "linkHandling", "unsupportedEntryHandling"],
+      "properties": {
+        "scannerVersion": { "enum": ["source-scanner/1", "directory-scanner/1"] },
+        "candidateSet": { "enum": ["head-index-and-untracked", "filesystem"] },
+        "pathOrder": { "const": "utf16-code-unit" }, "ruleDialect": { "const": "posix-glob-v1" }, "caseSensitive": { "const": true },
+        "includePatterns": { "const": ["**"] }, "fixedExcludePrefixes": { "const": [".git", ".harness"] },
+        "projectExcludePatterns": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "gitIgnoreMode": { "enum": ["untracked-only", "directory-files"] }, "gitIgnoreRevision": { "$ref": "common.schema.json#/$defs/sha256" },
+        "skillRootExcludePrefixes": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/relativePath" } },
+        "linkHandling": { "const": "record-readlink-utf8-no-follow" }, "unsupportedEntryHandling": { "const": "unknown" }
+      },
+      "allOf": [{
+        "if": { "properties": { "scannerVersion": { "const": "directory-scanner/1" } } },
+        "then": { "properties": { "candidateSet": { "const": "filesystem" }, "gitIgnoreMode": { "const": "directory-files" } } },
+        "else": { "properties": { "candidateSet": { "const": "head-index-and-untracked" }, "gitIgnoreMode": { "const": "untracked-only" } } }
+      }]
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.44：命令名称及projectId/worktreeId不变，init及register支持普通目录。工作区登记见[workspace Schema](contracts/workspace.schema.json)：kind缺失兼容旧git，directory的Git common-dir/branch为空。普通目录来源status为unversioned、head为空且treeHash为完整文件清单哈希；unknown仍不能有treeHash。旧任务、回执和Git指纹算法不改写；原地Git转换后旧任务仍为原绑定，获取新内容使用新任务。目录入口提示随项目备份长期上下文；Git入口仍提示相关源码一起版本管理。首次接入仍由原生询问工具取得同意，最近边界或当前目录为实际目标，不自动创建Git仓库。
+
 v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径（`Referenced schema`），init/model validate补充证据分隔及关系类型语法，完整示例随安装使用说明提供，不要求消费者读取开发源码或测试。`SYNC_RACE`继续退出3、保留原回执，可附`conflicts`期望/实际字段及`recovery`；恢复是重新status、审核并用新requestId提交新声明，原ID继续重放原结果。调用者失败后不访问成功data；响应及声明Schema不变。
 
 状态：**正式CLI实现契约**，实际代码/验证范围见[实施状态](../implementation/STATUS.md)。本文不是旧`scripts/harness.mjs`原型的使用说明。产品边界见[产品规格](product.md)，模型字段见[模型与读取契约](model-context.md)，持久化和日志见[存储](storage.md)、[观测与同步](observation-sync.md)。对应D01–D15、A01–A10及TC27入口增量。
@@ -27,11 +29,11 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 ### 目标解析顺序
 
 1. 验证显式 project/worktree UUID；两者都给出时必须互相归属。只给 worktree 可由登记记录取 project；只给 project 且有多个已登记 worktree 时必须补 worktree，不选最近项。
-2. 查找 cwd 所在的已登记 Git worktree，核验实际根目录、Git common-dir 和 `.harness/project.json` 的 projectId。显式目标与已登记 cwd 不同即 `TARGET_CONFLICT`，不得静默跨项目操作。
+2. 查找 cwd 最近项目或仓库边界所在的已登记工作区，核验实际根目录、kind及适用的Git common-dir 和 `.harness/project.json` 的 projectId。显式目标与已登记 cwd 不同即 `TARGET_CONFLICT`，不得静默跨项目操作。
 3. 带 task ID 的命令可定位该任务归属，但仍必须与显式目标和已登记 cwd 一致。在未登记 cwd 中必须显式提供 worktree（以及需要时的 project），不能仅从 task ID 猜写入目标。
 4. 没有任务的目标命令使用显式目标或已登记 cwd；无法唯一解析即 `TARGET_REQUIRED`。不使用全局“最后活动项目/任务”。
 
-无显式目标、cwd处于未登记的已有Git worktree时，`TARGET_REQUIRED`的`details.onboarding`提供`state:"initialization-required"|"registration-required"`、实际`worktreeRoot`、`confirmationRequired:true`、`nextAction:"ask-user"`、含路径与影响的`question`、`command`参数数组（`["init"]`或`["worktree","register",root]`）、`fallback:"continue-without-l3"`及`fallbackWhen:["declined","cancelled"]`。这是待接入确认，不是CLI不可用；仅提供指引，不自动写入工作区/登记/任务。agent优先处理此分支，实际调用当前宿主/模式可用且允许的原生询问工具，按用户语言一次展示一个问题及真实路径/影响；异步调用返回或预选选项不是同意；同意后在该根目录执行对应命令并校验，拒绝/取消才本任务普通执行且不重问，未回复不能直接采用回退；已有授权复用。旧CLI只有原onboarding字段时仍先询问。无Git目录、显式目标不全或其它冲突不产生首次接入指引；不能借该指引切换数据根或初始化另一个项目。CLI的JSON模式继续非交互。
+无显式目标、cwd处于未登记的已有普通目录或Git worktree时，`TARGET_REQUIRED`的`details.onboarding`提供`state:"initialization-required"|"registration-required"`、实际`worktreeRoot`、`confirmationRequired:true`、`nextAction:"ask-user"`、含路径与影响的`question`、`command`参数数组（`["init"]`或`["worktree","register",root]`）、`fallback:"continue-without-l3"`及`fallbackWhen:["declined","cancelled"]`。这是待接入确认，不是CLI不可用；仅提供指引，不自动写入工作区/登记/任务。agent优先处理此分支，实际调用当前宿主/模式可用且允许的原生询问工具，按用户语言一次展示一个问题及真实路径/影响；异步调用返回或预选选项不是同意；同意后在该根目录执行对应命令并校验，拒绝/取消才本任务普通执行且不重问，未回复不能直接采用回退；已有授权复用。旧CLI只有原onboarding字段时仍先询问。数据根冲突、显式目标不全或其它目标冲突不产生首次接入指引；不能借该指引切换数据根或初始化另一个项目。CLI的JSON模式继续非交互。
 
 `project list`、`serve start/status/stop` 等全局命令无 worktree 时返回 `target:null`；worktree list 的 project 参数仅作过滤，不要求选择该项目的单一 worktree。项目登记结果可有 projectId 而无 worktree，仍放在 data 内，不构造虚假的 worktree。登记同一实际路径幂等；复制的项目标识、路径重定位和已丢失 worktree 按[架构](architecture.md)规则处理，不能仅以分支名识别。
 
@@ -43,7 +45,7 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 
 | 命令与参数 | 行为、默认值及主要结果 |
 | --- | --- |
-| `init [--name <name>]` | 仅在已有 Git worktree 内运行；名称默认根目录名。新建 `.harness/project.json`、`model/`、`evidence.json`、`aliases.json` 最小模板，校验后登记当前项目/worktree。已有配置只校验并幂等登记，不覆盖文件、不 `git init`、不改 AGENTS/agent 配置。首次全局技能库播种见第 5 节 |
+| `init [--name <name>]` | 在已有普通目录或 Git worktree 内运行；名称默认根目录名。新建 `.harness/project.json`、`model/`、`evidence.json`、`aliases.json` 最小模板，校验后登记当前项目/worktree。已有配置只校验并幂等登记，不覆盖文件、不 `git init`、不改 AGENTS/agent 配置。首次全局技能库播种见第 5 节 |
 | `project register <path>` | 校验已有 `.harness/project.json` 和 Git 项目后本机登记；不隐式创建模型。返回 project 记录 |
 | `project list` / `project show <project-id>` | 返回已登记项目；show 不要求已有活动任务 |
 | `project unregister <project-id>` | 取消本机项目与其 worktree 登记、停用相应观测绑定；保留工作目录、用户技能和所有档案，返回取消的 ID；不永久清理 |

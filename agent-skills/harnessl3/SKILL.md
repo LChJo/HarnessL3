@@ -38,7 +38,7 @@ Chosen CLI operation
 |                         declined/cancelled: work without L3 for this task
 |-- Archive-only handoff/read/history -> preserve its original target; no project initialization
 `-- Live project operation
-    |-- No usable existing Git worktree -> explain the missing target; do independent work
+    |-- No usable existing directory -> explain the missing target; do independent work
     |-- .harness/project.json missing -> project-init.md: ask to INITIALIZE this actual path
     |-- Config exists but worktree is known unregistered -> project-init.md: ask to REGISTER
     `-- Ready, or registration state unknown -> execute; route onboarding errors below
@@ -72,10 +72,10 @@ One task has one joint skill selection; changed skills need a new stage task. Ow
 
 ## Work and task lifecycle
 
-- Use the actual existing worktree/branch. Consult command --help/Schema only when needed; take IDs, bindings and file hashes from real responses.
+- Use the actual existing directory or Git worktree/branch. The nearest .harness/project.json or .git boundary owns the target; without either, init targets cwd. Plain directories need no Git; never downgrade a damaged registered Git target. Consult command --help/Schema only when needed; take IDs, bindings and file hashes from real responses.
 - Write non-ASCII JSON to an explicit UTF-8 file outside the worktree, then use --file. Use stdin only with guaranteed UTF-8 bytes; default PowerShell native pipelines can corrupt text. Preserve already-corrupted history.
 - After source/long-term document changes, maintain current LikeC4 descriptions, relations, evidence and incoming links; preserve identities/history and verify the actual scope. See [stage synchronization](references/runtime.md#document-maintenance-and-stage-synchronization).
-- Version project .harness authority, related source/docs and actual project skill files with Git. Preserve and isolate machine settings/credentials, derived indexes, history and external skill libraries. This is not authorization to stage/commit/push.
+- Keep project .harness authority, related source/docs and actual project skill files together: version them in Git projects; back them up with plain-directory projects. In-place Git adoption preserves UUIDs/history and invalidates current source proofs; use a new task for changed bindings. Preserve and isolate machine settings/credentials, derived indexes, history and external skill libraries. This is not authorization to stage/commit/push.
 - A plan, todo list or final reply does not trigger task close. Keep the task open while its work or confirmation is pending; close after actual completion/cancellation and recorded sync state. Closed tasks are read-only; subagents never close a parent task.
 - For JSON calls, keep stdout/stderr separate and save the CLI exit code. Check ok before reading data; preserve complete error.code/details on failure. Parser/head success is not CLI success.
 - Preserve partial/unresolved/unknown states. Selection/read does not prove understanding or execution.

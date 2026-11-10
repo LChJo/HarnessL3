@@ -1,10 +1,11 @@
 export interface Target { projectId: string; worktreeId: string }
-export interface SourceVersion { head: string | null; treeHash: string | null; status: 'clean' | 'dirty' | 'unknown' }
+export interface SourceVersion { head: string | null; treeHash: string | null; status: 'clean' | 'dirty' | 'unversioned' | 'unknown' }
 export interface Binding extends Target { modelRevision: string; catalogRevision: string; sourceVersion: SourceVersion; sourceScanRevision: string }
 export interface Diagnostic { message: string; code?: string; file?: string; line?: number; column?: number; severity?: 'error' | 'warning'; evidenceId?: string }
 export interface ProjectConfig { schemaVersion: 1; projectId: string; name: string; source: { excludePatterns: string[] }; skills?: { root: string } }
-export interface ProjectRecord { id: string; name: string; gitCommonDir: string; active: boolean; configPath: string }
-export interface WorktreeRecord { id: string; projectId: string; root: string; gitCommonDir: string; branch: string | null; available: boolean; active: boolean; config?: ProjectConfig }
+export type WorkspaceKind = 'git' | 'directory';
+export interface ProjectRecord { id: string; name: string; kind?: WorkspaceKind; gitCommonDir: string | null; active: boolean; configPath: string }
+export interface WorktreeRecord { id: string; projectId: string; kind?: WorkspaceKind; root: string; gitCommonDir: string | null; branch: string | null; available: boolean; active: boolean; config?: ProjectConfig }
 export interface Brief { id: string; locator: string; entityType: 'object' | 'relation'; title: string; kind: string; brief: string; parentId: string | null; children: number }
 export interface Directory { parentId: string | null; items: Brief[] }
 export interface Entity {

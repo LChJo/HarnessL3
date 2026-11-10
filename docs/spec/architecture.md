@@ -1,5 +1,7 @@
 # 架构与工程边界
 
+v0.44：workspace支持git/directory两个适配器。目录定位向上止于最近`.harness/project.json`或`.git`；没有边界时使用当前实际目录，嵌套目标不借外层身份。目录路径探测、初始化、技能根校验及来源扫描不调用Git；Git项目仍需Git，不因工具缺失或损坏降级。来源目录适配器复用原字节/链接边界/hash和FreshnessManager，`.gitignore`由固定生产依赖`ignore@7.0.14`解释；现有Git适配器仍使用原生Git。常驻Runtime按请求刷新登记身份，原地Git转换后共用原档案并使扫描策略失效。
+
 v0.41观察路径：Web的只读视图读取已记录模型/任务/最近状态，日常增量观测与严格来源核验独立调度；浏览不启动完整源码采集。sourceObservation不是可供任务绑定的完整来源，所有严格提交边界保持现有检查。耗时采集共享在途工作并合并通知，派生索引按连续提交事务追赶。
 
 规格v1.0，实现及平台验证见[实施状态](../implementation/STATUS.md)。目标与约束：[基准](../PROJECT_BASELINE.md)；公开协议：[CLI契约](cli-contract.md)。
@@ -48,7 +50,7 @@ CLI是参数/协议/展示适配层，核心用例只实现一份。服务在用
 
 | 模块 | 输入与产出 | 边界 |
 | --- | --- | --- |
-| workspace | Git路径/项目配置→项目、worktree身份与机器注册 | 只登记已有目录，不执行Git创建/切换/删除 |
+| workspace | 目录/Git路径/项目配置→项目、worktree身份与机器注册 | 只登记已有目录，不执行Git创建/切换/删除 |
 | model | LikeC4/证据/别名→有效快照、简述、诊断、C4 | 文本为权威，缓存不回写成第二套模型 |
 | references | 本地文档证据→批量Git归属诊断 | 只读索引/ignore，不暂存、不改来源策略或复制文档 |
 | context | 任务/批量查询/选择→精确上下文与交接 | 复用模型快照，不调用LLM |
@@ -61,7 +63,7 @@ CLI是参数/协议/展示适配层，核心用例只实现一份。服务在用
 
 ## 项目与本机目录
 
-Git内默认约定是`.harness/project.json`、`.harness/model/*.c4`、`.harness/evidence.json`、`.harness/aliases.json`；目录/相对模型位置由配置契约限定。项目UUID随Git保存；worktree UUID在本机注册，绑定真实目录与Git common-dir，不能用分支名、远端URL或模型hash替代。
+Git内默认约定是`.harness/project.json`、`.harness/model/*.c4`、`.harness/evidence.json`、`.harness/aliases.json`；目录/相对模型位置由配置契约限定。项目UUID保存在项目内（Git版本管理或目录备份）；worktree UUID在本机注册，绑定真实目录、类型及适用的Git common-dir，不能用分支名、远端URL或模型hash替代。
 
 机器数据根由`--data-dir`、`HARNESSL3_HOME`、各平台默认数据目录依次解析，具体布局见[存储](storage.md)。数据根必须在所有登记worktree之外，不能等于或作为worktree的祖先；新登记冲突时拒绝，不能隐式移动或改绑数据。绝对路径、端口、日志位置与运行事件不写Git配置。路径比较用规范化真实路径：Windows按文件系统大小写规则，POSIX保留大小写；拒绝跨目标的符号链接逃逸。
 

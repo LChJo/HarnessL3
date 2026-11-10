@@ -101,3 +101,10 @@ tests/v1/source-observation.test.mjs text eol=lf
 tests/v1/web-service.test.mjs text eol=lf
 tests/v1/initialization-contracts.test.mjs text eol=lf
 docs/implementation/INITIALIZATION_REVIEW.md text eol=lf
+
+docs/spec/contracts/source-policy.schema.json text eol=lf
+docs/spec/contracts/workspace.schema.json text eol=lf
+scripts/v1/directory-browser.mjs text eol=lf
+tests/v1/directory-scan-probe.mjs text eol=lf
+tests/v1/directory-workspace.test.mjs text eol=lf
+docs/implementation/CLEANUP.md text eol=lf

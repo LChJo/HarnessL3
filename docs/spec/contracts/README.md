@@ -4,6 +4,7 @@
 
 | Schema | 验证对象 |
 | --- | --- |
+| [workspace](workspace.schema.json) / [source-policy](source-policy.schema.json) | 工作区git/directory类型、可空Git字段及扫描适配器策略；缺kind兼容旧Git登记 |
 | [common](common.schema.json) | UUID、SHA-256、UTC 时间、路径、目标、来源版本、binding、简述、精确正文和批次共享字段 |
 | [project-config](project-config.schema.json) / [aliases](aliases.schema.json) / [evidence](evidence.schema.json) | 随 Git 的最小配置、显式旧定位映射及依据 |
 | [selection](selection.schema.json) | 一次上下文/技能联合选择，空集合合法 |

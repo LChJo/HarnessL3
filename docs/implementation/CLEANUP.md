@@ -25,3 +25,13 @@
 暂留位置为本机`.harness-local/validation/codex-read-pending-fixture.txt`和系统Temp下`harnessl3-claude-protocol-*`、`harnessl3-claude-shell-*`的自建合成目录；不随Git或npm包上传。新探针原始宿主日志留在本机，用户原有会话日志保持只读。保留这些文件不表示产品GC删除了用户历史。
 
 当前验证状态见[STATUS](STATUS.md)。没有执行git clean、切换用户分支、删除源码或永久删除任务历史。
+
+## v0.44 提交前清理（2026-11-10）
+
+按用户要求核对并清理本轮产物：25个Windows原型测试夹具通过创建时间、源码中的mkdtemp前缀、合成内容标记与无占用进程检查后删除；回收4个一次性建模/WSL驱动脚本及12个CLI临时传输文件。Windows删除逐层检查路径与reparse point，只删除链接本身，不进入目标；没有改动用户技能库、真实任务历史、依赖或工具缓存。
+
+三份已记录的Linux原生临时源码副本在本次复查时已不存在，未记作本次删除；其中原/tmp候选包也已不可用，保留原报告，不补造原包。现存Windows最终候选包、Windows/Linux最终验证报告、失败与成功同步回执及任务档案均保留。本机核验清单位于`.harness-local/validation/directory-cleanup-windows.json`及`directory-cleanup-linux.json`。
+
+继续删除14份重复本机输出的命令被自动审批拒绝，返回`blocked by policy`；该命令没有执行。重复输出、后续清理用的两个系统Temp辅助脚本及空目标目录保留，不使用其它工具绕过拒绝。此限制不影响源码提交与推送，也不意味着已删除所有本机临时产物。
+
+提交前对三份已有LF约定的源码恢复LF，并为五份新增且被当前证据引用的文本补齐LF属性；刷新当前证据原字节哈希，不改旧档案。功能及平台验证范围沿用[本轮状态](STATUS.md)，不因清理或提交而补称macOS或完整三平台验收通过。

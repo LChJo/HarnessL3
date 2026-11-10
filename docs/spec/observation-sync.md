@@ -1,5 +1,11 @@
 # 只读日志观测与源码同步
 
+v0.44普通目录适配器：完整成功的来源版本为{head:null,treeHash:<manifest哈希>,status:"unversioned"}，失败为unknown且treeHash为空。manifest沿用下述唯一编码、原字节SHA-256、链接叶条目及UTF-16排序；普通目录没有Git tracked删除墓碑，删除通过前后清单差异表示，空目录不进入manifest。两遍枚举及文件字节核对，规则/配置变化和扫描竞态不能被当作完整成功；事件、字节回退和策略变化仍使旧proof失效。显式证据、增量观测与完整来源核验保持分离。
+
+目录策略为scannerVersion:"directory-scanner/1"、candidateSet:"filesystem"、gitIgnoreMode:"directory-files"，共享字段见[source-policy Schema](contracts/source-policy.schema.json)。git-ignore-rules归档形状复用，仅保存实际根及嵌套.gitignore（origin=worktree，ignoreCase=false），不读取机器Git全局配置或info/exclude；规则原字节归档。直接生产依赖ignore@7.0.14处理目录/否定/通配规则，各级按所在目录生效，排除父目录不能由子级否定纳入；扫描与监听新路径使用相同规则链。下述Git算法及指纹不变。
+
+新directory配置的source.excludePatterns默认包含**/node_modules、**/.venv、**/__pycache__、**/.cache、**/dist、**/build、**/coverage、**/target；全部可编辑，已有配置原样保留。受限posix-glob-v1项目排除与.gitignore分开；固定.git/.harness与实际技能根硬排除。嵌套Git及HarnessL3项目为独立边界，未显式排除时诊断unknown；不借外层项目、不遍历链接目标、不自动改范围。
+
 v0.43：来源扫描对嵌套Git仓库返回`SOURCE_NESTED_REPOSITORY`、准确相对路径及显式source.excludePatterns恢复方式，未读取其内部正文，不自动修改范围、Git ignore或.git；gitlink及其它特殊条目继续unknown。`SYNC_RACE`的回执错误可附`conflicts:[{field,expected,actual}]`及`recovery`，区分proof代次/指纹、两次采集或提交前代次冲突；保留完整CAS和原requestId的历史回放。即使指纹恢复原值也不接受旧代次，重新status及审核后才能用新requestId提交新声明。旧无扩展字段回执仍原样兼容。
 
 v0.41：日常watcher变化按worktree立即推进代次、保持pending并合并变化路径，后台只读取这些叶条目，目录/策略/身份/事件缺口转为完整reconciliation。sourceObservation仅记录本次增量观测的路径、字节指纹、时间、代次及缺口；sourceVersion/lastCompleteSource保留上次完整检查的值，scanPending不因增量成功清除，不能用增量观测声明当前来源完整或恢复旧proof。后台完整补偿有界调度，观测覆盖正常时空闲tick不重复全扫；watcher不可用/失败保留诊断并退回完整补偿，补偿周期使用单调时钟；sync status、任务绑定及sync verify仍进行既有两遍字节/前后Git状态/提交前核对。同目标并发status可共享一次在途采集，后续新调用重新核对；verify的独立复核保留。显式引用在排除前处理，字节回退、链接边界和中途新变动保持原约束。
@@ -97,7 +103,7 @@ watcher 收到有效源码变化立即递增该 worktree 的单调 `sourceEpoch`
 
 显式引用先于`.harness`等目录的常规分流处理，未被引用的模型文件仍遵守模型版本规则。工作区内的文件链接/junction同时登记声明路径及经过边界检查的真实目标；目标暂时缺失时保留最后安全目标用于观测重建，当前引用移除或成功改指后更新派生索引，不改写历史。不会为了观测引用而跟随越界目标或扩大来源manifest。
 
-`sourceVersion` 固定为 `{head: string|null, treeHash: sha256|null, status: clean|dirty|unknown}`。`status` 是过滤后选定来源范围内的 Git 工作区状态，不是语义已同步：仅排除目录中的修改不把它变成 dirty，不能直接复制整个仓库的 porcelain 状态。unknown 的 `treeHash` 必须为空。`head` 为实际完整 commit，detached HEAD 保留 commit，尚无 commit 可为空；它不代表未提交内容。
+`sourceVersion` 固定为 `{head: string|null, treeHash: sha256|null, status: clean|dirty|unversioned|unknown}`。Git适配器的`status`是过滤后选定来源范围内的Git工作区状态；目录适配器完整成功为unversioned，不是语义已同步：仅排除目录中的修改不把它变成 dirty，不能直接复制整个仓库的 porcelain 状态。unknown 的 `treeHash` 必须为空。`head` 为实际完整 commit，detached HEAD 保留 commit，尚无 commit 可为空；它不代表未提交内容。
 
 <a id="source-manifest"></a>
 

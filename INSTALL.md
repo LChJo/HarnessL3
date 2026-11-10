@@ -7,7 +7,7 @@
 ## 安装来源与前提
 
 - GitHub 仓库：<https://github.com/LChJo/HarnessL3>。
-- Windows、macOS、Linux 均需 **Node.js >=24.12.0 且 <25**、随附 npm、Git，以及 GitHub/npm registry 网络访问。先运行 `node --version`、`npm --version`、`git --version`；缺少依赖时先安装，不忽略引擎约束。
+- Windows、macOS、Linux 从源码安装均需 **Node.js >=24.12.0 且 <25**、随附 npm、Git，以及 GitHub/npm registry 网络访问。普通目录运行只需对应 Node.js；Git 项目运行仍需 Git。已有安装包可通过 npm 安装，无需为普通目录另建 Git 仓库。先运行 `node --version`、`npm --version`、`git --version`；缺少依赖时先安装，不忽略引擎约束。
 - npm 全局 prefix 必须可写，并将其命令目录加入 PATH；不要自动使用管理员权限。私有仓库需要使用机器已有的 GitHub 认证，不能将凭证写入命令或日志。
 
 **首次安装和更新使用同一段命令**。脚本在独立临时目录下载源码、安装依赖、构建并全局安装 CLI，再从安装包复制运行时 skill。
@@ -158,7 +158,7 @@ node <已安装harnessl3包绝对路径>/scripts/verify-install.mjs --handoff-be
 
 ## 安装后进入用户项目
 
-安装成功不等于已经初始化项目。只有用户要求接入某个项目时，才在该**已有 Git worktree** 中执行：
+安装成功不等于已经初始化项目。只有用户要求接入某个项目时，才在该**已有普通目录或 Git worktree** 中执行：
 
 ```text
 harnessl3 init --name "项目名称" --json

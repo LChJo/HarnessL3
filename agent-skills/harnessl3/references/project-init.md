@@ -1,20 +1,20 @@
 # Project initialization and registration
 
-Read for an uninitialized/unregistered existing Git worktree, explicit onboarding, or a placeholder/incomplete model. A ready project does not need repeated initialization or whole-project modeling.
+Read for an uninitialized/unregistered existing directory or Git worktree, explicit onboarding, or a placeholder/incomplete model. A ready project does not need repeated initialization or whole-project modeling.
 
 ## Identify the actual setup requirement
 
 Use the intended existing worktree as the command working directory. If facts are missing, establish them with:
 
 ```text
-git rev-parse --show-toplevel
-git branch --show-current
 harnessl3 worktree list --json
 ```
 
 A missing .harness/project.json requires initialization; an existing config with an unregistered worktree requires registration. Do not guess the most recent project, create Git/worktrees, or infer a target from an empty registry.
 
 TARGET_REQUIRED with details.onboarding is a request for consent, not a generic CLI outage. Its worktreeRoot is the actual path; state distinguishes initialization-required from registration-required; command is a suggested argument array. nextAction:ask-user and question guide the current agent. fallback:continue-without-l3, including on older CLIs, applies only after decline/cancellation. Older confirmationRequired:true also requires asking. Other missing/conflicting targets do not authorize initialization.
+
+Locate the nearest ancestor .harness/project.json or .git boundary using file tools; with neither, init targets cwd. Nested targets cannot borrow an outer identity. Plain-directory setup never needs Git; inspect Git only at a .git boundary. Preserve errors for damaged/unavailable registered Git targets. New directory configs receive editable exclusions and read hierarchical .gitignore; existing config bytes remain unchanged. Later in-place Git adoption preserves both UUIDs/history and requires fresh verification; changed context needs a new task.
 
 ## Ask once, then follow the answer
 
@@ -61,6 +61,6 @@ Report real stages, covered/uncovered scope, actual counts and diagnostics, not 
 
 After correct-target setup, semantic modeling/review, parsing and coverage checks, return to the main skill's chosen operation. If current modeling requires a fresh task binding, create it for the actual user goal; retain old snapshots as captured. Onboarding alone is not returned task context. Show the main skill's required output card only after actual context and necessary skill bodies return.
 
-Keep the existing data root (--data-dir, HARNESSL3_HOME or platform default), outside all registered worktrees; do not substitute a temporary root to disguise recovery. Version project model/config/evidence/aliases and referenced project docs/actual skill files with related source. Keep machine settings, credentials, logs, archives and derived indexes separate and preserved; do not copy external skill entities into Git. Initialization consent does not authorize commit/push.
+Keep the existing data root (--data-dir, HARNESSL3_HOME or platform default), outside all registered worktrees; do not substitute a temporary root to disguise recovery. Version project model/config/evidence/aliases and referenced project docs/actual skill files with related source in Git projects; back them up with plain-directory projects. Keep machine settings, credentials, logs, archives and derived indexes separate and preserved; do not copy external skill entities into Git. Initialization consent does not authorize commit/push.
 
 The default user service is persistent with no idle expiry; explicit roots may have separate instances. A login code lasts five minutes/one use and a browser session twelve hours; neither is the process lifetime. Do not delete .harness, skills or history to repair setup. Archive-only handoff/read/history recovery does not require reinitializing today's project.

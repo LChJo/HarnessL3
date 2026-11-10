@@ -9,11 +9,12 @@ When not already known, check the relevant prerequisites:
 ```text
 node --version
 npm --version
-git --version
 harnessl3 --version
 ```
 
-Requires Node.js >=24.12.0 and <25, npm and Git. A missing command is an installation issue, not an uninitialized project. If installation was not authorized, explain what is missing and offer to install; do not change the machine silently. While awaiting an answer, do independent work only. Reuse existing explicit authorization.
+Requires Node.js >=24.12.0 and <25 and npm. Git is needed for source installation and managed Git projects; plain-directory runtime does not require it. A missing command is an installation issue, not an uninitialized project. If installation was not authorized, explain what is missing and offer to install; do not change the machine silently. While awaiting an answer, do independent work only. Reuse existing explicit authorization.
+
+Check git --version only when source installation or a managed Git target actually requires it.
 
 ## Use the maintained installation guide
 

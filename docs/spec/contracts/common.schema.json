@@ -22,12 +22,15 @@
       "properties": {
         "head": { "type": ["string", "null"], "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$" },
         "treeHash": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
-        "status": { "enum": ["clean", "dirty", "unknown"] }
+        "status": { "enum": ["clean", "dirty", "unversioned", "unknown"] }
       },
       "allOf": [{
         "if": { "properties": { "status": { "const": "unknown" } } },
         "then": { "properties": { "treeHash": { "type": "null" } } },
         "else": { "properties": { "treeHash": { "$ref": "#/$defs/sha256" } } }
+      }, {
+        "if": { "properties": { "status": { "const": "unversioned" } } },
+        "then": { "properties": { "head": { "type": "null" } } }
       }]
     },
     "binding": {

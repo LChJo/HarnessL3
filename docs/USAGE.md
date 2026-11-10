@@ -1,6 +1,6 @@
 # HarnessL3 CLI 使用
 
-正式首版实现与平台验证进度见仓库的[实施状态](implementation/STATUS.md)。需要Node.js 24.12.0或更新的24.x版本，以及Git。CLI使用现有agent，不启动模型，不安装Hooks，也不执行所选技能。
+正式首版实现与平台验证进度见仓库的[实施状态](implementation/STATUS.md)。需要Node.js 24.12.0或更新的24.x版本，普通目录运行无需Git；管理Git工作区或从源码安装时需要Git。CLI使用现有agent，不启动模型，不安装Hooks，也不执行所选技能。
 
 ## 安装与初始化
 
@@ -10,13 +10,13 @@
 
 安装后所有任务默认先尝试L3组织上下文并筛选技能，问答/研究/规划/实现/审查等哪怕1%可能相关亦触发。每轮按当前操作重判技能并读取所选正文，不能因项目正文已持有而跳过。同技能/合适版本沿用原选择并task read；从to-tickets转implement等技能集合变化或需要新版本时，新建阶段任务，一次选择技能及缺失上下文，随后读取技能正文。已有项目内容在对话中复用，可空选上下文；新任务不继承旧packet，不跨任务填known。无适用技能保持明确空选，不发空文件读取。材料丢失才handoff恢复，缺新内容才差量获取。同task再次读取不重复卡片，新task按既有规则展示一次；计划、技能切换和回复结束不自动关闭未完成任务。父交接保留范围/选择并逐轮读取必要技能，不能重选或关闭父任务；独立范围自行建档。入口恢复不递归，缺有效已有worktree或工具能力时真实报告并继续独立工作。
 
-首次发现当前Git工作区未登记，`TARGET_REQUIRED`及`error.details.onboarding`表示需要接入确认。agent应使用通用询问窗口展示路径和初始化影响；窗口不可用则在对话中询问。同意后先创建缺失配置/登记，再由当前大模型读取项目、直接编写LikeC4对象/关系/证据与结构视图，报告阅读、建模和校验进度；完成覆盖核对后继续原任务。只有拒绝或取消才普通执行，本任务内不重问。已有授权复用，无回复不算同意。CLI的`nextAction:ask-user`与询问内容是给当前agent的指引，不自动初始化，也不在JSON进程内提问；不能因非零退出码直接跳过询问。
+首次发现当前普通目录或Git工作区未登记，`TARGET_REQUIRED`及`error.details.onboarding`表示需要接入确认。agent应使用通用询问窗口展示路径和初始化影响；使用当前宿主/模式允许的原生询问工具并等待回答。同意后先创建缺失配置/登记，再由当前大模型读取项目、直接编写LikeC4对象/关系/证据与结构视图，报告阅读、建模和校验进度；完成覆盖核对后继续原任务。只有拒绝或取消才普通执行，本任务内不重问。已有授权复用，无回复不算同意。CLI的`nextAction:ask-user`与询问内容是给当前agent的指引，不自动初始化，也不在JSON进程内提问；不能因非零退出码直接跳过询问。
 
 本次上下文通过select/query/handoff实际返回且所需技能正文读取后，agent用`web open --no-open --task <task-id> --json`取得链接，在进度消息中显示一次“查看HarnessL3的输出”卡片，再继续用户工作；格式见[运行时skill](../agent-skills/harnessl3/SKILL.md)。卡片使用加粗标题、空白引用行和箭头链接，不包代码围栏；网址只用于链接目标，不另附裸地址、使用/选择说明或常规到期文案。卡片不表示用户工作完成，空选择同样处理，最终答复不重复。Web不可用时仍可继续CLI。
 
 接口发现从`harnessl3 --help`开始；`harnessl3 task --help`列该组命令，`harnessl3 task select --help`给出具体用法、必需/可选参数、请求Schema/示例路径及返回含义。路径指向当前安装包，可用现有文件工具按需读取；嵌套字段由Schema及本地引用定义。帮助/版本仍为静态文本，即使带`--json`也不启动服务或返回业务封套。业务命令只返回当次实际数据，不重复附带完整接口手册。
 
-在一个已经存在的Git工作区执行：
+在一个已经存在的普通目录或Git工作区执行：
 
 ```text
 harnessl3 init --name "项目名称" --json
@@ -27,6 +27,12 @@ harnessl3 web open
 init只创建缺失的`.harness/project.json`、`.harness/model/*.c4`、证据和别名文件，以及首次全局技能库；不会执行Git init、切换分支或创建worktree。返回的`initialization.stage:scaffold-ready`表示基础接入就绪，`semanticStatus:not-assessed`表示CLI尚未评估语义；同时给出实际模型数量和当前agent的建模/审核动作。当前大模型随后直接阅读来源并维护模型，不另起模型或用生成脚本猜业务语义。已登记但仍是占位模型时也需要补全结构；已有有效内容保留。
 
 另一个已有worktree执行init或worktree register即可。同一Git common-dir下保持项目UUID相同，各工作区有独立UUID和本机历史。项目身份冲突会拒绝，不能复制其它仓库的projectId冒充同一项目。
+
+普通目录向上以最近的.harness/project.json或.git为边界；都没有时使用当前目录。嵌套项目独立登记，不借外层身份。新建普通目录默认排除node_modules、.venv、__pycache__、.cache、dist、build、coverage及target（任意层），可在.harness/project.json的source.excludePatterns编辑；已有配置不覆盖。.gitignore在各层按所在目录生效，支持否定规则。普通目录完整来源状态为unversioned，扫描失败为unknown。以后原地git init会保留原projectId/worktreeId和历史，使当前来源重新待核验；旧任务保持原绑定，新来源通过新任务取得。已登记Git项目缺少Git或仓库损坏会报错，不会降级为普通目录。
+
+## 随项目保存上下文
+
+普通目录请将下表的长期上下文、相关源码和实际项目技能共同备份；本机历史与凭证继续隔离保存。
 
 ## 随源码提交项目上下文
 

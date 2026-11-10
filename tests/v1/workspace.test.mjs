@@ -81,9 +81,11 @@ test('TC03 an existing empty user skills directory is preserved; init never init
   assert.deepEqual(await readdir(path.join(f.dataRoot, 'skills')), []);
   const nonGit = path.join(f.root, 'not a repository');
   await mkdir(nonGit);
-  await assert.rejects(f.registry().init(nonGit), code('INVALID_ARGUMENT'));
-  await assert.rejects(readFile(path.join(nonGit, '.harness', 'project.json')), { code: 'ENOENT' });
-  assert.deepEqual(await readdir(nonGit), []);
+  const plain = await f.registry().init(nonGit);
+  assert.equal(plain.worktree.kind, 'directory');
+  assert.equal(plain.worktree.gitCommonDir, null);
+  assert.equal(plain.worktree.branch, null);
+  await assert.rejects(readFile(path.join(nonGit, '.git')), { code: 'ENOENT' });
 });
 
 test('TC01 independent repositories with identical names retain independent IDs after restart and unregister', async (t) => {

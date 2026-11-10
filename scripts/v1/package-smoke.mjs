@@ -17,8 +17,8 @@ export async function packageSmoke() {
   const consumerFiles = path.join(temporary, '中文 package files')
   const project = path.join(temporary, 'isolated project')
   let installedBinary
-  const cli = (args, input) => new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [installedBinary, ...args, '--json', '--data-dir', dataRoot], { cwd: project, windowsHide: true, env: { ...process.env, HARNESSL3_HOME: '', HARNESS_SKILLS_ROOT: '' } })
+  const cli = (args, input, { cwd = project, noGit = false } = {}) => new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [installedBinary, ...args, '--json', '--data-dir', dataRoot], { cwd, windowsHide: true, env: { ...process.env, HARNESSL3_HOME: '', HARNESS_SKILLS_ROOT: '', ...(noGit ? { PATH: '' } : {}) } })
     let stdout = '', stderr = ''
     child.stdout.on('data', chunk => { stdout += chunk }); child.stderr.on('data', chunk => { stderr += chunk })
     child.once('error', reject)
@@ -114,7 +114,7 @@ export async function packageSmoke() {
     assert.equal(verification.historyCheck, 'matched-before-update')
     assert.equal(verification.handoff.taskId, entry.taskId)
     assert.ok(verification.checks.includes('runtime-fingerprint') && verification.checks.includes('service-build'))
-    assert.equal(verification.build.sourceCommit, (await execFile('git', ['-C', root, 'rev-parse', 'HEAD'], { windowsHide: true })).stdout.trim())
+    assert.equal(verification.build.sourceCommit, JSON.parse(await readFile(path.join(root, 'build/build-info.json'), 'utf8')).sourceCommit)
     const alteredBaseline = structuredClone(baseline)
     alteredBaseline.data.packet.contexts[0].entity.brief = 'Different before-update packet'
     await writeFile(baselineFile, JSON.stringify(alteredBaseline), 'utf8')
@@ -137,11 +137,34 @@ export async function packageSmoke() {
     const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match => match[1])
     assert.ok(assets.length >= 2)
     for (const asset of assets) { const response = await fetch(descriptor.url + asset); assert.equal(response.status, 200, asset); assert.ok((await response.arrayBuffer()).byteLength > 0) }
+    await cli(['serve', 'stop'])
+    const plainRoot = path.join(temporary, '普通目录 no git')
+    await mkdir(path.join(plainRoot, 'child'), { recursive: true })
+    await writeFile(path.join(plainRoot, 'README.md'), 'Installed directory fixture')
+    const plain = (args, input) => cli(args, input, { cwd: plainRoot, noGit: true })
+    const directoryInit = await plain(['init'])
+    assert.equal(directoryInit.data.result.worktree.kind, 'directory')
+    const directoryEntry = (await cli(['task', 'start', '--title', 'Installed no Git directory'], undefined, { cwd: path.join(plainRoot, 'child'), noGit: true })).data
+    assert.equal(directoryEntry.binding.sourceVersion.status, 'unversioned')
+    const directorySkill = directoryEntry.catalog.find(item => item.id === 'development/implement')
+    const directorySelection = await plain(['task', 'select', directoryEntry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), binding: directoryEntry.binding, context: { expand: [], read: [directoryEntry.directory.items[0].id], known: {} }, skills: [{ id: directorySkill.id, reason: 'Installed directory verification' }] })
+    const directoryFile = directorySkill.files.find(item => item.path === 'SKILL.md')
+    assert.equal((await plain(['task', 'read', directoryEntry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), files: [{ skillId: directorySkill.id, path: directoryFile.path, expectedHash: directoryFile.hash }] })).data.files.length, 1)
+    const directoryState = (await plain(['sync', 'status'])).data.result
+    const directoryProof = { schemaVersion: 1, requestId: randomUUID(), target: directoryInit.target, phaseId: randomUUID(), sourceEpoch: directoryState.sourceEpoch, expectedSourceVersion: directoryState.sourceVersion, expectedModelRevision: directoryState.modelRevision, scope: { paths: ['README.md'], entities: [] }, disposition: 'no-semantic-change', reason: 'Reviewed installed directory fixture', checks: [{ name: 'Fixture source review', status: 'passed', evidence: ['README.md'] }] }
+    assert.equal((await plain(['sync', 'verify', '--file', '-'], directoryProof)).data.result.state, 'verified')
+    const directoryHandoff = (await plain(['task', 'handoff', directoryEntry.taskId])).data
+    assert.equal(directorySelection.data.packet.contexts.length, 1)
+    await plain(['serve', 'stop'])
+    assert.deepEqual((await plain(['task', 'handoff', directoryEntry.taskId])).data, directoryHandoff)
+    const directoryLink = (await plain(['web', 'open', '--no-open', '--task', directoryEntry.taskId])).data.result.url
+    const { verifyDirectoryBrowser } = await import('./directory-browser.mjs')
+    const directoryBrowser = await verifyDirectoryBrowser(directoryLink, directoryEntry.taskId)
     const artifacts = path.join(root, '.harness-local', 'artifacts')
     await mkdir(artifacts, { recursive: true })
     const output = path.join(artifacts, manifest.filename)
     await copyFile(tarball, output)
-    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, installedVerification: verification, alteredHandoffRejected: true, tarball: output }
+    const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 21, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, installedVerification: verification, alteredHandoffRejected: true, directoryWithoutGit: { lifecycle: true, restartHandoff: true, browser: directoryBrowser }, tarball: output }
     await writeFile(path.join(artifacts, 'package-smoke-' + process.platform + '.json'), JSON.stringify(report, null, 2) + '\n')
     return report
   } finally {

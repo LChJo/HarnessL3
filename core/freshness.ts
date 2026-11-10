@@ -13,7 +13,7 @@ import { loadModel } from './model.js';
 import { readConfig } from './workspace.js';
 import { resolveInside, safeRelative } from './paths.js';
 import { isErrno } from './io.js';
-import { scanSource, observeSourcePaths, changedSourcePaths, isSourcePathIncluded, type SourceObservation, type SourceScan, type SourceManifest, type SourcePolicy, type IgnoreRules, type IgnoreRuleFile } from './source.js';
+import { scanSource, observeSourcePaths, changedSourcePaths, isSourcePathIncluded, isDirectoryPathIgnored, type SourceObservation, type SourceScan, type SourceManifest, type SourcePolicy, type IgnoreRules, type IgnoreRuleFile } from './source.js';
 import type { Diagnostic, ModelSnapshot, SourceVersion, Target, WorktreeRecord } from './types.js';
 
 const execFile = promisify(callbackExecFile);
@@ -104,6 +104,8 @@ export class FreshnessManager {
   ready(): Promise<void> { return this.loading ??= this.restore(); }
   currentState(): FreshnessState { return structuredClone(this.state); }
   currentModel(): ModelSnapshot | null { return structuredClone(this.observedModel); }
+  /** Registration changed adapters; retained observations are no longer a current proof. */
+  identityChanged(): void { this.gap(); }
   private instant(): string {
     const current = this.now();
     if (!(current instanceof Date) || !Number.isFinite(current.getTime())) throw new HarnessError('INTERNAL_ERROR', 'The synchronization clock must return a valid Date.');
@@ -290,8 +292,8 @@ export class FreshnessManager {
       return;
     }
     if (referenced) return;
+    if (relative.split('/').at(-1) === '.gitignore' && (!relative.includes('/') || !this.lastScan?.policy || isSourcePathIncluded(relative.slice(0, relative.lastIndexOf('/')), this.lastScan.policy)) && !this.lastScan?.ignoredDirectoryPrefixes?.some(ignored => prefix(ignored, relative))) { this.fullRequired = true; this.markSource([relative]); return; }
     if (this.lastScan?.policy && !isSourcePathIncluded(relative, this.lastScan.policy)) return;
-    if (relative.split('/').at(-1) === '.gitignore' && !this.lastScan?.ignoredDirectoryPrefixes?.some(ignored => prefix(ignored, relative))) { this.fullRequired = true; this.markSource([relative]); return; }
     if (this.lastScan?.manifest?.content.entries.some(entry => prefix(relative, entry.path))) { this.markSource([relative]); return; }
     // Keep native Git's last observed directory classification after deletion;
     // checking a missing `build` as a file loses a `build/` ignore rule.
@@ -323,6 +325,14 @@ export class FreshnessManager {
       let directory = false;
       try { directory = (await lstat(path.join(this.worktree.root, ...relative.split('/')))).isDirectory(); }
       catch (error) { if (!isErrno(error, 'ENOENT') && !isErrno(error, 'ENOTDIR')) throw error; }
+      if (this.worktree.kind === 'directory') {
+        if (await isDirectoryPathIgnored(this.worktree.root, relative, directory)) {
+          if (directory && this.lastScan) this.lastScan.ignoredDirectoryPrefixes = sorted([...(this.lastScan.ignoredDirectoryPrefixes ?? []), relative]);
+          return;
+        }
+        if (directory) this.gap(); else this.markSource([relative]);
+        return;
+      }
       const environment: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: '0', GIT_TERMINAL_PROMPT: '0' };
       for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_NAMESPACE', 'GIT_CEILING_DIRECTORIES', 'GIT_DISCOVERY_ACROSS_FILESYSTEM']) delete environment[key];
       try {

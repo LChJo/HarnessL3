@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.43 adds initialization contract discovery and scoped recovery diagnostics while preserving source, identity, epoch and archived-history boundaries.",
+      "claim": "Baseline v0.44 supports plain directory workspaces, editable exclusions, hierarchical gitignore and in-place Git adoption while preserving isolation and history.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "a9fcc50c19a6162fca25f2289f0b2895aeb1b5ab0b6fa00cccb9263ab8c2a86d",
-      "observedAt": "2026-11-10T04:02:25.438Z"
+      "hash": "ac91563dab1d0bc8d82103f94c71827a34b64054c87e79e68932bf7706c7bed5",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -34,22 +34,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime returns recorded Web state without source scans and keeps parsing or unknown current model state distinct from a last valid snapshot.",
+      "claim": "Runtime reuses archived resources across workspace adapter changes and invalidates current freshness; ordinary browsing keeps the existing no-full-scan boundary.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "209fc2e81e3b509b5a22f58864d297f1d33ac5304f1d45d4503e7be280800e4a",
-      "observedAt": "2026-11-09T14:34:41.696Z"
+      "hash": "220783ece47de93fa71e9883bfc7e2e583363e336b45750bb3edfa1d4647fc4b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "WorkspaceRegistry preserves existing identities and files; unregistered Git worktrees return ask-user, an actual path/impact question, and fallback only after decline or cancellation.",
+      "claim": "Workspace registry locates nearest directory/Git boundaries, keeps stable UUIDs across atomic Git adoption and rejects identity or path conflicts without Git downgrade.",
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "a2b84079a0b7c8ce99151088e3418425c0bc87c5ebf0098bc4b926384a46ee3e",
-      "observedAt": "2026-11-09T07:28:53.721Z"
+      "hash": "8b5567d083983367a728303b4edaf142a5e8468eb2c37502737f46c93e0f3e07",
+      "observedAt": "2026-11-10T05:10:12.421Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService preserves frozen bindings and exact archives while projecting compact event references and catching up continuous index ranges transactionally.",
+      "claim": "Task bindings and archived selections remain immutable; routing advises directory backups or Git versioning according to actual workspace type.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "6e48236e032f1581808abace6d8d930452095bb47c1800f20737cb79a65abe21",
-      "observedAt": "2026-11-09T12:40:27.258867Z"
+      "hash": "5a6bf2ba09153574420d518cdd0c73da497f5f6f355d9b5763457351ff238c41",
+      "observedAt": "2026-11-10T05:10:12.421Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -104,22 +104,22 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Source scanning preserves full byte verification and reports nested repository boundaries explicitly without traversing or automatically excluding them.",
+      "claim": "Git and filesystem adapters share byte/link capture; directory scans use hierarchical ignore rules and two enumerations plus byte checks, preserving unknown on failures.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "1d90c62297c172317cb9e174ce065107f6545b8d842a0241240adf4bb9bd7575",
-      "observedAt": "2026-11-10T04:02:25.440Z"
+      "hash": "dd0ec7e727673bd88c55e0ba56c8621f995e16e625b8f9551a9038b2bc2ea95f",
+      "observedAt": "2026-11-10T04:58:07.799Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "Scoped verification preserves strict epoch and version CAS, records expected/actual conflict fields and review-based recovery in new receipts, and reads old receipts without rewriting them.",
+      "claim": "Freshness uses directory scan rules for new path classification and invalidates proofs for identity, rule and byte changes while preserving strict epochs and evidence scope.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "a9367fe81d427879f1e66a56d4c6f27866e813104500e84c1f436666a725a2cc",
-      "observedAt": "2026-11-10T04:02:25.440Z"
+      "hash": "031858f5ce6e12c43764910a6ab7796938058816c5565c0769ff9115698b8b67",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web restores remembered visible task IDs and batches beyond the first list page via paginated history search, preserves memory on query failure, and retains existing read-only and generation boundaries.",
+      "claim": "Web labels actual directory workspaces and retains task, canvas, skill, structure and historical interactions.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "534f05a3c1963e3c2cb94ce4029b3d92dfd28ee9bfd55b69dcdde0a8c7e6e6dd",
-      "observedAt": "2026-11-09T14:34:41.702Z"
+      "hash": "3b4e5c34b4509b977334fa6a80c697476f6adbe6078034983feece71717f7df6",
+      "observedAt": "2026-11-10T05:10:12.421Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain.",
+      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "580dba84cf43c31458824e4af23eb18887a1d4b47065490ccfc58881814b8e8a",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "8e49a2a71adaac3a9a750880c291eff07e4688db215b5dc0db373aee95699a9b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Formal CLI builds stamp provenance and ship explicit skill-installation and runtime-verification tools; prototype scripts remain separate.",
+      "claim": "Formal CLI builds stamp provenance and ship explicit skill-installation and runtime-verification tools; prototype scripts remain separate. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "package.json"
       },
-      "hash": "9667156dd26b9915638de3c8054356a9de68cb32c6c61ae35206979b286a29f1",
-      "observedAt": "2026-11-09T05:37:20.133Z"
+      "hash": "ac4c4399ef4fc6eea1b77858dabca6f362bf292e0bf23409ed4006f7a67968f7",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Text authority and reference lifecycle remain; known uses exact retained bodies from the same task and cannot replace the first read with another task hash.",
+      "claim": "Text authority and reference lifecycle remain; known uses exact retained bodies from the same task and cannot replace the first read with another task hash. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "9b6019860a9bfba34d8bed0c7632ea7c5fc35a3ba5aaaeb7c230caa42c50b373",
-      "observedAt": "2026-11-10T04:02:25.441Z"
+      "hash": "49db082e8d3de195449aed93bd065548d0ce080f47963e3517f2837e3e5afe16",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -274,22 +274,22 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "Source batching preserves raw/current-state checks and link boundaries; explicit evidence references and scoped synchronization retain existing physical-path, anomaly and pending/history rules.",
+      "claim": "Source batching preserves raw/current-state checks and link boundaries; explicit evidence references and scoped synchronization retain existing physical-path, anomaly and pending/history rules. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "5e2067f4ecd834cc3ea7f41e1da74300b58b5aa35aca462f56d8ad5562a6fa9f",
-      "observedAt": "2026-11-10T04:02:25.441Z"
+      "hash": "2d29a592cedc1997e9b900c224757dc1843123542c047018ddc918703e857f99",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Storage preserves original journals and snapshots; new freshness rows reference receipt state bytes, and compact derived indexes catch up continuous commits.",
+      "claim": "Storage preserves original journals and snapshots; new freshness rows reference receipt state bytes, and compact derived indexes catch up continuous commits. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "72b3812e14c25bd31f0a2414d22acc760149ae26322379fc3ecb212d0fa8ebcc",
-      "observedAt": "2026-11-09T13:39:40.548Z"
+      "hash": "787f88b2215a0eb26e930d40da95e7520e9175e0e3843f593f79ab610777a85a",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts.",
+      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "151004ba9e0ddea5eb88956d0724e551035637d6a4aeec38596c111bebc3efd3",
-      "observedAt": "2026-11-10T04:02:25.441Z"
+      "hash": "f923a2d6a40d524cf5e9377afd0deff11518a6140fc33bb86c438dcd5c8aae7a",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static command help discovers actual request and referenced Schema paths and provides installed model-authoring guidance without starting the service.",
+      "claim": "Static command help discovers actual request and referenced Schema paths and provides installed model-authoring guidance without starting the service. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "8f7a5c9b79415a020b18d8d3ae2e203e7e447097d9dbbca43004eeed61cc4cbd",
-      "observedAt": "2026-11-10T04:02:25.441Z"
+      "hash": "f7d379018670dbf8e6e39c565a79ecc64b89006c42dad6b8ea69204bce01ceb1",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "4bce2368892f81c5134588fed72eeaf26feed2c7048a29bf214846bae92bad22",
-      "observedAt": "2026-11-10T04:09:09.448Z"
+      "hash": "d8f1e487282ed102a1aaa83e5721d6413f456a72fdb52c9572825fe50c301fa1",
+      "observedAt": "2026-11-10T05:10:12.421Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "A fresh installed package through a Unicode directory alias exercises runtime fingerprint/service identity, archived handoff comparison and changed-baseline rejection, plus existing skill/task/login/offline checks.",
+      "claim": "A fresh installed package through a Unicode directory alias exercises runtime fingerprint/service identity, archived handoff comparison and changed-baseline rejection, plus existing skill/task/login/offline checks. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "bb5f68282a0fb3d00bb1240d8c8a5c046b002825e3f9fcfc10c1e33edc94dff9",
-      "observedAt": "2026-11-10T04:02:25.442Z"
+      "hash": "b857687281b7ae8172fd8bb177985112a91777cb22781761388644935a31718f",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -464,22 +464,22 @@
     {
       "id": "d6360000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "The platform installation flows preserve an old package, verify the expected clean source and running build, and describe explicit saved-handoff checks and data-preserving rollback.",
+      "claim": "The platform installation flows preserve an old package, verify the expected clean source and running build, and describe explicit saved-handoff checks and data-preserving rollback. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "INSTALL.md"
       },
-      "hash": "349d5d44ed19d114f967dddb0989bbe3051763ca5ddabe502c4b8681b4c865af",
-      "observedAt": "2026-11-09T05:37:20.145Z"
+      "hash": "339ed09c258b2ad29264b3bea036984c5c8f90586345d736ec5ef69a8ed0e7fb",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries.",
+      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/install-update.md"
       },
-      "hash": "cf1572d5b11137683efb43258581f10cfa92d6503d75f3e3bc67ebd902d9241a",
-      "observedAt": "2026-11-09T10:19:54.758Z"
+      "hash": "c7484eab65997d4110421727caacff773c67e285de1145821a0b71cf128d2807",
+      "observedAt": "2026-11-10T04:58:07.810Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000006",
@@ -534,52 +534,52 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery.",
+      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "7135aba9477dbad299d2fc2596fc68bb842204cd6da91c2fc7bf4779603e8982",
-      "observedAt": "2026-11-10T04:02:25.443Z"
+      "hash": "1a1ab9b0800f6c2f7b81d0a229ed0c250424488bd516e5b97c1d30a877050994",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
       "kind": "document",
-      "claim": "Architecture separates preflight/control availability from background recovery while retaining singleton ownership, full target verification, explicit subscriptions and safe shutdown.",
+      "claim": "Architecture separates preflight/control availability from background recovery while retaining singleton ownership, full target verification, explicit subscriptions and safe shutdown. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "dffec2a26856116cd1186988d81900a4cc3b21770d28f159a8c4611f15f05d19",
-      "observedAt": "2026-11-09T13:39:40.551Z"
+      "hash": "f7f48d743d68eec18e22b807eba1716e7af3b9d8aad739f88f0c8680dc9a88c4",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool.",
+      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "24c7adfeabc08cb7c0f8a7dde7d418b5069551f0ab6abccd2f84329120ef5ad3",
-      "observedAt": "2026-11-10T04:02:25.443Z"
+      "hash": "72257717f2c77aebb999c7e3000028db4fd8d17b956625d2c6e856d543ba2779",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements.",
+      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "d8b523201fe6806a44c4f590941191fe32a549f025571751752ef05f555158bf",
-      "observedAt": "2026-11-10T04:02:25.443Z"
+      "hash": "8c8d77b845f22fcbfc0007067a1d3174ec86879f43fa22ed59f0d1717a09aa2b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope.",
+      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "7aee553a75d8d152399df609b222ab4ff9b8d98ab894ff6f7c1456d092731a65",
-      "observedAt": "2026-11-10T04:02:25.444Z"
+      "hash": "323457e869490e8f3217c84cd01ac06f76bc1033f4feea20ec676da725bb4a2b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries.",
+      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "af535f7b9a22e79f9a90da4268cdead518e791a46e2bbe2104f98d8eec130096",
-      "observedAt": "2026-11-10T04:02:25.444Z"
+      "hash": "990e4ff2f02af342887de2e6ace621447f1c3fe196e9d79d6e06a10fb38c7a9b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -644,32 +644,32 @@
     {
       "id": "da230000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "Web restores recorded targets without source reconciliation, deduplicates covered events and counts complete hidden subtrees while preserving authentication and fixed history.",
+      "claim": "Web restores recorded targets without source reconciliation, deduplicates covered events and counts complete hidden subtrees while preserving authentication and fixed history. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "df06b8249a85c69ef24abe03a92f0b9641f28b1bc953e1d992fa860ea0011b8c",
-      "observedAt": "2026-11-09T13:39:40.553Z"
+      "hash": "66b145d6ce535d0f214132189aff49cee99fa3cb1b0a8abb5aceed1d650a1937",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Authorized semantic onboarding reads installed model guidance, declares relationship kinds, uses space-separated evidence and preserves established UUIDs during repairs.",
+      "claim": "Authorized semantic onboarding reads installed model guidance, declares relationship kinds, uses space-separated evidence and preserves established UUIDs during repairs. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "1cd03e7be3a8409ede682a82b74a8407df712732dff416b1d9c2b574dab7c583",
-      "observedAt": "2026-11-10T04:02:25.444Z"
+      "hash": "bb4e15093502c7988d94e748f029284574db0d0aa6ed873a7981ee979284ddc2",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps.",
+      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "a25696dd6bf33811d3f9b38fc296074788b1b7e6d267ddb521d32f6ed5d24895",
-      "observedAt": "2026-11-10T04:02:25.444Z"
+      "hash": "f0f55750c992c4aa4d5f7f8d56a9952ddb0e3f9b8716a13983e3bbcfbd9e2df9",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -734,12 +734,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Shared known description documents empty/default and exact same-task contentHash usage; UUID/SHA-256 validation is unchanged.",
+      "claim": "Shared known description documents empty/default and exact same-task contentHash usage; UUID/SHA-256 validation is unchanged. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "docs/spec/contracts/common.schema.json"
       },
-      "hash": "9e315a26f4fc1f171983fe7747de8009fe16174c161d1bdfd341e75c8bcc1502",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "d79b4eb2a10a1f4881f9468d06bb5d11c8f20fae317617cd0e51773a8594ee3a",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000003",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries.",
+      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "af535f7b9a22e79f9a90da4268cdead518e791a46e2bbe2104f98d8eec130096",
-      "observedAt": "2026-11-10T04:02:25.445Z"
+      "hash": "990e4ff2f02af342887de2e6ace621447f1c3fe196e9d79d6e06a10fb38c7a9b",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -794,12 +794,12 @@
     {
       "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
       "kind": "document",
-      "claim": "User navigation describes native question-tool onboarding, alongside per-turn skill reads and reusable project context.",
+      "claim": "User navigation describes native question-tool onboarding, alongside per-turn skill reads and reusable project context. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
       "location": {
         "path": "README.md"
       },
-      "hash": "eb40abb5bde6810af565f67c5576204faa62f439a40e47c9d93aa4ff499f136b",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "59cbe76dff298df110df1167d0356fe71b543e8cfffacb0f4836e1c952884bf0",
+      "observedAt": "2026-11-10T04:53:34.995Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -910,6 +910,76 @@
       },
       "hash": "a6a54f43b2f648f0ac6850e889d9911de65bde6952ae850af69708b778114fa6",
       "observedAt": "2026-11-10T04:02:25.446Z"
+    },
+    {
+      "id": "9a02944d-cbb2-46da-b77f-9c0182486781",
+      "kind": "source-code",
+      "claim": "Directory workspace contract and isolated verification: tests/v1/directory-workspace.test.mjs Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "location": {
+        "path": "tests/v1/directory-workspace.test.mjs"
+      },
+      "hash": "427cbe8f4eaa29de59fab3e0c4346dc72692887448342756c89bf0eb61911507",
+      "observedAt": "2026-11-10T04:58:07.826Z"
+    },
+    {
+      "id": "ff040559-643c-4bfd-8584-d507e92d0bdf",
+      "kind": "source-code",
+      "claim": "Directory workspace contract and isolated verification: tests/v1/directory-scan-probe.mjs Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "location": {
+        "path": "tests/v1/directory-scan-probe.mjs"
+      },
+      "hash": "7618d466a6c3ab9b0ebec8a9d4f95a7c3c12b3d650d6c8214e7568290820c89b",
+      "observedAt": "2026-11-10T04:58:07.827Z"
+    },
+    {
+      "id": "b35d98f4-6a6c-47eb-b2eb-b3152bf7c34d",
+      "kind": "source-code",
+      "claim": "Directory workspace contract and isolated verification: scripts/v1/directory-browser.mjs Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "location": {
+        "path": "scripts/v1/directory-browser.mjs"
+      },
+      "hash": "1ae70d2a8416836bba113dc9cccc67061b0a0c6ea5fd85ab6e61cd82ae3b5a86",
+      "observedAt": "2026-11-10T04:53:34.995Z"
+    },
+    {
+      "id": "18218b5d-a2e7-45cd-bb6c-fec8287ceea2",
+      "kind": "document",
+      "claim": "Directory workspace contract and isolated verification: docs/spec/contracts/workspace.schema.json Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "location": {
+        "path": "docs/spec/contracts/workspace.schema.json"
+      },
+      "hash": "eec2746cbb47f73fa74e79bea3d24a3fce1185d8b64125bae657eec3f610c6f4",
+      "observedAt": "2026-11-10T04:53:34.995Z"
+    },
+    {
+      "id": "f11ba75e-586a-4e73-916f-a588e214dc8a",
+      "kind": "document",
+      "claim": "Directory workspace contract and isolated verification: docs/spec/contracts/source-policy.schema.json Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "location": {
+        "path": "docs/spec/contracts/source-policy.schema.json"
+      },
+      "hash": "6dd5a97c1527786f87773306a34388b803d8c44d15964749055a254998b4a16c",
+      "observedAt": "2026-11-10T04:53:34.995Z"
+    },
+    {
+      "id": "01b35a6e-055b-477a-aa86-f0bb7b163c23",
+      "kind": "document",
+      "claim": "Authorized v0.44 cleanup records deleted synthetic fixtures and helpers, already-absent Linux copies, preserved history/evidence and an automatic deletion rejection.",
+      "location": {
+        "path": "docs/implementation/CLEANUP.md"
+      },
+      "hash": "cbe40a03654215ca07c9af7ede0e79be78823bd1b3acb3c94e3f56c2338470e0",
+      "observedAt": "2026-11-10T05:11:16.151Z"
+    },
+    {
+      "id": "116a4c91-d92b-427b-8016-2fcaca15b51d",
+      "kind": "document",
+      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts.",
+      "location": {
+        "path": ".gitattributes"
+      },
+      "hash": "ae2f6eae566820aa829286368f8acee408afb5595e87c6b02a63ccae1fd07870",
+      "observedAt": "2026-11-10T05:10:12.421Z"
     }
   ]
 }

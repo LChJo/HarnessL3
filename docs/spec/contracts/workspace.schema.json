@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/workspace.schema.json",
+  "title": "Registered workspace (missing kind means legacy Git)",
+  "type": "object", "additionalProperties": false,
+  "required": ["id", "projectId", "root", "gitCommonDir", "branch", "available", "active"],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "projectId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "kind": { "enum": ["git", "directory"], "description": "Missing kind is read as legacy git." },
+    "root": { "type": "string", "minLength": 1 },
+    "gitCommonDir": { "type": ["string", "null"], "minLength": 1 },
+    "branch": { "type": ["string", "null"] },
+    "available": { "type": "boolean" }, "active": { "type": "boolean" },
+    "config": { "$ref": "project-config.schema.json" }
+  },
+  "allOf": [{
+    "if": { "required": ["kind"], "properties": { "kind": { "const": "directory" } } },
+    "then": { "properties": { "gitCommonDir": { "type": "null" }, "branch": { "type": "null" } } },
+    "else": { "properties": { "gitCommonDir": { "type": "string" } } }
+  }]
+}

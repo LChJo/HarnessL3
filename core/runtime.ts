@@ -107,6 +107,7 @@ export class Runtime extends EventEmitter {
       current = await replacement
     }
     // Registry activity/availability is resolved for each request; archived resources keep no live identity authority.
+    if ((current.worktree.kind ?? 'git') !== (worktree.kind ?? 'git') || current.worktree.gitCommonDir !== worktree.gitCommonDir) current.freshness.identityChanged()
     Object.assign(current.worktree, worktree)
     return current
   }
@@ -124,7 +125,7 @@ export class Runtime extends EventEmitter {
     const tasks = new TaskService({
       worktree: record, archive, index,
       source: async skillsRoot => {
-        await new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot }).resolve({ cwd: this.dataRoot, worktreeId: record.id })
+        Object.assign(record, await new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot }).resolve({ cwd: this.dataRoot, worktreeId: record.id }))
         const config = await this.registry().readConfig(record.root)
         const scanned = await scanSource(record, config, skillsRoot)
         if (!scanned.sourceScanRevision || !scanned.manifest || !scanned.policy || !scanned.ignoreRules || scanned.sourceVersion.status === 'unknown') throw new HarnessError('SOURCE_CHANGED', 'The current source cannot be fingerprinted completely.', { diagnostics: scanned.diagnostics, sourceVersion: scanned.sourceVersion }, true)
