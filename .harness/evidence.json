@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current baseline v0.42 requires actual permitted host-native question-tool calls for setup decisions, preserving prior routing, review, source and history rules.",
+      "claim": "Baseline v0.43 adds initialization contract discovery and scoped recovery diagnostics while preserving source, identity, epoch and archived-history boundaries.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "a45339a96a2e4e0e5369e589bd598bd9f344a53e7151c32189a2d98ed67c87d8",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "a9fcc50c19a6162fca25f2289f0b2895aeb1b5ab0b6fa00cccb9263ab8c2a86d",
+      "observedAt": "2026-11-10T04:02:25.438Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -54,12 +54,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000006",
       "kind": "source-code",
-      "claim": "LikeC4 and evidence/aliases form one model snapshot, retaining evidence identities and document Git diagnostics without rewriting authored status.",
+      "claim": "Model validation checks evidence-list syntax before resolving IDs and gives declared-relationship DSL guidance while preserving identity and reference constraints.",
       "location": {
         "path": "core/model.ts"
       },
-      "hash": "5ae42fee4f7bbe7c0bcb3fc02af202b453f88066c4644ff4614c5410330b0921",
-      "observedAt": "2026-11-07T14:25:11.750Z"
+      "hash": "7a93da1e1d2a4e9452444eff52635876a306dc6215f9920df0fcbcfa239aa87a",
+      "observedAt": "2026-11-10T04:02:25.440Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000007",
@@ -104,22 +104,22 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Strict scans retain full double-byte and Git-state checks; targeted observation reads only requested leaves, refuses ancestor links and never returns a full source binding.",
+      "claim": "Source scanning preserves full byte verification and reports nested repository boundaries explicitly without traversing or automatically excluding them.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "cea306cd5a715c76a06a14368a1df135e75fde4aaf8e75d02d06b74b1ca93b3f",
-      "observedAt": "2026-11-09T12:40:27.260766Z"
+      "hash": "1d90c62297c172317cb9e174ce065107f6545b8d842a0241240adf4bb9bd7575",
+      "observedAt": "2026-11-10T04:02:25.440Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "FreshnessManager separates pending path observation from full reconciliation/proof, coalesces in-flight status, compensates gaps and restores compact state references alongside original inline history.",
+      "claim": "Scoped verification preserves strict epoch and version CAS, records expected/actual conflict fields and review-based recovery in new receipts, and reads old receipts without rewriting them.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "52cbc4e879a135a0a778173afdcb4fb4401b29802ba8ec8467f8b870f0b9bb2e",
-      "observedAt": "2026-11-09T12:47:29.403191Z"
+      "hash": "a9367fe81d427879f1e66a56d4c6f27866e813104500e84c1f436666a725a2cc",
+      "observedAt": "2026-11-10T04:02:25.440Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -208,8 +208,8 @@
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "1958cbc653f7c5d4d75fbb1655434a12cc2e314c35071b55aa49d3470b531432",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "9b6019860a9bfba34d8bed0c7632ea7c5fc35a3ba5aaaeb7c230caa42c50b373",
+      "observedAt": "2026-11-10T04:02:25.441Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -278,8 +278,8 @@
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "da0982fb857178531433ef4bce189db8854ea0cf21bb7e4a7b58ebe8170a34ff",
-      "observedAt": "2026-11-09T13:39:40.547Z"
+      "hash": "5e2067f4ecd834cc3ea7f41e1da74300b58b5aa35aca462f56d8ad5562a6fa9f",
+      "observedAt": "2026-11-10T04:02:25.441Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference specifies same-skill turn reads, skill-only stage selections, empty choices, fresh read request IDs and archive/version/known boundaries without new CLI fields.",
+      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "7c4b67bf99e389d7567a587ded0208cb9bb6a4a0144c8e99a2057122f84006d0",
-      "observedAt": "2026-11-09T12:35:44.735Z"
+      "hash": "151004ba9e0ddea5eb88956d0724e551035637d6a4aeec38596c111bebc3efd3",
+      "observedAt": "2026-11-10T04:02:25.441Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static command help reads known guidance from the shared schema and explains guarded JSON result handling while retaining contract discovery and no service startup.",
+      "claim": "Static command help discovers actual request and referenced Schema paths and provides installed model-authoring guidance without starting the service.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "b52bc4937f060b724221c3543def0557fdea06b501cfe36ca3f992dd6563d468",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "8f7a5c9b79415a020b18d8d3ae2e203e7e447097d9dbbca43004eeed61cc4cbd",
+      "observedAt": "2026-11-10T04:02:25.441Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -368,18 +368,18 @@
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "ef67acd91405ed5dede8a0b5f02a51c8f91314f619fab0de54243bf7a1e51ba3",
-      "observedAt": "2026-11-09T15:23:32.072000Z"
+      "hash": "19b5d2668e3868fb673c49e6b76741b0799d3a567ff97f4ab4c030237e8a3b52",
+      "observedAt": "2026-11-10T04:02:25.442Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status separates v0.42 question-tool instructions, static and copy checks from unrun real-host prompting behavior; earlier validations remain scoped historical results.",
+      "claim": "Implementation status records the initialization review and separates current Windows test and package evidence from earlier platforms and unrun host behavior.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "6211a22539fb62dfe85a8e88c8c1b9eb86d6e8b5527c5f9b296d43770a92ab05",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "4bce2368892f81c5134588fed72eeaf26feed2c7048a29bf214846bae92bad22",
+      "observedAt": "2026-11-10T04:09:09.448Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -398,8 +398,8 @@
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "3c60d50487fb93d53d4c6780f90306743af8719aff168b123ed6645c86278aec",
-      "observedAt": "2026-11-09T05:37:20.140Z"
+      "hash": "bb5f68282a0fb3d00bb1240d8c8a5c046b002825e3f9fcfc10c1e33edc94dff9",
+      "observedAt": "2026-11-10T04:02:25.442Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC27 requires observable native question-tool calls when available/permitted and separates async waiting, file checks and real-host acceptance from earlier regression coverage.",
+      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "3d987cb124403a6e78c480a5d900a84e454f2aa0500b2e1cb8c27d548765608c",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "7135aba9477dbad299d2fc2596fc68bb842204cd6da91c2fc7bf4779603e8982",
+      "observedAt": "2026-11-10T04:02:25.443Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -558,8 +558,8 @@
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "e80ccd547cd0e9b2e3c645b588228e057dfa83abc90ea698dddd04b619ee83b5",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "24c7adfeabc08cb7c0f8a7dde7d418b5069551f0ab6abccd2f84329120ef5ad3",
+      "observedAt": "2026-11-10T04:02:25.443Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -568,8 +568,8 @@
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "b2b7ef6225f89c5d0a34190e54ec3c1a80ecfda121aef4bf0423f2ea15428738",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "d8b523201fe6806a44c4f590941191fe32a549f025571751752ef05f555158bf",
+      "observedAt": "2026-11-10T04:02:25.443Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "38b0a5d395f37b2fcad6528c40ebabc887b54bfae45133a818222cc330fcf2a5",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "7aee553a75d8d152399df609b222ab4ff9b8d98ab894ff6f7c1456d092731a65",
+      "observedAt": "2026-11-10T04:02:25.444Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -598,8 +598,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "88afe6166cb47dbb8ab5ae9ebfb63ec409d2d862a058c0945b14c1b132e86ab9",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "af535f7b9a22e79f9a90da4268cdead518e791a46e2bbe2104f98d8eec130096",
+      "observedAt": "2026-11-10T04:02:25.444Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,22 +654,22 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Onboarding guidance applies the shared native question-tool rule to actual path/action/impact, preserves pending async decisions and explicit consent, and retains current-agent semantic modeling and archive recovery boundaries.",
+      "claim": "Authorized semantic onboarding reads installed model guidance, declares relationship kinds, uses space-separated evidence and preserves established UUIDs during repairs.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "7479d08264926ce078d36ef90be2cd466780d60c5294d46c2f3eb8bc8b4099ef",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "1cd03e7be3a8409ede682a82b74a8407df712732dff416b1d9c2b574dab7c583",
+      "observedAt": "2026-11-10T04:02:25.444Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage describes per-turn skills, empty-context stage tasks, same-task known limits and existing onboarding, card and guarded JSON behavior.",
+      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "f4750b4a31f646d373c229ac45839381bc390b9a7a13e24dc8c7e5fd60941dc1",
-      "observedAt": "2026-11-09T12:35:44.740Z"
+      "hash": "a25696dd6bf33811d3f9b38fc296074788b1b7e6d267ddb521d32f6ed5d24895",
+      "observedAt": "2026-11-10T04:02:25.444Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -758,8 +758,8 @@
       "location": {
         "path": "tests/v1/cli-help.test.mjs"
       },
-      "hash": "872c8a4af9d3c0739f77cbbcdb51194906f3e307859667a37c9a005a3c9d213e",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "a8f37e3c86c4f4277a3c8266be9be7243695e926de7f88404c248f91a553bf3c",
+      "observedAt": "2026-11-10T04:02:25.445Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000005",
@@ -768,8 +768,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "88afe6166cb47dbb8ab5ae9ebfb63ec409d2d862a058c0945b14c1b132e86ab9",
-      "observedAt": "2026-11-10T03:39:32.946Z"
+      "hash": "af535f7b9a22e79f9a90da4268cdead518e791a46e2bbe2104f98d8eec130096",
+      "observedAt": "2026-11-10T04:02:25.445Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -890,6 +890,26 @@
       },
       "hash": "7e4200174a8ec47e97589d850e3e5fc1d0b459a38374dd6d5f3a1bfe129a4b59",
       "observedAt": "2026-11-09T14:59:54.309000Z"
+    },
+    {
+      "id": "a92a0672-621d-4e8e-a549-9d0a3cd8c16b",
+      "kind": "source-code",
+      "claim": "Initialization regression fixtures validate the installed guide model, nested-boundary failure/recovery and fail-closed result consumption in actual subprocesses.",
+      "location": {
+        "path": "tests/v1/initialization-contracts.test.mjs"
+      },
+      "hash": "acadaa15f208cfea15afc49861b57acdbbc77d7b8d56b76bc0207ae11fb0bde3",
+      "observedAt": "2026-11-10T04:02:25.445Z"
+    },
+    {
+      "id": "95672f7f-92d3-462c-8780-7ca4c7fb1561",
+      "kind": "document",
+      "claim": "Initialization incident review separates generator mistakes, caller discovery/consumption errors, nested source boundaries and epoch conflicts; records architectural remedies and verification limits.",
+      "location": {
+        "path": "docs/implementation/INITIALIZATION_REVIEW.md"
+      },
+      "hash": "a6a54f43b2f648f0ac6850e889d9911de65bde6952ae850af69708b778114fa6",
+      "observedAt": "2026-11-10T04:02:25.446Z"
     }
   ]
 }

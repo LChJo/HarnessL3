@@ -86,6 +86,24 @@ const resultKinds: Record<string, string> = {
   'task close': 'command-result: taskId, closedAt and syncStatus; not proof of task success.',
 }
 
+function referencedSchemas(file: string, seen = new Set<string>()): string[] {
+  seen.add(file)
+  const visit = (value: unknown): void => {
+    if (!value || typeof value !== 'object') return
+    for (const [key, child] of Object.entries(value)) {
+      if (key === '$ref' && typeof child === 'string') {
+        const reference = child.split('#')[0]
+        if (reference && !reference.includes(':')) {
+          const target = path.resolve(path.dirname(file), reference)
+          if (!seen.has(target)) referencedSchemas(target, seen)
+        }
+      } else visit(child)
+    }
+  }
+  visit(JSON.parse(readFileSync(file, 'utf8')))
+  return [...seen].filter(target => target !== file)
+}
+
 function flagUsage(operation: string, name: string): string {
   const value = operation === 'migrate prototype' && name === 'from' ? 'directory' : options[name]?.[0] ?? 'value'
   return '--' + name + (booleanFlags.has(name) ? '' : ` <${value}>`)
@@ -118,11 +136,13 @@ export function renderHelp(words: string[]): string {
       const schemaPath = path.join(SCHEMA_ROOT, contract + '.schema.json')
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as { required: string[] }
       lines.push('Request schema: ' + schemaPath, 'Request example: ' + path.join(SCHEMA_ROOT, 'examples', contract + '.json'), 'Normalized required fields: ' + schema.required.join(', '), 'The schema applies after requestId normalization. Raw JSON may omit requestId; save an explicit ID for reliable retries.', 'Read the schema and its local references for nested fields; use real IDs, bindings and hashes returned by this task.', '')
+      lines.push(...referencedSchemas(schemaPath).map(file => 'Referenced schema: ' + file), '')
       if (contract === 'selection' || contract === 'query') {
         const common = JSON.parse(readFileSync(path.join(SCHEMA_ROOT, 'common.schema.json'), 'utf8')) as { $defs: { known: { description: string } } }
         lines.push((contract === 'selection' ? 'context.known: ' : 'known: ') + common.$defs.known.description, '')
       }
     }
+    if (operation === 'init' || operation === 'model validate') lines.push('Model authoring: metadata evidence is one scalar: unique UUIDs separated by a single space, not commas; use none for no evidence.', 'Relationship kinds: declare relationship calls in specification and use source -[calls]-> target. A bare -> has no kind.', 'Read the model authoring example in the Usage guide below before editing. Preserve existing harness_id and evidence IDs during repairs.', '')
     lines.push('Returns: ' + (resultKinds[operation] ?? 'command-result: ' + descriptions[operation]), '')
   } else {
     lines.push(`Usage: harnessl3 ${topic ? topic + ' <command>' : '<command>'} [arguments] [--json]`, '', 'Commands:')

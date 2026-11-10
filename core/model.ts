@@ -206,11 +206,14 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
       if (!statusValues.has(metadata.status as string)) fail(`${item.id}: status must be verified, needs-review, or unknown.`)
       if (metadata.source === 'inference' && metadata.status === 'verified') fail(`${item.id}: inference cannot have verified status.`)
       const evidence = typeof metadata.evidence === 'string' && metadata.evidence !== 'none' ? metadata.evidence.split(' ') : []
-      if (typeof metadata.evidence === 'string' && metadata.evidence !== 'none' && (evidence.some(id => !uuid.test(id)) || new Set(evidence).size !== evidence.length)) fail(`${item.id}: evidence must be none or unique UUIDs separated by one space.`)
-      for (const id of evidence) if (!proofIds.has(id)) fail(`${item.id}: evidence UUID does not exist: ${id}.`)
+      const validEvidence = !evidence.some(id => !uuid.test(id)) && new Set(evidence).size === evidence.length
+      if (!validEvidence) fail(`${item.id}: evidence must be none or unique UUIDs separated by a single space, not commas. Write one scalar string, without arrays or duplicate IDs.`)
+      // Resolve references only after validating the list syntax. A malformed
+      // comma-joined scalar is not a missing evidence record.
+      if (validEvidence) for (const id of evidence) if (!proofIds.has(id)) fail(`${item.id}: evidence UUID does not exist: ${id}.`)
       if (metadata.status === 'verified' && evidence.length === 0) fail(`${item.id}: verified status requires at least one resolvable evidence UUID.`)
       const specification = data.elements[item.id] ? data.specification.elements : data.specification.relationships
-      if (!item.kind || !Object.hasOwn(specification, item.kind)) fail(`${item.id}: kind must be declared in the LikeC4 specification.`)
+      if (!item.kind || !Object.hasOwn(specification, item.kind)) fail(`${item.id}: kind must be declared in the LikeC4 specification. ${data.elements[item.id] ? 'Declare an element kind and use it on the object.' : 'For example, declare relationship calls and use source -[calls]-> target; a bare -> has no kind.'}`)
     }
     const aliases = aliasesJson.value.aliases
     for (const [locator, target] of Object.entries(aliases)) {

@@ -385,6 +385,7 @@ async function ordinaryBytes(file: string, label: string, noFollow = true): Prom
 async function sourceEntry(root: string, candidate: Candidate): Promise<SourceEntry> {
   if ([...candidate.stages].some(stage => stage !== 0)) throw new ScanFailure('SOURCE_INDEX_CONFLICT', 'Unresolved index stages prevent a complete source snapshot.', candidate.path);
   if ([...candidate.modes].some(mode => !['100644', '100755', '120000'].includes(mode))) throw new ScanFailure('SOURCE_UNSUPPORTED_ENTRY', 'Gitlinks and unsupported Git entry kinds cannot be scanned.', candidate.path);
+  if (candidate.directory) throw new ScanFailure('SOURCE_NESTED_REPOSITORY', 'A nested repository is a separate source boundary and was not traversed. Review this scope; to exclude it explicitly, add its worktree-relative path to source.excludePatterns in .harness/project.json. Do not remove its .git directory.', candidate.path);
   const presentParents = await checkParents(root, candidate.path);
   const file = path.join(root, ...candidate.path.split('/'));
   let entry;

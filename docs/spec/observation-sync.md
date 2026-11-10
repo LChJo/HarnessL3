@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.43：来源扫描对嵌套Git仓库返回`SOURCE_NESTED_REPOSITORY`、准确相对路径及显式source.excludePatterns恢复方式，未读取其内部正文，不自动修改范围、Git ignore或.git；gitlink及其它特殊条目继续unknown。`SYNC_RACE`的回执错误可附`conflicts:[{field,expected,actual}]`及`recovery`，区分proof代次/指纹、两次采集或提交前代次冲突；保留完整CAS和原requestId的历史回放。即使指纹恢复原值也不接受旧代次，重新status及审核后才能用新requestId提交新声明。旧无扩展字段回执仍原样兼容。
+
 v0.41：日常watcher变化按worktree立即推进代次、保持pending并合并变化路径，后台只读取这些叶条目，目录/策略/身份/事件缺口转为完整reconciliation。sourceObservation仅记录本次增量观测的路径、字节指纹、时间、代次及缺口；sourceVersion/lastCompleteSource保留上次完整检查的值，scanPending不因增量成功清除，不能用增量观测声明当前来源完整或恢复旧proof。后台完整补偿有界调度，观测覆盖正常时空闲tick不重复全扫；watcher不可用/失败保留诊断并退回完整补偿，补偿周期使用单调时钟；sync status、任务绑定及sync verify仍进行既有两遍字节/前后Git状态/提交前核对。同目标并发status可共享一次在途采集，后续新调用重新核对；verify的独立复核保留。显式引用在排除前处理，字节回退、链接边界和中途新变动保持原约束。
 
 - 状态：正式CLI实现契约，实际双适配器样本、合成负例和同步/平台范围见[实施状态](../implementation/STATUS.md)；v0.16有限演示不代替正式证据。

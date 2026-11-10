@@ -100,6 +100,32 @@ function proof(state, worktree, overrides = {}) {
   };
 }
 
+test('TC08 epoch-only conflicts explain the actual mismatch and preserve their receipt after recovery', async t => {
+  const f = await fixture(t, { warm: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const declaration = proof(baseline, f.initialized.worktree);
+  // A notification gap invalidates the proof even when bytes later match again.
+  f.manager.gap();
+  let receipt;
+  await assert.rejects(f.manager.verify(declaration, f.skillsRoot), error => {
+    assert.equal(error.code, 'SYNC_RACE');
+    assert.deepEqual(error.details.result.sourceVersion, baseline.sourceVersion);
+    assert.ok(error.details.conflicts.some(item => item.field === 'sourceEpoch' && item.expected === baseline.sourceEpoch && item.actual > baseline.sourceEpoch));
+    assert.equal(error.details.recovery.nextAction, 'refresh-review-and-submit-new-proof');
+    assert.equal(error.details.recovery.reuseRequestId, false);
+    receipt = error.details;
+    return true;
+  });
+  const fresh = await f.manager.status(f.skillsRoot);
+  await f.manager.verify(proof(fresh, f.initialized.worktree), f.skillsRoot);
+  await assert.rejects(f.manager.verify(declaration, f.skillsRoot), error => {
+    assert.deepEqual(error.details.conflicts, receipt.conflicts);
+    assert.equal(error.details.replayed, true);
+    return true;
+  });
+  assert.equal(f.manager.currentState().state, 'verified');
+});
+
 test('TC07 background observation hashes changed leaves without promoting its baseline to a current full scan', async t => {
   const f = await fixture(t, { extraSource: true, warm: true });
   const baseline = await f.manager.status(f.skillsRoot);

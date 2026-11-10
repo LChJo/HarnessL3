@@ -99,3 +99,5 @@ tests/v1/source-observation-probe.mjs text eol=lf
 tests/v1/source-observation.test.mjs text eol=lf
 
 tests/v1/web-service.test.mjs text eol=lf
+tests/v1/initialization-contracts.test.mjs text eol=lf
+docs/implementation/INITIALIZATION_REVIEW.md text eol=lf

@@ -35,6 +35,8 @@ harnessl3 sync verify --help
 
 Help provides required/optional arguments, return semantics, and actual Schema/example paths. Read required local references, not the whole contract tree. Do not invent fields or copy example IDs/hashes/bindings. For older help, npm root -g locates harnessl3/docs/USAGE.md and docs/spec/contracts; custom installs use their actual package root. Contracts must match the running version.
 
+Use the exact Request schema, Referenced schema and Usage guide paths from help; do not infer filenames from command names or assume dist, source files or development tests are installed. Confirm actual local paths before reading them.
+
 | Operation | Purpose |
 | --- | --- |
 | task select | One joint context/skill selection using the actual entry binding/catalog |
@@ -75,6 +77,8 @@ Use the project's authoritative locations for long-term specs, task documents, d
 Use file tools for LikeC4 and evidence. Inspect model validate/sync status, resolve actual changed/missing/unreadable evidence, then use the current sync verify contract with real target, source epoch/version, model revision, scope, disposition and checks. No semantic change still needs actual review evidence; no pending change needs no fabricated proof.
 
 Mechanical evidence anomalies cannot be cleared with a blanket passed claim. A healthy unrelated local scope can be saved while other work remains pending. New concurrent changes invalidate old declarations; recheck rather than resubmitting stale versions. Scoped proof is not whole-project semantic synchronization, and task close does not prove user-work success.
+
+For SOURCE_NESTED_REPOSITORY or unsupported source entries, inspect the reported boundary and intended coverage. Do not silently exclude it, delete its .git, or rewrite ignore rules. An explicitly chosen project source exclusion changes coverage and never clears a referenced evidence failure. For SYNC_RACE, inspect error.details.conflicts and the original receipt; run sync status again, review the fresh scope and submit a new declaration with a new requestId. Equal source/model hashes do not override a changed epoch. Do not automatically copy only the new epoch into the old proof.
 
 Version authoritative .harness model/config/evidence/aliases, related source/docs and actual project skill files together. Keep machine settings/credentials, logs, history/snapshots/archived skills, indexes/caches/layouts separate and preserved. Do not copy global libraries or external link entities. Ignored/untracked/uncheckable Git ownership is diagnostic, not permission to stage, change ignores or delete files. Review actual diff and existing commit authorization.
 

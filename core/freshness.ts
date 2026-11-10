@@ -47,7 +47,7 @@ export interface VerificationResult extends FreshnessState {
   declaration: SyncProof; automaticChecks: { name: string; status: 'passed' | 'failed'; scope: string[] }[];
   replayed: boolean; seq: number;
 }
-interface VerifyReceipt { result: Omit<VerificationResult, 'replayed' | 'seq'>; error: { code: string; message: string } | null }
+interface VerifyReceipt { result: Omit<VerificationResult, 'replayed' | 'seq'>; error: { code: string; message: string; details?: Record<string, unknown> } | null }
 interface Capture { source: SourceScan; model: ModelSnapshot | null; modelDiagnostics: Diagnostic[]; attemptedModelRevision: string | null; epoch: number; generation: number }
 interface Options {
   worktree: WorktreeRecord; archive: Archive; serial: <T>(operation: () => Promise<T>) => Promise<T>;
@@ -474,7 +474,7 @@ export class FreshnessManager {
 
   private outcome(receipt: VerifyReceipt, replayed: boolean, seq: number): VerificationResult {
     const result: VerificationResult = { ...structuredClone(receipt.result), replayed, seq };
-    if (receipt.error) throw new HarnessError(receipt.error.code, receipt.error.message, { result, replayed, seq }, receipt.error.code === 'SYNC_RACE');
+    if (receipt.error) throw new HarnessError(receipt.error.code, receipt.error.message, { ...receipt.error.details, result, replayed, seq }, receipt.error.code === 'SYNC_RACE');
     return result;
   }
 
@@ -522,6 +522,23 @@ export class FreshnessManager {
       await Promise.allSettled([...this.classifiers]);
       await this.apply(current);
       let error: VerifyReceipt['error'] = null;
+      const race = (): NonNullable<VerifyReceipt['error']> => {
+        const comparisons = [
+          ['sourceEpoch', proof.sourceEpoch, this.state.sourceEpoch],
+          ['sourceVersion', proof.expectedSourceVersion, current.source.sourceVersion],
+          ['modelRevision', proof.expectedModelRevision, current.model?.revision ?? null],
+          ['captureGeneration', current.generation, this.changeGeneration],
+          ['preflightGeneration', preflight.generation, current.generation],
+          ['preflightEpoch', preflight.epoch, current.epoch],
+          ['preflightSourceVersion', preflight.source.sourceVersion, current.source.sourceVersion],
+          ['sourceScanRevision', preflight.source.sourceScanRevision, current.source.sourceScanRevision],
+          ['preflightModelRevision', preflight.model?.revision ?? null, current.model?.revision ?? null],
+        ] as const;
+        return { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.', details: {
+          conflicts: comparisons.filter(([, expected, actual]) => !same(expected, actual)).map(([field, expected, actual]) => ({ field, expected, actual })),
+          recovery: { nextAction: 'refresh-review-and-submit-new-proof', statusCommand: ['harnessl3', 'sync', 'status', '--json'], reuseRequestId: false },
+        } };
+      };
       let scopeValid = false;
       const evidenceProblems = current.model ? referencedEvidenceProblems(current.model) : [];
       const scopedEntities = new Set(proof.scope.entities);
@@ -532,11 +549,11 @@ export class FreshnessManager {
       if (!current.model) error = { code: 'MODEL_INVALID', message: 'The current model is invalid; no successful verification was recorded.' };
       else if (current.source.sourceVersion.status === 'unknown' || !current.source.sourceScanRevision) error = { code: 'SYNC_UNRESOLVED', message: 'The current source scope is unknown.' };
       else if (proof.sourceEpoch !== this.state.sourceEpoch || this.changeGeneration !== current.generation || preflight.generation !== current.generation || !same(proof.expectedSourceVersion, current.source.sourceVersion) || proof.expectedModelRevision !== current.model.revision || preflight.epoch !== current.epoch || !same(preflight.source.sourceVersion, current.source.sourceVersion) || preflight.source.sourceScanRevision !== current.source.sourceScanRevision || preflight.model?.revision !== current.model.revision) {
-        error = { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.' };
+        error = race();
       } else {
         try { pathInScope = this.pathScope(await this.validateScope(proof, current.model)); scopeValid = true; scopedEvidenceProblems = problemsInScope(); }
         catch (failure) { error = { code: failure instanceof HarnessError ? failure.code : 'INVALID_ARGUMENT', message: failure instanceof Error ? failure.message : 'The declared scope could not be validated.' }; }
-        if (!error && this.changeGeneration !== current.generation) error = { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.' };
+        if (!error && this.changeGeneration !== current.generation) error = race();
         if (!error && scopedEvidenceProblems.length) error = { code: 'SYNC_UNRESOLVED', message: 'Referenced evidence in the declared scope is changed, missing or unreadable; repair its current references before verifying.' };
         if (!error && (proof.disposition === 'unresolved' || proof.checks.some(check => check.status !== 'passed'))) error = { code: 'SYNC_UNRESOLVED', message: 'The declaration or its checks leave unresolved work.' };
       }

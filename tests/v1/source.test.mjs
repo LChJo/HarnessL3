@@ -213,6 +213,25 @@ test('TC07 a tracked descendant hidden by a directory link is unknown, never fol
   assert.ok(result.diagnostics.some((item) => item.code === 'SOURCE_ANCESTOR_LINK'));
 });
 
+test('TC07 nested repositories report their boundary and recover only through explicit scope configuration', async t => {
+  const f = await fixture(t);
+  const nested = path.join(f.checkout, 'reference', 'legacy');
+  await mkdir(nested, { recursive: true });
+  await git(nested, 'init');
+  await writeFile(path.join(nested, 'private.txt'), 'Nested repository bytes\n');
+  const result = await f.scan();
+  assert.equal(result.sourceVersion.status, 'unknown');
+  const diagnostic = result.diagnostics.find(item => item.code === 'SOURCE_NESTED_REPOSITORY');
+  assert.equal(diagnostic?.file, 'reference/legacy');
+  assert.match(diagnostic.message, /source\.excludePatterns/);
+  assert.deepEqual((await f.registry.readConfig(f.checkout)).source.excludePatterns, []);
+  const excluded = await f.configure({ ...f.config, source: { excludePatterns: ['reference/legacy'] } });
+  const recovered = await f.scan(excluded);
+  assert.notEqual(recovered.sourceVersion.status, 'unknown');
+  assert.ok(!recovered.manifest.content.entries.some(entry => entry.path.startsWith('reference/legacy')));
+  assert.equal(await readFile(path.join(nested, 'private.txt'), 'utf8'), 'Nested repository bytes\n');
+});
+
 test('TC07 gitlinks and unresolved index stages are explicit unknown unless their scope is excluded', async (t) => {
   const f = await fixture(t);
   const head = (await git(f.checkout, 'rev-parse', 'HEAD')).stdout.trim();

@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径（`Referenced schema`），init/model validate补充证据分隔及关系类型语法，完整示例随安装使用说明提供，不要求消费者读取开发源码或测试。`SYNC_RACE`继续退出3、保留原回执，可附`conflicts`期望/实际字段及`recovery`；恢复是重新status、审核并用新requestId提交新声明，原ID继续重放原结果。调用者失败后不访问成功data；响应及声明Schema不变。
+
 状态：**正式CLI实现契约**，实际代码/验证范围见[实施状态](../implementation/STATUS.md)。本文不是旧`scripts/harness.mjs`原型的使用说明。产品边界见[产品规格](product.md)，模型字段见[模型与读取契约](model-context.md)，持久化和日志见[存储](storage.md)、[观测与同步](observation-sync.md)。对应D01–D15、A01–A10及TC27入口增量。
 
 ## 1. 调用约定与目标

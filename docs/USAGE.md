@@ -136,6 +136,77 @@ node $readerFile $cliCode $responseFile
 
 ## 更新上下文与关闭阶段
 
+### 编写与修复模型
+
+先读取 `harnessl3 model validate --help` 和初始化生成的模型。模型仍由当前 agent 通过文件工具维护，下面是可直接校验的最小对象及关系示例：
+
+```likec4
+specification {
+  element system
+  element component
+  relationship calls
+}
+model {
+  app = system "Application" {
+    metadata {
+      harness_id "10000000-0000-4000-8000-000000000001"
+      brief "Application boundary"
+      source "human"
+      status "needs-review"
+      evidence "none"
+      version "1"
+    }
+  }
+  worker = component "Worker" {
+    metadata {
+      harness_id "10000000-0000-4000-8000-000000000002"
+      brief "Runs work"
+      source "human"
+      status "needs-review"
+      evidence "none"
+      version "1"
+    }
+  }
+  app -[calls]-> worker "Dispatch" {
+    metadata {
+      harness_id "20000000-0000-4000-8000-000000000001"
+      brief "Dispatches work"
+      source "human"
+      status "needs-review"
+      evidence "none"
+      version "1"
+    }
+  }
+}
+views { view overview { include * } }
+```
+
+示例 UUID 只用于示例；实际模型保留既有身份，新实体生成独立 UUID。关系必须在 `specification` 声明类型并使用 `-[calls]->` 等相应语法，裸 `->` 不满足 HarnessL3 的类型契约。对象与关系均需完整 metadata。
+
+多条证据使用一个字符串，以**单个空格**分隔唯一 UUID；生成代码使用 `keys.map(k => sources[k]).join(' ')`，不用逗号、数组或重复字段。每个 UUID 必须真实存在于 `.harness/evidence.json`；没有依据使用 `none` 并保持 `needs-review` 或 `unknown`。仅修正格式时直接修复现有文件，不重跑会随机重建全部 UUID 的初始化脚本。文件哈希相同不代表语义核验完成。
+
+### 初始化失败后的处理
+
+- Schema 与示例路径以对应命令 `--help` 返回为准；`Referenced schema` 列出实际本地引用。不要猜测 `project.schema.json`、`task-select.schema.json` 或 `dist/`，安装包不包含开发源码和测试。
+- `SOURCE_NESTED_REPOSITORY` 表示入选来源内存在独立 Git 仓库，未递归读取。先检查报错路径的用途；确需排除时，在 `.harness/project.json` 的 `source.excludePatterns` 中显式加入该 worktree 相对路径，再执行原操作。gitlink、特殊文件及冲突索引也保持未知，不自动排除、不删除 `.git`、不改 Git ignore；排除不等于删除，也不覆盖显式证据的校验。
+- `SYNC_RACE` 的 `error.details.conflicts` 列出期望和实际冲突字段。即使源码及模型指纹相同，代次变化仍会使旧声明失效。先确认旧回执，重新执行 `sync status`，审核新的待核验范围，再用新 requestId 提交新声明。不能只替换 epoch 或自动重发旧 proof；旧 requestId 继续重放原结果。
+
+PowerShell 在同一调用作用域内先检查退出码及封套，再访问 `data`；下面展示保存结果后的保护步骤，`$responseText` 与 `$cliCode` 来自前面的调用示例：
+
+```powershell
+$response = ($responseText -join "`n") | ConvertFrom-Json -ErrorAction Stop
+if ($null -eq $response -or $response.ok -ne $true) {
+    throw ($responseText -join "`n")
+}
+if ($cliCode -ne 0) {
+    # Partial results remain available in the saved response; handle them explicitly.
+    throw "CLI exit $cliCode; inspect the saved response before continuing."
+}
+$entry = $response.data
+```
+
+失败封套没有成功 `data`；不能继续对空值调用 `Get-Member`、生成选择或 proof。
+
 agent直接使用现有文件工具编辑LikeC4、证据或源码；界面展开不修改这些文件。源码或扫描范围变化使状态pending，模型合法与源码clean/dirty分别显示。旧任务继续保持旧绑定，若需要变化后的上下文，应新建任务。入选路径需要外部Git clean/process过滤器时，扫描保守返回unknown，不启动用户脚本；可显式排除该范围。
 
 ```text

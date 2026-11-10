@@ -138,6 +138,22 @@ test('distinct relationships with identical endpoints retain their separate UUID
   assert.deepEqual(modelBody(snapshot, ids.worker, sourceVersion).relationships.map(relation => relation.id), [ids.relation, ids.second])
 })
 
+test('initialization reports actionable evidence syntax and relationship kinds without cascading missing IDs', async t => {
+  const proofs = [ids.proof, '30000000-0000-4000-8000-000000000002']
+  const evidence = proofs.map(id => ({ id, kind: 'manual', claim: 'Fixture reference', location: { url: 'https://example.invalid/reference' }, hash: null, observedAt: null }))
+  const body = model().replace('evidence "none"', `evidence "${proofs.join(',')}"`).replace('-[calls]->', '->')
+  const root = await fixture(t, body, evidence)
+  await assert.rejects(loadModel(root), error => {
+    const messages = error.details.diagnostics.map(item => item.message)
+    assert.ok(messages.some(message => message.includes('single space') && message.includes('not commas')))
+    assert.ok(messages.some(message => message.includes('-[calls]->') && message.includes('relationship calls')))
+    assert.ok(!messages.some(message => message.includes('evidence UUID does not exist')))
+    return true
+  })
+  await writeFile(join(root, '.harness/model/main.c4'), model().replace('evidence "none"', `evidence "${proofs.join(' ')}"`))
+  assert.equal((await loadModel(root)).entities.length, 4)
+})
+
 for (const field of ['brief', 'source', 'status', 'evidence', 'version', 'harness_id']) {
   test(`required metadata ${field} is enforced with file and line diagnostics`, async t => {
     const body = model().replace(new RegExp(`\\s+${field} "[^"\\n]*"`), '')

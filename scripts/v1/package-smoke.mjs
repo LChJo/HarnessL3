@@ -62,6 +62,13 @@ export async function packageSmoke() {
     assert.ok(installedSchema && path.isAbsolute(installedSchema), 'Installed help must expose an absolute Schema path')
     assert.equal(await realpath(installedSchema), await realpath(path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json')))
     assert.equal(JSON.parse(await readFile(installedSchema, 'utf8')).type, 'object')
+    const references = [...selectHelp.matchAll(/^Referenced schema: (.+)$/gm)].map(match => match[1])
+    assert.ok(references.some(file => path.basename(file) === 'common.schema.json'))
+    for (const file of references) assert.equal(typeof JSON.parse(await readFile(file, 'utf8')), 'object')
+    const modelHelp = (await execFile(process.execPath, [installedBinary, 'model', 'validate', '--help'], { cwd: project, windowsHide: true })).stdout
+    assert.match(modelHelp, /relationship calls.*-\[calls\]->/)
+    const modelGuide = modelHelp.match(/^Usage guide: (.+)$/m)?.[1]
+    assert.match(await readFile(modelGuide, 'utf8'), /relationship calls/)
     const webHelp = (await execFile(process.execPath, [installedBinary, 'web', 'open', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(webHelp, /--no-open/)
     const git = (...args) => execFile('git', ['-C', project, ...args], { windowsHide: true })

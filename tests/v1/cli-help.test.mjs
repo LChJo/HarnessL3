@@ -38,6 +38,9 @@ test('TC22 help discovers a command-specific request contract without starting t
   assert.ok(schemaPath && path.isAbsolute(schemaPath))
   assert.ok(examplePath && path.isAbsolute(examplePath))
   const schema = JSON.parse(await readFile(schemaPath, 'utf8'))
+  const references = [...selection.matchAll(/^Referenced schema: (.+)$/gm)].map(match => match[1])
+  assert.ok(references.some(file => path.basename(file) === 'common.schema.json'))
+  for (const file of references) assert.equal(typeof JSON.parse(await readFile(file, 'utf8')), 'object')
   const example = JSON.parse(await readFile(examplePath, 'utf8'))
   for (const required of schema.required) assert.ok(selection.includes(required), `Missing request field: ${required}`)
   assert.equal(example.schemaVersion, 1)
@@ -45,6 +48,19 @@ test('TC22 help discovers a command-specific request contract without starting t
   assert.ok(responsePath)
   await access(responsePath)
   assert.equal(await f.help('task', 'select', example.requestId), selection)
+  await assert.rejects(access(f.dataRoot))
+})
+
+test('TC03/22 model help exposes authoring syntax in the installed usage guide', async t => {
+  const f = await fixture(t)
+  for (const operation of [['init'], ['model', 'validate']]) {
+    const output = await f.help(...operation)
+    assert.match(output, /evidence.*single space.*not commas/)
+    assert.match(output, /relationship calls.*-\[calls\]->/)
+    const guide = output.match(/^Usage guide: (.+)$/m)?.[1]
+    assert.ok(guide)
+    assert.match(await readFile(guide, 'utf8'), /relationship calls/)
+  }
   await assert.rejects(access(f.dataRoot))
 })
 
