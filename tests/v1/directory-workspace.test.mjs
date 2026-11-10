@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdir, writeFile, readFile, cp, rm, rmdir, symlink } from 'node:fs/promises'
+import { mkdir, writeFile, readFile, cp, rm, rmdir, symlink, realpath } from 'node:fs/promises'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fixture, projectRoot, execFile } from './helpers.mjs'
@@ -33,7 +33,10 @@ test('TC01/03 directory identities, nearest boundaries, editable defaults and co
   const nested = path.join(f.root, 'nested')
   await mkdir(path.join(nested, '.harness'), { recursive: true })
   await writeFile(path.join(nested, '.harness', 'project.json'), JSON.stringify({ schemaVersion: 1, projectId: randomUUID(), name: 'nested', source: { excludePatterns: [] } }))
-  await assert.rejects(f.registry.resolve({ cwd: nested }), error => error.code === 'TARGET_REQUIRED' && error.details.onboarding.worktreeRoot === nested)
+  // Onboarding reports the canonical boundary, which differs from a native
+  // macOS /private alias or a Windows 8.3 temp spelling.
+  const canonicalNested = await realpath(nested)
+  await assert.rejects(f.registry.resolve({ cwd: nested }), error => error.code === 'TARGET_REQUIRED' && error.details.onboarding.worktreeRoot === canonicalNested)
   await assert.rejects(f.registry.resolve({ cwd: nested, worktreeId: worktree.id }), { code: 'TARGET_CONFLICT' })
   const registered = await f.registry.register(nested)
   assert.notEqual(registered.project.id, project.id)
@@ -222,7 +225,8 @@ test('TC01/07 runtime adopts Git without replacing resources or treating a retai
     assert.equal(resource.freshness.currentState().state, 'pending')
     assert.equal(resource.freshness.currentState().scanPending, true)
     assert.ok(resource.freshness.currentState().sourceEpoch > before.sourceEpoch)
-    assert.equal((await resource.freshness.status(skills)).sourceVersion.status, 'dirty')
+    const adoptedScan = await resource.freshness.status(skills)
+    assert.equal(adoptedScan.sourceVersion.status, 'dirty', JSON.stringify(adoptedScan.diagnostics))
     const registryFile = path.join(f.dataRoot, 'registry.json')
     const registry = JSON.parse(await readFile(registryFile, 'utf8'))
     for (const item of [...registry.projects, ...registry.worktrees]) delete item.kind
