@@ -18,11 +18,11 @@ TARGET_REQUIRED with details.onboarding is a request for consent, not a generic 
 
 ## Ask once, then follow the answer
 
-Reuse explicit authorization for this path/action. Otherwise use the available general question UI, in the user's language:
+Reuse explicit authorization for this path/action. Otherwise follow the main skill's question-tool rule and make one native question-tool call before setup; printing a question and options is not that call.
 
-> Initialize HarnessL3 for the existing worktree at <actual absolute path>? This creates missing .harness configuration, model, evidence and alias files, registers the worktree, and creates the user skill library only if absent. Existing content is preserved.
+The tool question must identify the actual absolute worktree path and the required action. For initialization, explain that missing .harness configuration, model, evidence and alias files will be added, the worktree registered, and the user skill library created only if absent; existing content is preserved. For an existing configuration, ask to register instead and state that configuration/model files are preserved. Offer consent-and-continue and work-without-L3-for-this-task, with a recommendation when useful.
 
-Offer consent-and-continue or work-without-L3-for-this-task. If configuration exists, ask to register instead and state that configuration/model files are preserved. If the UI is unavailable, ask in conversation and wait; do not pretend a window appeared or block the JSON CLI waiting for terminal input.
+Use the actual tool name/schema exposed by this host, including an allowed async variant when appropriate. Keep the decision pending until the user answers; neither an async return nor a default/preselected choice is consent. The JSON CLI stays non-interactive.
 
 - Consent: execute the matching operation below, complete semantic review/modeling, then resume the original task.
 - Decline/cancel: ordinary execution; do not create configuration/registration/tasks or ask again for the same goal. Reconsider only when the user requests onboarding or changes task/worktree.

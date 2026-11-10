@@ -44,7 +44,13 @@ Chosen CLI operation
     `-- Ready, or registration state unknown -> execute; route onboarding errors below
 ```
 
-Do not create Git/worktrees, probe all prerequisites, or install software merely because a message arrived. Installation and project initialization are separate permissions. Reuse explicit authorization for the relevant action/path; otherwise use the available question UI, or ask in conversation and wait.
+Do not create Git/worktrees, probe all prerequisites, or install software merely because a message arrived. Installation and project initialization are separate permissions. Reuse explicit authorization for the relevant action/path; otherwise follow the question-tool rule below.
+
+### Ask through the host's question tool
+
+For a required user decision or setup consent, use the native question tool actually exposed and permitted by this host/mode (for example `AskQuestion`, `AskUserQuestion`, `request_user_input`, or `request_user_input_async`). **Call the tool** with its real schema; a question and bullet options in chat do not open that UI. Ask one self-contained question in the user's language, include the actual target/impact, give concise choices and a recommendation when useful, then wait for the answer before dependent work. Look up facts yourself and reuse confirmed decisions.
+
+An async tool returning control is not a user answer; continue only independent work while the decision is pending. Never claim a dialog appeared without a successful tool call.
 
 For initialization/registration: consent -> follow the project reference, then resume; decline/cancel -> ordinary work without further L3 calls for this task; pending -> independent work only. Silence is not consent. Initialization includes the current agent's reading, modeling and coverage review; scaffold-ready or parsing success alone is insufficient.
 

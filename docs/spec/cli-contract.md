@@ -29,7 +29,7 @@
 3. 带 task ID 的命令可定位该任务归属，但仍必须与显式目标和已登记 cwd 一致。在未登记 cwd 中必须显式提供 worktree（以及需要时的 project），不能仅从 task ID 猜写入目标。
 4. 没有任务的目标命令使用显式目标或已登记 cwd；无法唯一解析即 `TARGET_REQUIRED`。不使用全局“最后活动项目/任务”。
 
-无显式目标、cwd处于未登记的已有Git worktree时，`TARGET_REQUIRED`的`details.onboarding`提供`state:"initialization-required"|"registration-required"`、实际`worktreeRoot`、`confirmationRequired:true`、`nextAction:"ask-user"`、含路径与影响的`question`、`command`参数数组（`["init"]`或`["worktree","register",root]`）、`fallback:"continue-without-l3"`及`fallbackWhen:["declined","cancelled"]`。这是待接入确认，不是CLI不可用；仅提供指引，不自动写入工作区/登记/任务。agent优先处理此分支，在通用询问窗口按用户语言展示实际路径与影响，窗口不可用则对话询问；同意后在该根目录执行对应命令并校验，拒绝/取消才本任务普通执行且不重问，未回复不能直接采用回退；已有授权复用。旧CLI只有原onboarding字段时仍先询问。无Git目录、显式目标不全或其它冲突不产生首次接入指引；不能借该指引切换数据根或初始化另一个项目。CLI的JSON模式继续非交互。
+无显式目标、cwd处于未登记的已有Git worktree时，`TARGET_REQUIRED`的`details.onboarding`提供`state:"initialization-required"|"registration-required"`、实际`worktreeRoot`、`confirmationRequired:true`、`nextAction:"ask-user"`、含路径与影响的`question`、`command`参数数组（`["init"]`或`["worktree","register",root]`）、`fallback:"continue-without-l3"`及`fallbackWhen:["declined","cancelled"]`。这是待接入确认，不是CLI不可用；仅提供指引，不自动写入工作区/登记/任务。agent优先处理此分支，实际调用当前宿主/模式可用且允许的原生询问工具，按用户语言一次展示一个问题及真实路径/影响；异步调用返回或预选选项不是同意；同意后在该根目录执行对应命令并校验，拒绝/取消才本任务普通执行且不重问，未回复不能直接采用回退；已有授权复用。旧CLI只有原onboarding字段时仍先询问。无Git目录、显式目标不全或其它冲突不产生首次接入指引；不能借该指引切换数据根或初始化另一个项目。CLI的JSON模式继续非交互。
 
 `project list`、`serve start/status/stop` 等全局命令无 worktree 时返回 `target:null`；worktree list 的 project 参数仅作过滤，不要求选择该项目的单一 worktree。项目登记结果可有 projectId 而无 worktree，仍放在 data 内，不构造虚假的 worktree。登记同一实际路径幂等；复制的项目标识、路径重定位和已丢失 worktree 按[架构](architecture.md)规则处理，不能仅以分支名识别。
 

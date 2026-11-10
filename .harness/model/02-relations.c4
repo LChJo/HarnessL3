@@ -232,11 +232,11 @@ model {
   app.runtimeSkill -[guides]-> app.projectModel "当前agent直接建模" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000018"
-      brief "当前大模型读取真实项目并直接编写对象、关系、证据及视图，报告真实进度。"
+      brief "当前agent先按宿主实际可用工具取得接入确认，再读取项目并直接编写对象、关系、证据及视图，报告真实进度。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000011"
-      version "1"
+      version "2"
     }
   }
   app.quality -[verifies]-> app.cli "CLI与安装验证" {

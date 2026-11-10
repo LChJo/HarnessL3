@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.41 combines recorded review and incremental observation with per-turn skill routing and complete omitted-branch counts while preserving strict checks and immutable history.",
+      "claim": "Current baseline v0.42 requires actual permitted host-native question-tool calls for setup decisions, preserving prior routing, review, source and history rules.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "44bc768ea6d0896d14ae509e4f71cf69d09c35864777da4d6134d36b32b71b43",
-      "observedAt": "2026-11-09T13:39:40.544Z"
+      "hash": "a45339a96a2e4e0e5369e589bd598bd9f344a53e7151c32189a2d98ed67c87d8",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Compact English entry reassesses and loads skills each user turn before reusing project context; skill/version changes use new stage tasks, with existing setup and guarded result handling preserved.",
+      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "9b09128089adbc426a645977ad2a493fce771f80f29cf229efab73414fab1746",
-      "observedAt": "2026-11-09T12:35:44.734Z"
+      "hash": "580dba84cf43c31458824e4af23eb18887a1d4b47065490ccfc58881814b8e8a",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Status records the v0.41 review fixes for task restoration and current model validity, separating actual checks and remaining platform limits.",
+      "claim": "Status separates v0.42 question-tool instructions, static and copy checks from unrun real-host prompting behavior; earlier validations remain scoped historical results.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "f4d994a9d20569bca9279dfd0bff08674fb8b7a1b684c670bb7c4bf24e8ad13f",
-      "observedAt": "2026-11-09T14:34:41.703Z"
+      "hash": "6211a22539fb62dfe85a8e88c8c1b9eb86d6e8b5527c5f9b296d43770a92ab05",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "Acceptance covers no-scan review, scoped observation, strict proofs, compact index equivalence, full omitted counts and per-turn skill stages with separate actual validation.",
+      "claim": "TC27 requires observable native question-tool calls when available/permitted and separates async waiting, file checks and real-host acceptance from earlier regression coverage.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "0b50e06a3556a9adae3e9343a4fa8440104303b95aec0326476824c112c76ad9",
-      "observedAt": "2026-11-09T13:39:40.550Z"
+      "hash": "3d987cb124403a6e78c480a5d900a84e454f2aa0500b2e1cb8c27d548765608c",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "The existing one-selection task protocol supports per-turn archived skill reads and new empty-context stage tasks; new tasks do not inherit packets or cross-task known.",
+      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "bf7280d89f6ff1ba0db92dca78bfeb2afc4f76e3783404f4fdd04d3d4c6172d9",
-      "observedAt": "2026-11-09T12:35:44.737Z"
+      "hash": "e80ccd547cd0e9b2e3c645b588228e057dfa83abc90ea698dddd04b619ee83b5",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "Product requirements distinguish review and incremental observation from strict validation, full hidden-branch counts and per-turn skill routing from reusable project context.",
+      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "d3e39658731c22eab6e603d81b642f34af2ab60740fdba022097f081a3928369",
-      "observedAt": "2026-11-09T13:39:40.552Z"
+      "hash": "b2b7ef6225f89c5d0a34190e54ec3c1a80ecfda121aef4bf0423f2ea15428738",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The specification integrates v0.41 observation/review, v0.40 skill routing and v0.39 counts while marking superseded continuation guidance and preserving historical boundaries.",
+      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "604eddf5db22a1d9b7199106de79384cf62a8c0971a17b2b5d7bd1b633455b98",
-      "observedAt": "2026-11-09T13:39:40.552Z"
+      "hash": "38b0a5d395f37b2fcad6528c40ebabc887b54bfae45133a818222cc330fcf2a5",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.41, separate review/incremental observation from strict checks and require per-turn skill routing while preserving context reuse, maintenance and commit authorization.",
+      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "33e817c45c5c97c32c18d1bea0812f86c94766b981a693c4c6484e6e202f6bc7",
-      "observedAt": "2026-11-09T13:39:40.552Z"
+      "hash": "88afe6166cb47dbb8ab5ae9ebfb63ec409d2d862a058c0945b14c1b132e86ab9",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,12 +654,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "English onboarding guidance distinguishes missing config from unregistered existing config, requires actual-path consent and current-agent semantic modeling/coverage, and exempts archive-only recovery from reinitialization.",
+      "claim": "Onboarding guidance applies the shared native question-tool rule to actual path/action/impact, preserves pending async decisions and explicit consent, and retains current-agent semantic modeling and archive recovery boundaries.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "65eaeb62b82a60087d6b3fde4dd3208e5ff48085f0e2e8ccf45b1ed031f5555f",
-      "observedAt": "2026-11-09T10:19:54.761Z"
+      "hash": "7479d08264926ce078d36ef90be2cd466780d60c5294d46c2f3eb8bc8b4099ef",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.41, separate review/incremental observation from strict checks and require per-turn skill routing while preserving context reuse, maintenance and commit authorization.",
+      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "33e817c45c5c97c32c18d1bea0812f86c94766b981a693c4c6484e6e202f6bc7",
-      "observedAt": "2026-11-09T13:39:40.554Z"
+      "hash": "88afe6166cb47dbb8ab5ae9ebfb63ec409d2d862a058c0945b14c1b132e86ab9",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -794,12 +794,12 @@
     {
       "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
       "kind": "document",
-      "claim": "User navigation distinguishes per-turn skill selection/body reads from reusable project context and describes stage tasks on skill changes.",
+      "claim": "User navigation describes native question-tool onboarding, alongside per-turn skill reads and reusable project context.",
       "location": {
         "path": "README.md"
       },
-      "hash": "0c8f65c8514117ffc680fd9b3d0a5d442fe4cd1dcc67ebc2da4fbb2dd9e7e06d",
-      "observedAt": "2026-11-09T12:35:44.744Z"
+      "hash": "eb40abb5bde6810af565f67c5576204faa62f439a40e47c9d93aa4ff499f136b",
+      "observedAt": "2026-11-10T03:39:32.946Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
