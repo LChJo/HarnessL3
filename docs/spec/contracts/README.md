@@ -1,5 +1,7 @@
 # v1 可校验契约
 
+v0.46：新增selection-input/query-input描述CLI接受的任务自有缺省字段；原selection/query继续校验规范化请求。snapshot绑定显式mode、来源unknown且sourceScanRevision=null；旧无mode仍要求扫描策略哈希。file-read允许省略expectedHash并从原方案解析，显式值仍检查；selection.stage表示追加阶段，旧归档不重写。
+
 状态：正式实现共用的协议工件。所有 schema 使用 JSON Schema Draft 2020-12；`$id` 的 `https://harnessl3.local/` 只是稳定逻辑标识，不是在线服务。核心以Ajv2020执行完整契约校验；请求/响应遵守[CLI 文档](../cli-contract.md)与[模型文档](../model-context.md)，功能及平台结果见[实施状态](../../implementation/STATUS.md)。
 
 | Schema | 验证对象 |

@@ -2,7 +2,9 @@ import { open, readFile, mkdir, lstat } from 'node:fs/promises';
 import { resolve, join, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { setImmediate } from 'node:timers/promises';
-import { HarnessError } from './errors.js';
+import { openSync, closeSync, readSync, lstatSync } from 'node:fs';
+import { reportProgress } from './progress.js';
+import { HarnessError, asHarnessError, permissionError } from './errors.js';
 import { canonicalJson, digest, parseJsonStrict, sha256 } from './json.js';
 import { atomicWrite, ensureDir, isErrno } from './io.js';
 
@@ -40,6 +42,7 @@ export type CommitInput<T> = {
 export type CommitResult<T> = { receipt: T; replayed: boolean; seq: number };
 export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[]; afterSeq?: number }
 export interface CommitHeader { seq: number; operationId: string; committedAt: string; scope: string; requestId: string; receiptHash: string; kind: string | null; taskId: string | null; operation: string | null; source: string | null }
+interface StoredRecord extends CommitHeader { hash: string; requestHash: string; archives: ArchiveReference[]; offset: number; length: number }
 
 function corrupt(message: string, details: Record<string, unknown> = {}): HarnessError {
   return new HarnessError('ARCHIVE_CORRUPT', message, details);
@@ -66,10 +69,11 @@ export class Archive {
   readonly readOnly: boolean;
   private loaded?: Promise<void>;
   private queue: Promise<unknown> = Promise.resolve();
-  private commits: CommitRecord[] = [];
-  private requests = new Map<string, CommitRecord>();
-  private byKind = new Map<string, CommitRecord[]>();
-  private byTask = new Map<string, CommitRecord[]>();
+  private commits: StoredRecord[] = [];
+  private requests = new Map<string, StoredRecord>();
+  private byKind = new Map<string, StoredRecord[]>();
+  private byTask = new Map<string, StoredRecord[]>();
+  private journalBytes = 0;
   private state: 'ready' | 'recovery-required' = 'ready';
   private problems: ArchiveDiagnostic[] = [];
 
@@ -84,9 +88,58 @@ export class Archive {
   records(filter: RecordFilter = {}): CommitRecord[] { return [...this.scan(filter)]; }
   scan(filter: RecordFilter = {}): IterableIterator<CommitRecord> {
     const records = this.matching(filter);
-    return (function* () { for (const record of records) yield structuredClone(record); })();
+    const archive = this;
+    return (function* () { for (const record of records) yield archive.recordSync(record.seq); })();
   }
-  headers(filter: RecordFilter = {}): CommitHeader[] { return Array.from(this.matching(filter), record => this.header(record)); }
+  async *scanAsync(filter: RecordFilter = {}): AsyncIterableIterator<CommitRecord> {
+    const boundary = this.headers(filter);
+    for (const header of boundary) yield await this.record(header.seq);
+  }
+  headers(filter: RecordFilter = {}): CommitHeader[] { return Array.from(this.matching(filter), record => {
+    const { hash: _hash, requestHash: _requestHash, archives: _archives, offset: _offset, length: _length, ...header } = record;
+    return { ...header };
+  }); }
+  async record(seq: number): Promise<CommitRecord> { await this.ready(); return this.readRecord(this.stored(seq)); }
+  async receipt(seq: number): Promise<unknown> {
+    const record = await this.record(seq);
+    await this.verifyReferences(record);
+    return this.readSnapshot(record.receiptHash);
+  }
+  recordSync(seq: number): CommitRecord {
+    const stored = this.stored(seq), file = join(this.root, 'journal.jsonl');
+    const info = lstatSync(file);
+    if (!info.isFile() || info.isSymbolicLink()) throw corrupt('Journal is not a regular local file.');
+    const descriptor = openSync(file, 'r');
+    try {
+      const bytes = Buffer.alloc(stored.length);
+      let read = 0;
+      while (read < bytes.length) { const count = readSync(descriptor, bytes, read, bytes.length - read, stored.offset + read); if (!count) throw corrupt('A committed journal record is truncated.'); read += count; }
+      return this.decodeStored(bytes, stored);
+    } finally { closeSync(descriptor); }
+  }
+  private stored(seq: number): StoredRecord {
+    const record = this.commits[seq - 1];
+    if (!Number.isSafeInteger(seq) || !record || record.seq !== seq) throw new HarnessError('NOT_FOUND', 'This committed sequence is not in the verified journal.', { seq });
+    return record;
+  }
+  private decodeStored(bytes: Buffer, stored: StoredRecord): CommitRecord {
+    try {
+      const record = parseJsonStrict(decode(bytes)) as CommitRecord;
+      if (record.hash !== stored.hash || record.seq !== stored.seq || digest('commit', recordContent(record)) !== stored.hash) throw corrupt('Committed journal bytes changed after recovery.', { seq: stored.seq });
+      return record;
+    } catch (error) { if (error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT') throw error; throw corrupt('Committed journal bytes are invalid.', { seq: stored.seq }); }
+  }
+  private async readRecord(stored: StoredRecord): Promise<CommitRecord> {
+    const file = join(this.root, 'journal.jsonl');
+    await this.regularFile(file);
+    const handle = await open(file, 'r');
+    try {
+      const bytes = Buffer.alloc(stored.length);
+      let read = 0;
+      while (read < bytes.length) { const { bytesRead } = await handle.read(bytes, read, bytes.length - read, stored.offset + read); if (!bytesRead) throw corrupt('A committed journal record is truncated.'); read += bytesRead; }
+      return this.decodeStored(bytes, stored);
+    } finally { await handle.close(); }
+  }
   references(filter: RecordFilter = {}): ArchiveReference[] {
     const references = new Map<string, ArchiveReference>();
     for (const record of this.matching(filter)) for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, { ...reference });
@@ -103,27 +156,27 @@ export class Archive {
       taskId: payload?.kind === 'task' && typeof payload.task?.id === 'string' ? payload.task.id : null,
       operation: typeof payload?.operation === 'string' ? payload.operation : null, source: typeof payload?.source === 'string' ? payload.source : null };
   }
-  private matching(filter: RecordFilter): IterableIterator<CommitRecord> {
+  private matching(filter: RecordFilter): IterableIterator<StoredRecord> {
     const { kind, taskId } = filter, excluded = new Set(filter.excludeKinds);
     const records = taskId !== undefined ? this.byTask.get(taskId) ?? [] : kind !== undefined ? this.byKind.get(kind) ?? [] : this.commits;
     const length = records.length;
-    const header = (record: CommitRecord) => this.header(record);
     return (function* () {
       for (let i = 0; i < length; i++) {
-        const record = records[i], meta = header(record);
+        const record = records[i], meta = record;
         if (record.seq <= (filter.afterSeq ?? 0) || kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind)) continue;
         yield record;
       }
     })();
   }
-  private remember(record: CommitRecord): void {
-    this.commits.push(record);
-    this.requests.set(this.key(record.scope, record.requestId), record);
+  private remember(record: CommitRecord, offset: number, length: number): void {
     const header = this.header(record);
+    const stored: StoredRecord = { ...header, hash: record.hash, requestHash: record.requestHash, archives: record.archives.map(reference => ({ ...reference })), offset, length };
+    this.commits.push(stored);
+    this.requests.set(this.key(record.scope, record.requestId), stored);
     for (const [index, key] of [[this.byKind, header.kind], [this.byTask, header.taskId]] as const) if (key !== null) {
       let records = index.get(key);
       if (!records) { records = []; index.set(key, records); }
-      records.push(record);
+      records.push(stored);
     }
   }
 
@@ -132,7 +185,7 @@ export class Archive {
   private async directory(name: string): Promise<string> {
     const dir = join(this.root, name);
     try { if (!this.readOnly) await mkdir(dir, { recursive: true, mode: 0o700 }); }
-    catch (error) { throw new HarnessError('IO_ERROR', 'Cannot create archive directory.', { path: dir, cause: String(error) }); }
+    catch (error) { throw new HarnessError('IO_ERROR', 'Cannot create archive directory.', { ...asHarnessError(error).details, path: dir, cause: String(error) }); }
     const info = await lstat(dir);
     if (!info.isDirectory() || info.isSymbolicLink()) throw corrupt('Archive directory is not a regular local directory.', { path: dir });
     return dir;
@@ -149,59 +202,75 @@ export class Archive {
       for (const dir of ['snapshots', 'skill-blobs', 'tasks', 'checkpoints', 'diagnostics']) await this.directory(dir);
     }
     const journal = join(this.root, 'journal.jsonl');
-    let bytes: Buffer;
-    try { await this.regularFile(journal); bytes = await readFile(journal); }
+    try { await this.regularFile(journal); }
     catch (error) {
       if (isErrno(error, 'ENOENT')) return;
       throw error;
     }
-    const lastNewline = bytes.lastIndexOf(10);
-    const completeEnd = lastNewline + 1;
-    let offset = 0;
-    let validEnd = 0;
-    let yieldedThrough = 0;
-    while (offset < completeEnd) {
-      const newline = bytes.indexOf(10, offset);
-      const line = bytes.subarray(offset, newline);
-      try {
-        const record = parseJsonStrict(decode(line)) as CommitRecord;
-        this.validateRecord(record);
-        this.remember(record);
-        validEnd = newline + 1;
-      } catch (error) {
-        this.state = 'recovery-required';
-        this.problems.push({ code: 'JOURNAL_CORRUPT', message: `Commit validation failed at byte ${offset}: ${String(error)}`, path: journal, verifiedThrough: this.seq });
-        break;
+    const latest = new Map<string, { seq: number; index: number }>();
+    let offset = 0, yieldedThrough = 0, pendingBytes = 0;
+    let pending: Buffer[] = [];
+    const reader = await open(journal, 'r');
+    const total = (await reader.stat()).size;
+    reportProgress({ phase: 'recovering-history', completed: 0, total });
+    try {
+      chunks: for await (const chunk of reader.createReadStream({ autoClose: false, highWaterMark: 256 * 1024 })) {
+        const bytes = chunk as Buffer;
+        let start = 0, newline: number;
+        while ((newline = bytes.indexOf(10, start)) >= 0) {
+          const part = bytes.subarray(start, newline);
+          const line = pending.length ? Buffer.concat([...pending, part], pendingBytes + part.length) : part;
+          try {
+            const record = parseJsonStrict(decode(line)) as CommitRecord;
+            this.validateRecord(record);
+            this.remember(record, offset, line.length);
+            record.materializations.forEach((item, index) => latest.set(item.path, { seq: record.seq, index }));
+          } catch (error) {
+            const permission = permissionError(error);
+            if (permission) throw permission;
+            this.state = 'recovery-required';
+            this.problems.push({ code: 'JOURNAL_CORRUPT', message: `Commit validation failed at byte ${offset}: ${String(error)}`, path: journal, verifiedThrough: this.seq });
+            break chunks;
+          }
+          offset += line.length + 1;
+          pending = []; pendingBytes = 0; start = newline + 1;
+          if (offset - yieldedThrough >= 1024 * 1024) {
+            yieldedThrough = offset;
+            reportProgress({ phase: 'recovering-history', completed: offset, total });
+            await setImmediate();
+          }
+        }
+        if (start < bytes.length) { const rest = Buffer.from(bytes.subarray(start)); pending.push(rest); pendingBytes += rest.length; }
       }
-      offset = newline + 1;
-      if (offset - yieldedThrough >= 1024 * 1024) { yieldedThrough = offset; await setImmediate(); }
-    }
+    } finally { await reader.close(); }
+    this.journalBytes = offset;
     // Only an unterminated suffix following a fully verified prefix is uncommitted.
-    if (this.state === 'ready' && completeEnd < bytes.length && validEnd === completeEnd) {
+    if (this.state === 'ready' && pendingBytes > 0) {
       if (this.readOnly) this.problems.push({ code: 'JOURNAL_INCOMPLETE_TAIL', message: 'Uncommitted incomplete tail remains unchanged during read-only inspection.', path: journal, verifiedThrough: this.seq });
       else {
         const path = join(await this.directory('diagnostics'), `${randomUUID()}.journal-tail`);
-        await atomicWrite(path, bytes.subarray(completeEnd));
+        await atomicWrite(path, Buffer.concat(pending, pendingBytes));
         const handle = await open(journal, 'r+');
-        try { await handle.truncate(completeEnd); await handle.sync(); } finally { await handle.close(); }
+        try { await handle.truncate(offset); await handle.sync(); } finally { await handle.close(); }
         this.problems.push({ code: 'JOURNAL_INCOMPLETE_TAIL', message: 'Uncommitted incomplete tail was preserved before truncation.', path, verifiedThrough: this.seq });
       }
     }
-    const latest = new Map<string, Materialization>();
+    pending = [];
     // Recovery shares verification work, not decoded bodies or a lifetime trust cache.
     const verified = new Map<string, Promise<void>>();
     for (const record of this.commits) {
       try {
         await this.verifyReferences(record, verified);
-        for (const materialization of record.materializations) latest.set(materialization.path, materialization);
       } catch (error) {
+        const permission = permissionError(error);
+        if (permission) throw permission;
         this.state = 'recovery-required';
         this.problems.push({ code: 'ARCHIVE_CORRUPT', message: String(error), seq: record.seq, verifiedThrough: this.seq });
       }
     }
     // Do not replace current projections from a journal with an unverifiable suffix.
     if (this.state === 'ready' && !this.readOnly) {
-      try { for (const item of latest.values()) await this.materialize(item); }
+      try { for (const item of latest.values()) await this.materialize((await this.readRecord(this.stored(item.seq))).materializations[item.index]); }
       catch (error) {
         this.state = 'recovery-required';
         this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), verifiedThrough: this.seq });
@@ -259,6 +328,8 @@ export class Archive {
       if (!snapshot || typeof snapshot !== 'object' || Object.keys(snapshot).length !== 4 || snapshot.schemaVersion !== 1 || typeof snapshot.kind !== 'string' || !snapshot.kind || snapshot.hash !== hash || digest(snapshot.kind, snapshot.content) !== hash) throw corrupt('Snapshot fingerprint or schema is invalid.', { path: file });
       return snapshot.content as T;
     } catch (error) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
       if (error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT') throw error;
       throw corrupt('Snapshot is missing or invalid.', { path: file, hash, missing: isErrno(error, 'ENOENT'), cause: String(error) });
     }
@@ -289,12 +360,14 @@ export class Archive {
       if (sha256(bytes) !== hash) throw corrupt('Archived skill bytes do not match their fingerprint.', { path: file, hash });
       return bytes;
     } catch (error) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
       if (error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT') throw error;
       throw corrupt('Archived skill bytes are missing or unreadable.', { path: file, hash, missing: isErrno(error, 'ENOENT'), cause: String(error) });
     }
   }
 
-  private async verifyReferences(record: CommitRecord, verified?: Map<string, Promise<void>>): Promise<void> {
+  private async verifyReferences(record: Pick<CommitRecord, 'archives'>, verified?: Map<string, Promise<void>>): Promise<void> {
     for (const reference of record.archives) {
       const key = `${reference.kind}:${reference.hash}`;
       let pending = verified?.get(key);
@@ -366,19 +439,22 @@ export class Archive {
     const journal = join(this.root, 'journal.jsonl');
     try { await this.regularFile(journal); } catch (error) { if (!isErrno(error, 'ENOENT')) throw error; }
     const handle = await open(journal, 'a', 0o600);
+    const bytes = Buffer.from(`${canonicalJson(record)}\n`, 'utf8');
     try {
-      await handle.writeFile(`${canonicalJson(record)}\n`, 'utf8');
+      if ((await handle.stat()).size !== this.journalBytes) throw corrupt('The journal length changed outside the current writer.');
+      await handle.writeFile(bytes);
       await handle.sync();
     } catch (error) {
       this.state = 'recovery-required';
       this.problems.push({ code: 'JOURNAL_WRITE_FAILED', message: String(error), path: journal, verifiedThrough: this.seq });
-      throw new HarnessError('IO_ERROR', 'Journal append did not complete; restart recovery is required.', { requestId: captured.requestId, cause: String(error) });
+      throw new HarnessError('IO_ERROR', 'Journal append did not complete; restart recovery is required.', { ...asHarnessError(error).details, requestId: captured.requestId, outcome: 'unknown', nextAction: 'query-request', cause: String(error) });
     } finally { await handle.close(); }
-    this.remember(record);
+    this.remember(record, this.journalBytes, bytes.length - 1);
+    this.journalBytes += bytes.length;
     try { for (const item of materializations) await this.materialize(item); }
     catch (error) {
       this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), seq: record.seq });
-      throw new HarnessError('IO_ERROR', 'Commit is durable but its materialized projection needs recovery.', { committed: true, seq: record.seq, requestId: record.requestId, cause: String(error) });
+      throw new HarnessError('IO_ERROR', 'Commit is durable but its materialized projection needs recovery.', { ...asHarnessError(error).details, committed: true, seq: record.seq, requestId: record.requestId, outcome: 'committed', nextAction: 'query-request', cause: String(error) });
     }
     return { receipt: await this.readSnapshot<T>(receiptHash), replayed: false, seq: record.seq };
   }

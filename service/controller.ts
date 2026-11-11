@@ -4,7 +4,7 @@ import { setTimeout } from 'node:timers/promises'
 import path from 'node:path'
 import { readJson, ensureDir, isErrno } from '../core/io.js'
 import { digest } from '../core/json.js'
-import { HarnessError } from '../core/errors.js'
+import { HarnessError, asHarnessError, permissionError } from '../core/errors.js'
 import { PACKAGE_ROOT, parsePackageBuild, type PackageBuild } from '../core/package.js'
 import { validateContract } from '../core/contract.js'
 import type { Envelope } from '../core/types.js'
@@ -23,7 +23,7 @@ export function processAlive(pid: number): boolean { try { process.kill(pid, 0);
 export async function descriptor(dataRoot: string): Promise<ServiceDescriptor | null> {
   await validateServiceFile(path.join(dataRoot, 'service.json'))
   let value: ServiceDescriptor
-  try { value = await readJson<ServiceDescriptor>(path.join(dataRoot, 'service.json')) } catch (error) { if (isErrno(error, 'ENOENT')) return null; throw new HarnessError('SERVICE_CONFLICT', 'The service descriptor is unreadable; no unknown process will be contacted') }
+  try { value = await readJson<ServiceDescriptor>(path.join(dataRoot, 'service.json')) } catch (error) { if (isErrno(error, 'ENOENT')) return null; if (isErrno(error, 'EACCES') || isErrno(error, 'EPERM')) throw error; throw new HarnessError('SERVICE_CONFLICT', 'The service descriptor is unreadable; no unknown process will be contacted') }
   if (value.schemaVersion !== 1 || value.protocolVersion !== 1 || !Number.isInteger(value.pid) || value.pid <= 0 || typeof value.instanceId !== 'string' || typeof value.token !== 'string' || !/^[a-f0-9]{64}$/.test(value.token) || !/^http:\/\/127\.0\.0\.1:\d+$/.test(value.url) || value.dataRootHash !== digest('data-root', dataRoot)) throw new HarnessError('SERVICE_CONFLICT', 'The service descriptor has an incompatible identity')
   value.build = parsePackageBuild(value.build) ?? undefined
   return value
@@ -45,7 +45,7 @@ async function startupOwner(dataRoot: string): Promise<StartupOwner | null> {
   await validateServiceFile(file)
   let owner: StartupOwner
   try { owner = await readJson<StartupOwner>(file) }
-  catch (error) { if (isErrno(error, 'ENOENT')) return null; throw new HarnessError('SERVICE_CONFLICT', 'The startup lock is unreadable; no unknown process will be contacted') }
+  catch (error) { if (isErrno(error, 'ENOENT')) return null; if (isErrno(error, 'EACCES') || isErrno(error, 'EPERM')) throw error; throw new HarnessError('SERVICE_CONFLICT', 'The startup lock is unreadable; no unknown process will be contacted') }
   if (owner?.schemaVersion !== 1 || !Number.isSafeInteger(owner.pid) || owner.pid <= 0 || typeof owner.instanceId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(owner.instanceId) || typeof owner.startedAt !== 'string' || !Number.isFinite(Date.parse(owner.startedAt))) throw new HarnessError('SERVICE_CONFLICT', 'The startup lock has an incompatible identity')
   return owner
 }
@@ -164,7 +164,7 @@ export async function ensureService(dataRoot: string, port = 0, signal?: AbortSi
       return record
     }
     if (record && lastProbe?.state === 'conflict') throw serviceFailure({ record, state: 'conflict', diagnostic: lastProbe })
-    if (failure) throw new HarnessError('IO_ERROR', 'Could not launch the local service')
+    if (failure) throw new HarnessError('IO_ERROR', 'Could not launch the local service', asHarnessError(failure).details)
     if (joining && !record || exited !== null && exited !== 0) {
       // Another process may own the startup lock; give its bounded initialization time to finish.
       const lock = await startupOwner(dataRoot)
@@ -175,21 +175,48 @@ export async function ensureService(dataRoot: string, port = 0, signal?: AbortSi
   }
   throw new HarnessError('BUSY', 'The service did not become ready within the startup deadline', { log: path.join(dataRoot, 'service.log'), ...(lastProbe ? { diagnostic: lastProbe } : {}) }, true)
 }
-export async function rpc(record: ServiceDescriptor, request: CommandRequest, signal?: AbortSignal): Promise<Envelope> {
+export type ProgressReporter = (progress: { phase: string; completed?: number; total?: number }) => void
+export async function rpc(record: ServiceDescriptor, request: CommandRequest, signal?: AbortSignal, progress?: ProgressReporter): Promise<Envelope> {
+  cancelled(signal)
+  progress?.({ phase: 'dispatching' })
+  let polling = false, supported = true
+  const poll = async () => {
+    if (!progress || polling || !supported || signal?.aborted) return
+    polling = true
+    try {
+      const timeout = AbortSignal.timeout(1000)
+      const response = await fetch(record.url + '/requests/' + request.requestId + '?' + new URLSearchParams({ cwd: request.cwd }), { headers: serviceHeaders(record), signal: signal ? AbortSignal.any([signal, timeout]) : timeout })
+      if (!response.ok) { await response.body?.cancel(); if (response.status === 404) supported = false; return }
+      const status = await response.json() as { requestId?: string; phase?: string; completed?: number; total?: number }
+      if (status.requestId === request.requestId && typeof status.phase === 'string') progress({ phase: status.phase,
+        ...(Number.isSafeInteger(status.completed) && status.completed! >= 0 ? { completed: status.completed } : {}),
+        ...(Number.isSafeInteger(status.total) && status.total! >= 0 ? { total: status.total } : {}),
+      })
+    } catch { /* Progress failure cannot replace the business result or trigger a second dispatch. */ }
+    finally { polling = false }
+  }
+  const timer = progress ? setInterval(() => { void poll() }, 1000) : undefined
+  timer?.unref()
+  try { return await rpcOnce(record, request, signal) }
+  finally { clearInterval(timer) }
+}
+async function rpcOnce(record: ServiceDescriptor, request: CommandRequest, signal?: AbortSignal): Promise<Envelope> {
   cancelled(signal)
   let response: Response
   try { response = await fetch(record.url + '/rpc', { method: 'POST', headers: { ...serviceHeaders(record), 'content-type': 'application/json' }, body: JSON.stringify(request), signal }) }
   catch (error) {
     cancelled(signal)
+    const permission = permissionError(error)
+    if (permission) throw new HarnessError('IO_ERROR', permission.message, { ...permission.details, requestId: request.requestId, outcome: 'unknown', nextAction: 'query-request' })
     const code = systemCode(error), refused = code === 'ECONNREFUSED'
-    throw new HarnessError(refused ? 'BUSY' : 'IO_ERROR', refused ? 'The local service is temporarily unreachable; retry this command' : 'The local service response was lost; check the request result before retrying', { requestId: request.requestId, reason: refused ? 'connection-refused' : 'response-lost', outcome: refused ? 'not-executed' : 'unknown', ...(code ? { systemCode: code } : {}) }, true)
+    throw new HarnessError(refused ? 'BUSY' : 'IO_ERROR', refused ? 'The local service is temporarily unreachable; retry this command' : 'The local service response was lost; check the request result before retrying', { requestId: request.requestId, reason: refused ? 'connection-refused' : 'response-lost', outcome: refused ? 'not-executed' : 'unknown', nextAction: refused ? 'retry-same-request' : 'query-request', ...(code ? { systemCode: code } : {}) }, refused)
   }
   if (!response.ok) {
     await response.body?.cancel()
     const temporary = response.status === 503
     const rejected = [401, 403, 409, 503].includes(response.status)
     const reason = temporary ? 'not-accepting-requests' : response.status === 409 ? 'protocol-or-identity-mismatch' : [401, 403].includes(response.status) ? 'authentication-rejected' : 'http-error'
-    throw new HarnessError(temporary ? 'BUSY' : response.status === 409 ? 'VERSION_CONFLICT' : rejected ? 'SERVICE_CONFLICT' : 'IO_ERROR', temporary ? 'The local service is not accepting requests yet; retry this command' : rejected ? 'The local service rejected the request before execution' : 'The local service returned an unexpected HTTP error; check the request result before retrying', { requestId: request.requestId, httpStatus: response.status, reason, outcome: rejected ? 'not-executed' : 'unknown' }, temporary || !rejected)
+    throw new HarnessError(temporary ? 'BUSY' : response.status === 409 ? 'VERSION_CONFLICT' : rejected ? 'SERVICE_CONFLICT' : 'IO_ERROR', temporary ? 'The local service is not accepting requests yet; retry this command' : rejected ? 'The local service rejected the request before execution' : 'The local service returned an unexpected HTTP error; check the request result before retrying', { requestId: request.requestId, httpStatus: response.status, reason, outcome: rejected ? 'not-executed' : 'unknown', nextAction: rejected ? 'resolve-admission' : 'query-request' }, temporary)
   }
   try {
     const result = validateContract<Envelope>('response', await response.json())
@@ -197,14 +224,14 @@ export async function rpc(record: ServiceDescriptor, request: CommandRequest, si
     return result
   } catch {
     cancelled(signal)
-    throw new HarnessError('IO_ERROR', 'The local service response is incomplete or invalid; check the request result before retrying', { requestId: request.requestId, reason: 'invalid-response', outcome: 'unknown' }, true)
+    throw new HarnessError('IO_ERROR', 'The local service response is incomplete or invalid; check the request result before retrying', { requestId: request.requestId, reason: 'invalid-response', outcome: 'unknown', nextAction: 'query-request' })
   }
 }
-export async function executeRpc(dataRoot: string, request: CommandRequest, signal?: AbortSignal): Promise<{ record: ServiceDescriptor; response: Envelope }> {
+export async function executeRpc(dataRoot: string, request: CommandRequest, signal?: AbortSignal, progress?: ProgressReporter): Promise<{ record: ServiceDescriptor; response: Envelope }> {
   cancelled(signal)
   let record = await descriptor(dataRoot) ?? await ensureService(dataRoot, 0, signal)
   for (let attempt = 0; ; attempt++) {
-    try { return { record, response: await rpc(record, request, signal) } }
+    try { return { record, response: await rpc(record, request, signal, progress) } }
     catch (error) {
       // Only failures known to precede execution may be automatically resent.
       // A lost response may follow a committed write, even on a healthy daemon.

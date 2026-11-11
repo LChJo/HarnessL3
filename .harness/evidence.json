@@ -4,42 +4,42 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.44 supports plain directory workspaces, editable exclusions, hierarchical gitignore and in-place Git adoption while preserving isolation and history.",
+      "claim": "Baseline v0.46 distinguishes lightweight snapshots, explicit verified source bindings, append-only skill stages and recoverable bounded CLI requests.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "ac91563dab1d0bc8d82103f94c71827a34b64054c87e79e68932bf7706c7bed5",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "6457ba83d2a1c9d748ab792109e0cb9e038398696b10285164fa852a5834c392",
+      "observedAt": "2026-11-10T14:07:55.557Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "CLI reports controlled service build metadata and recovery diagnostics, sends ordinary RPC directly and retains existing request/outcome semantics.",
+      "claim": "CLI resolves shorthand inputs, emits early IDs/progress and bounded-wait outcomes, while preserving one JSON envelope and the original request identity.",
       "location": {
         "path": "cli/main.ts"
       },
-      "hash": "a1acd214e9924eeafc585596e5bedc542b36d0efac0ff63b090ccaf51bc21d9a",
-      "observedAt": "2026-11-09T05:37:20.124Z"
+      "hash": "7b0c6f6d6f11aa849b5bd0b47882a3a6675b37f3c98a7cf29c4721f1792fd187",
+      "observedAt": "2026-11-10T14:27:25.188Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Loopback service preserves authenticated admission and recovery boundaries; browser login reports missing sessions, expired codes and invalid/used codes, and checking a valid session does not rotate or extend it.",
+      "claim": "Authenticated loopback service exposes request progress and preserves accepted work, single-writer admission and browser session boundaries.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "1b34bfbcb53e8dc7605f61bf9d718fb4385e07c82eb14576fb48b9ce25ebfeed",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "01f5e34b52a3087e5cbceb9f8338d1d2e7607a344805664d520631e54ae2c657",
+      "observedAt": "2026-11-10T14:07:55.575Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime reuses archived resources across workspace adapter changes and invalidates current freshness; ordinary browsing keeps the existing no-full-scan boundary.",
+      "claim": "Runtime assembles worktree resources and request tracking, resolves durable request receipts within target scope and preserves unknown outcomes.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "220783ece47de93fa71e9883bfc7e2e583363e336b45750bb3edfa1d4647fc4b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "b18eef19eff46dac26fb63d03a837b711a5b57a1ff71e051c1199c0924ee7454",
+      "observedAt": "2026-11-10T14:07:55.576Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -48,8 +48,8 @@
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "8b5567d083983367a728303b4edaf142a5e8468eb2c37502737f46c93e0f3e07",
-      "observedAt": "2026-11-10T05:10:12.421Z"
+      "hash": "5504a65473e946ff91cc685bb2743f64e84b57c2bb17978c5b31f59b62721ead",
+      "observedAt": "2026-11-10T14:07:55.582Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -58,18 +58,18 @@
       "location": {
         "path": "core/model.ts"
       },
-      "hash": "7a93da1e1d2a4e9452444eff52635876a306dc6215f9920df0fcbcfa239aa87a",
-      "observedAt": "2026-11-10T04:02:25.440Z"
+      "hash": "ed24311f3c46101acf06ac92bf9a24111fcb04e30247c195b4b0fd68b8888a2a",
+      "observedAt": "2026-11-10T14:07:55.587Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "Task bindings and archived selections remain immutable; routing advises directory backups or Git versioning according to actual workspace type.",
+      "claim": "TaskService implements model snapshots, explicit verified source checks, task-owned defaults, append-only skill stages and bounded task-body retention.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "5a6bf2ba09153574420d518cdd0c73da497f5f6f355d9b5763457351ff238c41",
-      "observedAt": "2026-11-10T05:10:12.421Z"
+      "hash": "a477a0fcd299cbe734ec3d5a770b3b617bd8ddd77973b3de05d0012f3584e4e3",
+      "observedAt": "2026-11-10T14:07:55.590Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -78,18 +78,18 @@
       "location": {
         "path": "core/skills.ts"
       },
-      "hash": "d92a5313ecedd2c00a0bf2438da9d6d76064b74b1aada37f2c86e9d547ee1f08",
-      "observedAt": "2026-11-07T12:41:21.092Z"
+      "hash": "e97e62d115a89b8df73cd3f855d8ce536c78b4d030e5007ece28c0c8ceb63402",
+      "observedAt": "2026-11-10T14:07:55.595Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000009",
       "kind": "source-code",
-      "claim": "File-authoritative Archive supports bounded stable-ID/header and sequence queries; recovery and requested reference integrity remain checked.",
+      "claim": "Archive validates journal streams and references, retains compact metadata, rereads recorded bodies by byte position and recovers original receipts.",
       "location": {
         "path": "core/archive.ts"
       },
-      "hash": "dab6ea0c6af4fd4ba914cb4e1a3b7c47c9e0dd877c4e6f3e032c1abdf8ec3d94",
-      "observedAt": "2026-11-09T12:40:27.259852Z"
+      "hash": "adbef808f4fac256e205f388d19befbdbd23539653f5b445a2e79ab61d55fc83",
+      "observedAt": "2026-11-10T14:07:55.597Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000a",
@@ -108,8 +108,8 @@
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "dd0ec7e727673bd88c55e0ba56c8621f995e16e625b8f9551a9038b2bc2ea95f",
-      "observedAt": "2026-11-10T04:58:07.799Z"
+      "hash": "563c8c02c6c62e4baa3411ab0348f5537bb48a07f7411c6f1efaa55cd2fa1e1d",
+      "observedAt": "2026-11-10T14:07:55.598Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
@@ -118,8 +118,8 @@
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "031858f5ce6e12c43764910a6ab7796938058816c5565c0769ff9115698b8b67",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "242638edfeb78fea888ec5378ccf5d0b32b144bae648a68e26c09469749fc5fe",
+      "observedAt": "2026-11-10T14:27:25.191Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -128,8 +128,8 @@
       "location": {
         "path": "core/observation.ts"
       },
-      "hash": "5ba2c96470a60182f073c760ce71d8cb2767110c423c1fcd50b2945674ddee16",
-      "observedAt": "2026-11-09T05:37:20.131Z"
+      "hash": "56ebcdf87eaba35f2fcc7f08a9be41153543319e2998d7211dc39cb9668a1909",
+      "observedAt": "2026-11-10T14:07:55.601Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000e",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Host startup failures have no CLI result; command/path approval is conditional on actual host policy and independent work continues when blocked.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "8e49a2a71adaac3a9a750880c291eff07e4688db215b5dc0db373aee95699a9b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "f7f1fad908a5ed7473f0127a2657a466cbef23653ab1e2e1d7611ded6bde97c0",
+      "observedAt": "2026-11-10T14:07:55.603Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -208,18 +208,18 @@
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "49db082e8d3de195449aed93bd065548d0ce080f47963e3517f2837e3e5afe16",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "16ac6c6acc4afe0c06dad070eefbf285ab733801de94b3598ea99980c4743b69",
+      "observedAt": "2026-11-10T14:07:55.604Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
       "kind": "source-code",
-      "claim": "Controller distinguishes live startup ownership from stopped/authenticated endpoints, joins bounded startup without spawning a competitor, sanitizes optional build metadata and preserves pre-execution-only RPC retries.",
+      "claim": "Controller distinguishes live startup ownership from stopped/authenticated endpoints, joins bounded startup without spawning a competitor, sanitizes optional build metadata and preserves pre-execution-only RPC retries. Permission failures reading the service descriptor or startup lock remain native IO failures, and spawn errors retain available system diagnostics.",
       "location": {
         "path": "service/controller.ts"
       },
-      "hash": "f0aab01aa5ae95c64d55046b1b7dc8a3dd3ca0cc198adc08f3af4fdfa4467018",
-      "observedAt": "2026-11-09T05:37:20.135Z"
+      "hash": "70fbfc95aef73488d07549ae17d7b524f761ab7a754dd99cffc6d76bb602c238",
+      "observedAt": "2026-11-10T14:07:55.605Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000017",
@@ -278,8 +278,8 @@
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "2d29a592cedc1997e9b900c224757dc1843123542c047018ddc918703e857f99",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "12676204e2f93b4be5bda26bfe7fddf0b8e386a721b9e1b382baa09de9c2db0c",
+      "observedAt": "2026-11-10T14:07:55.606Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -288,8 +288,8 @@
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "787f88b2215a0eb26e930d40da95e7520e9175e0e3843f593f79ab610777a85a",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "a6988e3a2547e8315a334562e04c39b0e5c9d9ee859ecd309fae7c4dd264f32f",
+      "observedAt": "2026-11-10T14:07:55.608Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -304,12 +304,12 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Permission recovery separates installation/runtime access, OS/sandbox refusal and pre-process host errors without changing data roots or host ACLs.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "f923a2d6a40d524cf5e9377afd0deff11518a6140fc33bb86c438dcd5c8aae7a",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "56c8930cb83eeb1edd14c6220a04a4067a6c4bf23026a4c5056e53d9f21cef5f",
+      "observedAt": "2026-11-10T14:07:55.609Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -318,8 +318,8 @@
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "f7d379018670dbf8e6e39c565a79ecc64b89006c42dad6b8ea69204bce01ceb1",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "452de78735f73dadbedb89d4ef70206c9cc44b1b9c4b219cf72e928ec63db1b0",
+      "observedAt": "2026-11-10T14:27:25.192Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,22 +374,22 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records the initialization review and separates current Windows test and package evidence from earlier platforms and unrun host behavior.",
+      "claim": "Implementation status records the initialization review and separates current Windows test and package evidence from earlier platforms and unrun host behavior. Records v0.45 Windows 32/32 regression with real isolated ACL denial and the unverified restricted-host/Linux/macOS scope.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "d8f1e487282ed102a1aaa83e5721d6413f456a72fdb52c9572825fe50c301fa1",
-      "observedAt": "2026-11-10T05:10:12.421Z"
+      "hash": "162c15d13273030bbf1db03d1aa9d6c7d96e77a222ac7074e737b2ee04ef9c1c",
+      "observedAt": "2026-11-10T14:31:05.561Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
       "kind": "source-code",
-      "claim": "The explicit runtime-skill installer uses Node main-module identity so aliased entry paths execute its JSON CLI; imports do not perform installation. Existing backup and destination-link checks remain.",
+      "claim": "The explicit runtime-skill installer uses Node main-module identity so aliased entry paths execute its JSON CLI; imports do not perform installation. Existing backup and destination-link checks remain. Permission refusal adds errno/path/operation and recovery hints while retaining partial copy results.",
       "location": {
         "path": "scripts/install-agent-skills.mjs"
       },
-      "hash": "3caefd51925335a37ca699a91babc63d85ad5edc6b33ee88360441d666be881f",
-      "observedAt": "2026-11-07T17:35:58.359Z"
+      "hash": "59f3bdd54f19f5b15a5cadad55228682a86c19f55412a29e896dfc98fd2996b6",
+      "observedAt": "2026-11-10T13:26:17.707Z"
     },
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
@@ -398,8 +398,8 @@
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "b857687281b7ae8172fd8bb177985112a91777cb22781761388644935a31718f",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "dac1efc62079e59002d5c13d6df2f475f8ae4b96b7d60b701f4a238607842917",
+      "observedAt": "2026-11-10T14:07:55.612Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -438,8 +438,8 @@
       "location": {
         "path": "scripts/verify-install.mjs"
       },
-      "hash": "2249bca25b26a6a98c8f39a00f794d25767b7d11ddc07ae3e5fb97f0e4ac1c58",
-      "observedAt": "2026-11-09T05:37:20.142Z"
+      "hash": "f1ac47059037cc1dc5a2cdb765d22f37456e196157e181589139743e5d43eb55",
+      "observedAt": "2026-11-10T14:27:25.193Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000002",
@@ -464,22 +464,22 @@
     {
       "id": "d6360000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "The platform installation flows preserve an old package, verify the expected clean source and running build, and describe explicit saved-handoff checks and data-preserving rollback. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "The platform installation flows preserve an old package, verify the expected clean source and running build, and describe explicit saved-handoff checks and data-preserving rollback. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Restricted-host troubleshooting distinguishes command provisioning from CLI permission diagnostics and scopes approval to actual failed access.",
       "location": {
         "path": "INSTALL.md"
       },
-      "hash": "339ed09c258b2ad29264b3bea036984c5c8f90586345d736ec5ef69a8ed0e7fb",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "5269fc17870889b35222fdd88e976c826ac750ed491a2647ddccbfa84ea9de32",
+      "observedAt": "2026-11-10T13:26:17.707Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "English installation guidance distinguishes a missing CLI from project setup, reuses relevant authorization, uses the maintained INSTALL guide, and preserves old handoffs, package/skill backups, data roots and single-service recovery boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Installation consent does not grant OS/sandbox access; copy and service verification outcomes remain separate.",
       "location": {
         "path": "agent-skills/harnessl3/references/install-update.md"
       },
-      "hash": "c7484eab65997d4110421727caacff773c67e285de1145821a0b71cf128d2807",
-      "observedAt": "2026-11-10T04:58:07.810Z"
+      "hash": "4bc9324e768793d41da7a742322ad7020f30e45e6989af6ec023e7bf84a0439b",
+      "observedAt": "2026-11-10T13:26:17.707Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000006",
@@ -504,12 +504,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000008",
       "kind": "source-code",
-      "claim": "Archive regressions exercise single-pass shared-reference validation, later corruption, filtered immutable record/reference queries and invocation-boundary iteration alongside durability checks.",
+      "claim": "Archive tests include low-heap streaming recovery, immutable references and corruption detection while preserving journal bytes.",
       "location": {
         "path": "tests/v1/archive.test.mjs"
       },
-      "hash": "6c90f881e5a979ff956e4ee5499992df70a0b642dfbe4ad1dba2994cc4cc9813",
-      "observedAt": "2026-11-09T05:37:20.149Z"
+      "hash": "3fe1a01628e1ea08548724ed4d4b25c233bf7a44931ba372b70b39ed66c03a8c",
+      "observedAt": "2026-11-10T14:07:55.612Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000009",
@@ -528,18 +528,18 @@
       "location": {
         "path": "tests/v1/context.test.mjs"
       },
-      "hash": "28cc68512beb61c13fbc6d4345a31b131e22f84f0799f79103aaf0c807cf2bdd",
-      "observedAt": "2026-11-09T05:37:20.152Z"
+      "hash": "409d8fee6c6281860ae46f1650d18bfc635537a7124f264dfad4333c51a9c7c6",
+      "observedAt": "2026-11-10T14:07:55.613Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. TC22/26/27 additionally separate isolated permission failures from real restricted-host approval and provisioning acceptance.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "1a1ab9b0800f6c2f7b81d0a229ed0c250424488bd516e5b97c1d30a877050994",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "e1228cb4720aff6ced79e82cb87020e0b2ba8cea51826ef32d56b1a95178133a",
+      "observedAt": "2026-11-10T14:27:25.194Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -548,38 +548,38 @@
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "f7f48d743d68eec18e22b807eba1716e7af3b9d8aad739f88f0c8680dc9a88c4",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "f97007a2287a001869d6ae0565a4e79cbdc60f691666a4da1d0ac85370ae1a06",
+      "observedAt": "2026-11-10T14:07:55.614Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. IO_ERROR permission diagnostics preserve path/syscall and do not replace unknown write outcomes or grant host approval.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "72257717f2c77aebb999c7e3000028db4fd8d17b956625d2c6e856d543ba2779",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "7447069ec18b83295f539cb5dfca4897a31e2c3df41a45bc7a428be15e40c33f",
+      "observedAt": "2026-11-10T14:27:25.194Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. FR12/15 separate setup consent from execution permissions and permit independent work when no approval is available.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "8c8d77b845f22fcbfc0007067a1d3174ec86879f43fa22ed59f0d1717a09aa2b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "0417c62245a36f928c68d80eea79bd8a4550d81b9c633cbc452c10709bd2a2e9",
+      "observedAt": "2026-11-10T14:07:55.616Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Baseline v0.45 scopes permission recovery and keeps real host acceptance separate.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "323457e869490e8f3217c84cd01ac06f76bc1033f4feea20ec676da725bb4a2b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "99bdb9c059e156073fcf05053cd390363fccda7d45933aa4583f7878bd832a65",
+      "observedAt": "2026-11-10T14:07:55.617Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Agent conventions follow baseline v0.46: lightweight model snapshots, explicit verified source bindings, reusable skill bodies, append-only skill stages and original-request recovery. Native setup questions, directory workspace support, permission boundaries and document maintenance remain required.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "990e4ff2f02af342887de2e6ace621447f1c3fe196e9d79d6e06a10fb38c7a9b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "f76b2ffacfb870c6b35f9301ea388f29281252d5a7e10534852d9d3de8a1217f",
+      "observedAt": "2026-11-11T03:17:24.689Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Permission troubleshooting links to restricted-host recovery and preserves the original archive root.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "f0f55750c992c4aa4d5f7f8d56a9952ddb0e3f9b8716a13983e3bbcfbd9e2df9",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "55bc06c09f0c6be8e52a9104a5dd3b6fe58c47d9b482a1847978889f58963219",
+      "observedAt": "2026-11-10T14:27:25.195Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -718,8 +718,8 @@
       "location": {
         "path": "agent-skills/harnessl3/references/subagent.md"
       },
-      "hash": "c8095c7e523af96796250ca1cc6af9de25ce7c055bd4f2a2f163783a4567dbcf",
-      "observedAt": "2026-11-09T12:35:44.741Z"
+      "hash": "fe86edae862a31ee1443a24f917c9fb247789589968a52af14527fe7937c1c8a",
+      "observedAt": "2026-11-10T14:07:55.618Z"
     },
     {
       "id": "800efe39-40f9-47b8-a70b-d1819705009e",
@@ -728,8 +728,8 @@
       "location": {
         "path": "core/contract.ts"
       },
-      "hash": "14a223e955ed75694a8ed31c1d6d041d8cdffe27aac559cb373f3f82996077cb",
-      "observedAt": "2026-11-09T10:02:55.827Z"
+      "hash": "cf6bf8eadd9b7125cf8006d8f29d14bc8cecb170f95ab3f3566149bb6c8d10be",
+      "observedAt": "2026-11-10T14:07:55.619Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000002",
@@ -738,8 +738,8 @@
       "location": {
         "path": "docs/spec/contracts/common.schema.json"
       },
-      "hash": "d79b4eb2a10a1f4881f9468d06bb5d11c8f20fae317617cd0e51773a8594ee3a",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "5bfd8a82e266a6473b76ce1c004aa1d366cb83d68f39ff59eb5672e579a88868",
+      "observedAt": "2026-11-10T14:07:55.620Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000003",
@@ -758,18 +758,18 @@
       "location": {
         "path": "tests/v1/cli-help.test.mjs"
       },
-      "hash": "a8f37e3c86c4f4277a3c8266be9be7243695e926de7f88404c248f91a553bf3c",
-      "observedAt": "2026-11-10T04:02:25.445Z"
+      "hash": "252e639b3b900eb069cbc098c2ac8a359fb789a0b3707a406c885445c3bd707e",
+      "observedAt": "2026-11-10T14:07:55.621Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.42: actual permitted host-native question-tool use, pending async decisions and prior skill/context/maintenance/authorization boundaries. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Agent conventions follow baseline v0.46: lightweight model snapshots, explicit verified source bindings, reusable skill bodies, append-only skill stages and original-request recovery. Native setup questions, directory workspace support, permission boundaries and document maintenance remain required.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "990e4ff2f02af342887de2e6ace621447f1c3fe196e9d79d6e06a10fb38c7a9b",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "f76b2ffacfb870c6b35f9301ea388f29281252d5a7e10534852d9d3de8a1217f",
+      "observedAt": "2026-11-11T03:17:24.689Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -798,8 +798,8 @@
       "location": {
         "path": "README.md"
       },
-      "hash": "59cbe76dff298df110df1167d0356fe71b543e8cfffacb0f4836e1c952884bf0",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "7295c8d7351a41f0038bdea1f57c6cdc7a3924212bfc4f526d890a1a3be67ce1",
+      "observedAt": "2026-11-10T14:07:55.622Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -808,8 +808,8 @@
       "location": {
         "path": "docs/implementation/CLI_SKILL_REVIEW.md"
       },
-      "hash": "61003eefdfeae8a74489b59413126e2f18d966cd4ba22f3440b3aa66adb53157",
-      "observedAt": "2026-11-09T12:35:44.745Z"
+      "hash": "8829854e22799b35a772274b502ac72fb25d9595131e75f8e90586649ecdbfec",
+      "observedAt": "2026-11-10T14:07:55.624Z"
     },
     {
       "id": "2b9a98f4-94bc-4d27-a3e3-f7ed9b3c712f",
@@ -818,8 +818,8 @@
       "location": {
         "path": "tests/v1/task-cli.test.mjs"
       },
-      "hash": "1156c82b9037ca24f3b1085b9dee81e02e0b3c0a682f8078ca1663ddf7a4546d",
-      "observedAt": "2026-11-09T12:35:44.745Z"
+      "hash": "49b3d39a08f707aec0d735fc7e6548af991c0535f3a04d860025ff96d36cc67a",
+      "observedAt": "2026-11-10T14:07:55.624Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000001",
@@ -898,8 +898,8 @@
       "location": {
         "path": "tests/v1/initialization-contracts.test.mjs"
       },
-      "hash": "acadaa15f208cfea15afc49861b57acdbbc77d7b8d56b76bc0207ae11fb0bde3",
-      "observedAt": "2026-11-10T04:02:25.445Z"
+      "hash": "8e9e45060dbcd6b3ae3f1221cc9edcf28003361581793f1f51413c29d8eda774",
+      "observedAt": "2026-11-10T14:07:55.625Z"
     },
     {
       "id": "95672f7f-92d3-462c-8780-7ca4c7fb1561",
@@ -918,8 +918,8 @@
       "location": {
         "path": "tests/v1/directory-workspace.test.mjs"
       },
-      "hash": "427cbe8f4eaa29de59fab3e0c4346dc72692887448342756c89bf0eb61911507",
-      "observedAt": "2026-11-10T04:58:07.826Z"
+      "hash": "f831abe0e419ae98deda15d8f780da31dc773e9308f606beedbc10f6fee091b7",
+      "observedAt": "2026-11-10T14:27:25.195Z"
     },
     {
       "id": "ff040559-643c-4bfd-8584-d507e92d0bdf",
@@ -928,8 +928,8 @@
       "location": {
         "path": "tests/v1/directory-scan-probe.mjs"
       },
-      "hash": "7618d466a6c3ab9b0ebec8a9d4f95a7c3c12b3d650d6c8214e7568290820c89b",
-      "observedAt": "2026-11-10T04:58:07.827Z"
+      "hash": "fd5ab1c420b740af87e8e765f11a97d332947ddc442eee8fbc295a69954c1d5b",
+      "observedAt": "2026-11-10T14:07:55.627Z"
     },
     {
       "id": "b35d98f4-6a6c-47eb-b2eb-b3152bf7c34d",
@@ -974,12 +974,92 @@
     {
       "id": "116a4c91-d92b-427b-8016-2fcaca15b51d",
       "kind": "document",
-      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts.",
+      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts. Permission error mapping and its test are also fixed to LF for stable evidence bytes.",
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "ae2f6eae566820aa829286368f8acee408afb5595e87c6b02a63ccae1fd07870",
-      "observedAt": "2026-11-10T05:10:12.421Z"
+      "hash": "b318ba8318ee56bd5a1e10bed87b516a2a92a1d08c4a963a5b1f47c5383276b9",
+      "observedAt": "2026-11-10T14:27:25.196Z"
+    },
+    {
+      "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
+      "kind": "source-code",
+      "claim": "Native EACCES/EPERM errors retain IO_ERROR, errno, available path/syscall and scoped recovery guidance without copying arbitrary error fields or rewriting existing HarnessError outcomes.",
+      "location": {
+        "path": "core/errors.ts"
+      },
+      "hash": "02a9010103180670674b2635b6740f47dc6ebe80411de3fbf79cc22b53321596",
+      "observedAt": "2026-11-10T14:07:55.627Z"
+    },
+    {
+      "id": "9d14a485-e13b-45d1-8208-29d31a638e8c",
+      "kind": "source-code",
+      "claim": "Isolated permission tests cover EACCES/EPERM mapping, unchanged business outcomes, actual Windows ACL denial or POSIX permissions, CLI envelope/requestId/exit code, descriptor/lock reads and installer writes; native host sandbox provisioning is outside this test seam.",
+      "location": {
+        "path": "tests/v1/permission-errors.test.mjs"
+      },
+      "hash": "810f03fa459874980021193b95c3f1903efa690efe93e54e4a7fc7fe72900a9e",
+      "observedAt": "2026-11-10T14:07:55.628Z"
+    },
+    {
+      "id": "0e67a30f-f14f-43b0-9fe7-9a7ab414c9d5",
+      "kind": "source-code",
+      "claim": "RequestTracker exposes ephemeral per-request phases, joins matching in-flight requests and bounds completion/result retention without replacing durable journals.",
+      "location": {
+        "path": "core/progress.ts"
+      },
+      "hash": "8dc7923cf7538740af2edce4dd72e8bf52df550a5e9baa35887ca438594e99f0",
+      "observedAt": "2026-11-10T14:27:25.196Z"
+    },
+    {
+      "id": "eacd2b8f-d6ba-4aa7-9d8a-1536b33662d9",
+      "kind": "source-code",
+      "claim": "CLI regression cases distinguish snapshot and verified reads, resolve recorded references and preserve historical skill stages.",
+      "location": {
+        "path": "tests/v1/agent-flow.test.mjs"
+      },
+      "hash": "777fdd7dc145ae3805e1b5c209c1bc642697e1514516234f07dfc8458b36afc4",
+      "observedAt": "2026-11-10T14:07:55.629Z"
+    },
+    {
+      "id": "4eeb09b0-6fc6-4ef1-b5bd-6dcec624f049",
+      "kind": "source-code",
+      "claim": "CLI request recovery cases cover bounded silence, original receipts, restart and target scope, concurrent admission, bootstrap errors and timed-out committed writes.",
+      "location": {
+        "path": "tests/v1/request-recovery.test.mjs"
+      },
+      "hash": "6fc7aa2da3c904b62d407e472dac4921d1164d2e08a37371704cb3a43edb18bc",
+      "observedAt": "2026-11-10T14:27:25.197Z"
+    },
+    {
+      "id": "580a91f2-72da-4c49-938c-ef31d15863f5",
+      "kind": "document",
+      "claim": "v0.46 reliability changes, original failure seams, preserved boundaries and actual verification destinations.",
+      "location": {
+        "path": "docs/implementation/RELIABILITY.md"
+      },
+      "hash": "a4c4655f0a72bd39178e68c5c24e1e5326cd6257f64eb32c6eb5101b39a6355f",
+      "observedAt": "2026-11-10T14:31:05.567Z"
+    },
+    {
+      "id": "aa0b2a7a-539a-423c-9775-d95d64f6dc52",
+      "kind": "document",
+      "claim": "Accepted selection input permits task-owned defaults while preserving explicit binding and stage validation.",
+      "location": {
+        "path": "docs/spec/contracts/selection-input.schema.json"
+      },
+      "hash": "4d1fdeba7aee1495e2fd07d5133ea986572da5a0577206aede3df5b8c35e5113",
+      "observedAt": "2026-11-10T14:07:55.631Z"
+    },
+    {
+      "id": "18e28937-86a0-4c30-82c1-f350b72a342b",
+      "kind": "document",
+      "claim": "Accepted query input resolves its task model revision and empty collections without inventing retained-content claims.",
+      "location": {
+        "path": "docs/spec/contracts/query-input.schema.json"
+      },
+      "hash": "61dc3c3f698bf5ac3db31af7e6d79a5f1bd813d700d47720c8d305f2cb0ac177",
+      "observedAt": "2026-11-10T14:07:55.632Z"
     }
   ]
 }

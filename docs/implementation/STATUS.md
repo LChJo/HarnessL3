@@ -1,5 +1,31 @@
 # 正式首版实施状态
 
+## v0.46：Agent CLI可靠性与可恢复调用（2026-11-10）
+
+用户授权按审查建议充分修复，机制与边界见[可靠性修复](RELIABILITY.md)。默认入口改为模型snapshot，不以源码全扫阻塞上下文；显式verified与sync仍完整核验。CLI接受批量快捷参数和任务自有缺省字段，归档文件哈希可从原方案解析，同任务--stage追加技能但保留各旧批次。stderr先返回ID/阶段并持续报告，默认120秒可配置总等待；超时不取消已接受工作，request status在明确目标内查询原回执/在途状态。启动错误保留单JSON，权限拒绝保留原生诊断。流式日志恢复、按需正文、有界任务/响应缓存及紧凑批次索引减轻旧历史内存压力，仍校验完整日志、原引用与各历史任务契约。原地转Git另修复旧在途目录刷新被新身份复用的竞态。
+
+Windows / Node24.12.0：一次完整npm test共393项，389通过、4平台能力跳过、0失败（final2，529379ms）。四项跳过沿用两项POSIX信号、一项大小写不同路径和一项非法UTF-8路径能力边界。此前完整轮391项中386通过、1竞态失败、4跳过，不计通过；修复并补可控交错回归后全量通过。全量启动后另调整等待预算及安装校验的预算传递，最终CLI/help/请求恢复10/10通过；不将分次范围称为最终源码单次全量。13份Schema/15例/32反例校验、技能格式和200处当前Markdown本地链接检查通过；模型valid、21对象/28关系，保留三个新增证据文件未跟踪提示，不自动暂存。
+
+最终Windows真实150文件npm包通过隔离安装、两宿主各5文件复制/重装、运行文件指纹/实际服务构建/RPC、旧handoff匹配和改坏对照拒绝；覆盖无Git目录CLI、快捷参数、阶段及旧批次字节、重启后原requestId查询。Edge157.0.4341.42实际显示目录标签、五类/C4/历史/Hub，0页面错误、0浏览读取请求；独立浏览器交互验证另通过3个gate和3个显示样本（1073/1361ms的P50/P95只属于该小样本）。CLI/Web构建通过。
+
+Linux / WSL2 Ubuntu原生临时目录、Node24.12.0：最终主修复10文件132项，127通过、5平台能力跳过、0失败，真实150文件包/无GitCLI/Chromium156.0.8078.4和旧handoff消费者通过；该轮在最后预算传递小修补前，预算补丁定向10/10通过（linux-budget）；未另重跑Linux包。未运行本轮macOS、Linux完整npm test或真实受限宿主进程创建/审批允许与禁止链；自建Windows ACL负例不能替代它们，不宣称本轮三平台全通过或原宿主启动故障已修复。
+
+本机全局CLI与两宿主runtime skill已更新到本轮候选，保留原安装包、原handoff、数据根、UUID与用户技能实体；真实服务按单实例排空后更新，不强杀或删除锁。最终全局安装验证通过（143210ms），原任务08d0b0ef的packet/plan/binding匹配，historyCheck=matched-before-update；运行时指纹782f427f437148dd1c45e97ceb3db032acaabc6c001b3ac9ad1067edca58955f。结果在`.harness-local/validation/reliability/global-install.json`。AI Mana目标原实现一次151917ms静默复现；候选首次恢复58051ms，后续1114/1388ms，四个配置/模型文件SHA-256不变。最终全局候选再次以默认参数调用，三次均成功（19963/1130/1177ms，mana-final-default）。不是同一冷启动控制实验；完整旧历史恢复仍可能较慢，不宣称数秒冷启动。初次旧handoff校验因子CLI30秒预算超时，原ID查得成功回执后修复预算传递，不重发写请求或重写原历史。
+
+验证记录在`.harness-local/validation/reliability/`（final2、budget-delta、linux-final、linux-budget、package-budget及浏览器/真实项目报告）；最终候选在`.harness-local/artifacts/`，源构建明确标记modified source。原模型实体/关系/证据身份保留；本轮不发布npm，不提交或推送。终端summary记录最终交付及尚未验证范围。
+
+## v0.45：受限宿主与CLI权限恢复（2026-11-10）
+
+用户报告读取运行时参考前出现`Failed to create unified exec process / helper_sandbox_lock_failed`，错误路径为宿主`.codex/.sandbox-bin`。该结果表明请求的命令尚未启动，不能归为L3执行或参考文件读取失败。本轮只读查看该目录ACL，未修改宿主ACL/配置，也未在受限会话重现或修复该启动故障。官方权限/审批说明已核对；不根据当前全面权限执行成功推断受限模式通过。
+
+修复L3自身的诊断缺口：原生EACCES/EPERM映射保留`IO_ERROR`和退出码1，增加permission-denied、可用path/syscall与恢复提示；服务描述文件/启动锁读取拒绝不再丢为身份冲突，spawn错误保留可用系统诊断。技能复制保留旧error字符串、results/current及用户字节，权限拒绝增加code/details。运行时skill与INSTALL区分安装授权、执行权限、宿主启动和CLI失败；只在工具/策略允许时申请具体命令/路径审批，无审批能力或拒绝后报告阻塞并继续独立工作。D14/D15、FR12/15及TC22/26/27同步；既有数据根、UUID、历史、单实例与未知写结果边界保持。
+
+Windows / Node24.12.0：CLI构建通过；最终五文件定向回归32/32通过、0跳过，含CLI/服务连接与恢复、技能复制/备份、EACCES/EPERM映射。真实ACL负例仅在自建临时目录中拒绝描述文件/锁读取与技能子目录创建，随后恢复原ACL；检查CLI单封套/原requestId/退出码、安装错误JSON及原文件字节。首轮映射检查2失败，修复后通过；早期POSIX用例在Windows跳过，后补Windows ACL覆盖。ACL用例首次因清理回调先删除目录导致恢复失败，改为先恢复再清理后通过；失败轮不计最终通过。技能格式校验通过。最终日志位于`.harness-local/permission-build.log`、`permission-final.log`及`permission-acl.log`（stderr另存）。
+
+未运行本轮Linux/macOS、完整npm test、真实受限宿主审批允许/禁止链或受限安装闭环；不宣称原宿主启动故障已修复或三平台增量通过。未替换全局CLI、已安装宿主skill和常驻服务，未发布npm，未提交或推送。当前模型和证据保持身份，按本轮实际核验范围维护。
+
+模型校验为valid、21对象/28关系，但另有本轮未修改的`tests/v1/directory-workspace.test.mjs`证据哈希不匹配警告（9a02944d-cbb2-46da-b77f-9c0182486781）；已核对实际字节与LF/CRLF候选，均不等于既存记录，未用新哈希覆盖未审核范围。该范围保留pending，本轮局部同步不声称全项目无诊断。新增权限测试和core/errors固定LF以保留跨检出字节。
+
 ## v0.44：普通目录工作区（2026-11-10）
 
 用户已确认非Git目录完整接入。登记/定位按最近项目或Git边界处理，新增directory类型及可空Git字段；缺kind的旧登记按Git读取。新目录配置包含八项可编辑默认排除，已有配置不覆盖。目录扫描使用直接生产依赖ignore@7.0.14处理各层.gitignore，复用原字节/链接叶条目与完整核验；成功为unversioned，失败保持unknown。两遍枚举及字节检查后再次核查目录身份/规则字节，防止最后一遍读字节期间的新规则或目录变化成为完整结果；这些元数据守卫不替代字节检查。监听新路径复用规则链，显式证据、增量观测、严格epoch/CAS继续保留。

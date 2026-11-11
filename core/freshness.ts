@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 import path from 'node:path';
 import { Archive, type ArchiveReference } from './archive.js';
-import { HarnessError } from './errors.js';
+import { HarnessError, permissionError } from './errors.js';
 import { validateContract } from './contract.js';
 import { canonicalJson } from './json.js';
 import { loadModel } from './model.js';
@@ -79,7 +79,8 @@ export class FreshnessManager {
   private closing?: Promise<void>;
   private changeGeneration = 0;
   private observedWrite?: Promise<unknown>;
-  private readonly refreshes = new Map<string, Promise<FreshnessState>>();
+  private readonly refreshes = new Map<string, { identity: number; pending: Promise<FreshnessState> }>();
+  private identityGeneration = 0;
   private readonly dirtyPaths = new Set<string>();
   private fullRequired = true;
   private lastFullCheck = 0;
@@ -105,7 +106,7 @@ export class FreshnessManager {
   currentState(): FreshnessState { return structuredClone(this.state); }
   currentModel(): ModelSnapshot | null { return structuredClone(this.observedModel); }
   /** Registration changed adapters; retained observations are no longer a current proof. */
-  identityChanged(): void { this.gap(); }
+  identityChanged(): void { this.identityGeneration++; this.gap(); }
   private instant(): string {
     const current = this.now();
     if (!(current instanceof Date) || !Number.isFinite(current.getTime())) throw new HarnessError('INTERNAL_ERROR', 'The synchronization clock must return a valid Date.');
@@ -114,7 +115,7 @@ export class FreshnessManager {
 
   private async restore(): Promise<void> {
     await this.archive.ready();
-    for (const record of this.archive.scan({ kind: 'freshness-state' })) {
+    for await (const record of this.archive.scanAsync({ kind: 'freshness-state' })) {
       const payload = record.payload as { kind?: string; state?: FreshnessState; stateHash?: string } | null;
       if (payload?.kind !== 'freshness-state') continue;
       if (payload.stateHash !== undefined && (typeof payload.stateHash !== 'string' || !/^[a-f0-9]{64}$/.test(payload.stateHash))) throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization state reference is invalid.');
@@ -391,12 +392,18 @@ export class FreshnessManager {
     const generation = this.changeGeneration;
     let source: SourceScan;
     try { source = await scanSource(this.worktree, await readConfig(this.worktree.root), skillsRoot); }
-    catch { source = { sourceVersion: { head: null, treeHash: null, status: 'unknown' }, sourceScanRevision: null, manifest: null, policy: null, diagnostics: [{ code: 'SOURCE_CONFIG_UNAVAILABLE', severity: 'error', message: 'Current source configuration is unavailable.' }], ignoreRules: null, ignoreRuleFiles: [] }; }
+    catch (error) {
+      const permission = permissionError(error);
+      if (permission) { this.state.state = 'unknown'; this.state.scanPending = true; throw permission; }
+      source = { sourceVersion: { head: null, treeHash: null, status: 'unknown' }, sourceScanRevision: null, manifest: null, policy: null, diagnostics: [{ code: 'SOURCE_CONFIG_UNAVAILABLE', severity: 'error', message: 'Current source configuration is unavailable.' }], ignoreRules: null, ignoreRuleFiles: [] };
+    }
     let model: ModelSnapshot | null = null;
     let modelDiagnostics: Diagnostic[] = [];
     let attemptedModelRevision: string | null = null;
     try { model = await loadModel(this.worktree.root); attemptedModelRevision = model.revision; modelDiagnostics = model.diagnostics; }
     catch (error) {
+      const permission = permissionError(error);
+      if (permission) { this.state.state = 'unknown'; this.state.scanPending = true; throw permission; }
       if (error instanceof HarnessError) {
         if (Array.isArray(error.details.diagnostics)) modelDiagnostics = error.details.diagnostics as Diagnostic[];
         if (typeof error.details.attemptedModelRevision === 'string') attemptedModelRevision = error.details.attemptedModelRevision;
@@ -458,9 +465,11 @@ export class FreshnessManager {
 
   status(skillsRoot: string): Promise<FreshnessState> {
     const existing = this.refreshes.get(skillsRoot);
-    if (existing) return existing.then(state => structuredClone(state));
+    if (existing) return existing.identity === this.identityGeneration
+      ? existing.pending.then(state => structuredClone(state))
+      : existing.pending.then(() => this.status(skillsRoot));
     const pending = this.reconcile(skillsRoot).finally(() => { this.refreshes.delete(skillsRoot); });
-    this.refreshes.set(skillsRoot, pending);
+    this.refreshes.set(skillsRoot, { identity: this.identityGeneration, pending });
     return pending.then(state => structuredClone(state));
   }
 
@@ -595,7 +604,7 @@ export class FreshnessManager {
       if (this.debounce) clearTimeout(this.debounce);
       await Promise.allSettled([...this.classifiers]);
       await this.running;
-      await Promise.allSettled([...this.refreshes.values()]);
+      await Promise.allSettled([...this.refreshes.values()].map(refresh => refresh.pending));
       await Promise.allSettled([...this.writes]);
       await this.serial(async () => undefined);
     })();

@@ -4,7 +4,7 @@ import { lstat, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { validateContract } from './contract.js';
-import { HarnessError } from './errors.js';
+import { HarnessError, permissionError } from './errors.js';
 import { ensureDir, isErrno, readJson, writeJson } from './io.js';
 import { canonicalPath, isWithin, samePath, resolveInside } from './paths.js';
 import { seedSkills } from './skills.js';
@@ -96,6 +96,8 @@ async function gitIdentity(location: string): Promise<WorkspaceIdentity> {
     if (!samePath(root, workingDirectory)) throw new Error('Invalid Git boundary');
     return { kind: 'git', root, gitCommonDir, gitDir, branch };
   } catch (error) {
+    const permission = permissionError(error);
+    if (permission) throw permission;
     if (error instanceof HarnessError) throw error;
     throw new HarnessError('INVALID_ARGUMENT', 'The Git boundary could not be inspected. Check Git installation and repository integrity; it cannot be used as a plain directory.', { path: location });
   }
@@ -370,7 +372,7 @@ export class WorkspaceRegistry {
       }
       const available = samePath(identity.root, record.root) && identity.kind === record.kind && sameCommon(identity.gitCommonDir, record.gitCommonDir) && config.projectId === record.projectId;
       return { record: { ...record, branch: available ? identity.branch : record.branch, available }, identity, config };
-    } catch { return { record: { ...record, available: false } }; }
+    } catch (error) { const permission = permissionError(error); if (permission) throw permission; return { record: { ...record, available: false } }; }
   }
 
   private async liveRecord(record: WorktreeRecord): Promise<WorktreeRecord> {

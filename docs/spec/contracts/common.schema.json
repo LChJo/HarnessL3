@@ -39,8 +39,14 @@
       "properties": {
         "projectId": { "$ref": "#/$defs/uuid" }, "worktreeId": { "$ref": "#/$defs/uuid" },
         "modelRevision": { "$ref": "#/$defs/sha256" }, "catalogRevision": { "$ref": "#/$defs/sha256" },
-        "sourceVersion": { "$ref": "#/$defs/sourceVersion" }, "sourceScanRevision": { "$ref": "#/$defs/sha256" }
-      }
+        "sourceVersion": { "$ref": "#/$defs/sourceVersion" }, "sourceScanRevision": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "mode": { "enum": ["snapshot", "verified"] }
+      },
+      "allOf": [{
+        "if": { "required": ["mode"], "properties": { "mode": { "const": "snapshot" } } },
+        "then": { "properties": { "sourceScanRevision": { "type": "null" }, "sourceVersion": { "properties": { "status": { "const": "unknown" } } } } },
+        "else": { "properties": { "sourceScanRevision": { "$ref": "#/$defs/sha256" } } }
+      }]
     },
     "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/uuid" } },
     "known": {

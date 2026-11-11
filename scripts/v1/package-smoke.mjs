@@ -57,7 +57,7 @@ export async function packageSmoke() {
     const help = await execFile(process.execPath, [installedBinary, '--help'], { cwd: project, windowsHide: true })
     assert.match(help.stdout, /HarnessL3 0\.1\.0/)
     const selectHelp = (await execFile(process.execPath, [installedBinary, 'task', 'select', '--help'], { cwd: project, windowsHide: true })).stdout
-    assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] --file/)
+    assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] \[--file/)
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
     assert.ok(installedSchema && path.isAbsolute(installedSchema), 'Installed help must expose an absolute Schema path')
     assert.equal(await realpath(installedSchema), await realpath(path.join(consumer, 'node_modules', 'harnessl3', 'docs', 'spec', 'contracts', 'selection.schema.json')))
@@ -144,7 +144,7 @@ export async function packageSmoke() {
     const plain = (args, input) => cli(args, input, { cwd: plainRoot, noGit: true })
     const directoryInit = await plain(['init'])
     assert.equal(directoryInit.data.result.worktree.kind, 'directory')
-    const directoryEntry = (await cli(['task', 'start', '--title', 'Installed no Git directory'], undefined, { cwd: path.join(plainRoot, 'child'), noGit: true })).data
+    const directoryEntry = (await cli(['task', 'start', '--title', 'Installed no Git directory', '--mode', 'verified'], undefined, { cwd: path.join(plainRoot, 'child'), noGit: true })).data
     assert.equal(directoryEntry.binding.sourceVersion.status, 'unversioned')
     const directorySkill = directoryEntry.catalog.find(item => item.id === 'development/implement')
     const directorySelection = await plain(['task', 'select', directoryEntry.taskId, '--file', '-'], { schemaVersion: 1, requestId: randomUUID(), binding: directoryEntry.binding, context: { expand: [], read: [directoryEntry.directory.items[0].id], known: {} }, skills: [{ id: directorySkill.id, reason: 'Installed directory verification' }] })
@@ -160,6 +160,20 @@ export async function packageSmoke() {
     const directoryLink = (await plain(['web', 'open', '--no-open', '--task', directoryEntry.taskId])).data.result.url
     const { verifyDirectoryBrowser } = await import('./directory-browser.mjs')
     const directoryBrowser = await verifyDirectoryBrowser(directoryLink, directoryEntry.taskId)
+    const shortcutId = randomUUID()
+    const snapshot = (await plain(['task', 'start', '--title', 'Installed agent shortcuts', '--request-id', shortcutId])).data
+    assert.equal(snapshot.binding.mode, 'snapshot')
+    assert.equal(snapshot.binding.sourceVersion.status, 'unknown')
+    assert.equal(snapshot.binding.sourceScanRevision, null)
+    const quick = await plain(['task', 'select', snapshot.taskId, '--read', snapshot.directory.items[0].id, '--skill', 'development/implement', '--reason', 'Verify packaged shortcuts'])
+    const firstStage = quick.data.result.batchId
+    assert.equal((await plain(['task', 'read', snapshot.taskId, '--skill', 'development/implement'])).data.files.length, 1)
+    await plain(['task', 'select', snapshot.taskId, '--stage', '--skill', 'quality/code-review', '--reason', 'Review packaged behavior'])
+    assert.equal((await plain(['task', 'read', snapshot.taskId, '--batch', firstStage, '--skill', 'development/implement'])).data.files.length, 1)
+    await plain(['serve', 'stop'])
+    const restoredRequest = await plain(['request', 'status', shortcutId])
+    assert.equal(restoredRequest.data.result.state, 'completed')
+    assert.equal(restoredRequest.data.result.receipt.data.taskId, snapshot.taskId)
     const artifacts = path.join(root, '.harness-local', 'artifacts')
     await mkdir(artifacts, { recursive: true })
     const output = path.join(artifacts, manifest.filename)

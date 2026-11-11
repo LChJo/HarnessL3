@@ -1,6 +1,6 @@
 export interface Target { projectId: string; worktreeId: string }
 export interface SourceVersion { head: string | null; treeHash: string | null; status: 'clean' | 'dirty' | 'unversioned' | 'unknown' }
-export interface Binding extends Target { modelRevision: string; catalogRevision: string; sourceVersion: SourceVersion; sourceScanRevision: string }
+export interface Binding extends Target { modelRevision: string; catalogRevision: string; sourceVersion: SourceVersion; sourceScanRevision: string | null; mode?: 'snapshot' | 'verified' }
 export interface Diagnostic { message: string; code?: string; file?: string; line?: number; column?: number; severity?: 'error' | 'warning'; evidenceId?: string }
 export interface ProjectConfig { schemaVersion: 1; projectId: string; name: string; source: { excludePatterns: string[] }; skills?: { root: string } }
 export type WorkspaceKind = 'git' | 'directory';
@@ -28,8 +28,8 @@ export interface SkillCatalog { root: string; revision: string | null; skills: S
 export interface SkillPlan { id: string; batchId: string; routerVersion: string; catalogRevision: string; skills: SelectedSkill[]; observation: 'selection-recorded; execution-unknown' }
 export interface QueryFields { expand: string[]; read: string[]; known: Record<string, string> }
 export interface QueryRequest extends QueryFields { schemaVersion: 1; requestId: string; expectedModelRevision: string }
-export interface SelectionRequest { schemaVersion: 1; requestId: string; binding: Binding; context: QueryFields; skills: { id: string; reason: string }[]; taskId?: string }
-export interface FileReadRequest { schemaVersion: 1; requestId: string; throughBatchId?: string; files: { skillId: string; path: string; expectedHash: string }[] }
+export interface SelectionRequest { schemaVersion: 1; requestId: string; binding: Binding; context: QueryFields; skills: { id: string; reason: string }[]; taskId?: string; stage?: boolean }
+export interface FileReadRequest { schemaVersion: 1; requestId: string; throughBatchId?: string; files: { skillId: string; path: string; expectedHash?: string }[] }
 export interface ItemError { operation: 'expand' | 'read' | 'skill-file'; id: string; path?: string; code: string; message: string }
 export interface BatchResult { batchId: string; directories: Directory[]; contexts: ContextBody[]; unchanged: { id: string; contentHash: string; reason: 'retained-in-this-task' }[]; errors: ItemError[]; observation: 'reader-response-produced' }
 export interface Packet { scope: 'returned-entities-only'; contexts: ContextBody[]; evidence: Evidence[] }

@@ -139,6 +139,12 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
           return json(response, await runtime.execute(command))
         } finally { active--; if (!active) for (const waiter of drainWaiters.splice(0)) waiter() }
       }
+      if (endpoint.pathname.startsWith('/requests/') && request.method === 'GET') {
+        if (!auth) return json(response, { error: 'Unauthorized' }, 401)
+        const id = endpoint.pathname.slice('/requests/'.length)
+        validateUuid(id, 'requestId')
+        return json(response, runtime.requests.progress(id, endpoint.searchParams.get('cwd') ?? undefined) ?? { requestId: id, state: 'unknown' })
+      }
       if (request.method === 'GET' && (endpoint.pathname === '/view' || endpoint.pathname === '/events')) {
         if (!auth && !web) return json(response, { error: 'Unauthorized' }, 401)
         if (draining) return json(response, { error: 'Service draining' }, 503)

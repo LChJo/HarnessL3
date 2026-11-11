@@ -18,6 +18,7 @@ import { canonicalPath, isWithin, samePath } from './paths.js'
 import { flag, validateUuid } from '../cli/args.js'
 import { validateContract } from './contract.js'
 import { isErrno } from './io.js'
+import { RequestTracker, reportProgress } from './progress.js'
 import type { CommandRequest } from '../cli/args.js'
 import type { Envelope, FileReadRequest, ModelSnapshot, Target, WorktreeRecord } from './types.js'
 
@@ -28,6 +29,7 @@ const archivedOperations = new Set(['task show', 'history show', 'task handoff',
 const taskOperations = new Set([...archivedOperations, 'task start', 'task prompt', 'task select', 'task close', 'context query'])
 export class Runtime extends EventEmitter {
   readonly dataRoot: string
+  readonly requests = new RequestTracker()
   private readonly resources = new Map<string, Promise<WorktreeResources>>()
   private readonly catalogs = new CatalogObserver()
   private readonly archives = new Map<string, Promise<Archive>>()
@@ -89,7 +91,10 @@ export class Runtime extends EventEmitter {
     return pending
   }
   async resolve(request: CommandRequest, allowInactive = false): Promise<WorktreeRecord> {
-    return this.registry(request).resolve({ cwd: request.cwd, projectId: flag(request, 'project'), worktreeId: flag(request, 'worktree'), allowInactive })
+    reportProgress({ phase: 'resolving-target' })
+    const worktree = await this.registry(request).resolve({ cwd: request.cwd, projectId: flag(request, 'project'), worktreeId: flag(request, 'worktree'), allowInactive })
+    reportProgress({ phase: 'loading-workspace', target: { projectId: worktree.projectId, worktreeId: worktree.id } })
+    return worktree
   }
   async worktreeResources(worktree: WorktreeRecord): Promise<WorktreeResources> {
     if (this.closing) throw new HarnessError('BUSY', 'The runtime is stopping', {}, true)
@@ -188,7 +193,7 @@ export class Runtime extends EventEmitter {
           await other.ready()
           if (other.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Cannot verify session ownership while another worktree journal requires recovery.', { worktreeId: worktree.id })
           const latest = new Map<string, { id: string; active: boolean; agent: string; sessionId: string; logFile: string; cursor: { sourceIdentity: string } }>()
-          for (const record of other.scan({ kind: 'observation-state' })) {
+          for await (const record of other.scanAsync({ kind: 'observation-state' })) {
             const payload = record.payload as { kind?: string; binding?: ReturnType<typeof latest.get> }
             if (payload?.kind === 'observation-state' && payload.binding) latest.set(payload.binding.id, payload.binding)
           }
@@ -219,7 +224,7 @@ export class Runtime extends EventEmitter {
       validateContract('response', receipt)
       const references = new Map<string, ArchiveReference>()
       const add = (kind: ArchiveReference['kind'], hash: string) => references.set(kind + ':' + hash, { kind, hash })
-      for (const commit of resource.archive.scan({ kind: 'legacy-migration' })) {
+      for await (const commit of resource.archive.scanAsync({ kind: 'legacy-migration' })) {
         const payload = commit.payload as { kind?: string; tasks?: { id: string; archiveHash: string; rawRefs: { rawHash: string }[] }[] }
         const archived = payload?.kind === 'legacy-migration' ? payload.tasks?.find(task => task.id === taskId) : undefined
         if (archived) { add('snapshot', archived.archiveHash); for (const raw of archived.rawRefs) add('snapshot', raw.rawHash) }
@@ -287,6 +292,37 @@ export class Runtime extends EventEmitter {
     return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: !!taskId, task, model, modelState, catalog, freshness, observation, archive: resource.tasks.status() }
   }
   async execute(request: CommandRequest): Promise<Envelope> {
+    try {
+      if (request.operation === 'request status') return await this.requestStatus(request)
+      return await this.requests.run(request, () => this.executeCommand(request))
+    } catch (error) {
+      const failure = asHarnessError(error)
+      return { schemaVersion: 1, requestId: request.requestId, target: null, replayed: false, ok: false, error: { code: failure.code, message: failure.message, retryable: failure.retryable, details: failure.details } }
+    }
+  }
+  private async requestStatus(request: CommandRequest): Promise<Envelope> {
+    const worktree = await this.resolve(request, true)
+    const target = { projectId: worktree.projectId, worktreeId: worktree.id }
+    const id = request.positionals[0]
+    const tracked = this.requests.result(id, target, request.cwd)
+    let result: Record<string, unknown>
+    if (tracked?.status.state === 'running') result = { ...tracked.status }
+    else {
+      const archive = this.archives.has(worktree.id) ? await this.archives.get(worktree.id)! : new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true })
+      await archive.ready()
+      if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Request outcome cannot be determined from an unverified archive', { requestId: id, outcome: 'unknown', diagnostics: archive.diagnostics })
+      const taskId = flag(request, 'task')
+      const matches = archive.headers(taskId ? { taskId } : {}).filter(header => header.requestId === id)
+      if (matches.length > 1) result = { requestId: id, state: 'ambiguous', outcome: 'unknown', nextAction: 'specify-task', taskIds: matches.map(header => header.taskId) }
+      else if (matches.length === 1) {
+        const match = matches[0], receipt = await archive.receipt(match.seq)
+        result = { requestId: id, state: 'completed', phase: 'completed', operation: match.operation, committedAt: match.committedAt, receipt }
+      } else if (tracked?.receipt) result = { ...tracked.status, receipt: tracked.receipt }
+      else result = { requestId: id, state: 'unknown', outcome: 'unknown', nextAction: 'inspect-original-request', ...(tracked ? { phase: tracked.status.phase } : {}) }
+    }
+    return { schemaVersion: 1, requestId: request.requestId, target, replayed: false, ok: true, data: commandResult(request.operation, result) }
+  }
+  private async executeCommand(request: CommandRequest): Promise<Envelope> {
     let target: Target | null = null
     if (this.gcApplying) return { schemaVersion: 1, requestId: request.requestId, target, replayed: false, ok: false, error: { code: 'BUSY', message: 'GC is applying its verified plan; retry this command.', retryable: true, details: {} } }
     this.activeOperations++

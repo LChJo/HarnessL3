@@ -21,7 +21,7 @@ function diagnostic(name: string, error: ErrorObject) {
     : error.keyword === 'additionalProperties' ? error.params.additionalProperty
     : error.propertyName ?? (error.keyword === 'propertyNames' ? error.params.propertyName : undefined)
   const location = error.instancePath + (typeof property === 'string' ? '/' + property.replace(/~/g, '~0').replace(/\//g, '~1') : '')
-  const knownPath = name === 'selection' ? '/context/known' : name === 'query' ? '/known' : null
+  const knownPath = name === 'selection' || name === 'selection-input' ? '/context/known' : name === 'query' || name === 'query-input' ? '/known' : null
   const hint = knownPath && (location === knownPath || location.startsWith(knownPath + '/')) ? knownDescription : undefined
   return { path: location, keyword: error.keyword, message: error.message ?? 'Invalid value', schemaPath: error.schemaPath, params: error.params, ...(hint ? { hint } : {}) }
 }

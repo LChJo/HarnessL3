@@ -22,7 +22,7 @@ export async function verifyInstallation(options = {}) {
   const report = { schemaVersion: 1, ok: false, stage: 'package', checks: [], historyCheck: 'not-requested', elapsedMs: 0 }
   const progress = message => process.stderr.write(`HarnessL3 verification (${Date.now() - started}ms): ${message}\n`)
   const command = async (args, requestId = randomUUID(), json = true) => {
-    const arguments_ = [binary, ...args, ...(json ? ['--json', '--request-id', requestId] : []), ...(json && options.dataDir ? ['--data-dir', options.dataDir] : [])]
+    const arguments_ = [binary, ...args, ...(json ? ['--json', '--request-id', requestId, '--timeout-ms', String(Math.min(3_600_000, Math.max(1, deadline - Date.now())))] : []), ...(json && options.dataDir ? ['--data-dir', options.dataDir] : [])]
     let stdout
     try { ({ stdout } = await execFile(process.execPath, arguments_, { windowsHide: true, timeout: Math.max(1, deadline - Date.now()), maxBuffer: 32 * 1024 * 1024 })) }
     catch (error) {

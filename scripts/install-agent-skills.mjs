@@ -142,7 +142,15 @@ if (import.meta.main) {
     const results = await installAgentSkills(parseArguments(process.argv.slice(2)))
     process.stdout.write(JSON.stringify({ ok: true, results }) + '\n')
   } catch (error) {
-    process.stderr.write(JSON.stringify({ ok: false, error: error.message, results: error.results || [], ...(error.current ? { current: error.current } : {}) }) + '\n')
+    const permission = ['EACCES', 'EPERM'].includes(error.code) ? {
+      code: 'IO_ERROR', details: {
+        systemCode: error.code, reason: 'permission-denied',
+        ...(typeof error.path === 'string' ? { path: error.path } : {}),
+        ...(typeof error.syscall === 'string' ? { syscall: error.syscall } : {}),
+        hint: 'Skill installation writes to the selected host skill roots and sibling backup directories. If host approval is available, request this installer command for those paths; otherwise report the blocked copy. Preserve completed results and existing skills.',
+      },
+    } : {}
+    process.stderr.write(JSON.stringify({ ok: false, error: error.message, ...permission, results: error.results || [], ...(error.current ? { current: error.current } : {}) }) + '\n')
     process.exitCode = 1
   }
 }

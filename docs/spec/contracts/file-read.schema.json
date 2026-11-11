@@ -10,7 +10,7 @@
     "files": {
       "type": "array", "minItems": 1, "uniqueItems": true,
       "items": {
-        "type": "object", "additionalProperties": false, "required": ["skillId", "path", "expectedHash"],
+        "type": "object", "additionalProperties": false, "required": ["skillId", "path"],
         "properties": {
           "skillId": { "$ref": "common.schema.json#/$defs/skillId" }, "path": { "$ref": "common.schema.json#/$defs/relativePath" },
           "expectedHash": { "$ref": "common.schema.json#/$defs/sha256" }

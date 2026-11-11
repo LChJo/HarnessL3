@@ -71,9 +71,8 @@ Git项目建议将以下文件与相关源码变更一并提交，便于其他�
 
 ```text
 harnessl3 task start --title "本次任务目的" --json
-harnessl3 task select [<task-id>] --file <selection.json> --json
-harnessl3 task handoff <task-id> --json
-harnessl3 task read <task-id> --file <files.json> --json
+harnessl3 task select <task-id> --read <entity-uuid> --skill <group/name> --reason "本阶段需要的方法" --json
+harnessl3 task read <task-id> --skill <group/name> --json
 harnessl3 web open --no-open --task <task-id> --json
 ```
 
@@ -81,15 +80,25 @@ task start返回本次绑定、顶层简述、实际技能轻目录和内置Skil
 
 路由提示包含筛选规则和上述Git提交范围建议，指向响应中的结构化taskId/binding/directory/catalog，不把这些数据嵌入提示文本。旧幂等回执/历史仍保留当时原文；规则更新不改任务目的、上下文或技能档案。
 
-selection.json使用start返回的原样binding，填入新的UUID requestId。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。一个task只保存一次联合技能选择。任务ID可作命令位置参数传入，也可写入selection.json的可选`taskId`字段后省略位置参数；两者都不能缺省。
+默认入口不扫描源码，返回模型快照，来源unknown/扫描策略null；需要完整当前来源绑定时使用task start --mode verified。复杂请求可用UTF-8文件；selection.json可省略binding与空context/skills，CLI从该task解析，显式binding仍检查，requestId可由CLI生成并先在stderr报告。结构见[selection Schema](spec/contracts/selection.schema.json)及[示例](spec/contracts/examples/selection.json)。技能使用实际catalog ID并说明理由；关联方法不会自动加入，空技能集合也有效。同一阶段只选一次；换技能或技能版本用task select <task-id> --stage追加，旧批次和技能字节保持。仍在上下文且适用的正文可跨轮复用，缺失才读取。需要新模型版本另建任务。任务ID可作命令位置参数传入，也可写入selection.json的可选`taskId`字段后省略位置参数；两者都不能缺省。
 
 首次读取通常将`context.known`填为`{}`；后续query的`known`也可为空。非空时，键是实体UUID，值是同任务已返回并仍保留的精确正文`contentHash`（64位小写十六进制SHA-256）。它不是“已经了解”的文字说明，也不使用技能、文件或来源哈希。从另一任务复制哈希不能跳过本任务首次正文读取；只需选择技能、`read:[]`时无需填入缓存条目。具体约束也可从`task select/context query --help`发现。
 
-handoff返回累计实际上下文和版本化技能文件引用。文件正文/附件随后以task read和expectedHash按需读取，见[file-read Schema](spec/contracts/file-read.schema.json)。选择与读取技能都不表示已执行。独立的后续上下文可用context query批量请求，见[query Schema](spec/contracts/query.schema.json)。
+handoff返回累计实际上下文和版本化技能文件引用。文件正文/附件随后以task read按需读取；--skill默认SKILL.md，--path选择附件，省略expectedHash按所选批次原引用解析，显式哈希仍校验，见[file-read Schema](spec/contracts/file-read.schema.json)。选择与读取技能都不表示已执行。独立的后续上下文可用context query批量请求，见[query Schema](spec/contracts/query.schema.json)。
 
 请求JSON优先使用明确以UTF-8写入的文件；文件输入支持单个UTF-8 BOM。也可使用`--file -`从保证UTF-8字节的stdin传入。Windows PowerShell的默认原生管道可能把中文替换成`?`，因此含中文的请求应先写入UTF-8文件，再传`--file <实际路径>`；已丢失的文字无法靠重新解码恢复。将请求文件放在工作区之外，避免新建未跟踪请求文件改变来源指纹。CLI不会自动把请求文件加入源码排除。
 
 相同requestId及相同语义请求重试会重放已提交回执；不同内容复用同一个ID会冲突。发生取消时，已提交结果仍保留，不要从客户端未收到响应推断未提交。JSON输出只有一个封套；成功0、参数错误2、冲突3、部分成功4、取消130，其它失败1。
+
+## 等待进度与找回结果
+
+等待期间stderr报告requestId及实际阶段；stdout在完成或失败时只返回一个JSON封套。默认等待120秒，确有长核验需要可用--timeout-ms延长；--quiet-progress关闭进度。超时或取消不代表服务未执行，请用原ID查询：
+
+```text
+harnessl3 request status <original-request-id> --json
+```
+
+结果running表示服务仍在处理，completed附原回执；重启后可从原档案找回任务回执。unknown表示没有足够证据，不能盲目换ID重发写请求；管理操作的非持久暂存结果在重启或淘汰后可能未知。查询仍遵守原worktree归属，必要时显式--worktree；同ID历史歧义可加--task。
 
 ## 可靠读取JSON结果
 
@@ -224,6 +233,8 @@ harnessl3 task close <task-id> --json
 proof使用当前status返回的目标、sourceEpoch、sourceVersion和modelRevision，声明路径/对象范围、updated或no-semantic-change及核查依据，见[proof Schema](spec/contracts/sync-proof.schema.json)。服务机械核对版本、范围、模型和checks，不代替调用方的语义判断。局部证明不清除未覆盖变化；并发新变动会拒绝旧证明。关闭任务可以保留pending或failed；历史与已选技能仍可读。
 
 ## 技能与只读观测
+
+权限排查见[受限 agent 运行说明](../INSTALL.md#在受限-agent-中运行)：宿主创建进程失败没有CLI封套；已启动CLI的权限拒绝通过`IO_ERROR`及`details.reason:permission-denied`报告可用的路径/操作。只在宿主策略允许时申请具体命令/路径审批，不把接入同意当执行授权，不更换原数据根恢复权限。
 
 画布逐层展示命中节点和祖先路径，其余节点合并为“…”；点击可进入全部节点列表，搜索、筛选或分页浏览。Skill Hub及技能文件夹采用相同处理。列表可打开详情并显式加入正文、目录或技能候选，返回画布后提交批量请求；查看列表本身不产生读取或选择。历史页面使用当时已保存的模型和目录。
 

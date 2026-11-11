@@ -3,13 +3,13 @@ name: harnessl3
 description: >
   Default context entry for all tasks: use when asking, researching, planning,
   implementing, debugging, reviewing, continuing, or handing off is even 1% relevant.
-  Reuse project context across turns; reassess and load skills for every user turn.
+  Reuse captured context and skill bodies across turns; reassess skills each turn.
   Applies to main agents and subagents with parent handoffs.
 ---
 
 # Route skills each turn; reuse project context
 
-For every user turn, choose skills for the current action and load their bodies, even if returned earlier. Reuse sufficient project context separately. Follow the stages below; ask questions and report progress in the user's language.
+For every user turn, reassess skills for the current action. Reuse identifiable captured bodies that are still available and suitable; read only missing or newly required skill versions and project context. Follow the stages below; ask questions and report progress in the user's language.
 
 ## 1. Route the current turn
 
@@ -17,11 +17,13 @@ For every user turn, choose skills for the current action and load their bodies,
 User request
 |-- Setup already declined/cancelled for this task -> work normally; do not ask again
 |-- Unanswered setup question -> independent work only; keep the question pending
-|-- Valid parent handoff -> inherit scope/selection; load needed selected skills for this turn
+|-- Valid parent handoff -> inherit scope/selection; obtain only missing bodies
 |-- Same goal/target, suitable captured versions and matching chosen skill set
-|   `-- task read selected skill bodies for this turn; reuse sufficient project context
-`-- New goal, no suitable task, or changed skills/required versions
-    `-- task start -> select current skills and only missing project context
+|   `-- reuse available bodies; task read/query only missing material
+|-- Same goal/target/model snapshot, changed skills/skill versions
+|   `-- task select --stage -> read missing selected bodies; retain earlier batches
+`-- New goal, no suitable task, or required new model/source binding
+    `-- task start -> select skills and only missing project context
 ```
 
 Planning -> implementation can keep the goal while changing skills (for example, to-tickets -> implement). A matching empty skill choice needs no file read. Recover lost content/references once with task handoff; query only missing context. See [continuation details](references/runtime.md#continuation-and-skill-routing) when switching stages.
@@ -68,7 +70,9 @@ Chosen operation
 
 `onboarding` is a consent request, including on older CLIs. `fallback:continue-without-l3` applies only after decline/cancellation, never merely after a nonzero exit. Use its actual worktreeRoot/state; target conflicts without onboarding are not permission to initialize.
 
-One task has one joint skill selection; changed skills need a new stage task. Own edits use stage synchronization. Old archives describe their captured version; current-version requests need a suitable binding. Before selection, task prompt can refresh a changed catalog. Check the original requestId receipt before retrying a lost write response.
+If the host cannot create the command process (for example sandbox provisioning or `helper_sandbox_lock_failed`), the command did not run and there is no CLI result to parse. Use an available permitted file reader for references. For a blocked command or CLI permission error, request narrowly scoped host approval only when the exposed tool and current policy allow it; otherwise report the blocker and continue independent work without claiming L3 succeeded. Never require full access, change host ACLs/settings, or relocate existing data as entry recovery. See [permission recovery](references/runtime.md#permission-and-host-startup-failures) when that reference is accessible.
+
+Default task start captures a model snapshot without scanning source; source status is unknown. Use verified mode only when current complete source binding is actually needed; sync verify always retains strict full checks. Use task select --stage for intentional skill changes on the same task, preserving earlier plans/bytes. Command help exposes shorthand flags and task-owned defaults; do not manually reconstruct bindings/hashes when the CLI can resolve them. Own edits still require stage synchronization. Before first selection, task prompt can refresh a changed catalog. On timeout/cancellation/lost response, use request status with the original ID before any retry; progress on stderr identifies that ID. Unknown is not evidence of non-execution.
 
 ## Work and task lifecycle
 

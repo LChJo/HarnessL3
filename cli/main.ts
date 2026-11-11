@@ -33,7 +33,16 @@ function output(response: Envelope, jsonMode: boolean): void {
 }
 async function loadInput(request: CommandRequest, signal: AbortSignal): Promise<void> {
   const file = flag(request, 'file')
-  if (!file) return
+  if (!file) {
+    const list = (name: string) => flag(request, name)?.split(',') ?? []
+    const base = { schemaVersion: 1, requestId: request.requestId }
+    if (request.operation === 'task select') request.input = { ...base, context: { expand: list('expand'), read: list('read'), known: {} }, skills: list('skill').map(id => ({ id, reason: flag(request, 'reason')! })), ...(request.flags.stage ? { stage: true } : {}) }
+    else if (request.operation === 'context query') request.input = { ...base, expand: list('expand'), read: list('read'), known: {} }
+    else if (request.operation === 'task read') request.input = { ...base, files: list('skill').map(skillId => ({ skillId, path: flag(request, 'path') ?? 'SKILL.md' })) }
+    else return
+    validateContract(request.operation === 'task select' ? 'selection-input' : request.operation === 'context query' ? 'query-input' : 'file-read', request.input)
+    return
+  }
   let bytes: Buffer
   if (file === '-') {
     const chunks: Buffer[] = []
@@ -53,14 +62,18 @@ async function loadInput(request: CommandRequest, signal: AbortSignal): Promise<
     if (flag(request, 'request-id') && request.requestId !== input.requestId) throw new HarnessError('INVALID_ARGUMENT', 'The requestId flag and JSON requestId differ')
     request.requestId = input.requestId
   } else input.requestId = request.requestId
-  const schema = request.operation === 'task select' ? 'selection' : request.operation === 'task read' ? 'file-read' : request.operation === 'sync verify' ? 'sync-proof' : 'query'
+  if (request.flags.stage) {
+    if (input.stage === false) throw new HarnessError('INVALID_ARGUMENT', '--stage conflicts with stage:false in the request')
+    input.stage = true
+  }
+  const schema = request.operation === 'task select' ? 'selection-input' : request.operation === 'task read' ? 'file-read' : request.operation === 'sync verify' ? 'sync-proof' : 'query-input'
   request.input = validateContract(schema, input)
 }
-async function openBrowser(url: string): Promise<void> {
+async function openBrowser(url: string, signal: AbortSignal): Promise<void> {
   const command = process.platform === 'win32' ? 'rundll32.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open'
   const args = process.platform === 'win32' ? ['url.dll,FileProtocolHandler', url] : [url]
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, { windowsHide: true, stdio: 'ignore', detached: true })
+    const child = spawn(command, args, { windowsHide: true, stdio: 'ignore', detached: true, signal })
     child.once('error', reject)
     child.once('exit', code => code === 0 ? resolve() : reject(new Error('The browser launcher failed')))
   })
@@ -69,6 +82,9 @@ export async function runCli(args: string[]): Promise<void> {
   const jsonMode = args.some(argument => argument === '--json' || argument.startsWith('--json='))
   let request: CommandRequest | undefined
   let alreadyPrinted = false
+  let deadline: ReturnType<typeof setTimeout> | undefined
+  let heartbeat: ReturnType<typeof setInterval> | undefined
+  let dispatched = false
   const cancellation = new AbortController()
   const cancel = () => { if (!alreadyPrinted) { cancellation.abort(); if (request && flag(request, 'file') === '-') process.stdin.destroy() } }
   process.once('SIGINT', cancel)
@@ -76,6 +92,16 @@ export async function runCli(args: string[]): Promise<void> {
     request = parseArgs(args)
     if (request.operation === 'help') { process.stdout.write(renderHelp(request.positionals)); return }
     if (request.operation === 'version') { process.stdout.write(PACKAGE_VERSION + '\n'); return }
+    const timeoutMs = Number(flag(request, 'timeout-ms') ?? 120_000)
+    deadline = setTimeout(() => {
+      cancellation.abort(new HarnessError('REQUEST_TIMEOUT', 'The CLI wait budget was exhausted; accepted server work may still complete', {
+        requestId: request!.requestId, operation: request!.operation, timeoutMs,
+        outcome: dispatched ? 'unknown' : 'not-executed', nextAction: dispatched ? 'query-request' : 'retry-same-request',
+        command: ['harnessl3', 'request', 'status', request!.requestId],
+      }))
+      if (flag(request!, 'file') === '-') process.stdin.destroy()
+    }, timeoutMs)
+    deadline.unref()
     const dataRoot = await resolveDataRoot(flag(request, 'data-dir'))
     if (process.env.HARNESS_SKILLS_ROOT) {
       if (!path.isAbsolute(process.env.HARNESS_SKILLS_ROOT)) throw new HarnessError('INVALID_ARGUMENT', 'HARNESS_SKILLS_ROOT must be absolute')
@@ -83,6 +109,20 @@ export async function runCli(args: string[]): Promise<void> {
     }
     await loadInput(request, cancellation.signal)
     if (cancellation.signal.aborted) throw new HarnessError('CANCELLED', 'CLI request cancelled before dispatch')
+    let latestProgress: Record<string, unknown> = { phase: 'connecting' }, lastProgress = '', lastProgressAt = 0
+    const progress = (state: Record<string, unknown>) => {
+      if (state.phase === 'dispatching') dispatched = true
+      if (request!.flags['quiet-progress'] || alreadyPrinted) return
+      latestProgress = state
+      const serialized = canonicalJson(state)
+      if (serialized === lastProgress && Date.now() - lastProgressAt < 5000) return
+      lastProgress = serialized; lastProgressAt = Date.now()
+      process.stderr.write(jsonMode ? canonicalJson({ kind: 'progress', requestId: request!.requestId, operation: request!.operation, ...state }) + '\n'
+        : `HarnessL3 ${request!.requestId}: ${String(state.phase)}\n`)
+    }
+    progress({ phase: 'connecting' })
+    heartbeat = setInterval(() => progress(latestProgress), 5_000)
+    heartbeat.unref()
     let response: Envelope
     if (request.operation === 'serve status') {
       const inspected = await inspectService(dataRoot, cancellation.signal)
@@ -94,7 +134,7 @@ export async function runCli(args: string[]): Promise<void> {
       if (await serviceStatus(dataRoot)) throw new HarnessError('SERVICE_CONFLICT', 'A service is already running; use serve status or stop it before foreground mode')
       const { startServer } = await import('../service/main.js')
       if (cancellation.signal.aborted) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')
-      await startServer(dataRoot, Number(flag(request, 'port') ?? 0), record => { output(success(request!, serviceResult('serve start', record)), jsonMode); alreadyPrinted = true })
+      await startServer(dataRoot, Number(flag(request, 'port') ?? 0), record => { clearTimeout(deadline); clearInterval(heartbeat); output(success(request!, serviceResult('serve start', record)), jsonMode); alreadyPrinted = true })
       return
     } else {
       let record: ServiceDescriptor
@@ -102,11 +142,11 @@ export async function runCli(args: string[]): Promise<void> {
         record = await ensureService(dataRoot, Number(flag(request, 'port') ?? 0), cancellation.signal)
         response = success(request, serviceResult(request.operation, record))
       } else {
-        const connected = await executeRpc(dataRoot, request, cancellation.signal)
+        const connected = await executeRpc(dataRoot, request, cancellation.signal, progress)
         record = connected.record; response = connected.response
       }
       if (request.operation === 'web open' && response.ok) {
-        const session = await fetch(record.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + record.token, 'x-harness-protocol': '1' } })
+        const session = await fetch(record.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + record.token, 'x-harness-protocol': '1' }, signal: cancellation.signal })
         if (!session.ok) throw new HarnessError('SERVICE_CONFLICT', 'Could not create a local browser session')
         const { code, expiresAt, browserSessionTtlMs } = await session.json() as { code: string; expiresAt: string; browserSessionTtlMs: number }
         if (typeof expiresAt !== 'string' || typeof browserSessionTtlMs !== 'number') throw new HarnessError('SERVICE_CONFLICT', 'Restart the local service to refresh Web sign-in metadata')
@@ -116,7 +156,7 @@ export async function runCli(args: string[]): Promise<void> {
         const url = record.url + '/#' + parameters
         const opened = !request.flags['no-open']
         if (opened) {
-          try { await openBrowser(url) } catch { throw new HarnessError('BROWSER_OPEN_FAILED', 'Could not open a browser; copy the URL from details', { url }) }
+          try { await openBrowser(url, cancellation.signal) } catch { throw new HarnessError('BROWSER_OPEN_FAILED', 'Could not open a browser; copy the URL from details', { url }) }
         }
         response.data = { kind: 'command-result', status: 'complete', operation: 'web open', result: { url, opened,
           service: { instanceId: record.instanceId, ...serviceLifetime },
@@ -126,8 +166,11 @@ export async function runCli(args: string[]): Promise<void> {
     }
     output(response, jsonMode)
   } catch (error) {
-    const failure = cancellation.signal.aborted && !alreadyPrinted ? new HarnessError('CANCELLED', 'The CLI request was cancelled; committed work is retained', request ? { requestId: request.requestId } : {}) : asHarnessError(error)
+    const failure = cancellation.signal.aborted && !alreadyPrinted
+      ? cancellation.signal.reason instanceof HarnessError ? cancellation.signal.reason
+        : new HarnessError('CANCELLED', 'The CLI request was cancelled; committed work is retained', request ? { requestId: request.requestId, outcome: dispatched ? 'unknown' : 'not-executed', nextAction: dispatched ? 'query-request' : 'retry-same-request' } : {})
+      : asHarnessError(error)
     if (alreadyPrinted) { process.stderr.write(failure.code + ': ' + failure.message + '\n'); process.exitCode = failure.exitCode; return }
     output({ schemaVersion: 1, requestId: request?.requestId ?? randomUUID(), target: null, replayed: false, ok: false, error: { code: failure.code, message: failure.message, retryable: failure.retryable, details: failure.details } }, jsonMode)
-  } finally { process.removeListener('SIGINT', cancel) }
+  } finally { clearTimeout(deadline); clearInterval(heartbeat); process.removeListener('SIGINT', cancel) }
 }

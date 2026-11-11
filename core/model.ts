@@ -5,6 +5,8 @@ import { FqnRef, type Fqn, type RelationId } from '@likec4/core'
 import { HarnessError } from './errors.js'
 import { canonicalJson, digest, sha256, parseJsonStrict } from './json.js'
 import { validateContract } from './contract.js'
+import { reportProgress } from './progress.js'
+import { permissionError } from './errors.js'
 import { documentGitDiagnostics } from './references.js'
 import type { Brief, ContextBody, Diagnostic, Directory, Entity, Evidence, ModelSnapshot, SourceVersion } from './types.js'
 
@@ -153,6 +155,7 @@ async function evidencePath(root: string, path: string): Promise<string> {
 
 /** Parse precisely the captured bytes. No workspace config or source-generating script is loaded. */
 export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
+  reportProgress({ phase: 'loading-model' })
   let parser: LikeC4 | undefined
   let sources: CapturedSource[] = []
   let attemptedModelRevision: string | null = null
@@ -253,6 +256,8 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
     })) : []
     return { revision, entities, evidence: evidenceJson.value.evidence, aliases, views, diagnostics }
   } catch (error) {
+    const permission = permissionError(error)
+    if (permission) throw permission
     if (error instanceof HarnessError && error.code === 'MODEL_INVALID') throw new HarnessError('MODEL_INVALID', error.message, { ...error.details, attemptedModelRevision })
     throw new HarnessError('MODEL_INVALID', 'The current LikeC4 model or its tracked references are invalid.', { attemptedModelRevision, diagnostics: [{ code: 'MODEL_LOAD', severity: 'error', file: '.harness/model', line: 1, column: 1, message: error instanceof Error ? error.message : String(error) }] })
   } finally { await parser?.dispose() }

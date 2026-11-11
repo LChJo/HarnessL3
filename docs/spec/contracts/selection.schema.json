@@ -8,6 +8,7 @@
     "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
     "binding": { "$ref": "common.schema.json#/$defs/binding" }, "context": { "$ref": "common.schema.json#/$defs/queryFields" },
     "taskId": { "$ref": "common.schema.json#/$defs/uuid", "description": "Optional when the command already carries the task ID as its positional argument" },
+    "stage": { "type": "boolean" },
     "skills": {
       "type": "array", "items": {
         "type": "object", "additionalProperties": false, "required": ["id", "reason"],

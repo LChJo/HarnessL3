@@ -7,6 +7,7 @@ import { captureSkills, scanSkills } from './skills.js'
 import { canonicalJson, digest, sha256 } from './json.js'
 import { HarnessError, asHarnessError } from './errors.js'
 import { validateContract } from './contract.js'
+import { reportProgress } from './progress.js'
 import { readJson } from './io.js'
 import { flag, validateUuid, type CommandRequest } from '../cli/args.js'
 import { SCHEMA_ROOT } from './package.js'
@@ -14,9 +15,9 @@ import type { BatchResult, Binding, Envelope, FileReadRequest, ItemError, ModelS
 
 const RETENTION = 60 * 86400000
 const ROUTER_VERSION = 'skill-hub/1'
-const projectionRevisions = { eventProjection: 'compact-headers/1' }
+const projectionRevisions = { eventProjection: 'compact-headers/1', taskProjection: 'compact-batches/1' }
 const hashPattern = /^[a-f0-9]{64}$/
-interface SourceState { sourceVersion: SourceVersion; sourceScanRevision: string; archives?: ArchiveReference[] }
+interface SourceState { sourceVersion: SourceVersion; sourceScanRevision: string | null; archives?: ArchiveReference[] }
 interface FrozenTask extends TaskRecord { sourceArchives?: ArchiveReference[] }
 interface FrozenBatch extends TaskBatch { binding: Binding; catalog: SkillBrief[] }
 interface TaskPayload { kind: 'task'; task: TaskRecord; operation?: string; source?: 'cli' | 'web' }
@@ -46,6 +47,9 @@ export class TaskService {
   private loading?: Promise<void>
   private queue: Promise<unknown> = Promise.resolve()
   private records = new Map<string, TaskRecord>()
+  private readonly latestTasks = new Map<string, number>()
+  private readonly cachedSizes = new Map<string, number>()
+  private cachedBytes = 0
   private indexProblem: unknown
 
   constructor(options: Options) {
@@ -66,7 +70,7 @@ export class TaskService {
     this.queue = next.catch(() => undefined)
     return next
   }
-  tasks(): TaskRecord[] { return [...this.records.values()].map(task => structuredClone(task)) }
+  tasks(): TaskRecord[] { return [...this.latestTasks.keys()].map(id => this.task(id)) }
   status() { return { archive: { state: this.archive.status, seq: this.archive.seq, diagnostics: this.archive.diagnostics }, index: this.index.status, indexError: this.indexProblem ? String(this.indexProblem) : null } }
 
   private target(): Target { return { projectId: this.worktree.projectId, worktreeId: this.worktree.id } }
@@ -84,22 +88,34 @@ export class TaskService {
   }
   private async load(): Promise<void> {
     await this.archive.ready()
-    this.restore()
+    await this.restore()
     if (this.archive.status !== 'ready') { this.indexProblem = new HarnessError('INDEX_UNAVAILABLE', 'The journal has an unverified region; history search is unavailable.', { diagnostics: this.archive.diagnostics }, true); return }
     try {
       await this.index.ready()
       await this.ensureIndex()
     } catch (error) { this.indexProblem = error }
   }
-  private restore(): void {
-    const restored = new Map<string, TaskRecord>()
-    for (const record of this.archive.scan({ kind: 'task' })) {
-      const payload = record.payload as Partial<TaskPayload> | null
-      if (payload?.kind !== 'task') continue
+  private async restore(): Promise<void> {
+    reportProgress({ phase: 'restoring-tasks' })
+    this.latestTasks.clear(); this.records.clear(); this.cachedSizes.clear(); this.cachedBytes = 0
+    for await (const record of this.archive.scanAsync({ kind: 'task' })) {
+      const payload = record.payload as TaskPayload
       const task = this.checkedTask(payload.task)
-      restored.set(task.id, task)
+      this.latestTasks.set(task.id, record.seq)
+      this.cacheTask(task)
     }
-    this.records = restored
+  }
+  private cacheTask(task: TaskRecord): void {
+    this.cachedBytes -= this.cachedSizes.get(task.id) ?? 0
+    this.records.delete(task.id); this.cachedSizes.delete(task.id)
+    const bytes = Buffer.byteLength(canonicalJson(task))
+    if (bytes > 16 * 1024 * 1024) return
+    this.records.set(task.id, task); this.cachedSizes.set(task.id, bytes); this.cachedBytes += bytes
+    while (this.records.size > 16 || this.cachedBytes > 16 * 1024 * 1024) {
+      const id = this.records.keys().next().value!
+      this.cachedBytes -= this.cachedSizes.get(id) ?? 0
+      this.cachedSizes.delete(id); this.records.delete(id)
+    }
   }
   private checkedTask(value: unknown): TaskRecord {
     try {
@@ -138,7 +154,7 @@ export class TaskService {
 
   /** Task and generic committed-event documents are safe to rebuild from the verified journal. */
   projection(): IndexDocument[] {
-    const documents = [...this.records.values()].flatMap(task => this.taskDocuments(task)).concat(this.externalDocuments?.() ?? [])
+    const documents = [...this.latestTasks.keys()].flatMap(id => this.taskDocuments(this.task(id))).concat(this.externalDocuments?.() ?? [])
     const events: { seq: number; document: IndexDocument }[] = []
     for (const header of this.archive.headers({ kind: 'task' })) {
       if (header.operation === 'task read' && header.taskId) events.push({ seq: header.seq, document: this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web') })
@@ -157,7 +173,7 @@ export class TaskService {
     const directories = new Map<string, IndexDocument>()
     const briefs = new Map<string, IndexDocument>()
     for (const batch of task.batches) {
-      documents.push({ id: batch.id, kind: 'batch', title: batch.operation, text: task.id, activityAt: batch.createdAt, data: { taskId: task.id, batch } })
+      documents.push({ id: batch.id, kind: 'batch', title: batch.operation, text: task.id, activityAt: batch.createdAt, data: { taskId: task.id, batchId: batch.id, operation: batch.operation, requestId: batch.requestId, createdAt: batch.createdAt, contextIds: batch.result?.contexts.map(body => body.entity.id) ?? [], directoryIds: batch.result?.directories.map(directory => directory.parentId) ?? [], skillPlanId: batch.skillPlan?.id ?? null } })
       for (const directory of batch.result?.directories ?? []) {
         directories.set(`${task.id}:directory:${directory.parentId}`, { id: `${task.id}:directory:${directory.parentId}`, kind: 'entity', title: 'Expanded directory', text: directory.parentId ?? '', data: { taskId: task.id, batchId: batch.id, parentId: directory.parentId, childIds: directory.items.map(item => item.id), scope: 'direct-child-directory' } })
         for (const item of directory.items) briefs.set(`${task.id}:brief:${item.id}`, { id: `${task.id}:brief:${item.id}`, kind: 'entity', title: item.title, text: `${item.locator}\n${item.brief}`, data: { taskId: task.id, batchId: batch.id, entityId: item.id, scope: 'direct-child-brief' } })
@@ -178,7 +194,7 @@ export class TaskService {
     if (this.archive.status !== 'ready') throw new HarnessError('INDEX_UNAVAILABLE', 'The journal requires recovery; history discovery cannot claim full coverage.', { diagnostics: this.archive.diagnostics }, true)
     try {
       await this.index.ready()
-      if (this.index.status.state !== 'ready' || this.index.status.seq > this.archive.seq || this.index.status.inputRevisions?.eventProjection !== projectionRevisions.eventProjection) {
+      if (this.index.status.state !== 'ready' || this.index.status.seq > this.archive.seq || this.index.status.inputRevisions?.eventProjection !== projectionRevisions.eventProjection || this.index.status.inputRevisions?.taskProjection !== projectionRevisions.taskProjection) {
         await this.index.rebuild(this.projection(), this.archive.seq, projectionRevisions)
       } else if (this.index.status.seq < this.archive.seq) {
         const fromSeq = this.index.status.seq + 1
@@ -189,7 +205,7 @@ export class TaskService {
         for (const header of headers) {
           if (header.kind === 'legacy-migration') { await this.index.rebuild(this.projection(), this.archive.seq, projectionRevisions); this.indexProblem = undefined; return }
           if (header.kind === 'task' && header.taskId) {
-            const task = this.records.get(header.taskId)
+            const task = this.latestTasks.has(header.taskId) ? this.task(header.taskId) : undefined
             if (task) for (const document of this.taskDocuments(task)) add(document)
             if (header.operation === 'task read') add(this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web'))
           } else add(this.eventDocument(header))
@@ -201,8 +217,13 @@ export class TaskService {
   }
   private task(id: string): TaskRecord {
     validateUuid(id, 'taskId')
-    const task = this.records.get(id)
-    if (!task) throw new HarnessError('NOT_FOUND', 'No task with this ID is archived in the selected worktree.', { taskId: id })
+    let task = this.records.get(id)
+    if (!task) {
+      const seq = this.latestTasks.get(id)
+      if (seq === undefined) throw new HarnessError('NOT_FOUND', 'No task with this ID is archived in the selected worktree.', { taskId: id })
+      task = this.checkedTask((this.archive.recordSync(seq).payload as TaskPayload).task)
+      this.cacheTask(task)
+    } else { this.records.delete(id); this.records.set(id, task) }
     return structuredClone(task)
   }
   private async verifyTask(task: TaskRecord): Promise<void> {
@@ -260,9 +281,18 @@ export class TaskService {
     const config = validateContract<ProjectConfig>('project-config', await readJson(path.join(this.worktree.root, '.harness', 'project.json')))
     if (config.projectId !== this.worktree.projectId) throw new HarnessError('TARGET_CONFLICT', 'The live project identity differs from the registered worktree.')
     const [model, source, catalog] = await Promise.all([loadModel(this.worktree.root), this.source(skillsRoot), withCatalog ? scanSkills(skillsRoot) : Promise.resolve(undefined)])
-    if (!source || !hashPattern.test(source.sourceScanRevision) || source.sourceVersion?.status === 'unknown' || !hashPattern.test(source.sourceVersion?.treeHash ?? '')) throw new HarnessError('SOURCE_CHANGED', 'A complete current source fingerprint is required before retrieving live context.', { source })
+    if (!source || !hashPattern.test(source.sourceScanRevision ?? '') || source.sourceVersion?.status === 'unknown' || !hashPattern.test(source.sourceVersion?.treeHash ?? '')) throw new HarnessError('SOURCE_CHANGED', 'A complete current source fingerprint is required before retrieving live context.', { source })
     if (catalog && (!catalog.valid || !catalog.revision)) throw new HarnessError('CATALOG_INVALID', 'The current skill directory is invalid.', { diagnostics: catalog.diagnostics })
     return { model, source, catalog }
+  }
+  private async snapshotCurrent(skillsRoot: string, withCatalog: boolean, task?: TaskRecord): Promise<Awaited<ReturnType<TaskService['current']>>> {
+    reportProgress({ phase: task ? 'reading-model-snapshot' : 'loading-model' })
+    const [model, catalog] = await Promise.all([
+      task ? this.archive.readSnapshot<ModelSnapshot>(task.modelSnapshotHash) : loadModel(this.worktree.root),
+      withCatalog ? scanSkills(skillsRoot) : Promise.resolve(undefined),
+    ])
+    if (catalog && (!catalog.valid || !catalog.revision)) throw new HarnessError('CATALOG_INVALID', 'The current skill directory is invalid.', { diagnostics: catalog.diagnostics })
+    return { model, source: { sourceVersion: { head: null, treeHash: null, status: 'unknown' }, sourceScanRevision: null }, catalog }
   }
   private versions(task: TaskRecord, current: Awaited<ReturnType<TaskService['current']>>, catalog = false): void {
     if (task.binding.modelRevision !== current.model.revision) throw new HarnessError('VERSION_CONFLICT', 'The model changed; start a new task instead of appending current content to an old snapshot.')
@@ -286,12 +316,12 @@ export class TaskService {
       const materialized = { schemaVersion: 1, lastAppliedSeq, task, contentHash: digest('task-projection', { lastAppliedSeq, task }) }
       const result = await this.archive.commit({ scope, requestId: request.requestId, request: normalized, payload: { kind: 'task', task, operation: request.operation, source: request.source ?? 'cli' } satisfies TaskPayload, receipt, archives: [...archives.values()], materializations: [{ path: `tasks/${task.id}.json`, content: materialized }] })
       seq = result.seq
-      if (result.replayed) this.restore()
-      else this.records.set(task.id, this.checkedTask(task))
+      if (result.replayed) await this.restore()
+      else { this.latestTasks.set(task.id, seq); this.cacheTask(this.checkedTask(task)) }
       receipt = validateContract<Envelope>('response', { ...result.receipt, replayed: result.replayed })
     } catch (error) {
       // Commit may be durable even when replacing its derived task file failed.
-      this.restore()
+      await this.restore()
       throw error
     }
     try {
@@ -306,7 +336,7 @@ export class TaskService {
     return [
       `Skill Hub ${ROUTER_VERSION}`,
       `Use this response's structured taskId, binding, directory and catalog fields as the task-specific source; preserve the exact binding when selecting. Discover command options and request contracts through the installed CLI help; request schemas and examples are installed under ${SCHEMA_ROOT} (examples/selection.json is the task select request example).`,
-      'Select all necessary context and methods together in one task select request. Independent targets can be requested together; read UUIDs may cross hierarchy levels. Expand returns direct child briefs; read returns only the exact entity and boundary references. A directory count does not mean its full content was read.',
+      'Select necessary context and methods together. CLI shorthand and omitted task-owned binding/default fields are supported; use command help. Intentional skill changes use task select --stage on this task; earlier batches and bytes remain unchanged. Default snapshot mode reads its captured model with current source unverified; only verified mode binds complete source. Independent targets can be requested together; read UUIDs may cross hierarchy levels. Expand returns direct child briefs; read returns the exact entity and boundary references. A directory count is not a body read.',
       'Skills are editable file references, not automatic dependencies or executed tools. Select actual catalog IDs with a reason; related entries are optional suggestions. Empty context and skill collections are valid when no extra resources are required. Read selected skill files later using their exact archived path and expectedHash; choosing or reading a skill does not execute it. The current agent continues its standard workflow; HarnessL3 does not start a model or agent.',
       'When retaining, editing, moving or deleting project documents, maintain affected model briefs, relationships and evidence with ordinary file tools, even without source-code changes. Preserve stable identities, repair current references and retain archived history; verify the actual phase scope before closing. Use established artifact and retention conventions for specs, local tickets, decisions, research and handoffs; distinguish durable project documents from temporary drafts and machine-local task journals. A .scratch path does not decide Git ownership. Read referenced document bodies explicitly when needed.',
       this.worktree.kind === 'directory' ? "Back up .harness/model/, .harness/project.json, .harness/evidence.json, .harness/aliases.json, referenced project documents and project-owned skill files together with the project. Keep machine-local registrations, history, snapshots, indexes and credentials isolated and preserved. Do not copy external skill libraries or follow external links." : "In Git projects, version .harness/model/ (.c4 and .likec4, including specification and views), .harness/project.json, .harness/evidence.json and .harness/aliases.json with related source changes. Include referenced project documentation and project-owned skill files, attachments and licenses kept as real files in this repository. Keep machine-local data roots, registrations, task journals/history/snapshots and archived skill bytes, SQLite indexes, caches/layouts, logs, machine paths/configuration and access credentials out of Git; preserve user skills and history. Do not copy global skill libraries or follow symlinks/junctions to external targets for a commit. Review diffs and follow the user's existing commit authorization; this advice does not authorize staging, committing or pushing.",
@@ -322,20 +352,31 @@ export class TaskService {
     if (operation === 'task start') {
       const title = flag(request, 'title')?.trim()
       if (!title) throw new HarnessError('INVALID_ARGUMENT', 'A nonempty task title is required.')
-      return { scope: `worktree:${this.worktree.id}`, value: { operation, title, session: flag(request, 'session') ?? null } }
+      return { scope: `worktree:${this.worktree.id}`, value: { operation, title, session: flag(request, 'session') ?? null, ...(flag(request, 'mode') ? { mode: flag(request, 'mode') } : {}) } }
     }
     if (operation === 'task list' || operation === 'history list') return { scope: `worktree:${this.worktree.id}`, value: { operation, flags: request.flags } }
     const schema = operation === 'task select' ? 'selection' : operation === 'context query' ? 'query' : operation === 'task read' ? 'file-read' : null
     let input: SelectionRequest | QueryRequest | FileReadRequest | undefined
+    let submitted: Record<string, unknown> | undefined
     if (schema) {
-      input = validateContract<SelectionRequest | QueryRequest | FileReadRequest>(schema, request.input)
-      if (input.requestId !== request.requestId) throw new HarnessError('INVALID_ARGUMENT', 'The JSON requestId and command requestId differ.')
+      submitted = structuredClone(validateContract<Record<string, unknown>>(schema === 'selection' || schema === 'query' ? schema + '-input' : schema, request.input))
+      if (request.flags.stage) submitted.stage = true
+      if (submitted.requestId !== request.requestId) throw new HarnessError('INVALID_ARGUMENT', 'The JSON requestId and command requestId differ.')
     }
-    const taskId = request.positionals[0] ?? (operation === 'task select' ? (input as SelectionRequest | undefined)?.taskId : undefined)
+    const taskId = request.positionals[0] ?? (operation === 'task select' ? submitted?.taskId as string | undefined : undefined)
     if (!taskId) throw new HarnessError('INVALID_ARGUMENT', 'Provide the task ID as the command positional or, for task select, the JSON taskId field.')
     validateUuid(taskId, 'taskId')
+    if (operation === 'task select' && submitted?.taskId && submitted.taskId !== taskId) throw new HarnessError('TARGET_CONFLICT', 'The positional and JSON task IDs differ')
+    if (schema && submitted) {
+      let prepared: Record<string, unknown> = submitted
+      if (schema === 'selection') prepared = { ...submitted, binding: submitted.binding ?? this.task(taskId).binding,
+        context: { expand: [], read: [], known: {}, ...submitted.context as object }, skills: submitted.skills ?? [] }
+      if (schema === 'query') prepared = { expand: [], read: [], known: {}, ...submitted, expectedModelRevision: submitted.expectedModelRevision ?? this.task(taskId).binding.modelRevision }
+      input = validateContract<SelectionRequest | QueryRequest | FileReadRequest>(schema, prepared)
+    }
     const value: Record<string, unknown> = { operation, taskId }
-    if (input) value.input = input
+    // Retry identity uses submitted intent, so inferred defaults cannot change an original receipt after a later stage.
+    if (input) value.input = submitted
     const batch = flag(request, 'batch')
     if (batch) { validateUuid(batch, 'batchId'); value.batch = batch }
     if (operation === 'task read' && (input as FileReadRequest).throughBatchId && batch && (input as FileReadRequest).throughBatchId !== batch) throw new HarnessError('INVALID_ARGUMENT', 'The command batch and JSON throughBatchId must match.')
@@ -386,7 +427,8 @@ export class TaskService {
       if (operation === 'task read') return await this.readFiles(request, normalized, '')
       this.active()
       const skillsRoot = typeof skills === 'string' ? skills : await skills()
-      await this.beforeLive?.(skillsRoot)
+      const snapshot = operation === 'task start' ? flag(request, 'mode') !== 'verified' : this.task(normalized.value.taskId as string).binding.mode === 'snapshot'
+      if (!snapshot && operation !== 'task close') await this.beforeLive?.(skillsRoot)
       if (operation === 'task close') return await this.serial(async () => {
         const replay = await this.replay(request, normalized.scope, normalized.value)
         if (replay) return replay
@@ -403,7 +445,8 @@ export class TaskService {
       this.active(initial)
       await this.verifyTask(initial)
       if (operation === 'task prompt' && initial.skillPlan) throw new HarnessError('SELECTION_EXISTS', 'This task already has a skill plan; use task handoff.')
-      if (operation === 'task select' && initial.skillPlan) throw new HarnessError('SELECTION_EXISTS', 'This task already has its one joint selection.')
+      const stage = operation === 'task select' && (normalized.input as SelectionRequest).stage === true
+      if (operation === 'task select' && initial.skillPlan && !stage) throw new HarnessError('SELECTION_EXISTS', 'This task already has a selection. Use --stage to append a new skill stage; earlier batches remain unchanged.')
       if (operation === 'task select') {
         const input = normalized.input as SelectionRequest
         if (input.binding.projectId !== this.worktree.projectId || input.binding.worktreeId !== this.worktree.id) throw new HarnessError('TARGET_CONFLICT', 'Selection binding belongs to another project or worktree.')
@@ -412,17 +455,19 @@ export class TaskService {
         if (input.binding.catalogRevision !== initial.binding.catalogRevision) throw new HarnessError('CATALOG_CHANGED', 'Selection catalog binding does not match the latest unselected prompt.')
       }
       if (operation === 'context query' && (normalized.input as QueryRequest).expectedModelRevision !== initial.binding.modelRevision) throw new HarnessError('VERSION_CONFLICT', 'The query expectedModelRevision differs from the task binding.')
-      const captured = await this.current(skillsRoot, operation !== 'context query')
-      this.versions(initial, captured, operation === 'task select')
+      const capture = () => snapshot ? this.snapshotCurrent(skillsRoot, operation !== 'context query', initial) : this.current(skillsRoot, operation !== 'context query')
+      const captured = await capture()
+      this.versions(initial, captured, operation === 'task select' && !stage)
       const selected = operation === 'task select' ? captureSkills(captured.catalog!, (normalized.input as SelectionRequest).skills) : undefined
       return await this.serial(async () => {
         const replay = await this.replay(request, normalized.scope, normalized.value)
         if (replay) return replay
         const task = this.task(initial.id)
         this.active(task)
-        if (task.skillPlan && (operation === 'task select' || operation === 'task prompt')) throw new HarnessError('SELECTION_EXISTS', 'This task already has its one joint selection; use handoff.')
-        const current = await this.current(skillsRoot, operation !== 'context query')
-        this.versions(task, current, operation === 'task select')
+        if (task.skillPlan && (operation === 'task select' || operation === 'task prompt') && !stage) throw new HarnessError('SELECTION_EXISTS', 'This task already has a selection; use --stage for a new skill stage or handoff for existing material.')
+        if (stage && task.skillPlan?.id !== initial.skillPlan?.id) throw new HarnessError('VERSION_CONFLICT', 'Another skill stage committed during preparation; inspect the current task before appending a stage.')
+        const current = snapshot && operation === 'context query' ? captured : await capture()
+        this.versions(task, current, operation === 'task select' && !stage)
         if (current.model.revision !== captured.model.revision || !same(current.source.sourceVersion, captured.source.sourceVersion) || current.source.sourceScanRevision !== captured.source.sourceScanRevision) throw new HarnessError('SOURCE_CHANGED', 'Context changed before the batch could commit.')
         if (operation !== 'context query' && current.catalog!.revision !== captured.catalog!.revision) throw new HarnessError('CATALOG_CHANGED', 'The skill catalog changed before selection could commit.')
         if (operation === 'task prompt') {
@@ -437,6 +482,7 @@ export class TaskService {
         const references: ArchiveReference[] = [...current.source.archives ?? []]
         if (selected) {
           for (const bytes of selected.blobs.values()) references.push({ kind: 'blob', hash: await this.archive.blob(bytes) })
+          if (stage) { task.binding.catalogRevision = current.catalog!.revision!; task.catalog = current.catalog!.skills }
           task.skillPlan = { id: randomUUID(), batchId, routerVersion: ROUTER_VERSION, catalogRevision: task.binding.catalogRevision, skills: selected.skills, observation: 'selection-recorded; execution-unknown' }
         }
         this.addBatch(task, request, normalized.input, result, captured.model, this.instant().toISOString())
@@ -449,17 +495,19 @@ export class TaskService {
     } catch (error) { return this.failure(request, error) }
   }
   private async start(request: CommandRequest, normalized: ReturnType<TaskService['normalized']>, skillsRoot: string): Promise<Envelope> {
-    const captured = await this.current(skillsRoot, true)
+    const snapshot = flag(request, 'mode') !== 'verified'
+    const captured = await (snapshot ? this.snapshotCurrent(skillsRoot, true) : this.current(skillsRoot, true))
+    reportProgress({ phase: 'waiting-to-commit' })
     return this.serial(async () => {
       const replay = await this.replay(request, normalized.scope, normalized.value)
       if (replay) return replay
-      const current = await this.current(skillsRoot, true)
+      const current = snapshot ? captured : await this.current(skillsRoot, true)
       if (captured.model.revision !== current.model.revision) throw new HarnessError('VERSION_CONFLICT', 'The model changed while task creation was in progress.')
       if (!same(captured.source.sourceVersion, current.source.sourceVersion) || captured.source.sourceScanRevision !== current.source.sourceScanRevision) throw new HarnessError('SOURCE_CHANGED', 'The source changed while task creation was in progress.')
       if (captured.catalog!.revision !== current.catalog!.revision) throw new HarnessError('CATALOG_CHANGED', 'The skills changed while task creation was in progress.')
       const at = this.instant().toISOString()
       const modelSnapshotHash = await this.archive.snapshot('model', captured.model)
-      const task: FrozenTask = { schemaVersion: 1, id: randomUUID(), title: String(normalized.value.title), binding: { ...this.target(), modelRevision: captured.model.revision, catalogRevision: captured.catalog!.revision!, sourceVersion: captured.source.sourceVersion, sourceScanRevision: captured.source.sourceScanRevision }, createdAt: at, updatedAt: at, lastReadAt: null, retentionBasisAt: at, expiresAt: new Date(Date.parse(at) + RETENTION).toISOString(), closedAt: null, declaredSession: typeof normalized.value.session === 'string' ? normalized.value.session : null, source: request.source ?? 'cli', initialDirectory: modelDirectory(captured.model), modelSnapshotHash, catalog: captured.catalog!.skills, batches: [], packet: emptyPacket(), skillPlan: null, sourceArchives: current.source.archives ?? [] }
+      const task: FrozenTask = { schemaVersion: 1, id: randomUUID(), title: String(normalized.value.title), binding: { ...this.target(), ...(snapshot ? { mode: 'snapshot' as const } : {}), modelRevision: captured.model.revision, catalogRevision: captured.catalog!.revision!, sourceVersion: captured.source.sourceVersion, sourceScanRevision: captured.source.sourceScanRevision }, createdAt: at, updatedAt: at, lastReadAt: null, retentionBasisAt: at, expiresAt: new Date(Date.parse(at) + RETENTION).toISOString(), closedAt: null, declaredSession: typeof normalized.value.session === 'string' ? normalized.value.session : null, source: request.source ?? 'cli', initialDirectory: modelDirectory(captured.model), modelSnapshotHash, catalog: captured.catalog!.skills, batches: [], packet: emptyPacket(), skillPlan: null, sourceArchives: current.source.archives ?? [] }
       return this.persist(request, normalized.scope, normalized.value, task, this.entry(request, task))
     })
   }
@@ -484,7 +532,7 @@ export class TaskService {
         if (!skill) throw new HarnessError('SKILL_NOT_SELECTED', 'This skill was not selected by the requested batch boundary.')
         const file = skill.files.find(item => item.path === requested.path)
         if (!file) throw new HarnessError('FILE_NOT_ARCHIVED', 'This path is not in the selected skill archive.')
-        if (file.hash !== requested.expectedHash) throw new HarnessError('HASH_MISMATCH', 'expectedHash differs from the selected archive reference.')
+        if (requested.expectedHash !== undefined && file.hash !== requested.expectedHash) throw new HarnessError('HASH_MISMATCH', 'expectedHash differs from the selected archive reference.')
         const bytes = await this.archive.readBlob(file.hash)
         if (bytes.length !== file.bytes || sha256(bytes) !== file.hash || (file.encoding === 'utf8' && !Buffer.from(bytes.toString('utf8')).equals(bytes))) throw new HarnessError('ARCHIVE_CORRUPT', 'The archived skill encoding or byte count is invalid.')
         files.push({ skillId: skill.id, file: { ...file, content: bytes.toString(file.encoding) } })

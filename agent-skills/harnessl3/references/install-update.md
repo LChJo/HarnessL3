@@ -18,6 +18,8 @@ Check git --version only when source installation or a managed Git target actual
 
 ## Use the maintained installation guide
 
+Installation requires writes outside the project: the actual npm prefix, selected host skill roots and their sibling backup directories. Request the specific installer command/paths through host approval only if the current host/policy permits it; user consent to install is not an OS or sandbox grant. If approval is unavailable or denied, report which stage is blocked and continue independent work. A host process-creation failure means the installer never ran; use the main skill's host-startup recovery, not a full-access requirement. Package, skill-copy and service/RPC verification results remain separate.
+
 The repository-root INSTALL.md is the single maintained procedure; do not maintain a second installer here.
 
 - For an existing global package, locate harnessl3/INSTALL.md with npm root -g. Use it only if its procedure still matches the intended GitHub source; updates use that source's current guide.

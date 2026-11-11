@@ -1,5 +1,7 @@
 # 模型、身份与批量读取 v1
 
+v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
+
 v0.44：文本权威、五类投影、技能和历史在普通目录与Git工作区一致。projectId保存在项目内，worktreeId为本机工作区登记ID；命令沿用worktree名称。directory来源为unversioned，不能用无HEAD推断Git类型。原地启用Git更新当前登记及来源适配器，原任务/正文/证据/技能归档保留原身份与字节，当前新来源通过新任务绑定取得。
 
 状态：**正式实现契约**，实际代码/平台范围见[实施状态](../implementation/STATUS.md)。LikeC4 `.c4` / `.likec4`是对象、关系、说明和视图权威；JSON只存项目标识、显式别名和证据，不维护第二套对象数据。agent继续使用原有文件工具读写。本文落实D01–D11/D13与A03–A07；任务/文件入口见[CLI契约](cli-contract.md)。
@@ -124,7 +126,7 @@ Git项目对本地 `document` 证据批量查询当前索引及原生ignore规�
 
 [query.schema.json](contracts/query.schema.json)允许 expand/read 混用，至少一个非空。同 UUID 同时 expand/read 合法，表示两种不同输出；同一数组内重复无效。顺序不构成因果：独立目标可并发生产结果，响应数组按输入顺序稳定输出，批次合并按持久提交顺序。
 
-[selection.schema.json](contracts/selection.schema.json)包含同一 context 结构和 skills，显式空集合表示无需额外资源。context 和技能由同一 agent 一次联合提交；CLI 不按关键词冒充选择，不自动增选 related。后续 query 仅补上下文，不更改已保存技能方案。
+[selection.schema.json](contracts/selection.schema.json)包含同一 context 结构和 skills，显式空集合表示无需额外资源。context 和技能由同一 agent 一次联合提交；CLI 不按关键词冒充选择，不自动增选 related。后续 query 仅补上下文；显式 task select --stage 可追加新技能方案，旧批次仍保留原方案。
 
 正文输出是 `contextBody`：entity 保存该实体当前权威声明；对象的 ancestors 只有定位简述，relationships 为其直接入/出关系，scope 为 boundary-reference；读取关系自身时 ancestors/relationships 为空，sourceId/targetId 仅作端点引用。顶层 evidenceIds 为实体与其返回关系所引依据的去重集合，packet.evidence 只带该集合的依据记录。正文 scope 为 exact-entity；输出包只累积实际返回或同任务已保留的正文，祖先/相邻对象不计作已读正文。目录显示总数不等于命中/读取数。
 
@@ -132,7 +134,7 @@ Git项目对本地 `document` 证据批量查询当前索引及原生ignore规�
 
 `known`通常为空对象`{}`，首次正文读取不能由另一任务的哈希省略；一次选择前若同任务已通过query返回并保留正文，则可声明相应`contentHash`。值要求64位小写十六进制SHA-256，不使用自由文本、技能/文件哈希或来源指纹。`read`为空时不需要填入缓存条目。共享Schema保留此用途说明，具体命令帮助和字段校验提示直接复用；合法哈希通过Schema不表示服务已经确认该任务持有正文。
 
-技能正文由 [file-read.schema.json](contracts/file-read.schema.json)按所选 skillId 和其内部相对路径批量取，expectedHash 必须来自该方案的文件引用；文件 utf8/base64 编码、原字节数及 hash 一起返回。不读取未选技能，不自动执行 Bash/脚本或安装宿主命令；后续标准 agent 的授权和行为不由“选择成功”替代。
+技能正文由 [file-read.schema.json](contracts/file-read.schema.json)按所选 skillId 和其内部相对路径批量取，省略expectedHash时由CLI按该批次方案解析；显式expectedHash必须匹配原归档引用；文件 utf8/base64 编码、原字节数及 hash 一起返回。不读取未选技能，不自动执行 Bash/脚本或安装宿主命令；后续标准 agent 的授权和行为不由“选择成功”替代。
 
 默认分发方法应在单独选择时完整可用：移除跨技能的Markdown链接、YAML related清单和指向库根维护说明的链接；少量必要行为直接写在正文，大块参考作为本方法目录内真实附件保留。逐方法捕获后核对本地链接都能从其文件清单解析，附件仍按需读取。此要求针对默认内容，不移除用户自有技能的related能力；候选仍不自动选择、归档或执行。清理当前文件不修改旧方案及已归档字节。
 
@@ -148,7 +150,7 @@ Git项目对本地 `document` 证据批量查询当前索引及原生ignore规�
 | contextBody.contentHash | 正文对象去除 contentHash 字段后的完整结构，kind=`context-body`；模型/依据版本变化均改变结果，不把缓存误当当前 |
 | 快照/布局 | 快照按内容寻址，布局缓存 key 另加引擎/布局版本；自动布局变化不改权威模型身份 |
 
-task 绑定来源扫描策略，源码发生变化立即 pending，阶段核验使用 sourceEpoch + 预期 sourceVersion/modelRevision 做 CAS。读任务快照与核验源码语义不同；模型/来源在新请求前变化会拒绝追加并要求新任务，旧包继续可只读查看。运行事件只表示实际采集/返回事实，不证明模型接收、理解或执行。
+snapshot任务只绑定捕获的模型/目录，来源unknown、扫描策略null；query读取该模型归档，不因无关源码或当前模型变化失效。需要新版模型另建任务。verified任务（含旧无mode任务）绑定完整来源/策略，变化仍拒绝追加。源码观测保持pending，阶段proof仍使用sourceEpoch与完整sourceVersion/modelRevision做严格CAS；快照读取不清除pending。运行事件只表示实际采集/返回事实，不证明模型接收、理解或执行。
 
 ## 5. 验收要点
 

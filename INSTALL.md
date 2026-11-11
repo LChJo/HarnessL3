@@ -135,6 +135,16 @@ skill 的安装更新、项目接入、运行细节与子任务说明位于 `ref
 
 ## 更新、验证与故障处理
 
+### 在受限 agent 中运行
+
+安装授权与宿主执行权限分开。安装会写入实际 npm prefix、上表中的宿主技能根及同级备份目录；运行需要读取包和参考文件，访问原机器数据根、当前项目及所选技能的实际路径，并连接本机回环服务；首次启动服务还需要创建本机服务进程。请按失败的具体命令、路径或回环访问，在宿主允许的审批机制中授权。无需全面放开沙箱，也不要把整个用户目录设为可写。宿主禁止审批或没有审批工具时，agent应说明被阻塞的步骤，继续可独立执行的工作。
+
+若报错为 `Failed to create unified exec process`、`sandbox provisioning failed` 或 `helper_sandbox_lock_failed`，命令尚未启动，L3 无法输出错误封套或触发宿主审批。先用一个无关的简单命令确认宿主是否能启动进程，并检查宿主有效权限配置和该错误路径的系统权限；仅测试命令启动成功后，再重试原 L3 步骤。参考文件可用宿主已允许的文件读取工具读取。修复宿主启动故障应按宿主自身的设置/支持流程处理；L3 不自动重装、修改 `.codex` ACL 或关闭整个沙箱。Codex 的权限与审批为两层控制，相关排查见[官方 Windows 沙箱说明](https://learn.chatgpt.com/docs/windows/windows-sandbox)和[审批说明](https://learn.chatgpt.com/docs/agent-approvals-security)。
+
+若 L3 已启动并返回 `IO_ERROR`、`details.reason:"permission-denied"`，核对 `systemCode` 及可用的 `path` / `syscall`，按实际操作处理沙箱或系统权限；该错误本身不能判定是哪一层拒绝。技能复制失败同样保留这些字段及已完成的 `results/current`。不要更换 `--data-dir`、删除锁、技能或历史来绕过权限；新数据根会得到另一套服务与档案。若写请求执行结果不明，先核对原 requestId 回执，再决定是否重试。普通终端或全面放开权限后的成功，不等于受限宿主已通过验收。
+
+### 更新与验证
+
 1. 更新前确认原安装所用的 Node/npm prefix 和数据根。若显式使用多个 `--data-dir`，先分别执行旧 CLI 的 `serve stop --data-dir <绝对路径> --json`；脚本只停止默认或 `HARNESSL3_HOME` 指向的数据根中的服务。
 2. 重新执行本平台脚本，同时更新 CLI 与运行时 skill。更新期间暂缓其它 agent 对同一安装的调用；后续 CLI 调用按需启动新服务。
 3. 在原工作目录执行 `harnessl3 --version` 和 `harnessl3 --help`，确认 PATH 命令与脚本输出一致，构建源提交符合下载记录。Windows 用 `Get-Command harnessl3 -All`，macOS/Linux 用 `type -a harnessl3` 排查多个安装。找不到命令时，将 Windows 的 `npm prefix -g` 或 macOS/Linux 的 `$(npm prefix -g)/bin` 加入 PATH，或使用脚本输出的绝对命令路径。

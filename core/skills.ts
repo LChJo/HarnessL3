@@ -3,7 +3,7 @@ import { join, relative, isAbsolute, resolve, sep, basename, dirname, posix } fr
 import { randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { parseDocument } from 'yaml'
-import { HarnessError } from './errors.js'
+import { HarnessError, permissionError } from './errors.js'
 import { digest, sha256, parseJsonStrict } from './json.js'
 import type { Diagnostic, FileRef, SelectedSkill, SkillBrief, SkillCatalog } from './types.js'
 
@@ -104,6 +104,8 @@ export async function scanSkills(inputRoot: string): Promise<SkillCatalog> {
     const manifest = skills.flatMap(skill => skill.files.map(({ path, hash }) => ({ path: `${skill.id}/${path}`, hash }))).sort((a, b) => compare(a.path, b.path))
     return { root, revision: digest('skill-catalog', manifest), skills, diagnostics, checkedAt, valid: true, files: captured }
   } catch (error) {
+    const permission = permissionError(error)
+    if (permission) throw permission
     diagnostics.push({ code: 'CATALOG_INVALID', severity: 'error', message: error instanceof Error ? error.message : String(error) })
     return { root, revision: null, skills: [], diagnostics, checkedAt, valid: false, files: new Map() }
   }

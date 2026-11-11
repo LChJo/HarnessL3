@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Archive } from '../../build/core/archive.js';
+import { execFile } from './helpers.mjs';
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'harnessl3-archive-'));
@@ -12,6 +13,21 @@ async function fixture(t) {
   return { root, archive: new Archive(root) };
 }
 const operation = (extras = {}) => ({ scope: `task:${randomUUID()}`, requestId: randomUUID(), request: { operation: 'test', value: 1 }, payload: { event: 'created' }, receipt: { answer: 'original' }, ...extras });
+
+test('TC17 journal recovery retains metadata while large history bodies stay on disk', async t => {
+  const { archive, root } = await fixture(t);
+  for (let i = 0; i < 48; i++) await archive.commit(operation({ payload: { kind: 'large-history', ordinal: i, padding: 'x'.repeat(2 * 1024 * 1024) } }));
+  const script = join(root, 'recover.mjs');
+  await writeFile(script, `import { Archive } from ${JSON.stringify(new URL('../../build/core/archive.js', import.meta.url).href)};
+    const archive = new Archive(${JSON.stringify(root)}, { readOnly: true });
+    await archive.ready();
+    const first = (await archive.record(1)).payload;
+    console.log(JSON.stringify({ status: archive.status, count: archive.headers().length, ordinal: first.ordinal, bytes: first.padding.length }));`);
+  const before = await stat(join(root, 'journal.jsonl'));
+  const { stdout } = await execFile(process.execPath, ['--max-old-space-size=64', script], { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 });
+  assert.deepEqual(JSON.parse(stdout), { status: 'ready', count: 48, ordinal: 0, bytes: 2 * 1024 * 1024 });
+  assert.equal((await stat(join(root, 'journal.jsonl'))).size, before.size);
+});
 
 test('TC17 recovery validates shared content once per pass and detects later corruption', async t => {
   const { archive, root } = await fixture(t);

@@ -8,10 +8,11 @@ export const commands: Record<string, CommandDefinition> = {
   init: { count: 0, flags: ['name'] },
   'project register': { count: 1 }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
   'worktree register': { count: 1 }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
-  'task start': { count: 0, flags: ['title', 'session'], required: ['title'] }, 'task prompt': { count: 1 },
-  'task select': { count: 1, optionalPositional: true, flags: ['file'], required: ['file'] }, 'task read': { count: 1, flags: ['file', 'batch'], required: ['file'] },
+  'task start': { count: 0, flags: ['title', 'session', 'mode'], required: ['title'] }, 'task prompt': { count: 1 },
+  'task select': { count: 1, optionalPositional: true, flags: ['file', 'read', 'expand', 'skill', 'reason', 'stage'] }, 'task read': { count: 1, flags: ['file', 'batch', 'skill', 'path'] },
   'task show': { count: 1, flags: ['batch'] }, 'task handoff': { count: 1, flags: ['batch'] }, 'task close': { count: 1 },
-  'task list': { count: 0, flags: ['limit', 'offset'] }, 'context query': { count: 1, flags: ['file'], required: ['file'] },
+  'task list': { count: 0, flags: ['limit', 'offset'] }, 'context query': { count: 1, flags: ['file', 'read', 'expand'] },
+  'request status': { count: 1, flags: ['task'] },
   'history list': { count: 0, flags: ['query', 'from', 'to', 'limit', 'offset'] }, 'history show': { count: 1, flags: ['batch'] },
   'skills list': { count: 0 }, 'skills refresh': { count: 0 },
   'agent bind': { count: 0, flags: ['agent', 'session', 'log-file', 'task'], required: ['agent', 'session', 'log-file'] },
@@ -21,8 +22,8 @@ export const commands: Record<string, CommandDefinition> = {
   'web open': { count: 0, flags: ['task', 'no-open'] }, 'model validate': { count: 0 },
   gc: { count: 0, flags: ['dry-run', 'apply'] }, 'migrate prototype': { count: 0, flags: ['from', 'dry-run', 'apply'], required: ['from', 'worktree'] },
 }
-export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'help', 'version']
-export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply', 'no-open'])
+export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'timeout-ms', 'quiet-progress', 'help', 'version']
+export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply', 'no-open', 'quiet-progress', 'stage'])
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 export function flag(request: CommandRequest, name: string): string | undefined { const value = request.flags[name]; return typeof value === 'string' ? value : undefined }
 export function validateUuid(value: string, field: string): string { if (!uuid.test(value)) throw new HarnessError('INVALID_ARGUMENT', 'Expected a lowercase UUID', { field }); return value }
@@ -57,10 +58,10 @@ export function parseArgs(args: string[], cwd = process.cwd()): CommandRequest {
   for (const name of ['project', 'worktree', 'request-id', 'batch', 'task', 'binding']) if (typeof flags[name] === 'string') validateUuid(flags[name] as string, name)
   if (positionals.length && operation !== 'project register' && operation !== 'worktree register') validateUuid(positionals[0], 'id')
   for (const name of ['title', 'name', 'session']) if (typeof flags[name] === 'string' && !(flags[name] as string).trim()) throw new HarnessError('INVALID_ARGUMENT', 'Argument must not be blank', { argument: name })
-  for (const name of ['limit', 'offset', 'port']) {
+  for (const name of ['limit', 'offset', 'port', 'timeout-ms']) {
     const value = flags[name]
     if (typeof value !== 'string') continue
-    if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (name === 'limit' && (+value < 1 || +value > 200)) || (name === 'port' && +value > 65535)) throw new HarnessError('INVALID_ARGUMENT', 'Numeric argument is outside its permitted range', { argument: name })
+    if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (name === 'limit' && (+value < 1 || +value > 200)) || (name === 'port' && +value > 65535) || (name === 'timeout-ms' && (+value < 1 || +value > 3_600_000))) throw new HarnessError('INVALID_ARGUMENT', 'Numeric argument is outside its permitted range', { argument: name })
   }
   for (const name of ['from', 'to']) if (operation === 'history list' && flags[name]) {
     const value = String(flags[name])
@@ -71,6 +72,10 @@ export function parseArgs(args: string[], cwd = process.cwd()): CommandRequest {
   if (flags['data-dir'] && !path.isAbsolute(String(flags['data-dir']))) throw new HarnessError('INVALID_ARGUMENT', '--data-dir must be absolute')
   if (flags['log-file'] && !path.isAbsolute(String(flags['log-file']))) throw new HarnessError('INVALID_ARGUMENT', '--log-file must be absolute')
   if (flags.agent && !['codex', 'claude-code'].includes(String(flags.agent))) throw new HarnessError('INVALID_ARGUMENT', 'Unsupported agent')
+  if (flags.mode && !['snapshot', 'verified'].includes(String(flags.mode))) throw new HarnessError('INVALID_ARGUMENT', 'mode must be snapshot or verified')
+  if (flags.file && ['read', 'expand', 'skill', 'reason', 'path'].some(name => flags[name] !== undefined)) throw new HarnessError('INVALID_ARGUMENT', 'Use either --file or the selection/read shorthand flags')
+  if (operation === 'task read' && !flags.file && !flags.skill) throw new HarnessError('INVALID_ARGUMENT', 'Provide --file or --skill for archived file reads')
+  if (operation === 'task select' && flags.skill && !flags.reason) throw new HarnessError('INVALID_ARGUMENT', 'Provide --reason for the requested skills, or use --file for individual reasons')
   return { operation, positionals, flags, requestId: String(flags['request-id'] ?? randomUUID()), cwd: path.resolve(cwd) }
 }
 

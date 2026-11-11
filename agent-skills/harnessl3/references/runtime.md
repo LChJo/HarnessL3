@@ -4,23 +4,34 @@ Read only when current CLI help is insufficient, or for complex requests, synchr
 
 ## Continuation and skill routing
 
-At every user turn, reassess the current action against the available skill descriptions. Project context and skill routing are separate: retain sufficient project bodies, but return the chosen skill bodies through task read for this turn even if an earlier turn read them. The agent chooses skills; the CLI records selection and returns bytes, without routing or executing a model itself.
+At every user turn, reassess the current action against skill descriptions. Reuse suitable captured project and skill bodies that remain identifiable in context; this reuse is not a new CLI read. Obtain only missing material or required new versions. The agent chooses skills; the CLI records selection and returns bytes, without executing a model.
 
 | Current turn | Operations |
 | --- | --- |
-| Same goal/target, suitable captured versions, matching selected skill set | task read the required selected SKILL.md files with their archived paths/hashes; read attachments only when needed |
-| Changed skill set (including a change to empty), new goal, or required current versions unavailable in the old binding | task start, then one task select for this stage's skills and missing project context, then task read chosen bodies |
+| Same goal/target, suitable versions, matching selected skills | Reuse available bodies; task read only missing selected files, attachments only when needed |
+| Changed skills/skill versions on the same suitable model snapshot | task select --stage with the intended skills and missing context; read newly required bodies |
+| New goal or required new model/current verified source binding | task start, then select the intended skills and missing project context |
 | No applicable skill and a reusable recorded empty selection | Keep the empty selection; no skill-file request is needed |
 | Lost bodies or file references | Recover once with task handoff using the actual taskId; then perform this turn's skill reads |
 | Missing project context | context query only the missing targets under a suitable binding |
 
-For example, a ticket-writing turn may select planning/to-tickets and the next implementation turn development/implement. Keep project context already available in the conversation. On the new task, select context as {"expand":[],"read":[],"known":{}} when no project material is missing. task start still returns briefs/catalog; the new packet is empty, not an inherited copy. Do not put another task's hashes in known or claim its bodies were returned by the new task. A second selection on the old task is rejected with SELECTION_EXISTS; preserve its original plan, group/IDs and archived bytes. Stage tasks use ordinary task IDs/titles; no parentTaskId or stage-specific CLI field exists.
+For example, a ticket-writing turn may select planning/to-tickets and the implementation turn development/implement. Retain project bodies and append an explicit task select --stage; empty context means no new project material. Earlier batch packet/plan/catalog and skill bytes remain unchanged and readable with --batch. A second selection without --stage is rejected. A new model version still needs a new task; an old packet must not be presented as today's model or verified source. Do not reuse known across tasks.
 
-Use a fresh requestId for each intentional turn's skill read; retain it for retries of that read. Same-request replay is not a new observed read. Reused context is likewise not a new read and skill reads do not renew context retention. An old/closed task can supply its captured skill bytes, but cannot supply today's edited skill under an old hash. Refresh the catalog through a new task when current skill descriptions/bytes are needed; task prompt can refresh only an unselected task.
+Use a fresh requestId for each intentional read or stage; retain it for retries. Replay/reuse is not a new observed read, and skill reads do not renew context retention. Closed tasks supply only captured bytes. Use --stage to select edited skill versions on an open task; task prompt refreshes an unselected catalog. CLI --skill/--path resolve recorded references, including the requested historical --batch, and an explicit expectedHash remains checked.
 
 Own edits still need stage synchronization, not automatic task creation. Plans, todos and replies do not close tasks; actual completion/cancellation of the recorded scope plus recorded sync state does. A skill switch alone does not close another unfinished task. Closed tasks remain read-only. Each new task follows the main skill's once-per-task card; repeated skill reads on an existing task do not repeat it.
 
 Use the main skill's ordered routing for missing CLI or project setup. Do not initialize a current project just to restore historical handoff/skill bytes. Declined/cancelled onboarding stays ordinary execution for the same task; valid parent handoffs inherit scope and selection.
+
+## Permission and host startup failures
+
+Distinguish command startup from a CLI response. `Failed to create unified exec process`, sandbox provisioning failures and `helper_sandbox_lock_failed` originate before the requested shell/CLI starts. Do not parse them as CLI JSON, reinstall L3, or infer that a reference file itself is unreadable. Try an available permitted native file reader for references. If all command startup is blocked, report the host failure and continue independent work; repairing the host belongs to its own setup/support path.
+
+For a started CLI, `IO_ERROR` with `details.reason:permission-denied` retains the OS code, and path/syscall when supplied by the OS. It does not establish whether the cause is the sandbox, filesystem ACL or another OS policy. Preserve stdout/stderr, exit code and requestId. Review the actual failed operation before retrying; an RPC failure may follow a commit, so inspect the original receipt if execution is uncertain.
+
+When the current host exposes and permits command/path approval, use its real tool schema to request only the failed command and required access, then wait for the actual result. A normal onboarding question cannot grant execution permission. With `never`, managed denial or no approval capability, state that limitation and the blocked operation; do not promise an approval dialog, retry unchanged, or ask the user to disable the sandbox. A denial ends this recovery attempt, not independent user work.
+
+Separate installation writes (npm prefix, host skill roots and sibling backups) from runtime access (package/reference reads, the original machine data root, project files, selected skill roots including real link targets, local loopback RPC and service startup when needed). Resolve only paths relevant to the failure. Keep data/history and UUIDs in place; changing `--data-dir` creates a different service/archive, not recovered access. Do not alter host configuration, ACLs, locks or service identity to bypass the restriction. A successful unrestricted run does not verify sandbox compatibility.
 
 ## Discover the current interface
 
@@ -84,7 +95,7 @@ Keep authoritative .harness model/config/evidence/aliases, related source/docs a
 
 ## Retries, history and observation
 
-- Same requestId and semantic request can replay; different content must not reuse it. On cancellation/lost responses, inspect the committed receipt via actual task show/handoff before retrying a write.
+- Save the request ID emitted on stderr. request status <request-id> inspects progress or the original durable receipt without dispatching the operation again. A timeout limits CLI waiting, not accepted server work; unknown after lookup/restart does not prove non-execution. Preserve the original ID and inspect before retrying. --timeout-ms sets a larger bounded wait only when appropriate; --quiet-progress suppresses stderr progress.
 - Correct cwd/target conflicts explicitly. New-version requests cannot use stale bindings; catalog-only changes before selection may use task prompt. Closed tasks cannot receive new batches.
 - history show restores captured batches without today's missing content. Browsing, handoff and skill reads do not extend the 60-day context retention window. Damage/uncollected evidence stays unknown.
 - For logs, consult agent bind --help only with authorized, known host/session/absolute log path. No latest-session guessing or recursive scans. File change is not a read; read is not understanding.

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/selection-input.schema.json",
+  "title": "Selection input with task-owned defaults",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestId"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "taskId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "binding": { "$ref": "common.schema.json#/$defs/binding" },
+    "context": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "expand": { "$ref": "common.schema.json#/$defs/ids" }, "read": { "$ref": "common.schema.json#/$defs/ids" },
+        "known": { "$ref": "common.schema.json#/$defs/known" }
+      }
+    },
+    "skills": { "$ref": "selection.schema.json#/properties/skills" },
+    "stage": { "type": "boolean" }
+  }
+}

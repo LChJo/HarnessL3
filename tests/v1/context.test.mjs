@@ -52,7 +52,8 @@ async function fixture(t) {
     validateContract('response', response)
     return response
   }
-  const start = async (title = 'Find exact context', requestId = randomUUID()) => call('task start', null, undefined, { title }, requestId)
+  // These existing cases exercise the explicit verified contract; snapshot behavior has separate CLI coverage.
+  const start = async (title = 'Find exact context', requestId = randomUUID()) => call('task start', null, undefined, { title, mode: 'verified' }, requestId)
   const selection = (entry, context = { expand: [], read: [], known: {} }, skills = []) => ({ schemaVersion: 1, requestId: randomUUID(), binding: entry.data.binding, context, skills })
   const query = (entry, expand = [], read = [], known = {}) => ({ schemaVersion: 1, requestId: randomUUID(), expectedModelRevision: entry.data.binding.modelRevision, expand, read, known })
   return { root, worktreeRoot, skillsRoot, archiveRoot, worktree, call, start, selection, query, get service() { return service }, get archive() { return archive }, get index() { return index }, setTime: value => { instant = new Date(value) }, setSource: value => { sourceState = value }, get sourceState() { return structuredClone(sourceState) }, provider: value => { provider = value }, restart: async () => { await service.close(); return open() } }

@@ -7,7 +7,7 @@ const mode = process.argv[3]
 const originalOpen = fs.open, originalReaddir = fs.readdir
 let count = 0
 fs.open = async (file, ...args) => {
-  if (mode === 'unreadable' && path.basename(file) === 'changing.txt') throw Object.assign(new Error('Denied fixture'), { code: 'EACCES' })
+  if (mode === 'unreadable' && path.basename(file) === 'changing.txt') throw Object.assign(new Error('Denied fixture'), { code: 'EACCES', path: String(file), syscall: 'open' })
   const handle = await originalOpen(file, ...args)
   if (mode === 'bytes' && path.basename(file) === 'changing.txt') {
     const read = handle.readFile.bind(handle)
@@ -33,4 +33,5 @@ fs.readdir = async (directory, ...args) => {
 }
 syncBuiltinESMExports()
 const { scanSource } = await import('../../build/core/source.js')
-console.log(JSON.stringify(await scanSource(input.worktree, input.config, input.skillsRoot)))
+try { console.log(JSON.stringify(await scanSource(input.worktree, input.config, input.skillsRoot))) }
+catch (error) { console.log(JSON.stringify({ error: { code: error.code, details: error.details } })) }

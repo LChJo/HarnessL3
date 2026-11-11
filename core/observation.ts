@@ -270,7 +270,7 @@ export class ObservationManager {
   ready(): Promise<void> { return this.initialized ??= this.load(); }
   private async load(): Promise<void> {
     await this.options.archive.ready();
-    for (const record of this.options.archive.scan({ kind: 'observation-state' })) {
+    for await (const record of this.options.archive.scanAsync({ kind: 'observation-state' })) {
       const mutation = record.payload as Mutation;
       if (mutation?.kind !== 'observation-state') continue;
       const snapshot = await this.options.archive.readSnapshot<{ binding: StoredBinding; events: ObservationEvent[] }>(mutation.snapshotHash);

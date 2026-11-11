@@ -64,8 +64,8 @@ export function projectContext(model: ModelSnapshot | null, task: TaskRecord | n
   const version = (id: string, name: string, brief: string, facts: Record<string, string>) => node('versions', 'version:' + id, name, brief, { kind: 'version', hit: bound, state: bound ? 'associated' : 'available', relatedIds: bodies.map(body => body.entity.id), fields: facts })
   category('versions').children = [
     version('model', '模型 · ' + revision.slice(0, 8), bound ? '任务模型' : '当前模型', { 模型版本: revision }),
-    version('source', '来源版本', task?.binding.sourceVersion.status ?? '尚未绑定任务', { HEAD: task?.binding.sourceVersion.head ?? '未知', 来源树指纹: task?.binding.sourceVersion.treeHash ?? '未知', 状态: task?.binding.sourceVersion.status ?? '未知', 范围: '按任务绑定的实际来源扫描范围' }),
-    version('policy', '扫描策略', task?.binding.sourceScanRevision.slice(0, 12) ?? '尚未绑定任务', { 扫描策略指纹: task?.binding.sourceScanRevision ?? '未知' }),
+    version('source', '来源版本', task?.binding.mode === 'snapshot' ? '来源尚未核验' : task?.binding.sourceVersion.status ?? '尚未绑定任务', { HEAD: task?.binding.sourceVersion.head ?? '未知', 来源树指纹: task?.binding.sourceVersion.treeHash ?? '未知', 状态: task?.binding.sourceVersion.status ?? '未知', 范围: task?.binding.mode === 'snapshot' ? '模型快照；未核验当前源码' : '按任务绑定的实际来源扫描范围' }),
+    version('policy', '扫描策略', task?.binding.sourceScanRevision?.slice(0, 12) ?? '来源尚未核验', { 扫描策略指纹: task?.binding.sourceScanRevision ?? '未知' }),
     version('worktree', '工作区', view?.worktree.branch ?? '分支未知', { 项目: task?.binding.projectId ?? view?.target.projectId ?? '未知', 工作区: task?.binding.worktreeId ?? view?.target.worktreeId ?? '未知', 模型目录: '.harness/model' }),
   ]
   function aggregate(item: MapItem): void {

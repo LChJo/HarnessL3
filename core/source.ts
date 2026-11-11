@@ -1,4 +1,5 @@
 import { execFile as callbackExecFile } from 'node:child_process';
+import { reportProgress } from './progress.js';
 import { constants } from 'node:fs';
 import { lstat, open, readdir, readlink, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -7,7 +8,7 @@ import ignore from 'ignore';
 import { canonicalJson, digest, parseJsonStrict, sha256, validUnicode } from './json.js';
 import { canonicalPath, isWithin, samePath, safeRelative } from './paths.js';
 import { isErrno } from './io.js';
-import { HarnessError } from './errors.js';
+import { HarnessError, permissionError } from './errors.js';
 import type { Diagnostic, ProjectConfig, SourceVersion, WorktreeRecord } from './types.js';
 
 const execFile = promisify(callbackExecFile);
@@ -143,6 +144,8 @@ function gitRunner(root: string): GitRun {
         child.stdin?.end(input);
       });
     } catch (error) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
       if (error && typeof error === 'object' && 'code' in error && typeof error.code === 'number') throw error;
       throw new ScanFailure('SOURCE_GIT_ERROR', 'Git source discovery could not be completed.');
     }
@@ -546,6 +549,8 @@ async function ignoreRules(run: GitRun, root: string, state: GitState): Promise<
         privateTokens.push(origin + ':' + relative + ':missing');
         return;
       }
+      const permission = permissionError(error);
+      if (permission) throw permission;
       if (error instanceof ScanFailure) throw error;
       throw new ScanFailure('SOURCE_IGNORE_UNAVAILABLE', 'The effective Git ignore rule bytes could not be captured.', relative ?? undefined);
     }
@@ -580,6 +585,8 @@ async function currentConfig(root: string, config: ProjectConfig): Promise<strin
     if (target(current) !== target(config)) throw new ScanFailure('SOURCE_CONFIG_CHANGED', 'The source configuration changed; retry with the current configuration.', '.harness/project.json', true);
     return target(current);
   } catch (error) {
+    const permission = permissionError(error);
+    if (permission) throw permission;
     if (error instanceof ScanFailure) throw error;
     throw new ScanFailure('SOURCE_CONFIG_UNAVAILABLE', 'The current source configuration could not be verified.', '.harness/project.json');
   }
@@ -587,6 +594,7 @@ async function currentConfig(root: string, config: ProjectConfig): Promise<strin
 
 /** Capture a reproducible source scope, without interpreting file contents. */
 export async function scanSource(worktree: WorktreeRecord, config: ProjectConfig, skillsRoot: string): Promise<SourceScan> {
+  reportProgress({ phase: 'scanning-source' });
   const result: SourceScan = { sourceVersion: { head: null, treeHash: null, status: 'unknown' }, sourceScanRevision: null, manifest: null, policy: null, diagnostics: [], ignoreRules: null, ignoreRuleFiles: [] };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -604,11 +612,11 @@ export async function scanSource(worktree: WorktreeRecord, config: ProjectConfig
         Object.assign(result.policy.content, { scannerVersion: 'directory-scanner/1', candidateSet: 'filesystem', gitIgnoreMode: 'directory-files' });
         result.sourceScanRevision = digest('source-scan-policy', result.policy.content);
         const entries: SourceEntry[] = [];
-        for (const candidate of before.candidates) entries.push(await sourceEntry(root, candidate));
+        for (const candidate of before.candidates) { entries.push(await sourceEntry(root, candidate)); if (entries.length % 64 === 0) reportProgress({ phase: 'scanning-source', completed: entries.length, total: before.candidates.length * 2 }); }
         const after = await directoryState(root, config, prefixes);
         if (before.token !== after.token || before.rules.token !== after.rules.token || configToken !== await currentConfig(root, config)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Directory entries or rules changed during scanning.', undefined, true);
         const verified: SourceEntry[] = [];
-        for (const candidate of after.candidates) verified.push(await sourceEntry(root, candidate));
+        for (const candidate of after.candidates) { verified.push(await sourceEntry(root, candidate)); if (verified.length % 64 === 0) reportProgress({ phase: 'verifying-source', completed: entries.length + verified.length, total: entries.length + after.candidates.length }); }
         if (canonicalJson(entries) !== canonicalJson(verified)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Source bytes changed during scanning.', undefined, true);
         await after.verify();
         if (configToken !== await currentConfig(root, config)) throw new ScanFailure('SOURCE_CONFIG_CHANGED', 'The source configuration changed during byte verification.', '.harness/project.json', true);
@@ -627,18 +635,20 @@ export async function scanSource(worktree: WorktreeRecord, config: ProjectConfig
       result.policy = policy(config, prefixes, rules.rules);
       result.sourceScanRevision = digest('source-scan-policy', result.policy.content);
       const entries: SourceEntry[] = [];
-      for (const candidate of before.candidates) entries.push(await sourceEntry(root, candidate));
+      for (const candidate of before.candidates) { entries.push(await sourceEntry(root, candidate)); if (entries.length % 64 === 0) reportProgress({ phase: 'scanning-source', completed: entries.length, total: before.candidates.length * 2 }); }
       const after = await gitState(run, worktree, config, prefixes);
       const afterRules = await ignoreRules(run, root, after);
       if (before.token !== after.token || rules.token !== afterRules.token || configToken !== await currentConfig(root, config)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Git state or ignore policy changed during the source scan.', undefined, true);
       const verified: SourceEntry[] = [];
-      for (const candidate of after.candidates) verified.push(await sourceEntry(root, candidate));
+      for (const candidate of after.candidates) { verified.push(await sourceEntry(root, candidate)); if (verified.length % 64 === 0) reportProgress({ phase: 'verifying-source', completed: entries.length + verified.length, total: entries.length + after.candidates.length }); }
       if (canonicalJson(entries) !== canonicalJson(verified)) throw new ScanFailure('SOURCE_SCAN_RACE', 'Source bytes changed during the source scan.', undefined, true);
       result.manifest = { schemaVersion: 1, kind: 'source-manifest', content: { entries } };
       result.sourceVersion = { head: before.head, treeHash: digest('source-manifest', result.manifest.content), status: before.dirty ? 'dirty' : 'clean' };
       result.diagnostics = [];
       return result;
     } catch (error) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
       const failure = error instanceof ScanFailure ? error : new ScanFailure('SOURCE_SCAN_UNAVAILABLE', 'The complete source scope could not be scanned.');
       if (failure.race && attempt === 0) { result.policy = null; result.sourceScanRevision = null; result.ignoreRules = null; result.ignoreRuleFiles = []; continue; }
       result.sourceVersion = { head: result.sourceVersion.head, treeHash: null, status: 'unknown' };

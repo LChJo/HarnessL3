@@ -187,7 +187,7 @@ test('TC02 two worktrees keep task identity, source versions and reads isolated'
   assert.equal(initialized.code, 0, initialized.stdout)
   assert.equal(initialized.body.target.projectId, f.target.projectId)
   assert.notEqual(initialized.body.target.worktreeId, f.target.worktreeId)
-  const entry = (await f.start()).body.data
+  const entry = (await f.call(['task', 'start', '--title', 'Verified worktree isolation', '--mode', 'verified'])).body.data
   const wrong = await f.call(['task', 'show', entry.taskId], { cwd: second })
   assert.equal(wrong.body.ok, false)
   assert.equal(wrong.body.error.code, 'NOT_FOUND')

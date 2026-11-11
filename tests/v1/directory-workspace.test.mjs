@@ -125,6 +125,12 @@ test('TC07 repeated byte/enumeration races and unreadable files never produce a 
   for (const mode of ['bytes', 'enumeration', 'rules', 'late-rule', 'unreadable']) {
     const { stdout } = await execFile(process.execPath, [path.join(projectRoot, 'tests/v1/directory-scan-probe.mjs'), input, mode], { windowsHide: true })
     const scan = JSON.parse(stdout)
+    if (mode === 'unreadable') {
+      assert.equal(scan.error.code, 'IO_ERROR')
+      assert.equal(scan.error.details.reason, 'permission-denied')
+      assert.equal(scan.error.details.path, path.join(f.root, 'changing.txt'))
+      continue
+    }
     assert.equal(scan.sourceVersion.status, 'unknown', mode)
     assert.equal(scan.sourceVersion.treeHash, null)
     assert.equal(scan.manifest, null)
@@ -144,7 +150,7 @@ test('TC01/03/07/08/21 directory CLI lifecycle runs with no Git in PATH and upgr
   const initialized = await call(['init'])
   assert.equal(initialized.code, 0, initialized.stdout + initialized.stderr)
   const target = initialized.body.target
-  const entry = await call(['task', 'start', '--title', 'No Git lifecycle'], { cwd: path.join(root, 'child') })
+  const entry = await call(['task', 'start', '--title', 'No Git lifecycle', '--mode', 'verified'], { cwd: path.join(root, 'child') })
   assert.equal(entry.code, 0, entry.stdout)
   assert.equal(entry.body.data.binding.sourceVersion.status, 'unversioned')
   assert.match(entry.body.data.routingPrompt, /Back up/)
@@ -177,7 +183,7 @@ test('TC01/03/07/08/21 directory CLI lifecycle runs with no Git in PATH and upgr
   assert.equal((await f.cli(['sync', 'status'], { cwd: root })).code, 0)
   const before = (await f.cli(['serve', 'status'])).body.data.result.instanceId
   await f.git(root, 'init', '-b', 'main')
-  const upgraded = await f.cli(['task', 'start', '--title', 'After git init'], { cwd: root })
+  const upgraded = await f.cli(['task', 'start', '--title', 'After git init', '--mode', 'verified'], { cwd: root })
   assert.equal(upgraded.code, 0, upgraded.stdout)
   assert.deepEqual(upgraded.body.target, target)
   assert.notEqual(upgraded.body.data.binding.sourceScanRevision, entry.body.data.binding.sourceScanRevision)
@@ -235,6 +241,37 @@ test('TC01/07 runtime adopts Git without replacing resources or treating a retai
     assert.equal((await new WorkspaceRegistry(f.dataRoot).worktree(adopted.id)).kind, 'git')
     assert.deepEqual(await readFile(registryFile), legacyBytes, 'Reading old registrations cannot rewrite them')
   } finally { await runtime.close() }
+})
+
+test('TC01/07 Git adoption cannot reuse an in-flight directory refresh result', async t => {
+  const f = await plain(t)
+  await writeFile(path.join(f.root, 'README.md'), 'Adoption during refresh')
+  const runtime = new Runtime(f.dataRoot)
+  let release
+  try {
+    const resource = await runtime.worktreeResources(f.registration.worktree)
+    const skills = await f.registry.skillsRoot(f.registration.worktree)
+    await resource.freshness.status(skills)
+    const reconcile = resource.freshness.reconcile.bind(resource.freshness)
+    let captured
+    const ready = new Promise(resolve => { captured = resolve })
+    const hold = new Promise(resolve => { release = resolve })
+    let calls = 0
+    resource.freshness.reconcile = async root => {
+      const state = await reconcile(root)
+      if (++calls === 1) { captured(); await hold }
+      return state
+    }
+    const oldRefresh = resource.freshness.status(skills)
+    await ready
+    await f.git(f.root, 'init', '-b', 'main')
+    await runtime.worktreeResources(await f.registry.worktree(f.registration.worktree.id))
+    const newRefresh = resource.freshness.status(skills)
+    release()
+    assert.equal((await oldRefresh).sourceVersion.status, 'unversioned')
+    assert.equal((await newRefresh).sourceVersion.status, 'dirty')
+    assert.ok(calls >= 2, 'the new adapter requires its own complete refresh')
+  } finally { release?.(); await runtime.close() }
 })
 
 test('TC07 directory watcher classifies new paths with the scan rules and excluded rule files still invalidate policy', async t => {

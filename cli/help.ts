@@ -14,14 +14,15 @@ const descriptions: Record<string, string> = {
   'worktree list': 'List registered worktrees, optionally filtered by project.',
   'worktree show': 'Show the exact worktree path and availability.',
   'worktree unregister': 'Deactivate this worktree registration while retaining its files and history.',
-  'task start': 'Create a context task and return brief directories, current skill catalog and routing guidance.',
+  'task start': 'Capture the model and skill directory without scanning source (default snapshot mode). Use --mode verified when a complete current source binding is required.',
   'task prompt': 'Refresh routing material for a task whose joint selection has not been recorded.',
-  'task select': 'Commit one joint context and skill selection; empty collections are valid.',
-  'task read': 'Read selected archived skill files by exact path and expected hash; never execute them.',
+  'task select': 'Select context and skills. Task-owned binding/defaults are resolved automatically. --stage appends a new skill plan while preserving earlier batches.',
+  'task read': 'Read selected archived files; --skill resolves SKILL.md and its hash from the recorded plan. Never execute files.',
   'task show': 'Restore recorded task state, optionally through one historical batch.',
   'task handoff': 'Return cumulative context and archived skill file references; do not read their bodies.',
   'task close': 'Close context organization; retain unresolved sync state and archived content.',
   'task list': 'List tasks in this target and its 60-day context activity window.',
+  'request status': 'Look up a running request or its original durable receipt in the resolved target; never repeat the operation. Missing evidence remains unknown.',
   'context query': 'Batch-expand brief directories or read exact context entities for this task.',
   'history list': 'Search the 60-day window by query/date with bounded pagination.',
   'history show': 'Restore an identified historical task or batch without extending retention.',
@@ -46,10 +47,19 @@ const options: Record<string, [string, string]> = {
   worktree: ['UUID', 'Exact registered worktree; a conflicting registered cwd is rejected.'],
   'data-dir': ['absolute-path', 'Machine data root outside all registered worktree trees.'],
   'request-id': ['UUID', 'Save a request ID for reliable retries; match the JSON requestId when both are supplied.'],
+  'timeout-ms': ['1..3600000', 'Total CLI wait budget in milliseconds; default 120000. A timeout does not cancel accepted server work; query the original request ID.'],
+  'quiet-progress': ['', 'Suppress stderr progress; stdout remains one result envelope in JSON mode.'],
   help: ['', 'Show static top-level, command-group or command help; no service startup.'],
   version: ['', 'Show the installed package version; no service startup.'],
   name: ['name', 'Project display name; init defaults to the worktree directory name.'],
   title: ['purpose', 'Non-empty purpose for this context task.'],
+  mode: ['snapshot|verified', 'Default snapshot reads the captured model with source status unknown. verified requires a complete current source fingerprint. Old bindings without mode stay verified.'],
+  read: ['UUID,...', 'Exact context entity IDs; comma-separated. Use --file for complex requests.'],
+  expand: ['UUID,...', 'Direct-child directory IDs; comma-separated.'],
+  skill: ['group/name,...', 'Skill IDs from this task catalog or recorded plan; comma-separated.'],
+  reason: ['text', 'Caller rationale for all skills named with --skill; use --file for separate reasons.'],
+  path: ['relative-path', 'Selected archived skill file; default SKILL.md.'],
+  stage: ['', 'Append an intentional skill stage on the same task; preserve historical plans, packets and bytes.'],
   session: ['session-id', 'Known session identifier; task start only declares it, not log observation.'],
   file: ['path|-', 'UTF-8 JSON file or UTF-8 stdin (-); prefer a file in PowerShell. Keep request files outside scanned source.'],
   batch: ['UUID', 'Fixed historical batch boundary; otherwise use the latest recorded batch at call start.'],
@@ -76,6 +86,7 @@ const resultKinds: Record<string, string> = {
   'serve status': 'command-result: state (running/stopped/draining/unavailable/conflict), diagnostic when needed, shared service identity, startedAt, scope:user-data-root and lifetime:until-stopped; no idle expiry. Ordinary RPC and stop have no separate health gate. Transient connection failures are retried; lost write responses require checking the original requestId before retrying.',
   'web open': 'command-result: url, opened, service and login metadata; --no-open returns opened:false. The single-use sign-in code lasts five minutes, the authenticated browser session lasts twelve hours, and the service runs until stopped. After context and required skill contents return, follow the runtime skill to show one progress output card before continuing; do not repeat it in the final answer.',
   'task start': 'task-entry: taskId, binding, routingPrompt, directory and catalog.',
+  'request status': 'command-result: state, phase and receipt when available. unknown does not mean not-executed. --task disambiguates IDs reused across tasks.',
   'task prompt': 'task-entry: refreshed routing material and binding for the pending selection.',
   'task select': 'selection: context packet, archived skill plan and exact file references.',
   'context query': 'context-batch: exact requested briefs/bodies and per-item errors.',
@@ -110,7 +121,7 @@ function flagUsage(operation: string, name: string): string {
 }
 function usage(operation: string): string {
   const definition = commands[operation]
-  const positional = !definition.count ? '' : operation === 'task select' ? ' [<task-id>]' : operation.endsWith(' register') ? ' <path>' : operation.startsWith('project ') ? ' <project-id>' : operation.startsWith('worktree ') ? ' <worktree-id>' : operation === 'agent unbind' ? ' <binding-id>' : ' <task-id>'
+  const positional = !definition.count ? '' : operation === 'task select' ? ' [<task-id>]' : operation === 'request status' ? ' <request-id>' : operation.endsWith(' register') ? ' <path>' : operation.startsWith('project ') ? ' <project-id>' : operation.startsWith('worktree ') ? ' <worktree-id>' : operation === 'agent unbind' ? ' <binding-id>' : ' <task-id>'
   const required = definition.required ?? []
   const optional = (definition.flags ?? []).filter(name => !required.includes(name))
   return 'harnessl3 ' + operation + positional + required.map(name => ' ' + flagUsage(operation, name)).join('') + optional.map(name => ' [' + flagUsage(operation, name) + ']').join('')
@@ -137,6 +148,7 @@ export function renderHelp(words: string[]): string {
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as { required: string[] }
       lines.push('Request schema: ' + schemaPath, 'Request example: ' + path.join(SCHEMA_ROOT, 'examples', contract + '.json'), 'Normalized required fields: ' + schema.required.join(', '), 'The schema applies after requestId normalization. Raw JSON may omit requestId; save an explicit ID for reliable retries.', 'Read the schema and its local references for nested fields; use real IDs, bindings and hashes returned by this task.', '')
       lines.push(...referencedSchemas(schemaPath).map(file => 'Referenced schema: ' + file), '')
+      if (contract === 'selection' || contract === 'query') lines.push('Accepted input schema: ' + path.join(SCHEMA_ROOT, contract + '-input.schema.json'), 'Raw input may omit the task-owned binding/model revision and empty collections. Explicit supplied versions are still checked. known defaults to {}; no cached body claim is invented.', '')
       if (contract === 'selection' || contract === 'query') {
         const common = JSON.parse(readFileSync(path.join(SCHEMA_ROOT, 'common.schema.json'), 'utf8')) as { $defs: { known: { description: string } } }
         lines.push((contract === 'selection' ? 'context.known: ' : 'known: ') + common.$defs.known.description, '')

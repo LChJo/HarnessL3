@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnessl3.local/spec/v1/query-input.schema.json",
+  "title": "Context query input with task-owned defaults",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestId"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "requestId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "expectedModelRevision": { "$ref": "common.schema.json#/$defs/sha256" },
+    "expand": { "$ref": "common.schema.json#/$defs/ids" }, "read": { "$ref": "common.schema.json#/$defs/ids" },
+    "known": { "$ref": "common.schema.json#/$defs/known" }
+  }
+}

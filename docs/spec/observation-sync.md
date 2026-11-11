@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
+
 v0.44普通目录适配器：完整成功的来源版本为{head:null,treeHash:<manifest哈希>,status:"unversioned"}，失败为unknown且treeHash为空。manifest沿用下述唯一编码、原字节SHA-256、链接叶条目及UTF-16排序；普通目录没有Git tracked删除墓碑，删除通过前后清单差异表示，空目录不进入manifest。两遍枚举及文件字节核对，规则/配置变化和扫描竞态不能被当作完整成功；事件、字节回退和策略变化仍使旧proof失效。显式证据、增量观测与完整来源核验保持分离。
 
 目录策略为scannerVersion:"directory-scanner/1"、candidateSet:"filesystem"、gitIgnoreMode:"directory-files"，共享字段见[source-policy Schema](contracts/source-policy.schema.json)。git-ignore-rules归档形状复用，仅保存实际根及嵌套.gitignore（origin=worktree，ignoreCase=false），不读取机器Git全局配置或info/exclude；规则原字节归档。直接生产依赖ignore@7.0.14处理目录/否定/通配规则，各级按所在目录生效，排除父目录不能由子级否定纳入；扫描与监听新路径使用相同规则链。下述Git算法及指纹不变。

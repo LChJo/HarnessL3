@@ -1,5 +1,11 @@
 # CLI 与交换协议 v1
 
+v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
+
+v0.45（FR12/15）：宿主命令创建失败不属于CLI封套，CLI无法为未启动的进程发起审批。CLI内原生EACCES/EPERM通过`IO_ERROR`、退出码1、`retryable:false`返回，`details`保留`reason:permission-denied`、`systemCode`及系统提供的`path/syscall`，附`hint`；不据此猜测是ACL或沙箱拒绝。服务描述文件/启动锁的读取拒绝保留该诊断，不伪装身份冲突；进程spawn失败保留可用系统诊断。原业务错误和未知写结果不被替换，审批/重试仍须审查执行结果与原requestId。
+
+agent仅在当前宿主工具及策略允许时请求具体命令/路径审批；接入询问不能授予OS权限，CLI不自行提权。无审批能力、拒绝或宿主启动故障时报告实际阻塞并继续独立工作；不要求全面放开、不改宿主ACL/配置、不迁移数据根或删除历史。安装复制的独立JSON结果保留`error`字符串和`results/current`，权限拒绝额外返回相同`code/details`诊断。真实受限宿主验收不能由非受限进程结果替代。
+
 v0.44：命令名称及projectId/worktreeId不变，init及register支持普通目录。工作区登记见[workspace Schema](contracts/workspace.schema.json)：kind缺失兼容旧git，directory的Git common-dir/branch为空。普通目录来源status为unversioned、head为空且treeHash为完整文件清单哈希；unknown仍不能有treeHash。旧任务、回执和Git指纹算法不改写；原地Git转换后旧任务仍为原绑定，获取新内容使用新任务。目录入口提示随项目备份长期上下文；Git入口仍提示相关源码一起版本管理。首次接入仍由原生询问工具取得同意，最近边界或当前目录为实际目标，不自动创建Git仓库。
 
 v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径（`Referenced schema`），init/model validate补充证据分隔及关系类型语法，完整示例随安装使用说明提供，不要求消费者读取开发源码或测试。`SYNC_RACE`继续退出3、保留原回执，可附`conflicts`期望/实际字段及`recovery`；恢复是重新status、审核并用新requestId提交新声明，原ID继续重放原结果。调用者失败后不访问成功data；响应及声明Schema不变。
@@ -10,7 +16,7 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 
 - npm 包提供 `harnessl3` 二进制，Node.js + TypeScript 实现，Windows/macOS/Linux 使用相同命令及 JSON；路径差异由平台适配处理。
 - CLI 由**当前 agent 主动调用**。它提供确定性的发现、校验、归档和读取，不启动 agent、不请求另一模型、不自动执行技能脚本、不安装 Hooks。
-- 全局参数：`--json`、`--project <UUID>`、`--worktree <UUID>`、`--data-dir <absolute-path>`、`--request-id <UUID>`、`--help`、`--version`。全局参数可放在子命令之后。未知参数、重复的单值参数和多余位置参数报 `INVALID_ARGUMENT`。
+- 全局参数：`--timeout-ms <1..3600000>`、`--quiet-progress`、`--json`、`--project <UUID>`、`--worktree <UUID>`、`--data-dir <absolute-path>`、`--request-id <UUID>`、`--help`、`--version`。全局参数可放在子命令之后。未知参数、重复的单值参数和多余位置参数报 `INVALID_ARGUMENT`。
 - 数据根优先级：`--data-dir` > `HARNESSL3_HOME` > [存储规格](storage.md)的系统默认目录。它是本机路径，不写入 Git；必须位于所有已登记 worktree 之外，且不能是 worktree 的祖先目录，登记时也要核查这一边界。
 - `--file <path>` 读取 UTF-8 JSON；`--file -` 从UTF-8字节的stdin读至EOF。允许一个文件头BOM，拒绝重复JSON键、非法Unicode、非有限数和未知字段。中文请求优先用明确的UTF-8文件，避免PowerShell默认原生管道在输入前替换成问号；合法ASCII问号不等于可恢复的中文，CLI不猜写文字。不从剪贴板、环境变量或日志猜测请求正文。
 - `--json` 的 stdout 只写**一个** UTF-8 JSON 对象和结尾换行；进度、诊断、服务启动提示进 stderr，不输出 ANSI。JSON 模式不提问、不等待交互输入。非 JSON 模式呈现同一结果的文字，退出码完全一致。
@@ -39,6 +45,14 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 
 取消登记的本机记录保留 inactive 身份。显式指定原 worktree UUID 时，`history list/show`、`task show/handoff/read` 可只读访问其档案，免 live 根目录存在/HEAD 检查，但仍核对注册归属、显式目标/cwd 冲突及档案完整性；select/query/prompt/sync 等活动操作拒绝。当前源码不可访问时如实显示不可用，不把档案读取变成当前源码已核验。
 
+### 请求进度、等待和结果找回
+
+默认CLI总等待预算120000ms，--timeout-ms可设1–3600000ms；这是内部等待策略，不是性能SLA。stderr在分派前给requestId及阶段，长请求查询认证的/requests/<id>取得恢复、模型、来源扫描、排队等进度；--quiet-progress只关闭进度，不改变stdout单封套。REQUEST_TIMEOUT/1与CANCELLED/130保留原ID及outcome/nextAction；等待结束不取消已接受的服务工作。安装校验将剩余总预算传给CLI，不再受另一层较短默认值截断。
+
+`request status <request-id> [--task <task-id>]`只在解析出的目标内查询running/completed及原receipt；同ID跨历史scope歧义时要求--task。重启后从原journal/引用重核持久回执，不重发原操作；没有可证实记录返回unknown，不能据此宣称未执行。未归档管理结果仅有有界暂存，丢失后保持unknown。进程内相同ID/相同意图的在途请求共享结果，内容冲突拒绝；暂存上限128完成请求/4MiB，最多32在途，预算均非SLA。
+
+[selection-input Schema](contracts/selection-input.schema.json)与[query-input Schema](contracts/query-input.schema.json)描述可省略的任务自有字段；规范化后的原Schema继续严格检查。默认known始终{}，不替调用者编造缓存声明；同requestId使用原提交意图回放，后续阶段不改变推导字段的重试身份。--file与资源快捷参数互斥。
+
 ## 2. 首版命令表
 
 尖括号是必填占位符；下表没有列出的破坏性能力不属于首版。所有已有 worktree 操作均只登记/取消登记，不创建、切换或删除 Git worktree/分支。标记“本机”的操作只改变本机状态。
@@ -52,14 +66,14 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 | `worktree register <path>` | 只登记已有工作区，核对 projectId/common-dir，返回本机 worktree UUID |
 | `worktree list [--project <id>]` / `worktree show <worktree-id>` | list 无 project 列出本机登记，带 project 过滤；返回根目录、Git 状态和可用性 |
 | `worktree unregister <worktree-id>` | 取消本机登记/观测绑定；保留目录和历史，不删除分支 |
-| `task start --title <purpose> [--session <declared-id>]` | 验证当前模型和实际技能目录，创建任务，归档顶层简述，返回 `task-entry`。session 只是调用方声明，不等于日志绑定或已观测 |
+| `task start --title <purpose> [--mode snapshot\|verified] [--session <id>]` | 默认snapshot只捕获合法模型和技能目录；来源unknown/策略null。verified显式完整核验，旧无mode任务仍为verified |
 | `task prompt <task-id>` | 尚未选择时返回当前筛选材料；实际目录变化时重建 catalogRevision。模型/来源已变化需新任务。已选择时拒绝重新路由，提示查看 handoff |
-| `task select [<task-id>] --file <selection.json>` | 一次提交上下文 `expand/read/known` 与 `skills[{id,reason}]`；验证版本、冻结技能文件、记录方案，返回 `selection`。任务ID可由位置参数或selection.json可选`taskId`字段提供，两者缺一不可 |
+| `task select [<task-id>] [--file <json>] [--read <UUID,...>] [--expand <UUID,...>] [--skill <ID,...> --reason <text>] [--stage]` | 任务绑定和空集合可省略，由CLI从原任务解析；显式绑定仍检查。--stage追加技能阶段，不改旧批次；不带该标志的重复选择仍拒绝 |
 | `context query <task-id> --file <query.json>` | 同批展开多个目录/读取多个正文，返回 `context-batch`。允许在联合选择前辅助筛选，或选择后补充上下文，不产生第二次技能选择 |
 | `task show <task-id> [--batch <batch-id>]` | 查询完整记录或截至该批的累计组织；只读，不续期 |
 | `task list [--limit <n>] [--offset <n>]` | 当前目标 60 天窗口内最近任务，默认 limit 50、offset 0；limit 范围 1–200，返回总数/hasMore |
 | `task handoff <task-id> [--batch <batch-id>]` | 返回截至指定批（默认调用时最新已记录批）的精确上下文包与**技能文件引用**；缺失部分标未知，不额外读取正文，不续期 |
-| `task read <task-id> --file <files.json> [--batch <batch-id>]` | 只读取已选技能归档正文/附件，支持多项；返回 `skill-files`，不从当前目录补文件、不运行脚本、不续期 |
+| `task read <task-id> [--file <json>] [--skill <ID,...>] [--path <relative-path>] [--batch <UUID>]` | 只读所选归档；--skill默认SKILL.md，省略expectedHash从原批次方案解析，显式哈希仍严格匹配 |
 | `task close <task-id>` | 幂等关闭上下文组织，拒绝后续 select/query；保留未解决同步/失败状态。不自动验证模型或宣称任务成功；历史与归档读取继续可用 |
 | `history list [--query <text>] [--from <YYYY-MM-DD>] [--to <YYYY-MM-DD>] [--limit <n>] [--offset <n>]` | 当前目标 60 天窗口，默认 20/0，limit 1–200；query 匹配目的/任务 ID/声明会话/模型版本，日期按 UTC 最后活动日闭区间过滤。返回总数及分页 |
 | `history show <task-id> [--batch <batch-id>]` | 与 task show 相同只读恢复；已知 ID 可查看超期档案，默认 list 不列超期；损坏显式失败 |
@@ -123,11 +137,11 @@ v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",s
 
 ### 版本和幂等
 
-- 每个新任务绑定 projectId/worktreeId/modelRevision/catalogRevision/sourceVersion/sourceScanRevision；来源指纹包括未提交状态，分支名不充当身份。
-- `select` 在接收前再次扫描实际模型、来源及技能库。任一预期版本不一致整体拒绝，不部分保存技能，也不调用模型自动重选。未选择的 prompt 可重建目录；新模型/来源需新 task。
-- `context query` 只检查任务的模型、来源及扫描策略；已选择后不因无关技能目录变化强制重选。选择后的手动技能读取始终读归档，允许当前目录改变或消失。
+- 每个新任务绑定 projectId/worktreeId/modelRevision/catalogRevision/sourceVersion/sourceScanRevision；snapshot显式记录mode与来源unknown/策略null，verified来源指纹包括未提交状态，分支名不充当身份。
+- snapshot的select/query从原模型快照取正文，选择仍检查实际技能目录；verified另核对当前模型、完整来源及策略。显式版本不匹配整体拒绝，不部分保存技能，不调用模型自动重选。未选择的prompt可刷新技能目录；需要新模型或verified来源绑定另建任务。
+- `context query`不因无关技能变化强制重选；snapshot也不因无关源码变化失效。技能正文始终读取原方案归档，允许当前目录改变或消失。
 - 规范请求的 `requestId` 来自文件、显式 flag 或 CLI 生成值。对同一 task（创建请求则为同一目标 worktree），相同 requestId + 相同 JCS 请求重试返回原已归档响应，不增加批次或最后活动时间；相同 ID 不同请求报 `REQUEST_ID_CONFLICT`。并发独立 query 可读取同一不可变快照，批次提交串行合并，不覆盖先提交结果。
-- task 的技能选择只允许一次；有效 commit 和引用均完整时，同一请求重试回放原方案，第二个选择不能覆盖。没有有效 commit 的中断请求未生效，同 requestId 可正常重试；孤立文件不能证明成功。有效 commit 引用损坏报 ARCHIVE_CORRUPT；SELECTION_UNKNOWN 只用于 legacy 或确实无法判定的已存旧选择，不能把未提交的首次选择锁死。
+- 每阶段只允许一次联合选择；同任务显式--stage追加新方案并保存原批次，普通第二次选择仍拒绝。有效commit与引用完整时同ID回放原结果；没有commit的中断未生效，孤立文件不证明成功。引用损坏报ARCHIVE_CORRUPT，不以当前字节补造；SELECTION_UNKNOWN仅用于真实不确定的旧记录。
 - `known` 只允许略去**该任务已归档保留且内容指纹一致**的正文；调用方单方面声称拥有内容不能跳过首次返回。返回 `unchanged` 仍能引用原包。不把 known 用作“不需要检查版本”。
 - 目录/正文成功返回才计作已记录读取活动；纯历史、handoff、技能归档读取、幂等重试、Web 展开、状态检查和关闭不续期。恰好 60 天仍在窗口内，超期拒绝新 select/query，档案保留。
 
