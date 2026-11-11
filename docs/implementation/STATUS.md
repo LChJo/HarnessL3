@@ -10,6 +10,8 @@ Windows / Node24.12.0：完整npm test共398项，394通过、4平台能力跳�
 
 备份在`.harness-local/backups/skills-upgrade-20261111/`，验证在`.harness-local/validation/skills-upgrade/`，包在`.harness-local/artifacts/harnessl3-0.1.1.tgz`，构建标记modified source。未运行本轮Linux/macOS或双宿主新会话语义加载验收，不继承旧三平台结论。升级验收时尚未暂存、提交、推送或发布；后续授权的提交前核对见[清理记录](CLEANUP.md)。
 
+提交后原生CI补充：063c768的Windows/macOS任务通过，Ubuntu程序测试394通过/4跳过，但Playwright附加字体的apt下载被Ubuntu镜像DNS故障阻断。修复移除无条件`--with-deps`，保留真实浏览器与包验证门禁；原因、上游依据及后续结果入口见[CI修复记录](SKILLS_UPGRADE.md#原生ci安装故障与修复2026-11-12)。这与双宿主新会话语义加载验收分开。
+
 ## v0.47：初始化与模型演进（2026-11-11）
 
 用户授权优化初始化建模并提供补充/修订/重建接口。`model maintain`返回版本化当前agent指引、模型拓扑、视图覆盖提示和最近来源观测；init共用指引，task路由/sync status提示结构演进。当前agent通过文件工具维护文本，简单项目随实现逐步补齐，保留实体身份和历史图；指引不改文件、不请求来源全扫、不清pending或替代完整proof。设计、实际范围与限制见[本轮记录](MODEL_EVOLUTION.md)。

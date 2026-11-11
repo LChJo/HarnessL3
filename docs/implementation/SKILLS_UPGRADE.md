@@ -33,3 +33,11 @@
 原包、原活动库、原种子与handoff保存在`.harness-local/backups/skills-upgrade-20261111/`，验证报告位于`.harness-local/validation/skills-upgrade/`。候选包`.harness-local/artifacts/harnessl3-0.1.1.tgz`的SHA512为`vIaqXtWlxwi46qpgs56lookILHf26cQ/EqKQu73Ewe2y0scyjA27y19DKKh1G7kf8PxSksgGzJ/bbw5KMYpH3g==`，构建明确标记modified source。当前新方法、审计和工程记录与模型共同留存，未自动暂存。
 
 正常安装仍不覆盖已有库。本机更新只按本次授权实施，不新增自动覆盖命令。升级验收阶段未修改来源排除、创建Git/worktree、清理未知文件、暂存、commit、push或发布npm；后续用户已授权整理临时产物并提交推送，范围见[清理记录](CLEANUP.md)。未运行的平台及真实宿主加载效果不能借既有结论标通过。
+
+## 原生CI安装故障与修复（2026-11-12）
+
+提交063c768的[原生CI](https://github.com/LChJo/HarnessL3/actions/runs/43056794193)中，Windows/macOS完整任务成功；Ubuntu 24.04的398项程序测试394通过、4显式跳过、零失败，随后`playwright install --with-deps chromium`因Ubuntu镜像DNS解析失败而退出100。日志显示浏览器共享运行库均已安装，待下载的9个包均为附加字体；`azure.archive.ubuntu.com`持续无法解析。失败任务重跑一次，同时核对到[同日上游故障报告](https://github.com/actions/runner-images/issues/15296)，不把基础设施错误归因于技能正文或产品回归。
+
+CI改用`playwright install chromium`下载锁定版本对应的浏览器，使用托管runner已有的共享库，避免每次无条件调用apt。既有browser-smoke和package-smoke仍实际启动Chromium并执行所有门禁，缺少运行库或其它启动错误仍会失败；没有切换系统浏览器、忽略安装失败、增加平台跳过或放宽断言。本次没有新增运行模块或改变产品契约，现有隔离验证对象补充CI准备职责及工作流证据。三平台完整结果以修复提交的GitHub Actions运行及终端总结为准，不以本机检查替代。
+
+原始失败日志、重跑回执和后续运行结果保存在忽略的`.harness-local/validation/ci-fix-20261112/`，不提交凭据或本机任务档案。

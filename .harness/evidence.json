@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "cd2e3be041a0625102a746766911daf8843bff942fecc6ec15d63dd5b146bcce",
-      "observedAt": "2026-11-11T16:16:07.472Z"
+      "hash": "1e69c53e32739f7e7e8c6f75d167f3b129df83f2b9371789b97be50610bd276b",
+      "observedAt": "2026-11-11T16:51:08.407Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -978,8 +978,8 @@
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "db8cc87a624b00277cfa799d84d208eb647b24e1781ab4afc95a62af41d19aa8",
-      "observedAt": "2026-11-11T16:16:07.475Z"
+      "hash": "338b128f4dd4f40b04ecf0bf43ea05b834896fe56076137b92a7898ced0e8536",
+      "observedAt": "2026-11-11T16:51:08.410Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1158,8 +1158,18 @@
       "location": {
         "path": "docs/implementation/SKILLS_UPGRADE.md"
       },
-      "hash": "bb463a0df05ded8c12d97ef93f94d0e6daec89eb10b381020e391fb1ca11a785",
-      "observedAt": "2026-11-11T16:16:07.475Z"
+      "hash": "a2d0316a5fa8f4c778ee9906004e871ffc26f53091036963d56ea7b71f1e8a19",
+      "observedAt": "2026-11-11T16:51:08.411Z"
+    },
+    {
+      "id": "d6480000-0000-4000-8000-000000000003",
+      "kind": "document",
+      "claim": "Native CI installs the pinned Chromium without unconditional apt downloads on hosted runners; unchanged browser and package smoke gates still launch the browser and fail on missing libraries or other launch errors.",
+      "location": {
+        "path": ".github/workflows/ci.yml"
+      },
+      "hash": "30683334dd6597804d8c804791f58ba33c2364fbb264947d582adf0ffddd9a63",
+      "observedAt": "2026-11-11T16:51:27.667Z"
     }
   ]
 }

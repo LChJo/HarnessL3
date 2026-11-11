@@ -128,3 +128,4 @@ skills/development/wizard/template.sh text eol=lf
 skills/quality/diagnosing-bugs/scripts/hitl-loop.template.sh text eol=lf
 skills/UPSTREAM.md text eol=lf
 docs/implementation/SKILLS_UPGRADE.md text eol=lf
+.github/workflows/ci.yml text eol=lf

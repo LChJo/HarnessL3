@@ -35,7 +35,7 @@ jobs:
       - name: Report test diagnostics
         if: always()
         run: node scripts/v1/ci-report.mjs
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - run: node scripts/v1/ci-step.mjs browser-smoke
         env:
           HARNESS_TEST_BROWSER_CRLF_SEED: '1'
