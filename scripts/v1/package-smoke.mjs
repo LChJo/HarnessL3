@@ -69,6 +69,11 @@ export async function packageSmoke() {
     assert.match(modelHelp, /relationship calls.*-\[calls\]->/)
     const modelGuide = modelHelp.match(/^Usage guide: (.+)$/m)?.[1]
     assert.match(await readFile(modelGuide, 'utf8'), /relationship calls/)
+    const maintainHelp = (await execFile(process.execPath, [installedBinary, 'model', 'maintain', '--help'], { cwd: project, windowsHide: true })).stdout
+    assert.match(maintainHelp, /supplement\|revise\|rebuild/)
+    const maintainSchema = maintainHelp.match(/^Result schema: (.+)$/m)?.[1]
+    assert.ok(maintainSchema && path.isAbsolute(maintainSchema))
+    assert.equal(JSON.parse(await readFile(maintainSchema, 'utf8')).title, 'Current-agent model maintenance guidance result')
     const webHelp = (await execFile(process.execPath, [installedBinary, 'web', 'open', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(webHelp, /--no-open/)
     const git = (...args) => execFile('git', ['-C', project, ...args], { windowsHide: true })
@@ -84,6 +89,12 @@ export async function packageSmoke() {
     assert.equal(initialized.data.result.initialization.stage, 'scaffold-ready')
     assert.equal(initialized.data.result.initialization.semanticStatus, 'not-assessed')
     assert.equal(initialized.data.result.initialization.nextAction, 'model-project')
+    assert.equal(initialized.data.result.initialization.promptVersion, 'model-maintenance/1')
+    const maintained = (await cli(['model', 'maintain', '--mode', 'rebuild'])).data.result
+    assert.equal(maintained.stage, 'guidance-ready')
+    assert.equal(maintained.sourceScan, 'not-requested')
+    assert.equal(maintained.topology.objects, 1)
+    assert.equal(maintained.semanticStatus, 'not-assessed')
     const started = await cli(['task', 'start', '--title', 'Installed package task'])
     const entry = started.data
     const taskLink = await cli(['web', 'open', '--no-open', '--task', entry.taskId])
@@ -144,6 +155,9 @@ export async function packageSmoke() {
     const plain = (args, input) => cli(args, input, { cwd: plainRoot, noGit: true })
     const directoryInit = await plain(['init'])
     assert.equal(directoryInit.data.result.worktree.kind, 'directory')
+    const directoryMaintenance = (await plain(['model', 'maintain', '--mode', 'revise'])).data.result
+    assert.equal(directoryMaintenance.modelState, 'valid')
+    assert.equal(directoryMaintenance.sourceScan, 'not-requested')
     const directoryEntry = (await cli(['task', 'start', '--title', 'Installed no Git directory', '--mode', 'verified'], undefined, { cwd: path.join(plainRoot, 'child'), noGit: true })).data
     assert.equal(directoryEntry.binding.sourceVersion.status, 'unversioned')
     const directorySkill = directoryEntry.catalog.find(item => item.id === 'development/implement')
