@@ -5,7 +5,7 @@ description: Investigate a question against high-trust primary sources and captu
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
-Investigate in the current agent. If the host supports background agents and the task authorizes delegation, a separately scoped reader may do this work while other work continues; otherwise keep the same research method without pretending another agent ran.
+Investigate in the current agent. If the host supports background agents and the task authorizes delegation, a separately scoped reader with a fresh context window and the minimum explicit L3 handoff may do this work while other work continues; otherwise keep the same research method without pretending another agent ran.
 
 Its job:
 

@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.47 adds current-agent supplement/revise/rebuild guidance and progressive source/model/view maintenance while retaining snapshot, proof, identity and history boundaries.",
+      "claim": "Baseline v0.48 defines the 26-method upstream adaptation and body-informed dynamic routing, preserving project authority, non-overwriting seeds, scoped model proof and immutable history.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "513923bcfd71ff91772fd21fb5ae68960c596014a63a8621fd77a5eb0d9cc800",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "c1367c571cb5c36fe964c1fe656051e59f5d6cd0aa8f48f69d2b59e20407d8ff",
+      "observedAt": "2026-11-11T14:41:34.475Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService retains task bindings and archives; routing guidance requires model review for structural evolution while preserving current-agent file edits and history.",
+      "claim": "TaskService skill-hub/2 routes from the actual catalog, requires relevant bodies before procedural advice, and preserves stage, snapshot, archive, task and authorization boundaries.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "8c0dd7fbaf5ba4ade1a68ea3d4712377a1d9e8e650501082c480f6e4a877b50c",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "e8b4301154c5112e9bfbf9c4e8f8c0bc58a944ca54b741a2fab005d06c8cc05f",
+      "observedAt": "2026-11-11T14:41:34.482Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -164,22 +164,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime skill routes each turn, preserves setup/permission boundaries and requires structural review during authorized development with supplement/revise/rebuild guidance when needed.",
+      "claim": "Runtime skill uses body-informed purpose and phase decisions, minimal authorized fresh-context handoffs, existing setup consent and missing-only material reads.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "bed47d1a4e4eb087cc2022323131bd5768fe86ddccdeb9f929ddaa8ba902efd8",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "370de47cd3aad6f0f7e3ee5210da274f758d9eef31b22251da541ce5f817a01d",
+      "observedAt": "2026-11-11T14:41:34.489Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
       "kind": "document",
-      "claim": "Bundled methods are self-contained within each selected folder; editable user files and archived bytes retain their existing boundaries.",
+      "claim": "The bundled library has seven categories and 26 self-contained editable methods, with current upstream provenance, retired IDs and explicit user-library preservation.",
       "location": {
         "path": "skills/README.md"
       },
-      "hash": "bf710836ecef0990887cb7385f1f56235890fd764e6b6222397f5a4ba2b025fa",
-      "observedAt": "2026-11-07T15:05:50.007Z"
+      "hash": "4c3bfcf3e5cff56a897747979abf3f8869722df923f4ca127575abba8edb4c73",
+      "observedAt": "2026-11-11T14:41:34.489Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000013",
@@ -188,8 +188,8 @@
       "location": {
         "path": "package.json"
       },
-      "hash": "ac4c4399ef4fc6eea1b77858dabca6f362bf292e0bf23409ed4006f7a67968f7",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "f7388dff566f450da374c8fbf79cf08ed72053a1186d7e9180f9d3ecbf884983",
+      "observedAt": "2026-11-11T14:41:34.490Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "v0.47 defines three model maintenance modes, mechanical view coverage hints, current-agent source review, incremental semantic evolution and continuing identity/history preservation.",
+      "claim": "Model/context contract retains current-agent text maintenance and historical bindings; v0.48 records the 26-method adaptation and dynamic routing without transitive skill selection.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "450399372ffa967ca251b3178e4a7bb3461547d02cfd5b49733c12db4388fd29",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "a37276e92d0e7b2e23cbe013bfe131d5cb2836306a51cbc31eaf675944536ff7",
+      "observedAt": "2026-11-11T14:41:34.492Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -288,8 +288,8 @@
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "a6988e3a2547e8315a334562e04c39b0e5c9d9ee859ecd309fae7c4dd264f32f",
-      "observedAt": "2026-11-10T14:07:55.608Z"
+      "hash": "02cc93bf2089abf20fe039a602ab1dbd5056578b16e05d29014f3b57ed040238",
+      "observedAt": "2026-11-11T14:41:34.501Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -298,18 +298,18 @@
       "location": {
         "path": "skills/FILE-REFERENCES.md"
       },
-      "hash": "1c5269f4bc67a6fe311169331873edc614eabc0ab3edc820b72ad60b75ae6387",
-      "observedAt": "2026-11-07T15:02:49.539Z"
+      "hash": "a49db43651453fa399177f6d56ba46e09de98ffb3e053567aa1acaa7368516cb",
+      "observedAt": "2026-11-11T14:41:34.502Z"
     },
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference requires actual scoped review and strict race recovery; structural changes trigger file-based model/evidence/view evolution without resetting identity/history.",
+      "claim": "Runtime reference distinguishes description filtering from reading a relevant method body, preserves same-task stages and actual scoped model/evidence/view review.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "01c8449eea41c6d72cc157167f5bf540e7d4836016aa62415fe7a0948d61e94b",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "0260d8cfbd1867a5f112c8b3d97f6c9f5c4ea62c37cbda7a1b3cbb1ac7b423dc",
+      "observedAt": "2026-11-11T14:41:34.507Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records v0.47 model guidance/coverage/evolution and separates actual local validation from global installation, platform and semantic host acceptance.",
+      "claim": "Implementation status records the v0.48 skill/router upgrade and actual Windows, package, global installation and historical compatibility checks; other platforms and new host-session semantics remain unverified.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "904691ec6bef97c97e448f7b4144f04f045dd9db8cff92d0b40c72d4760c067c",
-      "observedAt": "2026-11-11T05:22:12.530Z"
+      "hash": "cd2e3be041a0625102a746766911daf8843bff942fecc6ec15d63dd5b146bcce",
+      "observedAt": "2026-11-11T16:16:07.472Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -398,8 +398,8 @@
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "88d2ecaf5fb676594309c3643713a063d9505116a4d8a263c90d39f2ba1645ee",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "3d1dfa9b40c0f05f1c99c3574b3e5911a6f45f44c924e74b38bf012a355af400",
+      "observedAt": "2026-11-11T14:41:34.534Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -538,8 +538,8 @@
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "44282643b53ce9d2e7114931212612e2635fdd5fcc143585a67c46d06462db44",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "4dd16b594aecc32901f57cdd1e99794a7a4f2a1fff56d0e0296386a30f27a9e7",
+      "observedAt": "2026-11-11T14:41:34.567Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -558,8 +558,8 @@
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "331f9f17cfe808c28f298ef8a492a156e2126e9019681d9a064c7547c5134c65",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "c9b47b5385b2a10de51fb12d8b10cdf31f76b95e497e8da6084ce7ef23605e3a",
+      "observedAt": "2026-11-11T14:41:34.572Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -568,8 +568,8 @@
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "6a3c49bfe0923cdf69b1f08c69b9daf3408f7cb17b7c865199b47d0ed4771065",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "2ef4b0e294e4ef36f3b8b94a48c9ae5f86156059aa14143880aaa1cf6796bc2e",
+      "observedAt": "2026-11-11T14:41:34.574Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "464293290d426ec7a7c63f57f69c95a4d220cc004e0ab4b922fd682139e1a4cb",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "09f7fead0bf8434b5418f1c592bcdd402b36ffde2260b970e2828ad7e938569e",
+      "observedAt": "2026-11-11T14:58:18.590Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -598,8 +598,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "142636465eb5834bb6e5640c9709fad6764eb1dddfce26b4ce7f8c3cedb58814",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "e910d7761287b1a093a6e3515e7da0c1a04c6ed0c915b32557188d082301cf36",
+      "observedAt": "2026-11-11T14:41:34.579Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -668,8 +668,8 @@
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "dbf70ba4175b92b0623629824e20775f176e0511ec34e3bb7000d0b1ea927a12",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "c04c161c94132bf0ebabdaaa723aba8ee5eff35e7083407f7a9b94632333bd2e",
+      "observedAt": "2026-11-11T14:41:34.584Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -768,8 +768,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "142636465eb5834bb6e5640c9709fad6764eb1dddfce26b4ce7f8c3cedb58814",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "e910d7761287b1a093a6e3515e7da0c1a04c6ed0c915b32557188d082301cf36",
+      "observedAt": "2026-11-11T14:41:34.592Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -798,8 +798,8 @@
       "location": {
         "path": "README.md"
       },
-      "hash": "00568f44c955fb4eecaa01739262b9509ca269236f691368016b90d6ef25b832",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "bdf76e3f6997f492b92fac4911a32b6610a5fbe231d26dd3fc9b3a65cb9a623d",
+      "observedAt": "2026-11-11T14:41:34.594Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -964,12 +964,12 @@
     {
       "id": "01b35a6e-055b-477a-aa86-f0bb7b163c23",
       "kind": "document",
-      "claim": "Authorized v0.44 cleanup records deleted synthetic fixtures and helpers, already-absent Linux copies, preserved history/evidence and an automatic deletion rejection.",
+      "claim": "Authorized v0.44 cleanup and v0.48 pre-commit audit: prior atomic-write artifacts are absent, future PID-suffixed editor files are ignored, and local backups, verification, history and active skill entities are retained.",
       "location": {
         "path": "docs/implementation/CLEANUP.md"
       },
-      "hash": "cbe40a03654215ca07c9af7ede0e79be78823bd1b3acb3c94e3f56c2338470e0",
-      "observedAt": "2026-11-10T05:11:16.151Z"
+      "hash": "ce72d80903b6c63106520eafaf9f790d92f4faddb43c49dd0e1619777503005f",
+      "observedAt": "2026-11-11T16:16:07.475Z"
     },
     {
       "id": "116a4c91-d92b-427b-8016-2fcaca15b51d",
@@ -978,8 +978,8 @@
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "b318ba8318ee56bd5a1e10bed87b516a2a92a1d08c4a963a5b1f47c5383276b9",
-      "observedAt": "2026-11-10T14:27:25.196Z"
+      "hash": "db8cc87a624b00277cfa799d84d208eb647b24e1781ab4afc95a62af41d19aa8",
+      "observedAt": "2026-11-11T16:16:07.475Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1140,6 +1140,26 @@
       },
       "hash": "98701d6271410721b1d1c699149b9baa0f711d80c48c2443cbe8889cc029a6b2",
       "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "d6480000-0000-4000-8000-000000000001",
+      "kind": "document",
+      "claim": "The per-method provenance audit maps 26 local methods to upstream 1.3.2/4ae2317, explains local dependency inlining and ask-matt routing decisions, and records beta/governance exclusions.",
+      "location": {
+        "path": "skills/UPSTREAM.md"
+      },
+      "hash": "9ded9cda0aff7dc8bf7a0477fb0ff6656455c6a9ce402389c8043df2fc232b4b",
+      "observedAt": "2026-11-11T15:00:36.289Z"
+    },
+    {
+      "id": "d6480000-0000-4000-8000-000000000002",
+      "kind": "document",
+      "claim": "The v0.48 engineering record separates implemented skill/router changes, observed validation, one-time active-library migration and remaining platform/host scope.",
+      "location": {
+        "path": "docs/implementation/SKILLS_UPGRADE.md"
+      },
+      "hash": "bb463a0df05ded8c12d97ef93f94d0e6daec89eb10b381020e391fb1ca11a785",
+      "observedAt": "2026-11-11T16:16:07.475Z"
     }
   ]
 }

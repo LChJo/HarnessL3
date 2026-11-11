@@ -124,3 +124,7 @@ docs/spec/contracts/model-maintenance.schema.json text eol=lf
 docs/spec/contracts/response.schema.json text eol=lf
 docs/spec/implementation.md text eol=lf
 tests/v1/model-maintenance.test.mjs text eol=lf
+skills/development/wizard/template.sh text eol=lf
+skills/quality/diagnosing-bugs/scripts/hitl-loop.template.sh text eol=lf
+skills/UPSTREAM.md text eol=lf
+docs/implementation/SKILLS_UPGRADE.md text eol=lf

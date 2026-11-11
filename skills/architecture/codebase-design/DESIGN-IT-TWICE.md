@@ -18,7 +18,7 @@ Show this framing and continue within the task's existing authorization. No part
 
 ### 2. Generate distinct alternatives
 
-Produce a few **radically different** interfaces for the deepened module. If available and authorized, separate agents may explore them in parallel with independent scopes; otherwise use the same briefs as separate design passes and do not claim delegation occurred.
+Produce a few **radically different** interfaces for the deepened module. If available and authorized, separate agents may explore them in parallel with independent scopes and fresh context windows, receiving only their explicit brief and minimum L3 handoff; otherwise use the same briefs as separate design passes and do not claim delegation occurred.
 
 Use a separate technical brief for each design (file paths, coupling, dependency category from [DEEPENING.md](DEEPENING.md), what sits behind the seam). Give each a different design constraint:
 
@@ -27,7 +27,7 @@ Use a separate technical brief for each design (file paths, coupling, dependency
 - Agent 3: "Optimise for the most common caller — make the default case trivial."
 - Agent 4 (if applicable): "Design around ports & adapters for cross-seam dependencies."
 
-Include both [SKILL.md](SKILL.md) vocabulary and CONTEXT.md vocabulary in the brief so each sub-agent names things consistently with the architecture language and the project's domain language.
+Include both [SKILL.md](SKILL.md) vocabulary and GLOSSARY.md vocabulary in the brief so each sub-agent names things consistently with the architecture language and the project's domain language.
 
 Each design pass outputs:
 

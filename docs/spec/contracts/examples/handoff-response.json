@@ -96,7 +96,7 @@
     "skillPlan": {
       "id": "10000000-0000-4000-8000-000000000700",
       "batchId": "10000000-0000-4000-8000-000000000600",
-      "routerVersion": "skill-hub/v1",
+      "routerVersion": "skill-hub/2",
       "catalogRevision": "5dbeb8e9a496c525106b049ebce09785caa5e51cf79d1d7d5967a9020a8e42cc",
       "skills": [
         {

@@ -4,7 +4,7 @@ Read only when current CLI help is insufficient, or for complex requests, synchr
 
 ## Continuation and skill routing
 
-At every user turn, reassess the current action against skill descriptions. Reuse suitable captured project and skill bodies that remain identifiable in context; this reuse is not a new CLI read. Obtain only missing material or required new versions. The agent chooses skills; the CLI records selection and returns bytes, without executing a model.
+At every user turn, reassess the current action against skill descriptions. Reuse suitable captured project and skill bodies that remain identifiable in context; this reuse is not a new CLI read. Obtain only missing material or required new versions. Descriptions filter candidates; an explanation, procedure recommendation or advice to skip a step requires the relevant selected body (or its suitable captured version). Distinguish single-ticket work, complete-spec work, research, explanations and retrospectives by actual purpose rather than a mandatory pipeline. Do not read the whole catalog for a judgement about one method. The agent chooses skills; the CLI records selection and returns bytes, without executing a model.
 
 | Current turn | Operations |
 | --- | --- |

@@ -26,6 +26,10 @@ User request
     `-- task start -> select skills and only missing project context
 ```
 
+Descriptions orient selection. Before explaining a method, recommending its concrete procedure or advising that a step be skipped, read its selected body or reuse a suitable identifiable body already in context. Read only what that judgement needs; a summary is not the procedure.
+
+At a phase boundary, prefer continuing when the next phase needs the reasoning already available. Use handoff for an actual transfer of target, host or recipient; delegated tasks need support, authorization and a fresh context with the minimum explicit handoff. Context compaction or clearing follows the actual host and user direction, not a fixed token threshold or an assumed slash command.
+
 Planning -> implementation can keep the goal while changing skills (for example, to-tickets -> implement). A matching empty skill choice needs no file read. Recover lost content/references once with task handoff; query only missing context. See [continuation details](references/runtime.md#continuation-and-skill-routing) when switching stages.
 
 Proceed to stages 2-3 for the chosen operation. Reuse known setup facts and authorization; extra version/help/status probes are unnecessary. Briefs and references are not bodies. Normal stage synchronization still applies.

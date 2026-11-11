@@ -24,3 +24,6 @@ build/
 dist/
 .harness-local/
 *.log
+
+# Atomic editor writes (PID and unique suffix); keep named templates and fixtures.
+*.tmp.[0-9]*.*

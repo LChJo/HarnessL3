@@ -1,5 +1,15 @@
 # 正式首版实施状态
 
+## v0.48：26项稳定技能与内置路由（2026-11-11）
+
+默认库21项升级为7类26项，候选0.1.1；按上游1.3.2/4ae2317与L3既有适配逐项核对，新增7项、移除2项，保留quick及历史字节。ask-matt和阶段判断仅贡献内置skill-hub/2原则，分类、真实附件、内联依赖及授权边界保留。来源和取舍见[随包审计](../../skills/UPSTREAM.md)，交付与故障留证见[本轮记录](SKILLS_UPGRADE.md)。
+
+Windows / Node24.12.0：完整npm test共398项，394通过、4平台能力跳过、0失败（650699ms）。CLI/Web构建、26方法逐项独立归档、54份库文件、当前Markdown本地链接和两份Bash模板语法通过。最终真实npm包162文件/407018字节，26方法、两宿主各5文件复制/重装、运行及服务指纹、旧交接匹配和差异拒绝、无Git目录CLI/Edge157浏览通过；技能详情桌面/手机另验0页面错误、原方案与批次不变。22对象/31关系及三个视图保留实体身份，无遗漏叶对象；两个新增文档的未跟踪提示不授权暂存。
+
+本机全局CLI与双宿主runtime skill已更新为0.1.1。首次旧服务返回BUSY/draining，等待其退出；间隙另一个调用启动的新实例也核对身份并正常排空，未强杀或删锁。活动库在原junction实体内39次写入、4个旧路径退役，54文件与最终种子一致。实际服务指纹374af29e39eeac519759eb1bfc82a9f1ab587c8f8ca8859fb46d4bf9e5c427fa，原handoff匹配（219757ms）；同任务新增阶段后，旧批次writing-great-skills原字节仍可读，新implement/writing-for-agents与源码一致。
+
+备份在`.harness-local/backups/skills-upgrade-20261111/`，验证在`.harness-local/validation/skills-upgrade/`，包在`.harness-local/artifacts/harnessl3-0.1.1.tgz`，构建标记modified source。未运行本轮Linux/macOS或双宿主新会话语义加载验收，不继承旧三平台结论。升级验收时尚未暂存、提交、推送或发布；后续授权的提交前核对见[清理记录](CLEANUP.md)。
+
 ## v0.47：初始化与模型演进（2026-11-11）
 
 用户授权优化初始化建模并提供补充/修订/重建接口。`model maintain`返回版本化当前agent指引、模型拓扑、视图覆盖提示和最近来源观测；init共用指引，task路由/sync status提示结构演进。当前agent通过文件工具维护文本，简单项目随实现逐步补齐，保留实体身份和历史图；指引不改文件、不请求来源全扫、不清pending或替代完整proof。设计、实际范围与限制见[本轮记录](MODEL_EVOLUTION.md)。

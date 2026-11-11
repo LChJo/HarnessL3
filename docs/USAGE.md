@@ -254,7 +254,7 @@ proof使用当前status返回的目标、sourceEpoch、sourceVersion和modelRevi
 
 画布逐层展示命中节点和祖先路径，其余节点合并为“…”；点击可进入全部节点列表，搜索、筛选或分页浏览。Skill Hub及技能文件夹采用相同处理。列表可打开详情并显式加入正文、目录或技能候选，返回画布后提交批量请求；查看列表本身不产生读取或选择。历史页面使用当时已保存的模型和目录。
 
-只有Skill Hub路由原则内置。普通技能及附件是可编辑文件，当前7类21项方法随包提供。有效根优先级：HARNESS_SKILLS_ROOT绝对路径、项目配置的skills.root相对路径、默认机器技能库。已有库包括空目录都不补写或覆盖；升级不重置用户内容。默认skills入口通过symlink/junction指向同级持久实体，以免并发创建的空目录被覆盖；编辑入口内文件即可，`.skills-library-<UUID>`是活动内容，不能当临时文件删除。
+只有Skill Hub路由原则内置。普通技能及附件是可编辑文件，当前7类26项方法随包提供。有效根优先级：HARNESS_SKILLS_ROOT绝对路径、项目配置的skills.root相对路径、默认机器技能库。已有库包括空目录都不补写或覆盖；升级不重置用户内容。默认skills入口通过symlink/junction指向同级持久实体，以免并发创建的空目录被覆盖；编辑入口内文件即可，`.skills-library-<UUID>`是活动内容，不能当临时文件删除。
 
 ```text
 harnessl3 skills list --json

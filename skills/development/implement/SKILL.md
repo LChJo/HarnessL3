@@ -5,7 +5,7 @@ description: "Implement a piece of work based on a spec or set of tickets."
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
-Implement the work described by the user in the spec or tickets.
+Implement the work described by the user in the spec or tickets. If the user supplies a ticket reference, read it through the project's configured tracker or local artifact store and state its title before starting. Resolve a material ambiguity before implementing; a missing hosted tracker does not require setup when the ticket exists locally.
 
 Where useful, reproduce the required behavior with a failing test at the task's agreed test seam, then implement the smallest passing change. Reuse decisions already made instead of requesting the same approval again.
 

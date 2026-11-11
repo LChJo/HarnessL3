@@ -3,6 +3,8 @@ name: improve-codebase-architecture
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
 ---
 
+For authorized delegation, give the explorer a fresh context window, the confirmed target, minimum explicit L3 handoff and candidate brief; do not fork the full conversation. Otherwise perform the exploration in the current agent.
+
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
 # Improve Codebase Architecture
@@ -12,7 +14,7 @@ Surface architectural friction and propose **deepening opportunities** — refac
 This method is informed by the project's authoritative domain model and a shared design vocabulary:
 
 - Use a consistent vocabulary: a **module** hides implementation behind an **interface**; **depth** is how much useful complexity that interface hides. A **seam** is an evidenced boundary where implementations vary; an **adapter** translates across it. Favor changes whose simple interface removes substantial caller complexity and keeps related changes local. Check the deletion test: could a caller test survive replacing the implementation behind the same interface? Use the project's established terms when they differ.
-- The domain language in `CONTEXT.md` gives names to good seams; ADRs in `docs/adr/` record decisions this command should not re-litigate.
+- The domain language in `GLOSSARY.md` gives names to good seams; ADRs in `docs/adr/` record decisions this command should not re-litigate.
 
 ## Process
 
@@ -23,7 +25,7 @@ This method is informed by the project's authoritative domain model and a shared
 - If the user named a direction — a module, a subsystem, a pain point — take it, and skip the inference below.
 - Otherwise, walk back a good stretch of the commit history (`git log --oneline`) to find the codebase's hot spots — the files and areas that keep coming up — and let those paths pull your attention first. If the changes are scattered with no clear hot spot, widen the net.
 
-Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching first.
+Read the project's domain glossary (`GLOSSARY.md`) and any ADRs in the area you're touching first.
 
 Explore with the current agent's ordinary file/search tools. A separately scoped reader is optional when supported and authorized; no fixed Agent tool or agent type is required. Note where understanding creates friction:
 
@@ -54,7 +56,7 @@ For each candidate, render a card with:
 
 End the report with a **Top recommendation** section: which candidate you'd tackle first and why.
 
-**Use the project's authoritative vocabulary for the domain, and the module/interface vocabulary above for the architecture.** If `CONTEXT.md` defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
+**Use the project's authoritative vocabulary for the domain, and the module/interface vocabulary above for the architecture.** If `GLOSSARY.md` defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
 
 **ADR conflicts**: if a candidate contradicts an existing ADR, only surface it when the friction is real enough to warrant revisiting the ADR. Mark it clearly in the card (e.g. a warning callout: _"contradicts ADR-0007 — but worth reopening because…"_). Don't list every theoretical refactor an ADR forbids.
 
@@ -64,7 +66,7 @@ Do NOT propose interfaces yet. After the file is written, ask the user: "Which o
 
 ### 3. Grilling loop
 
-Once a candidate needs a design decision, walk its constraints, dependencies, module shape and surviving tests one question at a time. Look up facts first, give a recommendation, and wait for the user's decision before depending on it. Reuse decisions already confirmed for the task.
+Once a candidate needs a design decision, walk its constraints, dependencies, module shape and surviving tests in manageable rounds of independent questions. Look up facts first, give a recommendation, and wait for the user's decision before depending on it. Reuse decisions already confirmed for the task.
 
 When confirmed decisions change the domain knowledge, maintain the project's actual authority within scope:
 

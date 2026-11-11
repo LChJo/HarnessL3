@@ -11,6 +11,8 @@ Break a plan, spec, or conversation into a set of **tickets** — tracer-bullet 
 
 Use the project's current task-file or tracker convention and any configured label vocabulary. Record any convention that genuinely needs defining in the existing project documentation; missing tracker configuration does not block drafting tickets.
 
+When splitting an existing tracker issue, attach each resulting ticket as its sub-issue when supported, using real returned identifiers. Preserve native blocking edges; omit a redundant “Blocked by” body section when those edges already carry the complete relationship. Otherwise retain the project's text fallback.
+
 ## Process
 
 ### 1. Gather context
@@ -101,7 +103,7 @@ The end-to-end behaviour this ticket makes work, from the user's perspective —
 
 ## Blocked by
 
-- A reference to each blocking ticket, or "None — can start immediately".
+- A reference to each blocking ticket, or "None — can start immediately". Omit this section when the complete blockers are recorded as native edges.
 
 </issue-template>
 

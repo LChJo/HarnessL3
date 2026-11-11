@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.48（2026-11-11）：默认文件型方法升级至上游1.3.2/4ae2317的L3适配版，共7类26项，保留quick；退役方法仅退出当前库，历史ID/group/原字节保留。Skill Hub skill-hub/2吸收ask-matt的正文先读与阶段判断，实际目录及同任务--stage仍为准；不恢复跨技能依赖或固定流程，不强制setup/Hook/agent/worktree。正常安装仍不覆盖已有用户库；本次已授权本机库采用备份、逐文件核对及保留修改的一次性迁移。FR06/15、TC19/20/26/27及实际范围见实施状态。
+
 v0.47：新增 `model maintain [--mode supplement|revise|rebuild]`（默认supplement）。只读当前模型和证据，返回[model-maintenance结果Schema](contracts/model-maintenance.schema.json)：promptVersion、mode、stage=guidance-ready、semanticStatus=not-assessed、worktreeRoot、sourceScan=not-requested、modelState/revision、files、topology、coverage、diagnostics、observedSource、agentPrompt和nextCommands。observedSource为最近真实状态，未观测保持unknown，命令不请求来源扫描；模型无效仍返回诊断和修复指引、topology/coverage=null，权限错误照常失败。不覆盖文件、不自动启动agent或改变同步状态。sync status附modelMaintenance提示及维护命令，完整检查/CAS不变。init共用版本化指引并返回maintenanceCommand；task路由说明结构演进义务。当前agent经文件工具修改模型、证据与视图后校验、核对覆盖及严格阶段声明；旧任务绑定与历史图不回写。
 
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
@@ -193,7 +195,7 @@ npm另分发文件型运行时接入skill `agent-skills/harnessl3/`，供现有C
 
 该入口不属于普通方法seed或内置路由原则，与Hub当前21项方法分开。安装指南在安装/更新包后显式调用包内`scripts/install-agent-skills.mjs`，将整个skill及附件复制到Codex的`~/.agents/skills/harnessl3`与Claude Code的用户级skills目录；不使用npm生命周期Hook，不启动agent。相同字节不重写；更新既有主入口或附件先在skills根外按相对路径保存原字节备份，保留其它内容；实际逐文件复制结果与宿主发现/运行验证分开记录。引导恢复不递归，无明确目标或入口能力时真实报告，不伪报调用。默认目录及覆盖方式见[安装指南](../../INSTALL.md)。D13/D14的权威、技能归档和接入边界不变。
 
-内置的只有路由原则。npm携带独立seed文件（当前7类/21方法、附件、MIT与来源）；init仅在`<dataRoot>/skills`根完全不存在时，以[持久实体及独占目录入口](storage.md#2-目录与文件职责)发布完整副本。既有/并发出现的目录即使为空也不合并或覆盖；升级不改用户正文。实际路径优先HARNESS_SKILLS_ROOT本机覆盖、项目skills.root（worktree相对）、全局库。技能根不能等于worktree根、`.git`、`.harness`或运行档案目录；专用skills入口及其解析后的持久实体允许，不能据此把任意dataRoot子目录当库。项目内根固定排除来源扫描并记入sourceScanRevision。入口、实体和用户技能都不是可重建缓存，gc不删。
+内置的只有路由原则。npm携带独立seed文件（当前7类/26方法、附件、MIT与来源）；init仅在`<dataRoot>/skills`根完全不存在时，以[持久实体及独占目录入口](storage.md#2-目录与文件职责)发布完整副本。既有/并发出现的目录即使为空也不合并或覆盖；升级不改用户正文。实际路径优先HARNESS_SKILLS_ROOT本机覆盖、项目skills.root（worktree相对）、全局库。技能根不能等于worktree根、`.git`、`.harness`或运行档案目录；专用skills入口及其解析后的持久实体允许，不能据此把任意dataRoot子目录当库。项目内根固定排除来源扫描并记入sourceScanRevision。入口、实体和用户技能都不是可重建缓存，gc不删。
 
 扫描实际 `<group>/<name>/SKILL.md`，解析 name/description/可选 related，并保留普通附件原字节；name 和目录 ID 分开。目录/正文不可由固定手工名单推导。关联只辅助筛选，不自动选中，不递归加载正文。目录增加/删除/修改只更新当前轻目录和待选择提示，既有任务方案和已归档文件不变。非法当前目录显式诊断并清空候选。
 

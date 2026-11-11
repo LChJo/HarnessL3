@@ -5,7 +5,7 @@ description: Combine an interview with maintaining domain terms and design decis
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.
 
-Explore the project's actual files before asking about facts. Walk the unresolved design decisions and their dependencies one question at a time; provide a recommendation and wait for the user's answer before depending on it. Reuse decisions already confirmed.
+Explore the project's actual files before asking about facts. Map unresolved design decisions and their prerequisites. Ask independent frontier questions in manageable rounds through the available host question tool; provide recommendations and wait for actual answers before dependent work. Defer questions whose prerequisites are unanswered, and reuse decisions already confirmed.
 
 As answers land, record the resolved domain terms and design decisions in the project's existing authoritative model, glossary or ADRs. Preserve the term's meaning, the decision's rationale and relevant alternatives; keep unanswered choices explicitly unresolved. Do not create a second knowledge store merely to use this method.
 

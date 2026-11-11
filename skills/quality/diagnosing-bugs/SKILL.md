@@ -9,7 +9,11 @@ description: Diagnosis loop for hard bugs and performance regressions. Use when 
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 
-When exploring the codebase, read `CONTEXT.md` (if it exists) to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
+When exploring the codebase, read `GLOSSARY.md` (if it exists) to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
+
+## Redact
+
+Show only diagnostic signal from commands, output and captured artifacts. Replace secrets with `<REDACTED>`; keep credentials in environment variables rather than displayed commands. Captured network artifacts can contain auth headers. If redaction removes required evidence, explain the gap instead of exposing it.
 
 ## Phase 1 — Build a feedback loop
 
@@ -118,7 +122,7 @@ A correct seam is one where the test exercises the **real bug pattern** as it oc
 If a correct seam exists:
 
 1. Turn the minimised repro into a failing test at that seam.
-2. Watch it fail.
+2. Watch it fail. If the red was forced by mutating source or a fixture, compare it with a pristine copy first to prove that the intended mutation actually landed; an unchanged edit cannot validate the test.
 3. Apply the fix.
 4. Watch it pass.
 5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.

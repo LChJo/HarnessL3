@@ -9,6 +9,8 @@ A large idea is wrapped in fog: the way from here to the **destination** is not 
 
 The destination varies per effort, and naming it is the first act of charting — it shapes every ticket. It might be a spec to hand off and iterate on, a decision to lock before planning starts, or a change made in place like a data-structure migration. The map is domain-agnostic — engineering work, course content, whatever fits the shape.
 
+Maps resolve decisions rather than implement features unless their agreed Notes explicitly include execution. Keep decision tickets separate from implementation-ready triage labels. Create tickets first, then wire blocking edges and cross-references using real identifiers; never publish placeholder issue numbers. Resolve each ticket according to its recorded type, fetch relevant linked decisions as needed, and rule out work beyond the destination. Research artifacts follow project retention and authorization; a research-only branch does not imply opening a PR.
+
 ## Plan, don't do
 
 Wayfinder is **planning** by default: each ticket resolves a decision, and the map is done when the way is clear — nothing left to decide before someone goes and does the thing. The pull to just do the work is usually the signal you've reached the edge of the map and it's time to hand off. An effort can override this in its **Notes** — carrying execution into the map itself — but absent that, produce decisions, not deliverables.
@@ -77,7 +79,7 @@ Every ticket is either **HITL** — human in the loop, worked *with* a human who
 
 - **Research** (AFK): Read primary sources or local knowledge to surface a fact a decision needs, and capture cited findings in the project's existing research location. The current agent can do this; an independently scoped reader is optional when available and authorized.
 - **Prototype** (HITL): Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to — an outline, a rough take, a stub, or minimal UI/logic code that tests the unresolved design question. Links the prototype as an asset. Use when "how should it look" or "how should it behave" is the key question.
-- **Grilling** (HITL): Resolve open design choices in conversation, one question at a time, and record confirmed terms and decisions in the project's existing authority. Look up facts first and wait for the user's decisions. The default case.
+- **Grilling** (HITL): Resolve open design choices in conversation, in manageable rounds of independent questions, and record confirmed terms and decisions in the project's existing authority. Look up facts first and wait for the user's decisions. The default case.
 - **Task** (HITL or AFK): Manual work that must happen before a *decision* can be made — nothing to decide, prototype, or research, but the discussion is blocked until it's done. Signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen. This is the one type that *does* rather than decides — and it earns its place by unblocking a decision, not by delivering the destination. The agent drives it alone where it can (AFK); otherwise it hands the human a precise checklist (HITL). Resolved when the work is done; the answer records what was done and any resulting facts (credentials location, new URLs, row counts) later tickets depend on.
 
 ## Fog of war
@@ -109,11 +111,11 @@ Two modes. Work through bounded decisions with explicit checkpoints; continue an
 
 User invokes with a loose idea.
 
-1. **Name the destination.** Resolve the open scope decisions with the user one question at a time, recording confirmed terminology and choices, to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Resolve the open scope decisions with the user in manageable rounds of independent questions, recording confirmed terminology and choices, to pin down what this map is finding its way to — the spec, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Map the frontier.** Explore breadth-first, surfacing open decisions and first steps. If the path is already clear and bounded, a map adds no value; continue the authorized planning or implementation work rather than imposing an extra phase.
 3. **Create the map** (label `wayfinder:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map — then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog — the **Not yet specified** section.
-5. **Resolve independent research where useful.** Read primary sources in the current agent, or use independently scoped readers when available and authorized. Keep cited findings in the existing artifact location and link them from the ticket. A new branch, worktree or commit is not required by this method.
+5. **Resolve independent research where useful.** Read primary sources in the current agent, or use independently scoped readers with fresh context windows and minimum explicit L3 handoffs when available and authorized. Keep cited findings in the existing artifact location and link them from the ticket. A new branch, worktree or commit is not required by this method.
 6. Record the map's current frontier, confirmed decisions and unknowns. Charting does not silently start the implementation phase.
 
 ### Work through the map

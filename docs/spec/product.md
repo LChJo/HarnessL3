@@ -1,5 +1,7 @@
 # 产品规格
 
+v0.48（2026-11-11）：默认文件型方法升级至上游1.3.2/4ae2317的L3适配版，共7类26项，保留quick；退役方法仅退出当前库，历史ID/group/原字节保留。Skill Hub skill-hub/2吸收ask-matt的正文先读与阶段判断，实际目录及同任务--stage仍为准；不恢复跨技能依赖或固定流程，不强制setup/Hook/agent/worktree。正常安装仍不覆盖已有用户库；本次已授权本机库采用备份、逐文件核对及保留修改的一次性迁移。FR06/15、TC19/20/26/27及实际范围见实施状态。
+
 v0.47补充FR02/03/07/09/12/15：初始化指引必须要求真实职责、关键依赖和视图覆盖复核，不把大目录框图或语法有效等同语义完成。model maintain支持当前agent补充、修订、重建模型及视图，返回明确未执行状态和实际覆盖提示；agent直接维护文件。日常结构变化触发复核，已有pending/严格proof构成闭环；新项目随实现演进，计划/实现和核验范围分开，相同实体及历史身份保留。不扩展后台模型/Hook/源码CRUD，不设置图规模门槛。
 
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。

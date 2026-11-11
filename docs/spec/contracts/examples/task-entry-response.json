@@ -23,7 +23,7 @@
       },
       "sourceScanRevision": "6f3d695e98b115831225b9f1cf7371d22ffd2b1b08d6d4c0bc3db0e4f70b88d2"
     },
-    "routerVersion": "skill-hub/v1",
+    "routerVersion": "skill-hub/2",
     "routingPrompt": "Select the needed context and skills in one request; read file references only as needed.",
     "directory": {
       "parentId": null,

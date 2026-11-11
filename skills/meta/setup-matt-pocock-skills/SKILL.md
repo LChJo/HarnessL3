@@ -9,17 +9,19 @@ description: Optional guidance for documenting a project's existing task store, 
 
 The historical method name is retained for provenance; its category path follows this library's current organization. This editable file helps understand or document the target project's workflow; it is not an installer or a prerequisite for using the other files.
 
+For a chosen hosted tracker, verify the target repository is reachable before documenting a working integration; do not create a remote or repository automatically. Check triage-label existence and prepare missing-label changes only within the authorized setup scope. If a project still uses legacy `CONTEXT.md`/`CONTEXT-MAP.md`, discuss a move to the GLOSSARY names when migration is needed; preserve existing authority, stable identities and incoming references rather than renaming unrelated documents.
+
 ## 1. Read the existing rules
 
 Confirm the target project and worktree. Read its `AGENTS.md` and any explicitly designated authority, current task/spec locations, domain model, and decision records. Use `CLAUDE.md` only when that project actually designates it; do not prefer it merely because it exists, create a competing entry point, or overwrite another task's configuration.
 
-Look for existing task files and configured tools before proposing changes. Git remotes can identify a repository but do not prove an issue-tracker account, authenticated CLI, write permission or desired provider. A missing `docs/agents/` or `CONTEXT.md` is not a setup failure.
+Look for existing task files and configured tools before proposing changes. Git remotes can identify a repository but do not prove an issue-tracker account, authenticated CLI, write permission or desired provider. A missing `docs/agents/` or `GLOSSARY.md` is not a setup failure.
 
 ## 2. Identify only the conventions this task needs
 
 - **Task store**: reuse local task/spec files or the already configured tracker. External services are optional. If the task only needs a draft, write it in the authorized artifact location without initializing a tracker.
 - **Triage roles**: relevant only when the user actually needs incoming-work triage. Map who clarifies, prioritizes and implements work to the existing labels; do not create new labels or a second state machine automatically.
-- **Domain knowledge**: reuse the established authoritative model, glossary and decisions. LikeC4 or another existing model does not need a duplicate `CONTEXT.md` just to satisfy this method. When terminology needs work, record the term's agreed meaning and boundaries in that existing authority.
+- **Domain knowledge**: reuse the established authoritative model, glossary and decisions. LikeC4 or another existing model does not need a duplicate `GLOSSARY.md` just to satisfy this method. When terminology needs work, record the term's agreed meaning and boundaries in that existing authority.
 
 Ask only for decisions the project evidence and current authorization do not already settle. Preserve unknown access/capabilities explicitly instead of assuming installation or login.
 

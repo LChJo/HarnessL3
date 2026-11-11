@@ -9,7 +9,7 @@ The user wants to learn a topic. Use the scope they requested: one lesson or a s
 
 ## Teaching Workspace
 
-Use the learning workspace agreed for this task; the current repository is not automatically a course directory. Respect its write scope and existing conventions. The files below describe one optional layout, created only for a requested stateful course; a single lesson may be delivered without scaffolding all of them:
+Use the learning workspace agreed for this task; the current repository is not automatically a course directory. Respect its write scope and existing conventions. Output paths such as `./lessons/` resolve from that agreed workspace; only the linked `*-FORMAT.md` references resolve from this skill folder. The files below describe one optional layout, created only for a requested stateful course; a single lesson may be delivered without scaffolding all of them:
 
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](MISSION-FORMAT.md).
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
@@ -109,7 +109,7 @@ For skill acquisition, difficulty is the tool. Effortful retrieval is what build
 
 Each of these should be based on a **feedback loop**, where the user receives feedback on their performance. This feedback loop should be as tight as possible, giving feedback immediately - and ideally automatically.
 
-For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
+For quizzes, each answer should be exactly the same number of words (and characters, if possible). Vary which position holds the correct answer across questions. Don't give the user any clues about the answer through formatting.
 
 ## Acquiring Wisdom
 

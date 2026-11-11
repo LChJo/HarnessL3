@@ -35,7 +35,7 @@ Look for the originating spec, in this order:
 
 ### 3. Identify the standards sources
 
-Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
+Search the repository for every applicable standards document, including nested rules for the changed files. Include `CODING_STANDARDS.md` and `CONTRIBUTING.md` whenever present; pass the actual paths and applicable rules to the Standards reviewer.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below — a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 
@@ -59,7 +59,7 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 
 ### 4. Review both axes
 
-Use two independently scoped reviewers when the host supports them and delegation is authorized. Otherwise perform the Standards and Spec passes separately in the current agent. These briefs apply in either mode; no fixed `Agent` tool or agent type is required.
+Use two independently scoped reviewers when the host supports them and delegation is authorized. Otherwise perform the Standards and Spec passes separately in the current agent. Start each authorized reviewer with a fresh context window and the minimum explicit L3 handoff, diff, references and assigned brief. Run both together when supported and collect their returned reports before aggregating; do not race background report files. These briefs also apply to separate passes in the current agent; no fixed `Agent` tool or agent type is required.
 
 **Standards sub-agent prompt** — include:
 
