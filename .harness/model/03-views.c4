@@ -16,7 +16,7 @@ views {
   view context {
     title "上下文交接与源码同步"
     description "当前agent使用CLI；服务将请求分派到任务/模型/档案/索引与同步模块，Web仅投影实际记录。"
-    include app.cli, app.service, app.core.runtime, app.core.context, app.core.model, app.core.archive, app.core.index, app.core.source, app.web, app.runtimeSkill
+    include app.cli, app.service, app.core.runtime, app.core.context, app.core.model, app.core.modelMaintenance, app.core.archive, app.core.index, app.core.source, app.web, app.runtimeSkill
     style * { size xs textSize xl }
     autoLayout LeftRight 35 45
   }

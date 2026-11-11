@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.46 distinguishes lightweight snapshots, explicit verified source bindings, append-only skill stages and recoverable bounded CLI requests.",
+      "claim": "Baseline v0.47 adds current-agent supplement/revise/rebuild guidance and progressive source/model/view maintenance while retaining snapshot, proof, identity and history boundaries.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "6457ba83d2a1c9d748ab792109e0cb9e038398696b10285164fa852a5834c392",
-      "observedAt": "2026-11-10T14:07:55.557Z"
+      "hash": "513923bcfd71ff91772fd21fb5ae68960c596014a63a8621fd77a5eb0d9cc800",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -34,12 +34,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime assembles worktree resources and request tracking, resolves durable request receipts within target scope and preserves unknown outcomes.",
+      "claim": "Runtime routes model maintain to model/view inspection and versioned current-agent guidance, shares guidance with init and adds pending review hints to sync status without changing strict verification.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "b18eef19eff46dac26fb63d03a837b711a5b57a1ff71e051c1199c0924ee7454",
-      "observedAt": "2026-11-10T14:07:55.576Z"
+      "hash": "162ce37d297f5de160650162230972a20a1bd8da9dc4ec4d90f1593d6c49d87c",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService implements model snapshots, explicit verified source checks, task-owned defaults, append-only skill stages and bounded task-body retention.",
+      "claim": "TaskService retains task bindings and archives; routing guidance requires model review for structural evolution while preserving current-agent file edits and history.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "a477a0fcd299cbe734ec3d5a770b3b617bd8ddd77973b3de05d0012f3584e4e3",
-      "observedAt": "2026-11-10T14:07:55.590Z"
+      "hash": "8c0dd7fbaf5ba4ade1a68ea3d4712377a1d9e8e650501082c480f6e4a877b50c",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "English entry requires an actual available and permitted native question-tool call for required decisions, one question at a time, explicit waiting; per-turn routing and authorization reuse remain. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Host startup failures have no CLI result; command/path approval is conditional on actual host policy and independent work continues when blocked.",
+      "claim": "Runtime skill routes each turn, preserves setup/permission boundaries and requires structural review during authorized development with supplement/revise/rebuild guidance when needed.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "f7f1fad908a5ed7473f0127a2657a466cbef23653ab1e2e1d7611ded6bde97c0",
-      "observedAt": "2026-11-10T14:07:55.603Z"
+      "hash": "bed47d1a4e4eb087cc2022323131bd5768fe86ddccdeb9f929ddaa8ba902efd8",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Text authority and reference lifecycle remain; known uses exact retained bodies from the same task and cannot replace the first read with another task hash. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "v0.47 defines three model maintenance modes, mechanical view coverage hints, current-agent source review, incremental semantic evolution and continuing identity/history preservation.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "16ac6c6acc4afe0c06dad070eefbf285ab733801de94b3598ea99980c4743b69",
-      "observedAt": "2026-11-10T14:07:55.604Z"
+      "hash": "450399372ffa967ca251b3178e4a7bb3461547d02cfd5b49733c12db4388fd29",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -274,12 +274,12 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "Source batching preserves raw/current-state checks and link boundaries; explicit evidence references and scoped synchronization retain existing physical-path, anomaly and pending/history rules. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "v0.47 makes pending to agent model review/maintenance to strict scoped proof explicit; maintenance hints do not scan source, clear pending or prove semantics.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "12676204e2f93b4be5bda26bfe7fddf0b8e386a721b9e1b382baa09de9c2db0c",
-      "observedAt": "2026-11-10T14:07:55.606Z"
+      "hash": "1216456fdbeed9956a7eeeb7c92bbdd9d431d2b7198648a6622970ed5030dcd6",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime guidance uses discovered installed contract paths, guards failure envelopes and requires explicit scope decisions and new reviewed declarations after sync conflicts. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Permission recovery separates installation/runtime access, OS/sandbox refusal and pre-process host errors without changing data roots or host ACLs.",
+      "claim": "Runtime reference requires actual scoped review and strict race recovery; structural changes trigger file-based model/evidence/view evolution without resetting identity/history.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "56c8930cb83eeb1edd14c6220a04a4067a6c4bf23026a4c5056e53d9f21cef5f",
-      "observedAt": "2026-11-10T14:07:55.609Z"
+      "hash": "01c8449eea41c6d72cc157167f5bf540e7d4836016aa62415fe7a0948d61e94b",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static command help discovers actual request and referenced Schema paths and provides installed model-authoring guidance without starting the service. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Static help discovers model maintain modes and the installed result Schema while distinguishing guidance-ready/not-assessed from executed model changes.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "452de78735f73dadbedb89d4ef70206c9cc44b1b9c4b219cf72e928ec63db1b0",
-      "observedAt": "2026-11-10T14:27:25.192Z"
+      "hash": "7e8ed5c591bc060d328530f0ebf4dc2fb868bf6020091a7de12da9b1a49d1a36",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -364,22 +364,22 @@
     {
       "id": "1e950683-1469-49c8-9164-d439932a7bf2",
       "kind": "source-code",
-      "claim": "Native linked-reference regressions check repaired physical/alternative scopes and preserve a sibling document pending after partial verification.",
+      "claim": "Native linked-reference regressions check repaired physical/alternative scopes and preserve a sibling document pending after partial verification. Linked-document fixtures wait for native-notification quiet windows before capturing declarations; strict CAS and all anomaly assertions are retained.",
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "19b5d2668e3868fb673c49e6b76741b0799d3a567ff97f4ab4c030237e8a3b52",
-      "observedAt": "2026-11-10T04:02:25.442Z"
+      "hash": "28ffee9fc0d31cdbd46ab9d7ddefeed6b76f27e01b83bd994d920969ba06c9e1",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records the initialization review and separates current Windows test and package evidence from earlier platforms and unrun host behavior. Records v0.45 Windows 32/32 regression with real isolated ACL denial and the unverified restricted-host/Linux/macOS scope.",
+      "claim": "Implementation status records v0.47 model guidance/coverage/evolution and separates actual local validation from global installation, platform and semantic host acceptance.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "162c15d13273030bbf1db03d1aa9d6c7d96e77a222ac7074e737b2ee04ef9c1c",
-      "observedAt": "2026-11-10T14:31:05.561Z"
+      "hash": "904691ec6bef97c97e448f7b4144f04f045dd9db8cff92d0b40c72d4760c067c",
+      "observedAt": "2026-11-11T05:22:12.530Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "A fresh installed package through a Unicode directory alias exercises runtime fingerprint/service identity, archived handoff comparison and changed-baseline rejection, plus existing skill/task/login/offline checks. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Isolated package smoke exercises installed model maintain help/Schema and Git/directory modes alongside runtime fingerprint, history, skill and offline resource checks; definitions alone are not test success.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "dac1efc62079e59002d5c13d6df2f475f8ae4b96b7d60b701f4a238607842917",
-      "observedAt": "2026-11-10T14:07:55.612Z"
+      "hash": "88d2ecaf5fb676594309c3643713a063d9505116a4d8a263c90d39f2ba1645ee",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC03/07/08/22/26/27 cover model examples, nested boundaries, guarded failed results, installed contract discovery and epoch-conflict recovery. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. TC22/26/27 additionally separate isolated permission failures from real restricted-host approval and provisioning acceptance.",
+      "claim": "TC03/07/08/10/21/22/27 include model guidance modes, no source scan/file reset, invalid-model recovery, observed pending hints, view coverage and old-graph preservation; real semantic host coverage remains separate.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "e1228cb4720aff6ced79e82cb87020e0b2ba8cea51826ef32d56b1a95178133a",
-      "observedAt": "2026-11-10T14:27:25.194Z"
+      "hash": "44282643b53ce9d2e7114931212612e2635fdd5fcc143585a67c46d06462db44",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "CLI remains non-interactive and returns onboarding guidance; the agent calls the available permitted native question tool. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. IO_ERROR permission diagnostics preserve path/syscall and do not replace unknown write outcomes or grant host approval.",
+      "claim": "v0.47 defines model maintain guidance result and sync status modelMaintenance hint while preserving JSON, failure, source/CAS and task archive contracts.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "7447069ec18b83295f539cb5dfca4897a31e2c3df41a45bc7a428be15e40c33f",
-      "observedAt": "2026-11-10T14:27:25.194Z"
+      "hash": "331f9f17cfe808c28f298ef8a492a156e2126e9019681d9a064c7547c5134c65",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR15 requires actual host-native question calls for setup consent with explicit waiting, preserving context routing, reuse and other product requirements. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. FR12/15 separate setup consent from execution permissions and permit independent work when no approval is available.",
+      "claim": "FR02/03/07/09/12/15 require real structure/view coverage review and current-agent progressive maintenance without fabricated graph quotas or automatic background modeling.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "0417c62245a36f928c68d80eea79bd8a4550d81b9c633cbc452c10709bd2a2e9",
-      "observedAt": "2026-11-10T14:07:55.616Z"
+      "hash": "6a3c49bfe0923cdf69b1f08c69b9daf3408f7cb17b7c865199b47d0ed4771065",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Specification baseline v0.42 identifies native question-tool use, pending answers as D15/FR15/TC27 obligations while preserving earlier history and implementation scope. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Baseline v0.45 scopes permission recovery and keeps real host acceptance separate.",
+      "claim": "Specification baseline v0.47 adds versioned model maintenance and progressive evolution while retaining prior snapshot, source verification, permissions and history boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "99bdb9c059e156073fcf05053cd390363fccda7d45933aa4583f7878bd832a65",
-      "observedAt": "2026-11-10T14:07:55.617Z"
+      "hash": "464293290d426ec7a7c63f57f69c95a4d220cc004e0ab4b922fd682139e1a4cb",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.46: lightweight model snapshots, explicit verified source bindings, reusable skill bodies, append-only skill stages and original-request recovery. Native setup questions, directory workspace support, permission boundaries and document maintenance remain required.",
+      "claim": "Agent conventions follow v0.47: source structural changes require model/relationship/evidence/view review in the authorized stage; continuing IDs/history and strict scoped verification remain.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "f76b2ffacfb870c6b35f9301ea388f29281252d5a7e10534852d9d3de8a1217f",
-      "observedAt": "2026-11-11T03:17:24.689Z"
+      "hash": "142636465eb5834bb6e5640c9709fad6764eb1dddfce26b4ce7f8c3cedb58814",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,22 +654,22 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Authorized semantic onboarding reads installed model guidance, declares relationship kinds, uses space-separated evidence and preserves established UUIDs during repairs. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Initialization and follow-up maintenance require actual responsibilities/dependencies and view coverage review, three current-agent modes, gradual implemented scope and continuing identity/history.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "bb4e15093502c7988d94e748f029284574db0d0aa6ed873a7981ee979284ddc2",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "54bc0f981a4d65bca027fa2c06ec4fc409538ffe0e477b3a9d00a62e3dd3a7b5",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Installed usage supplies a complete model example and guarded PowerShell consumption plus explicit nested-source and epoch-conflict recovery steps. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. Permission troubleshooting links to restricted-host recovery and preserves the original archive root.",
+      "claim": "Installed usage explains supplement/revise/rebuild steps, guidance status, actual agent file edits, view coverage, source review and preserved historical graphs.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "55bc06c09f0c6be8e52a9104a5dd3b6fe58c47d9b482a1847978889f58963219",
-      "observedAt": "2026-11-10T14:27:25.195Z"
+      "hash": "dbf70ba4175b92b0623629824e20775f176e0511ec34e3bb7000d0b1ea927a12",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow baseline v0.46: lightweight model snapshots, explicit verified source bindings, reusable skill bodies, append-only skill stages and original-request recovery. Native setup questions, directory workspace support, permission boundaries and document maintenance remain required.",
+      "claim": "Agent conventions follow v0.47: source structural changes require model/relationship/evidence/view review in the authorized stage; continuing IDs/history and strict scoped verification remain.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "f76b2ffacfb870c6b35f9301ea388f29281252d5a7e10534852d9d3de8a1217f",
-      "observedAt": "2026-11-11T03:17:24.689Z"
+      "hash": "142636465eb5834bb6e5640c9709fad6764eb1dddfce26b4ce7f8c3cedb58814",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -794,12 +794,12 @@
     {
       "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
       "kind": "document",
-      "claim": "User navigation describes native question-tool onboarding, alongside per-turn skill reads and reusable project context. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Navigation introduces progressive model maintenance through current-agent guidance and the existing pending/verification lifecycle.",
       "location": {
         "path": "README.md"
       },
-      "hash": "7295c8d7351a41f0038bdea1f57c6cdc7a3924212bfc4f526d890a1a3be67ce1",
-      "observedAt": "2026-11-10T14:07:55.622Z"
+      "hash": "00568f44c955fb4eecaa01739262b9509ca269236f691368016b90d6ef25b832",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -998,8 +998,8 @@
       "location": {
         "path": "tests/v1/permission-errors.test.mjs"
       },
-      "hash": "810f03fa459874980021193b95c3f1903efa690efe93e54e4a7fc7fe72900a9e",
-      "observedAt": "2026-11-10T14:07:55.628Z"
+      "hash": "f1af78845584f69b59b7da517d77978cf8ed2b28c0dbd7bef96367fd7c537981",
+      "observedAt": "2026-11-11T05:21:57.603Z"
     },
     {
       "id": "0e67a30f-f14f-43b0-9fe7-9a7ab414c9d5",
@@ -1060,6 +1060,86 @@
       },
       "hash": "61dc3c3f698bf5ac3db31af7e6d79a5f1bd813d700d47720c8d305f2cb0ac177",
       "observedAt": "2026-11-10T14:07:55.632Z"
+    },
+    {
+      "id": "47a9761c-8c69-4907-926f-744ddf8e6ce5",
+      "kind": "source-code",
+      "claim": "Versioned current-agent supplement/revise/rebuild guidance inspects current model topology and view coverage, preserves invalid diagnostics and does not request a source scan or authority edits.",
+      "location": {
+        "path": "core/model-maintenance.ts"
+      },
+      "hash": "2c26dfeb1bd1515c57b389a7cb526e2157a495d676b8f28e3b47436bbc4f13f7",
+      "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "9d99fef9-ad18-475c-b541-12a01049e49c",
+      "kind": "source-code",
+      "claim": "Command parser accepts model maintain with its own three modes, retains task snapshot/verified validation and validates RPC flags through the same parser.",
+      "location": {
+        "path": "cli/args.ts"
+      },
+      "hash": "facd3ff0634c004aa6120e7dcef1fe1b0c870b3c0bd26f8256bc48e41e40f53a",
+      "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "935b3fd1-92c7-4a66-ba57-119fcc15bc9a",
+      "kind": "document",
+      "claim": "Result Schema fixes guidance-ready/not-assessed, bounds topology/coverage validity and labels source state as last-observed.",
+      "location": {
+        "path": "docs/spec/contracts/model-maintenance.schema.json"
+      },
+      "hash": "40f3f89ecf50b5447dd7efe2f8dcd7d6e572bc0af0110fb69b33e95f95d4a1a8",
+      "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "ba3cfd1c-08a2-439f-a9fd-32b5dd53f4ec",
+      "kind": "source-code",
+      "claim": "Isolated tests cover modes, initial guidance, source-scan/file preservation, missing view leaves, agent view evolution, invalid-model repair and pending review; test definitions do not prove execution.",
+      "location": {
+        "path": "tests/v1/model-maintenance.test.mjs"
+      },
+      "hash": "2e0976c0fed36df6db4a95785ea003e2c42f87a9be48101a6e83151c8bc91efe",
+      "observedAt": "2026-11-11T05:21:57.603Z"
+    },
+    {
+      "id": "5c648b0f-ccb6-4f46-b367-39c74a3ce972",
+      "kind": "document",
+      "claim": "Engineering record describes actual model/view gaps, implementation scope, validation and unverified host/platform/global-install boundaries.",
+      "location": {
+        "path": "docs/implementation/MODEL_EVOLUTION.md"
+      },
+      "hash": "65fcbc6099dbf18440ec267cb5d7adecdcc6b9037776675db328ab9465225c89",
+      "observedAt": "2026-11-11T05:22:12.530Z"
+    },
+    {
+      "id": "25bbe581-19f0-4d19-8e0b-01fdb103d4c3",
+      "kind": "document",
+      "claim": "Contract index links the model-maintenance result Schema alongside file-based model and scoped proof contracts.",
+      "location": {
+        "path": "docs/spec/contracts/README.md"
+      },
+      "hash": "799d881ee9228815d97cdcf6729b746d689b50877dc3150001863c840f030698",
+      "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "533fd5ee-ea4f-4de7-882a-19e9a59e3fe9",
+      "kind": "document",
+      "claim": "Implementation plan identifies progressive model maintenance as an additive v0.47 change without inheriting earlier platform results.",
+      "location": {
+        "path": "docs/spec/implementation.md"
+      },
+      "hash": "214bd1f8a26b3ac5b18184e62ee42a58fd99eca71d30d0ab08a0b5002504f704",
+      "observedAt": "2026-11-11T05:01:17.843Z"
+    },
+    {
+      "id": "f325ad00-2760-4dfd-9214-b15df2ac8dec",
+      "kind": "document",
+      "claim": "Command-result responses with operation model maintain must match the dedicated maintenance result Schema.",
+      "location": {
+        "path": "docs/spec/contracts/response.schema.json"
+      },
+      "hash": "98701d6271410721b1d1c699149b9baa0f711d80c48c2443cbe8889cc029a6b2",
+      "observedAt": "2026-11-11T05:01:17.843Z"
     }
   ]
 }

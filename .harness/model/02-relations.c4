@@ -279,4 +279,34 @@ model {
       version "1"
     }
   }
+  app.core.runtime -[uses]-> app.core.modelMaintenance "初始化与模型维护指引" {
+    metadata {
+      harness_id "b40b864b-5612-464b-a75a-f5e661ad0168"
+      brief "初始化与模型维护指引；指引不等于语义更新完成。"
+      source "fact"
+      status "verified"
+      evidence "47a9761c-8c69-4907-926f-744ddf8e6ce5 d6250000-0000-4000-8000-000000000004"
+      version "1"
+    }
+  }
+  app.core.modelMaintenance -[uses]-> app.core.model "读取合法模型与实际视图覆盖" {
+    metadata {
+      harness_id "cbdc9b79-0778-4b3b-b0aa-0be257643c08"
+      brief "读取合法模型与实际视图覆盖；指引不等于语义更新完成。"
+      source "fact"
+      status "verified"
+      evidence "47a9761c-8c69-4907-926f-744ddf8e6ce5"
+      version "1"
+    }
+  }
+  app.runtimeSkill -[guides]-> app.core.modelMaintenance "结构变化后的当前agent建模" {
+    metadata {
+      harness_id "52158066-b9d6-4fa1-a80f-7218a2fab554"
+      brief "结构变化后的当前agent建模；指引不等于语义更新完成。"
+      source "fact"
+      status "verified"
+      evidence "47a9761c-8c69-4907-926f-744ddf8e6ce5 d6250000-0000-4000-8000-000000000011"
+      version "1"
+    }
+  }
 }
