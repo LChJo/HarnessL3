@@ -30,6 +30,22 @@ init只创建缺失的`.harness/project.json`、`.harness/model/*.c4`、证据�
 
 普通目录向上以最近的.harness/project.json或.git为边界；都没有时使用当前目录。嵌套项目独立登记，不借外层身份。新建普通目录默认排除node_modules、.venv、__pycache__、.cache、dist、build、coverage及target（任意层），可在.harness/project.json的source.excludePatterns编辑；已有配置不覆盖。.gitignore在各层按所在目录生效，支持否定规则。普通目录完整来源状态为unversioned，扫描失败为unknown。以后原地git init会保留原projectId/worktreeId和历史，使当前来源重新待核验；旧任务保持原绑定，新来源通过新任务取得。已登记Git项目缺少Git或仓库损坏会报错，不会降级为普通目录。
 
+## 补充、修订与重建结构模型
+
+在已登记项目目录中，由当前agent按需要选择一种操作：
+
+```text
+harnessl3 model maintain --mode supplement --json
+harnessl3 model maintain --mode revise --json
+harnessl3 model maintain --mode rebuild --json
+```
+
+`supplement`（默认）补齐新实现或遗漏的模块、关系和视图；`revise`修订既有分层、职责和依赖；`rebuild`重新审核范围并重组模型和视图，同一实体继续使用原UUID。三种操作都返回当前agent的工作指引、模型数量/层级、各视图节点/连线、未在任何视图出现的叶对象及诊断。`stage:guidance-ready`表示指引已返回，`semanticStatus:not-assessed`表示建模尚未完成；不会覆盖文件或替agent运行另一个模型。模型无效时仍可取得修复指引和真实诊断，不能把此成功返回当作模型有效。
+
+agent随后读取必要来源，通过文件工具维护`.harness/model/`、证据和别名，执行`model validate`并检查实际图。根边界图可保留，但复杂项目需要合适的模块/专题视图；`include *`可能仅展示顶层，`app.*`只展示直接子层。未入图提示用于检查遗漏或说明范围，不要求把所有对象放进同一张图。
+
+新项目先表示已实现的结构，后续新增模块、入口、依赖或发生大重构时，在对应开发阶段补充或修订。`sync status`的`modelMaintenance`提示提供维护入口；源码变化仍待核验，更新后用原有完整`sync status`/`sync verify`流程声明实际范围，无语义变化也如实记录。`model maintain`不请求源码全扫，只返回已有活动资源的最近观测（可能未知或过时）；没有活动观测时为null，不为生成指引恢复任务档案。需要新模型上下文时重新`task start`捕获，旧任务保留当时图；不要删除`.harness`或重建项目身份来更新结构。
+
 ## 随项目保存上下文
 
 普通目录请将下表的长期上下文、相关源码和实际项目技能共同备份；本机历史与凭证继续隔离保存。

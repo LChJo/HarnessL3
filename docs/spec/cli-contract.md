@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.47：新增 `model maintain [--mode supplement|revise|rebuild]`（默认supplement）。只读当前模型和证据，返回[model-maintenance结果Schema](contracts/model-maintenance.schema.json)：promptVersion、mode、stage=guidance-ready、semanticStatus=not-assessed、worktreeRoot、sourceScan=not-requested、modelState/revision、files、topology、coverage、diagnostics、observedSource、agentPrompt和nextCommands。observedSource为最近真实状态，未观测保持unknown，命令不请求来源扫描；模型无效仍返回诊断和修复指引、topology/coverage=null，权限错误照常失败。不覆盖文件、不自动启动agent或改变同步状态。sync status附modelMaintenance提示及维护命令，完整检查/CAS不变。init共用版本化指引并返回maintenanceCommand；task路由说明结构演进义务。当前agent经文件工具修改模型、证据与视图后校验、核对覆盖及严格阶段声明；旧任务绑定与历史图不回写。
+
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
 
 v0.45（FR12/15）：宿主命令创建失败不属于CLI封套，CLI无法为未启动的进程发起审批。CLI内原生EACCES/EPERM通过`IO_ERROR`、退出码1、`retryable:false`返回，`details`保留`reason:permission-denied`、`systemCode`及系统提供的`path/syscall`，附`hint`；不据此猜测是ACL或沙箱拒绝。服务描述文件/启动锁的读取拒绝保留该诊断，不伪装身份冲突；进程spawn失败保留可用系统诊断。原业务错误和未知写结果不被替换，审批/重试仍须审查执行结果与原requestId。

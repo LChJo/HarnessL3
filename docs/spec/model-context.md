@@ -1,5 +1,19 @@
 # 模型、身份与批量读取 v1
 
+v0.47（2026-11-11）：初始化与后续模型维护共用版本化建模指引，新增 `model maintain [--mode supplement|revise|rebuild]`。返回当前模型拓扑、视图覆盖提示、最近来源观测及当前agent工作指引；不扫描来源、不改写权威文件、不创建任务。invalid模型可取得修复指引，权限失败保留原错误；指引返回不表示语义工作完成。
+
+## 模型维护与逐步演进
+
+- supplement（默认）：补齐本阶段新增或遗漏的职责、子模块、关系、证据和专题视图，不重写无关内容。
+- revise：审核并修订既有分层、职责和依赖，修复重命名/移动/删除后的当前引用、别名和视图。
+- rebuild：重新审核声明范围并重组当前模型/视图，相同语义实体保留harness_id，新增实体才生成UUID；不删除.harness、不重置项目身份或回写历史。
+
+三模式均返回stage=guidance-ready、semanticStatus=not-assessed、sourceScan=not-requested，由当前agent用已有文件工具执行。拓扑/覆盖只由实际模型和布局推导：对象/关系数、最大组成层级、各视图节点/边、未在任何视图出现的叶对象及根模板/扁平结构/单根视图等提示。提示不是错误或固定数量门槛；简单项目允许简单图，边界视图可以只含根，但不能替代必要内部视图。重要遗漏需补图或披露范围，不强制所有节点进一张图。非法模型topology/coverage为null，保留诊断和可取得的尝试版本，不借旧图冒充当前有效。
+
+指引要求读实际入口、装配及关键实现，按真实职责拆分复杂子系统，复核代表性业务路径及跨模块依赖，给复杂边界必要局部说明并检查实际视图覆盖。计划/已实现、事实/推断、已核/未核范围分别表达；不将目录名等同架构或为凑数量造节点。新项目先表达已有结构，随实现逐步补齐。
+
+源码新增/删除模块、入口、依赖、职责迁移或大规模重构触发结构复核。既有观测继续立即pending；task路由提醒维护义务，sync status增加modelMaintenance提示（review-required/unknown/no-pending-observed），不判断语义或清pending。model maintain只返回已有活动资源中的最近真实来源观测（可能unknown/旧状态），没有活动观测时返回null，不为生成指引恢复任务档案；不是完整来源检查。agent在获授权阶段内补充/修订；无语义变化保留实际审核依据。随后model validate并检查结构，再用sync status/verify完整核验及CAS声明实际范围；需要新模型绑定时另建任务，原任务/历史图不回写。Web浏览不触发全扫或自动建模。
+
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
 
 v0.44：文本权威、五类投影、技能和历史在普通目录与Git工作区一致。projectId保存在项目内，worktreeId为本机工作区登记ID；命令沿用worktree名称。directory来源为unversioned，不能用无HEAD推断Git类型。原地启用Git更新当前登记及来源适配器，原任务/正文/证据/技能归档保留原身份与字节，当前新来源通过新任务绑定取得。

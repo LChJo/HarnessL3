@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.47：结构演进由观测→pending→当前agent语义复核→文本模型/关系/证据/视图维护→完整sync proof构成闭环。新模块/入口/依赖、职责迁移、删除及重构需要核对模型；不要求每次文本变化都有图改动。sync status附modelMaintenance提示入口，model maintain提供补充/修订/重建指引及视图覆盖，不自行扫描来源、改模型或清pending。提示无法判断语义覆盖，unknown/no-pending-observed不代表架构完整。新项目模型随实际实现逐步补全，保留实体身份与历史图；不在watcher中调用模型，不改变严格来源核验/CAS。
+
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
 
 v0.44普通目录适配器：完整成功的来源版本为{head:null,treeHash:<manifest哈希>,status:"unversioned"}，失败为unknown且treeHash为空。manifest沿用下述唯一编码、原字节SHA-256、链接叶条目及UTF-16排序；普通目录没有Git tracked删除墓碑，删除通过前后清单差异表示，空目录不进入manifest。两遍枚举及文件字节核对，规则/配置变化和扫描竞态不能被当作完整成功；事件、字节回退和策略变化仍使旧proof失效。显式证据、增量观测与完整来源核验保持分离。

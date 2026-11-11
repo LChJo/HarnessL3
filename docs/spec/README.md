@@ -1,5 +1,7 @@
 # HarnessL3 CLI 工作规格 v1.0
 
+v0.47（2026-11-11）：初始化使用版本化建模指引；model maintain支持supplement/revise/rebuild，返回模型拓扑、视图覆盖提示及最近来源观测，由当前agent通过文件工具补充、修改、重建文本模型。task路由/sync status提示结构演进，源码pending及完整proof/CAS不变。新项目随实现逐步补全，相同实体身份和历史图保留；不以提示返回或解析成功代替语义覆盖。具体契约见模型/CLI/同步规格，实际验证见实施状态。
+
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
 
 基准0.45（2026-11-10）：受限宿主的命令创建失败与已启动CLI的权限失败分别处理；安装同意不等于宿主执行授权。错误诊断、具体命令/路径审批与无审批能力回退见CLI契约，TC22/26/27和实施状态分别记录程序与真实宿主范围。不要求全面放开或自动修改ACL/数据根，既有隔离和持久化边界不变。
