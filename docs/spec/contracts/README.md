@@ -6,6 +6,7 @@ v0.46：新增selection-input/query-input描述CLI接受的任务自有缺省字
 
 | Schema | 验证对象 |
 | --- | --- |
+| [model-maintenance](model-maintenance.schema.json) | model maintain的版本化agent指引、拓扑/视图覆盖提示和最近来源观测；非执行回执或语义完成证明 |
 | [workspace](workspace.schema.json) / [source-policy](source-policy.schema.json) | 工作区git/directory类型、可空Git字段及扫描适配器策略；缺kind兼容旧Git登记 |
 | [common](common.schema.json) | UUID、SHA-256、UTC 时间、路径、目标、来源版本、binding、简述、精确正文和批次共享字段 |
 | [project-config](project-config.schema.json) / [aliases](aliases.schema.json) / [evidence](evidence.schema.json) | 随 Git 的最小配置、显式旧定位映射及依据 |
@@ -15,7 +16,7 @@ v0.46：新增selection-input/query-input描述CLI接受的任务自有缺省字
 | [sync-proof](sync-proof.schema.json) | 阶段核验声明与 CAS 前置条件，非自动语义证明 |
 | [response](response.schema.json) | 互斥成功/错误封套，入口、选择、批读、交接、归档文件、管理结果及 legacy 档案 |
 
-`examples/` 共 15 份虚构项目 JSON，展示完整字段与响应。文件读取例含 SKILL.md 与一个附件，UTF-8 正文、字节数和 SHA-256 匹配；选择/交接/known/批次/目标互相对应；源文件、模型、任务均为文档 fixture，不是本机项目观测。校验脚本以虚构 `src/cancel.ts` 的 `export function cancel() {}\n`、project-config 的排除/技能路径和明确的空 Git ignore 输入复算 source-manifest/source-scan-policy；复算实际示例的目录/正文/技能文件指纹。modelRevision 仅作虚构模型 manifest 的格式与版本绑定示例，不是当前仓库核验结论。
+`examples/` 共 16 份虚构项目 JSON，展示完整字段与响应。文件读取例含 SKILL.md 与一个附件，UTF-8 正文、字节数和 SHA-256 匹配；选择/交接/known/批次/目标互相对应；源文件、模型、任务均为文档 fixture，不是本机项目观测。校验脚本以虚构 `src/cancel.ts` 的 `export function cancel() {}\n`、project-config 的排除/技能路径和明确的空 Git ignore 输入复算 source-manifest/source-scan-policy；复算实际示例的目录/正文/技能文件指纹。modelRevision 仅作虚构模型 manifest 的格式与版本绑定示例，不是当前仓库核验结论。
 
 请求 schema 验证 CLI 归一化之后的对象：requestId 必需。raw `--file` 可省略此字段，由 `--request-id` 或 CLI 生成值补齐后验证；flag 和文件同时提供必须相等。响应始终含 requestId 和 replayed（首返 false、幂等回放 true），以便关联丢失响应；未知自动 ID 不构成可恢复重试保证。
 

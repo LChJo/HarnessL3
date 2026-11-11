@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "requestId": "90000000-0000-4000-8000-000000000001",
+  "target": { "projectId": "90000000-0000-4000-8000-000000000002", "worktreeId": "90000000-0000-4000-8000-000000000003" },
+  "replayed": false, "ok": true,
+  "data": {
+    "kind": "command-result", "status": "complete", "operation": "model maintain",
+    "result": {
+      "promptVersion": "model-maintenance/1", "mode": "supplement", "stage": "guidance-ready", "semanticStatus": "not-assessed",
+      "worktreeRoot": "/example/project", "sourceScan": "not-requested", "modelState": "valid",
+      "modelRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "files": { "model": ".harness/model/", "evidence": ".harness/evidence.json", "aliases": ".harness/aliases.json" },
+      "topology": { "objects": 1, "relations": 0, "maxDepth": 1, "views": [{ "id": "overview", "title": null, "nodes": 1, "edges": 0 }] },
+      "coverage": { "scope": "model-views-only", "unrepresentedLeaves": [], "hints": [{ "code": "ROOT_ONLY_MODEL", "message": "Review the current project responsibilities before claiming coverage." }] },
+      "diagnostics": [], "observedSource": null,
+      "agentPrompt": "Illustrative guidance only: the current agent reads the project, edits LikeC4 and evidence, preserves continuing IDs and history, reviews view coverage and submits scoped synchronization checks.",
+      "nextCommands": [["harnessl3", "model", "validate", "--json"], ["harnessl3", "sync", "status", "--json"]]
+    }
+  }
+}

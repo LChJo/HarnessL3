@@ -118,7 +118,8 @@
       "properties": {
         "kind": { "const": "command-result" }, "status": { "const": "complete" },
         "operation": { "type": "string", "minLength": 1 }, "result": { "type": "object" }
-      }
+      },
+      "allOf": [{ "if": { "properties": { "operation": { "const": "model maintain" } } }, "then": { "properties": { "result": { "$ref": "model-maintenance.schema.json" } } } }]
     },
     "legacyArchive": {
       "type": "object", "additionalProperties": false,

@@ -144,6 +144,10 @@ reject('legacy-response.json', value => { value.data.binding.sourceScanRevision 
 reject('error-response.json', value => { delete value.error.code })
 reject('no-target-response.json', value => { delete value.requestId })
 reject('no-target-response.json', value => { delete value.replayed })
+reject('model-maintenance-response.json', value => { value.data.result.stage = 'completed' })
+reject('model-maintenance-response.json', value => { value.data.result.mode = 'snapshot' })
+reject('model-maintenance-response.json', value => { value.data.result.modelState = 'invalid' })
+reject('model-maintenance-response.json', value => { value.data.result.sourceScan = 'verified' })
 const replayFixture = structuredClone(examples.get('selection-response.json'))
 replayFixture.value.replayed = true
 assert.equal(validate(schemas.get(replayFixture.id), replayFixture.value, replayFixture.id).length, 0)
