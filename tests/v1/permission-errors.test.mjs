@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { asHarnessError, HarnessError } from '../../build/core/errors.js'
 import { descriptor, inspectService } from '../../build/service/controller.js'
-import { mkdtemp, mkdir, writeFile, readFile, chmod, rename, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, chmod, rename, rm, realpath } from 'node:fs/promises'
 import { execFile as callbackExecFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
@@ -25,8 +25,18 @@ async function restrict(restorations, root, target, directory = false) {
     restorations.push(restore)
     return restore
   }
+  // GitHub's Windows image exposes PowerShell 7 module roots through PSModulePath.
+  // Windows PowerShell 5.1 may then resolve Microsoft.PowerShell.Security from
+  // those incompatible binaries, so import the 5.1 module from $PSHOME and pin
+  // the module path the child actually sees.
+  const modulePath = [
+    path.join(process.env.SystemRoot ?? 'C:\\Windows', 'system32', 'WindowsPowerShell', 'v1.0', 'Modules'),
+    path.join(process.env.ProgramFiles ?? 'C:\\Program Files', 'WindowsPowerShell', 'Modules'),
+    process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'Documents', 'WindowsPowerShell', 'Modules') : null,
+  ].filter(item => item !== null).join(path.delimiter)
   const script = `
     $ErrorActionPreference = 'Stop'
+    Import-Module (Join-Path $PSHOME 'Modules\\Microsoft.PowerShell.Security\\Microsoft.PowerShell.Security.psd1') -Force
     $root = [IO.Path]::GetFullPath($env:L3_TEST_ROOT)
     $target = [IO.Path]::GetFullPath($env:L3_TEST_PATH)
     if (-not ([IO.Path]::GetFileName($root)).StartsWith('harnessl3-permission-') -or -not $target.StartsWith($root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe ACL fixture path' }
@@ -44,7 +54,7 @@ async function restrict(restorations, root, target, directory = false) {
     }
   `
   const invoke = acl => execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
-    windowsHide: true, env: { ...process.env, L3_TEST_ROOT: root, L3_TEST_PATH: target, L3_TEST_DIRECTORY: directory ? 'yes' : '', L3_TEST_ACL: acl },
+    windowsHide: true, env: { ...process.env, PSModulePath: modulePath, L3_TEST_ROOT: root, L3_TEST_PATH: target, L3_TEST_DIRECTORY: directory ? 'yes' : '', L3_TEST_ACL: acl },
   })
   const { stdout } = await invoke('')
   let restored = false
@@ -77,11 +87,11 @@ test('TC22 permission diagnostics preserve existing business errors and do not l
 })
 
 test('TC22 permission failures inside source scanning and snapshot reads remain actionable IO errors', async t => {
-  const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-permission-'))
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harnessl3-permission-')))
   const restorations = []
   t.after(async () => {
     for (const restore of restorations.reverse()) await restore()
-    if (path.dirname(root) !== path.resolve(tmpdir()) || !path.basename(root).startsWith('harnessl3-permission-')) throw new Error('Unsafe permission fixture cleanup')
+    if (path.dirname(root) !== await realpath(tmpdir()) || !path.basename(root).startsWith('harnessl3-permission-')) throw new Error('Unsafe permission fixture cleanup')
     await rm(root, { recursive: true, force: true })
   })
   const sourceRoot = path.join(root, 'project'), id = randomUUID()
@@ -113,7 +123,7 @@ test('TC22 permission failures inside source scanning and snapshot reads remain 
 })
 
 test('TC22/26 actual denied descriptor and skill writes preserve data and report permission errors', async t => {
-  const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-permission-'))
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'harnessl3-permission-')))
   const restorations = []
   const dataRoot = path.join(root, 'data'), skillsRoot = path.join(root, 'skills')
   await mkdir(dataRoot); await mkdir(skillsRoot)
@@ -124,7 +134,7 @@ test('TC22/26 actual denied descriptor and skill writes preserve data and report
   t.after(async () => {
     for (const restore of restorations.reverse()) await restore()
     await chmod(file, 0o600).catch(() => {}); await chmod(lock, 0o600).catch(() => {}); await chmod(skillsRoot, 0o700)
-    if (path.dirname(root) !== path.resolve(tmpdir()) || !path.basename(root).startsWith('harnessl3-permission-')) throw new Error('Unsafe permission fixture cleanup')
+    if (path.dirname(root) !== await realpath(tmpdir()) || !path.basename(root).startsWith('harnessl3-permission-')) throw new Error('Unsafe permission fixture cleanup')
     await rm(root, { recursive: true, force: true })
   })
   const restoreFile = await restrict(restorations, root, file)
