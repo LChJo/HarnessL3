@@ -2,6 +2,8 @@
 
 面向现有agent的项目上下文CLI：以LikeC4文本为主模型，复用稳定简述批量选择上下文和技能，Web显示可追溯的输入到上下文包组织。
 
+结构模型可随项目实现逐步补全：agent使用 `harnessl3 model maintain --mode supplement|revise|rebuild` 获取维护指引与视图覆盖提示（选择一种模式，默认supplement），再通过文件工具补充、修订或重组模型及证据。源码变化保持待核验，阶段结束检查结构与同步范围；相同实体身份和历史图保留。
+
 通过命令行按需读取项目上下文与技能，并在 Web 无限画布中查看任务组织、历史及来源依据。安装和更新见下文，功能与验证范围见[实施状态](docs/implementation/STATUS.md)。
 
 ## 安装与更新

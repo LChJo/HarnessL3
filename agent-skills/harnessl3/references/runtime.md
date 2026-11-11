@@ -78,6 +78,8 @@ After actual context and required skill bodies return, follow the main skill's o
 
 ## Document maintenance and stage synchronization
 
+Model evolution belongs to the same authorized development stage. New/removed modules, entry points, dependencies, responsibility moves or major refactors require comparing current sources with model composition, relationships and view coverage. `model maintain --mode supplement|revise|rebuild` provides current-agent guidance and mechanical coverage hints; choose one mode and reuse suitable guidance. It does not edit files, request a source scan or clear pending changes. `sync status.modelMaintenance` only suggests review from observed pending state; it is not an architecture audit. Use file tools to evolve the model/evidence, preserve continuing IDs/history, validate actual views and then submit the existing scoped proof. No semantic change still requires real reviewed scope. Do not declare planned modules implemented or grow graphs merely to reach counts.
+
 Use the project's authoritative locations for long-term specs, task documents, decisions and handoffs. Project task Markdown is distinct from machine task archives; a temporary directory name does not determine authority or Git ownership. A handoff should record actual task/worktree/version and relevant paths.
 
 - Add: reuse a suitable entity; maintain descriptions, evidence and links without creating one entity per document.
