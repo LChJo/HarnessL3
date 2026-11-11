@@ -5,6 +5,7 @@ import { EventEmitter } from 'node:events'
 import { WorkspaceRegistry } from './workspace.js'
 import { SEED_ROOT } from './package.js'
 import { loadModel } from './model.js'
+import { MODEL_GUIDANCE_VERSION, maintenanceCommand, modelGuidance, modelMaintenance, modelMaintenanceHint, type MaintenanceMode } from './model-maintenance.js'
 import { CatalogObserver } from './catalog.js'
 import { Archive, type ArchiveReference } from './archive.js'
 import { SearchIndex, type IndexDocument } from './index.js'
@@ -334,7 +335,10 @@ export class Runtime extends EventEmitter {
         const resource = await this.worktreeResources(worktree)
         const skillsRoot = await registry.skillsRoot(worktree)
         let result: unknown, replayed = false
-        if (request.operation === 'sync status') result = await resource.freshness.status(skillsRoot)
+        if (request.operation === 'sync status') {
+          const state = await resource.freshness.status(skillsRoot)
+          result = { ...state, modelMaintenance: modelMaintenanceHint(state) }
+        }
         else { const verified = await resource.freshness.verify(request.input, skillsRoot, request.requestId); const { replayed: replay, ...state } = verified; replayed = replay; result = state }
         return validateContract<Envelope>('response', { schemaVersion: 1, requestId: request.requestId, target, replayed, ok: true, data: commandResult(request.operation, result) })
       }
@@ -384,7 +388,7 @@ export class Runtime extends EventEmitter {
             stage: 'scaffold-ready', semanticStatus: 'not-assessed', modelCreated,
             nextAction: modelCreated ? 'model-project' : 'review-project-model',
             model: { objects: model.entities.filter(entity => entity.entityType === 'object').length, relations: model.entities.filter(entity => entity.entityType === 'relation').length, views: model.views.length },
-            agentGuidance: 'Use the current agent and existing file tools to inspect the project and author or review LikeC4 objects, relationships and evidence. Report reading, modeling and validation progress. Check the model and structure views before reporting project initialization complete, and disclose unmodeled scope.',
+            promptVersion: MODEL_GUIDANCE_VERSION, agentGuidance: modelGuidance('supplement'), maintenanceCommand: maintenanceCommand(),
           } }; break
         }
         case 'project register': result = await registry.register(path.resolve(request.cwd, id)); break
@@ -404,6 +408,15 @@ export class Runtime extends EventEmitter {
           target = { projectId: worktree.projectId, worktreeId: worktree.id }
           const model = await loadModel(worktree.root)
           result = { valid: true, modelRevision: model.revision, objectCount: model.entities.filter(entity => entity.entityType === 'object').length, relationCount: model.entities.filter(entity => entity.entityType === 'relation').length, diagnostics: model.diagnostics }; break
+        }
+        case 'model maintain': {
+          const worktree = await this.resolve(request)
+          target = { projectId: worktree.projectId, worktreeId: worktree.id }
+          // A modeling brief does not need to restore task archives or start observation.
+          const existing = this.resources.get(worktree.id)
+          const observed = existing ? (await existing).freshness.currentState() : undefined
+          result = validateContract('model-maintenance', await modelMaintenance(worktree.root, (flag(request, 'mode') ?? 'supplement') as MaintenanceMode, observed))
+          break
         }
         case 'web open': {
           try { const worktree = await this.resolve(request, true); target = { projectId: worktree.projectId, worktreeId: worktree.id } }

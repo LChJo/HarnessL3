@@ -38,6 +38,7 @@ const descriptions: Record<string, string> = {
   'serve stop': 'Stop this data root service; retain committed work.',
   'web open': 'Return a Web sign-in URL for the resident service; open the browser unless --no-open is supplied.',
   'model validate': 'Validate the current LikeC4 model without editing or marking source as synchronized.',
+  'model maintain': 'Prepare current-agent guidance to supplement, revise or rebuild the model and views; inspect model/view coverage without scanning source or editing project files. Default mode: supplement.',
   gc: 'Preview rebuildable derived-data cleanup by default; never purge history or user skills.',
   'migrate prototype': 'Preview legacy archive copying by default; apply preserves the original source.',
 }
@@ -93,6 +94,7 @@ const resultKinds: Record<string, string> = {
   'task handoff': 'handoff: cumulative exact context and selected archived file references.',
   'task read': 'skill-files: archived file content and per-item errors; no execution.',
   'sync status': 'command-result: current source/model versions, sourceEpoch, pending paths and evidence/Git diagnostics.',
+  'model maintain': 'command-result: versioned agentPrompt, modelRevision/state, topology, view coverage hints, diagnostics and last-observed source state. stage:guidance-ready and semanticStatus:not-assessed do not mean the model has been updated. The current agent uses file tools; rebuild preserves continuing IDs and history.',
   'sync verify': 'command-result: scoped verification outcome and remaining sync state.',
   'task close': 'command-result: taskId, closedAt and syncStatus; not proof of task success.',
 }
@@ -116,7 +118,7 @@ function referencedSchemas(file: string, seen = new Set<string>()): string[] {
 }
 
 function flagUsage(operation: string, name: string): string {
-  const value = operation === 'migrate prototype' && name === 'from' ? 'directory' : options[name]?.[0] ?? 'value'
+  const value = operation === 'model maintain' && name === 'mode' ? 'supplement|revise|rebuild' : operation === 'migrate prototype' && name === 'from' ? 'directory' : options[name]?.[0] ?? 'value'
   return '--' + name + (booleanFlags.has(name) ? '' : ` <${value}>`)
 }
 function usage(operation: string): string {
@@ -127,7 +129,7 @@ function usage(operation: string): string {
   return 'harnessl3 ' + operation + positional + required.map(name => ' ' + flagUsage(operation, name)).join('') + optional.map(name => ' [' + flagUsage(operation, name) + ']').join('')
 }
 function flags(operation: string, names: string[], required: string[] = []): string[] {
-  return names.map(name => '  ' + flagUsage(operation, name) + (required.includes(name) ? ' (required)' : '') + '\n    ' + (operation === 'migrate prototype' && name === 'from' ? 'Absolute legacy source directory; copy without deleting it.' : options[name]?.[1] ?? 'See the installed usage guide.'))
+  return names.map(name => '  ' + flagUsage(operation, name) + (required.includes(name) ? ' (required)' : '') + '\n    ' + (operation === 'model maintain' && name === 'mode' ? 'supplement fills gaps; revise corrects existing structure; rebuild reassesses the scope while preserving continuing IDs/history. The current agent performs file edits.' : operation === 'migrate prototype' && name === 'from' ? 'Absolute legacy source directory; copy without deleting it.' : options[name]?.[1] ?? 'See the installed usage guide.'))
 }
 
 /** Static discovery uses the parser's command/flag registry and this installed package's contracts. */
@@ -155,6 +157,7 @@ export function renderHelp(words: string[]): string {
       }
     }
     if (operation === 'init' || operation === 'model validate') lines.push('Model authoring: metadata evidence is one scalar: unique UUIDs separated by a single space, not commas; use none for no evidence.', 'Relationship kinds: declare relationship calls in specification and use source -[calls]-> target. A bare -> has no kind.', 'Read the model authoring example in the Usage guide below before editing. Preserve existing harness_id and evidence IDs during repairs.', '')
+    if (operation === 'model maintain') lines.push('Result schema: ' + path.join(SCHEMA_ROOT, 'model-maintenance.schema.json'), 'No source scan is requested. Observed source state may be unknown or stale; sync status/verify retain complete checks.', '')
     lines.push('Returns: ' + (resultKinds[operation] ?? 'command-result: ' + descriptions[operation]), '')
   } else {
     lines.push(`Usage: harnessl3 ${topic ? topic + ' <command>' : '<command>'} [arguments] [--json]`, '', 'Commands:')

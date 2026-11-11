@@ -20,6 +20,7 @@ export const commands: Record<string, CommandDefinition> = {
   'sync status': { count: 0 }, 'sync verify': { count: 0, flags: ['file'], required: ['file'] },
   'serve start': { count: 0, flags: ['port', 'foreground'] }, 'serve status': { count: 0 }, 'serve stop': { count: 0 },
   'web open': { count: 0, flags: ['task', 'no-open'] }, 'model validate': { count: 0 },
+  'model maintain': { count: 0, flags: ['mode'] },
   gc: { count: 0, flags: ['dry-run', 'apply'] }, 'migrate prototype': { count: 0, flags: ['from', 'dry-run', 'apply'], required: ['from', 'worktree'] },
 }
 export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'timeout-ms', 'quiet-progress', 'help', 'version']
@@ -72,7 +73,10 @@ export function parseArgs(args: string[], cwd = process.cwd()): CommandRequest {
   if (flags['data-dir'] && !path.isAbsolute(String(flags['data-dir']))) throw new HarnessError('INVALID_ARGUMENT', '--data-dir must be absolute')
   if (flags['log-file'] && !path.isAbsolute(String(flags['log-file']))) throw new HarnessError('INVALID_ARGUMENT', '--log-file must be absolute')
   if (flags.agent && !['codex', 'claude-code'].includes(String(flags.agent))) throw new HarnessError('INVALID_ARGUMENT', 'Unsupported agent')
-  if (flags.mode && !['snapshot', 'verified'].includes(String(flags.mode))) throw new HarnessError('INVALID_ARGUMENT', 'mode must be snapshot or verified')
+  if (flags.mode) {
+    const modes = operation === 'model maintain' ? ['supplement', 'revise', 'rebuild'] : ['snapshot', 'verified']
+    if (!modes.includes(String(flags.mode))) throw new HarnessError('INVALID_ARGUMENT', 'mode must be ' + modes.join(', '))
+  }
   if (flags.file && ['read', 'expand', 'skill', 'reason', 'path'].some(name => flags[name] !== undefined)) throw new HarnessError('INVALID_ARGUMENT', 'Use either --file or the selection/read shorthand flags')
   if (operation === 'task read' && !flags.file && !flags.skill) throw new HarnessError('INVALID_ARGUMENT', 'Provide --file or --skill for archived file reads')
   if (operation === 'task select' && flags.skill && !flags.reason) throw new HarnessError('INVALID_ARGUMENT', 'Provide --reason for the requested skills, or use --file for individual reasons')
