@@ -228,17 +228,20 @@ async function linkedDocument(t) {
 
 test('TC07 linked document target writes and rollback invalidate old proofs outside the source scan', async t => {
   const f = await linkedDocument(t);
+  await settle(f.manager);
   const baseline = await f.manager.status(f.skillsRoot);
   const oldProof = proof(baseline, f.initialized.worktree);
   const verified = await f.manager.verify({ ...oldProof, requestId: randomUUID() }, f.skillsRoot);
   await writeFile(f.document, 'Changed linked decision\n');
   await until(() => f.manager.currentState().sourceEpoch > verified.sourceEpoch, 'linked reference target change');
+  await settle(f.manager);
   const changed = await f.manager.status(f.skillsRoot);
   assert.equal(changed.state, 'pending');
   assert.ok(changed.pendingPaths.includes(f.relative));
   assert.ok(changed.diagnostics.some(item => item.code === 'EVIDENCE_CHANGED' && item.evidenceId === f.evidenceId));
   await writeFile(f.document, 'Confirmed decision\n');
   await until(() => f.manager.currentState().sourceEpoch > changed.sourceEpoch, 'linked reference target rollback');
+  await settle(f.manager);
   const restored = await f.manager.status(f.skillsRoot);
   assert.deepEqual(restored.sourceVersion, baseline.sourceVersion);
   assert.equal(restored.sourceScanRevision, baseline.sourceScanRevision);
@@ -271,11 +274,13 @@ test('TC08 linked evidence failures and repaired pending paths match physical an
   const f = await linkedDocument(t);
   await symlink(path.dirname(f.document), path.join(f.checkout, 'ignored', 'second-alias'), process.platform === 'win32' ? 'junction' : 'dir');
   const alternative = 'ignored/second-alias/decision.md';
+  await settle(f.manager);
   const baseline = await f.manager.status(f.skillsRoot);
   const verified = await f.manager.verify(proof(baseline, f.initialized.worktree), f.skillsRoot);
   await writeFile(f.document, 'Changed linked decision\n');
   await until(() => f.manager.currentState().sourceEpoch > verified.sourceEpoch, 'linked scope input change');
   for (const relative of [f.relative, f.targetRelative, alternative]) {
+    await settle(f.manager);
     const current = await f.manager.status(f.skillsRoot);
     await assert.rejects(f.manager.verify(proof(current, f.initialized.worktree, { scope: { paths: [relative], entities: [] } }), f.skillsRoot), error => {
       assert.equal(error.code, 'SYNC_UNRESOLVED');
@@ -288,6 +293,7 @@ test('TC08 linked evidence failures and repaired pending paths match physical an
   evidence.evidence[0].hash = sha256(await readFile(f.document));
   evidence.evidence[0].observedAt = new Date().toISOString();
   await writeFile(evidencePath, JSON.stringify(evidence));
+  await settle(f.manager);
   const repaired = await f.manager.status(f.skillsRoot);
   const result = await f.manager.verify(proof(repaired, f.initialized.worktree, { scope: { paths: [alternative], entities: [] } }), f.skillsRoot);
   assert.equal(result.state, 'verified', JSON.stringify({ pendingPaths: result.pendingPaths, diagnostics: result.diagnostics }));
