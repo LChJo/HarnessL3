@@ -1,4 +1,20 @@
-# Agent CLI可靠性修复（v0.46）
+# Agent CLI可靠性与同步恢复
+
+## v0.49：同步恢复（2026-11-12）
+
+用户反馈agent反复遇到SYNC_RACE，只留下“已有版本竞争问题”。截图脚本从sync status起头且后续被截断；代码中的SYNC_RACE由sync verify产生，不能据首行认定单独status查询抛出了它。本轮没有访问或修改截图中的其它项目，而是在独立合成worktree重现机制。
+
+- 原watchEvent把所有`.git/**`事件当作观测缺口，临时锁、reflog、对象pack和FETCH_HEAD也推进epoch；五个无源码变化通知便使隔离基线从0变为5。修复只过滤确定的维护路径；显式证据引用、关键/聚合/未知Git通知继续失效，包括index、HEAD、refs、config、info/exclude与objects/info/alternates。
+- 原status只补采一次；连续两次写入后仍返回scanPending。现在只读查询有界重新执行完整采集并等待路径分类，稳定后返回新的绑定；持续写入则保持pending，附SOURCE_CHANGING及下一步。没有使用mtime、增量结果或固定静默等待冒充完整核验。
+- 语义声明不自动重基。verify仍保留两次完整采集、提交队列内复核、版本/策略/模型/epoch比较和字节回退保护。SYNC_RACE返回明确原因、reviewRequired、reviewScope及当次current；同requestId原样重放旧回执。agent在既有授权内刷新事实、重审实际范围及checks后提交新声明；持续活动须说明具体待核验范围和下一步。
+
+初始命令`node --test --test-name-pattern='Git lock and reflog|status absorbs a bounded burst' tests/v1/freshness.test.mjs`两项均失败（epoch 5≠0、scanPending true≠false）；修复后二项通过。加入持续写入、真实Git元数据和结构化恢复/回放检查后，针对性五项全部通过。原有字节回退、来源未知、模型无效、链接/证据异常及局部scope保护继续纳入回归。实际完整测试、包和平台结论见[实施状态](STATUS.md)，报告保存在本机忽略目录，不用程序或文案测试冒充真实宿主语义加载。
+
+进一步以两个独立合成Git工作区调用真实CLI，并持续写入已有reflog：旧2257c91构建在156次写入时返回SYNC_RACE且源码版本未变；修复版在98次写入时成功verified。探针最初的重复清理hook在夹具删除后执行，已修复探针后重跑，不记为产品失败。Windows完整程序回归402项（398通过/4跳过/零失败）及同步/CLI/安装器51项通过；原生差分、JUnit与后续包报告保存在`.harness-local/validation/sync-recovery/`。
+
+本机候选包162文件/409062字节，真实npm消费者的安装/重装、26方法与双宿主复制、bin/实际服务构建/认证RPC、旧交接比较及差异拒绝、无Git目录/Edge157浏览通过。该包来自modified source，本机从干净GitHub源码更新及最终原生CI结果保留各自实际构建来源，不把候选验证冒充已交付的干净构建。
+
+## v0.46 原始范围
 
 用户授权按审查建议充分修复。当前范围对应D07/D09/D13–15、FR04–06/10–12/14–15及TC07–09/17–19/22–23/26–27；当前契约见[CLI](../spec/cli-contract.md)、[模型](../spec/model-context.md)和[存储](../spec/storage.md)。旧版本与旧回执按原字节保留。
 

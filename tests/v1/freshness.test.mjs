@@ -113,6 +113,11 @@ test('TC08 epoch-only conflicts explain the actual mismatch and preserve their r
     assert.ok(error.details.conflicts.some(item => item.field === 'sourceEpoch' && item.expected === baseline.sourceEpoch && item.actual > baseline.sourceEpoch));
     assert.equal(error.details.recovery.nextAction, 'refresh-review-and-submit-new-proof');
     assert.equal(error.details.recovery.reuseRequestId, false);
+    assert.equal(error.details.recovery.cause, 'observation-changed');
+    assert.equal(error.details.recovery.reviewRequired, true);
+    assert.deepEqual(error.details.recovery.reviewScope, declaration.scope);
+    assert.equal(error.details.recovery.current.sourceEpoch, error.details.result.sourceEpoch);
+    assert.match(error.message, /pending/);
     receipt = error.details;
     return true;
   });
@@ -157,6 +162,75 @@ test('TC07 concurrent status callers share one complete reconciliation but a lat
   assert.ok(results.every(state => state.sourceVersion.treeHash === results[0].sourceVersion.treeHash));
   await f.manager.status(f.skillsRoot);
   assert.equal(capture.mock.callCount(), 2);
+});
+
+test('TC08 Git lock and reflog notifications do not invalidate a reviewed source declaration', async t => {
+  const f = await fixture(t, { warm: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const declaration = proof(baseline, f.initialized.worktree);
+  // A Git client may acquire a lock or update its reflog without changing HEAD,
+  // index entries, ignore rules or any source byte. Inject those native paths.
+  for (const relative of ['.git/index.lock', '.git/HEAD.lock', '.git/logs/HEAD', '.git/objects/pack/tmp_pack_fixture', '.git/FETCH_HEAD']) f.manager.watchEvent(relative);
+  assert.equal(f.manager.currentState().sourceEpoch, baseline.sourceEpoch);
+  const verified = await f.manager.verify(declaration, f.skillsRoot);
+  assert.equal(verified.state, 'verified');
+});
+
+test('TC07 status absorbs a bounded burst of source notifications before returning a proof binding', async t => {
+  const f = await fixture(t, { warm: true });
+  // Native notification delivery is covered separately. Pin the interleaving
+  // here so this regression measures full recapture rather than OS timing.
+  f.manager.watcher.close();
+  const original = f.manager.capture.bind(f.manager);
+  let edits = 0;
+  const capture = t.mock.method(f.manager, 'capture', async root => {
+    const captured = await original(root);
+    if (edits < 2) {
+      await writeFile(path.join(f.checkout, 'README.md'), `source revision ${++edits}\n`);
+      f.manager.markSource(['README.md']);
+    }
+    return captured;
+  });
+  const current = await f.manager.status(f.skillsRoot);
+  assert.equal(current.scanPending, false);
+  assert.equal(current.sourceVersion.status, 'dirty');
+  assert.ok(capture.mock.callCount() >= 3);
+  capture.mock.restore();
+  await settle(f.manager);
+  const fresh = await f.manager.status(f.skillsRoot);
+  const verified = await f.manager.verify(proof(fresh, f.initialized.worktree), f.skillsRoot);
+  assert.equal(verified.state, 'verified');
+});
+
+test('TC07 continuous edits return bounded pending status with actionable diagnostics', async t => {
+  const f = await fixture(t, { warm: true });
+  f.manager.watcher.close();
+  const original = f.manager.capture.bind(f.manager);
+  let edits = 0;
+  const capture = t.mock.method(f.manager, 'capture', async root => {
+    const captured = await original(root);
+    await writeFile(path.join(f.checkout, 'README.md'), `ongoing revision ${++edits}\n`);
+    f.manager.markSource(['README.md']);
+    return captured;
+  });
+  const current = await f.manager.status(f.skillsRoot);
+  assert.equal(current.scanPending, true);
+  assert.equal(current.state, 'pending');
+  assert.ok(current.pendingPaths.includes('README.md'));
+  assert.ok(current.diagnostics.some(item => item.code === 'SOURCE_CHANGING' && /pending/.test(item.message)));
+  assert.ok(capture.mock.callCount() <= 3);
+});
+
+test('TC08 source-selecting Git metadata still invalidates a declaration', async t => {
+  const f = await fixture(t, { warm: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const declaration = proof(baseline, f.initialized.worktree);
+  for (const relative of ['.git/index', '.git/HEAD', '.git/refs/heads/main', '.git/config', '.git/info/exclude', '.git/objects/info/alternates', '.git', '.git/unknown-state']) {
+    const epoch = f.manager.currentState().sourceEpoch;
+    f.manager.watchEvent(relative);
+    assert.ok(f.manager.currentState().sourceEpoch > epoch, relative);
+  }
+  await assert.rejects(f.manager.verify(declaration, f.skillsRoot), { code: 'SYNC_RACE' });
 });
 
 test('TC16 compact state references share receipt bytes and restore alongside unchanged inline history', async t => {

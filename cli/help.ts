@@ -158,6 +158,8 @@ export function renderHelp(words: string[]): string {
     }
     if (operation === 'init' || operation === 'model validate') lines.push('Model authoring: metadata evidence is one scalar: unique UUIDs separated by a single space, not commas; use none for no evidence.', 'Relationship kinds: declare relationship calls in specification and use source -[calls]-> target. A bare -> has no kind.', 'Read the model authoring example in the Usage guide below before editing. Preserve existing harness_id and evidence IDs during repairs.', '')
     if (operation === 'model maintain') lines.push('Result schema: ' + path.join(SCHEMA_ROOT, 'model-maintenance.schema.json'), 'No source scan is requested. Observed source state may be unknown or stale; sync status/verify retain complete checks.', '')
+    if (operation === 'sync status') lines.push('A bounded complete recapture absorbs short notification bursts. scanPending:true or SOURCE_CHANGING means files are still changing; wait for current edits/builds to finish, then refresh before preparing a declaration.', '')
+    if (operation === 'sync verify') lines.push('SYNC_RACE keeps synchronization pending. recovery.cause, reviewScope and current explain the conflict; refresh and review that scope, then use a new requestId. The original requestId replays its historical receipt. Never change only sourceEpoch or automatically rebase an old declaration.', '')
     lines.push('Returns: ' + (resultKinds[operation] ?? 'command-result: ' + descriptions[operation]), '')
   } else {
     lines.push(`Usage: harnessl3 ${topic ? topic + ' <command>' : '<command>'} [arguments] [--json]`, '', 'Commands:')

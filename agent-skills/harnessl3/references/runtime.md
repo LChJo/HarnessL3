@@ -91,7 +91,14 @@ Use file tools for LikeC4 and evidence. Inspect model validate/sync status, reso
 
 Mechanical evidence anomalies cannot be cleared with a blanket passed claim. A healthy unrelated local scope can be saved while other work remains pending. New concurrent changes invalidate old declarations; recheck rather than resubmitting stale versions. Scoped proof is not whole-project semantic synchronization, and task close does not prove user-work success.
 
-For SOURCE_NESTED_REPOSITORY or unsupported source entries, inspect the reported boundary and intended coverage. Do not silently exclude it, delete its .git, or rewrite ignore rules. An explicitly chosen project source exclusion changes coverage and never clears a referenced evidence failure. For SYNC_RACE, inspect error.details.conflicts and the original receipt; run sync status again, review the fresh scope and submit a new declaration with a new requestId. Equal source/model hashes do not override a changed epoch. Do not automatically copy only the new epoch into the old proof.
+For SOURCE_NESTED_REPOSITORY or unsupported source entries, inspect the reported boundary and intended coverage. Do not silently exclude it, delete its .git, or rewrite ignore rules. An explicitly chosen project source exclusion changes coverage and never clears a referenced evidence failure.
+
+### Sync recovery
+
+1. Read `sync status`: when `scanPending:true` or `SOURCE_CHANGING` remains after its bounded complete recapture, let active edits/builds settle and refresh within a bounded wait. Keep the scope pending while activity continues.
+2. On `SYNC_RACE`, preserve the receipt and inspect `error.details.recovery.cause`, `reviewScope`, `current` and `conflicts`. These describe that attempt; refresh status to obtain current facts. Re-review changed source, model and evidence in the authorized scope, including relevant incoming links. Equal final hashes can follow a real byte rollback and do not make an old epoch valid.
+3. After that review, prepare a new declaration with the fresh binding and a new requestId. Recheck the checks and scope; changing only `sourceEpoch` or replaying the original requestId is not recovery. Verify and finish the normal stage lifecycle when the actual declared scope passes.
+4. If ongoing writes or an unresolved evidence/model problem prevents completion, state which scope is pending and the concrete next action in the user's language. Preserve completed business work and archived history. Ask the user only for a real decision or missing access, rather than treating a race code as an unexplained task ending.
 
 Keep authoritative .harness model/config/evidence/aliases, related source/docs and actual project skill files together: version them in Git projects; back them up with plain-directory projects. Keep machine settings/credentials, logs, history/snapshots/archived skills, indexes/caches/layouts separate and preserved. Do not copy global libraries or external link entities. Ignored/untracked/uncheckable Git ownership is diagnostic, not permission to stage, change ignores or delete files. Review actual diff and existing commit authorization.
 

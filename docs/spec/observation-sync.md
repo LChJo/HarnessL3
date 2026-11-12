@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.49：Git临时锁、reflog、已知内容寻址对象/pack写入及FETCH_HEAD/ORIG_HEAD/COMMIT_EDITMSG不代表当前来源切换；显式证据引用仍优先，HEAD/index/refs/配置/忽略规则、对象查找配置、聚合及未知通知继续失效。只读status可在有界次数内重做完整采集以吸收短时通知；持续变化保留scanPending及SOURCE_CHANGING，不把不稳定绑定用于声明。verify保持原有完整检查及严格CAS，不自动重基或重试语义声明。SYNC_RACE回执recovery增加cause、reviewRequired、reviewScope和current；这些是原尝试的快照，恢复先刷新事实并重新审查，再用新requestId提交。旧回执和所有未覆盖pending保留。
+
 v0.47：结构演进由观测→pending→当前agent语义复核→文本模型/关系/证据/视图维护→完整sync proof构成闭环。新模块/入口/依赖、职责迁移、删除及重构需要核对模型；不要求每次文本变化都有图改动。sync status附modelMaintenance提示入口，model maintain提供补充/修订/重建指引及视图覆盖，不自行扫描来源、改模型或清pending。提示无法判断语义覆盖，unknown/no-pending-observed不代表架构完整。新项目模型随实际实现逐步补全，保留实体身份与历史图；不在watcher中调用模型，不改变严格来源核验/CAS。
 
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。
@@ -235,7 +237,7 @@ paths 为目标工作区内 POSIX 相对路径，entities 为模型稳定 UUID�
 
 scope 可核验一部分变化：保存局部 proof，但只有所有待核验路径均被覆盖且当前版本/epoch 一致，工作区才是 verified；剩余范围继续 pending。语义影响范围由提交者声明并记录，不伪装成服务已经自动理解。路径/哈希匹配、模型有效、测试通过分别显示，自动校验结果和调用方语义声明分开保存。
 
-`invalid` 模型使同步不能成功，Web 展示当前诊断，可继续看明确标为旧版本的最近有效图。proof 校验失败保存原因和核验目标，freshness 标 failed；来源继续变化后为 pending。`sync status` 只查询/刷新当前事实，不自动把旧 proof 升级为最新，也不运行模型推理或修改文本。
+`invalid` 模型使同步不能成功，Web 展示当前诊断，可继续看明确标为旧版本的最近有效图。proof 校验失败保存原因和核验目标；SYNC_RACE保持pending，其它校验失败标failed，来源继续变化后为pending。`sync status` 只查询/刷新当前事实，不自动把旧 proof 升级为最新，也不运行模型推理或修改文本。
 
 `task close <id>` 表示停止给该上下文组织任务追加 select/context query，记录 `closedAt` 及同步状态摘要；task read 读取已归档技能文件仍允许。待核验或失败时仍可关闭并明确 `pending/failed`，不冒充“阶段语义已完成”；只读查询与历史恢复仍允许。它不结束 agent 进程、不证明技能执行结束，不因关闭延长历史期限。
 

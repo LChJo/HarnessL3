@@ -220,7 +220,8 @@ views { view overview { include * } }
 
 - Schema 与示例路径以对应命令 `--help` 返回为准；`Referenced schema` 列出实际本地引用。不要猜测 `project.schema.json`、`task-select.schema.json` 或 `dist/`，安装包不包含开发源码和测试。
 - `SOURCE_NESTED_REPOSITORY` 表示入选来源内存在独立 Git 仓库，未递归读取。先检查报错路径的用途；确需排除时，在 `.harness/project.json` 的 `source.excludePatterns` 中显式加入该 worktree 相对路径，再执行原操作。gitlink、特殊文件及冲突索引也保持未知，不自动排除、不删除 `.git`、不改 Git ignore；排除不等于删除，也不覆盖显式证据的校验。
-- `SYNC_RACE` 的 `error.details.conflicts` 列出期望和实际冲突字段。即使源码及模型指纹相同，代次变化仍会使旧声明失效。先确认旧回执，重新执行 `sync status`，审核新的待核验范围，再用新 requestId 提交新声明。不能只替换 epoch 或自动重发旧 proof；旧 requestId 继续重放原结果。
+- `sync status` 若仍有 `scanPending:true` 或 `SOURCE_CHANGING`，当前写入尚未稳定；有界等待编辑或构建结束后刷新，保留待核验范围。短时通知由CLI有界重新完整采集，持续活动不会伪报已核验。
+- `SYNC_RACE` 表示审核后又检测到变化，本次同步仍待核验。`recovery.cause/reviewScope/current` 给出原因、原声明范围及当次状态，`conflicts` 保留详细期望/实际字段。agent应在授权内刷新状态并重新核对源码、模型与证据，再用新requestId提交；持续变动时说明具体范围及下一步。即使最终指纹相同，字节回退仍使旧声明失效；不能只换epoch，原ID仅重放原回执。
 
 PowerShell 在同一调用作用域内先检查退出码及封套，再访问 `data`；下面展示保存结果后的保护步骤，`$responseText` 与 `$cliCode` 来自前面的调用示例：
 

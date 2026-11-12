@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.48 defines the 26-method upstream adaptation and body-informed dynamic routing, preserving project authority, non-overwriting seeds, scoped model proof and immutable history.",
+      "claim": "The current v0.49 baseline defines bounded complete sync reads, conservative notification handling and authorized scoped recovery while preserving strict proof semantics.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "c1367c571cb5c36fe964c1fe656051e59f5d6cd0aa8f48f69d2b59e20407d8ff",
-      "observedAt": "2026-11-11T14:41:34.475Z"
+      "hash": "a3b9c8698a740b9588454fb38923fb7b41486285caa672f47d2f7035b4a6d26c",
+      "observedAt": "2026-11-12T04:40:03.154Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService skill-hub/2 routes from the actual catalog, requires relevant bodies before procedural advice, and preserves stage, snapshot, archive, task and authorization boundaries.",
+      "claim": "TaskService preserves skill-hub/2 routing and archive boundaries, and directs authorized scoped sync recovery rather than stopping at an unexplained race.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "e8b4301154c5112e9bfbf9c4e8f8c0bc58a944ca54b741a2fab005d06c8cc05f",
-      "observedAt": "2026-11-11T14:41:34.482Z"
+      "hash": "3a529eea510777a7b378f9074f5678ad8d243708b218af9d44ed54e83a5a1ecb",
+      "observedAt": "2026-11-12T04:40:03.155Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -114,12 +114,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "Freshness uses directory scan rules for new path classification and invalidates proofs for identity, rule and byte changes while preserving strict epochs and evidence scope.",
+      "claim": "Freshness filters definite Git bookkeeping notifications, bounds complete read recaptures, retains pending under ongoing changes and returns actionable recovery while preserving strict proof CAS, byte rollback and evidence boundaries.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "242638edfeb78fea888ec5378ccf5d0b32b144bae648a68e26c09469749fc5fe",
-      "observedAt": "2026-11-10T14:27:25.191Z"
+      "hash": "3c6a4bc0c588786cda5e0b2f23703bc665395d5af5a332f975cc42904cf473a5",
+      "observedAt": "2026-11-12T04:40:03.155Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Runtime skill uses body-informed purpose and phase decisions, minimal authorized fresh-context handoffs, existing setup consent and missing-only material reads.",
+      "claim": "The runtime entry routes context and skills and points sync races to authorized recovery rather than unexplained task termination; real setup, history and authorization boundaries remain.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "370de47cd3aad6f0f7e3ee5210da274f758d9eef31b22251da541ce5f817a01d",
-      "observedAt": "2026-11-11T14:41:34.489Z"
+      "hash": "83aaeb90e78ba10d376b6803dd26f550d7583266c60f4423fa2cc5fb42cc1978",
+      "observedAt": "2026-11-12T04:40:03.156Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Formal CLI builds stamp provenance and ship explicit skill-installation and runtime-verification tools; prototype scripts remain separate. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Candidate package 0.1.2 retains the Node 24 and dependency contracts; this patch adds sync recovery without changing dependency scope.",
       "location": {
         "path": "package.json"
       },
-      "hash": "f7388dff566f450da374c8fbf79cf08ed72053a1186d7e9180f9d3ecbf884983",
-      "observedAt": "2026-11-11T14:41:34.490Z"
+      "hash": "bb3128166e71b8fa583df4d458100e24f8eb6b1cb62bd3d327b7840205e0df14",
+      "observedAt": "2026-11-12T04:40:03.156Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -274,12 +274,12 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "v0.47 makes pending to agent model review/maintenance to strict scoped proof explicit; maintenance hints do not scan source, clear pending or prove semantics.",
+      "claim": "The v0.49 sync contract distinguishes definite Git bookkeeping from source-affecting or unknown events, bounds complete status recapture and retains strict proof and rollback checks.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "1216456fdbeed9956a7eeeb7c92bbdd9d431d2b7198648a6622970ed5030dcd6",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "86a96265b4ceaa6e5e8477a113a0f657a69bc59714778c9fe04b255bd7dfa45e",
+      "observedAt": "2026-11-12T04:40:03.156Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference distinguishes description filtering from reading a relevant method body, preserves same-task stages and actual scoped model/evidence/view review.",
+      "claim": "Runtime reference orders sync readiness, structured conflict inspection, actual scoped review, a fresh declaration/request ID and honest pending reporting.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "0260d8cfbd1867a5f112c8b3d97f6c9f5c4ea62c37cbda7a1b3cbb1ac7b423dc",
-      "observedAt": "2026-11-11T14:41:34.507Z"
+      "hash": "b69e17502ecdca6adb600c0c50eea60a4fb62c2fb4919aa5e9648ea496c5f492",
+      "observedAt": "2026-11-12T04:40:03.157Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static help discovers model maintain modes and the installed result Schema while distinguishing guidance-ready/not-assessed from executed model changes.",
+      "claim": "Static help exposes installed schemas, stable-read readiness and structured sync recovery without starting the service or authorizing proof rebasing.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "7e8ed5c591bc060d328530f0ebf4dc2fb868bf6020091a7de12da9b1a49d1a36",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "a976a49996cedab1a2d643215e500be0687d4b44d285c041d1f4eede71c3031a",
+      "observedAt": "2026-11-12T04:40:03.157Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -364,22 +364,22 @@
     {
       "id": "1e950683-1469-49c8-9164-d439932a7bf2",
       "kind": "source-code",
-      "claim": "Native linked-reference regressions check repaired physical/alternative scopes and preserve a sibling document pending after partial verification. Linked-document fixtures wait for native-notification quiet windows before capturing declarations; strict CAS and all anomaly assertions are retained.",
+      "claim": "Isolated regressions cover Git bookkeeping false positives, bounded read convergence and ongoing writes, real Git metadata invalidation, rollback, scoped evidence and immutable recovery receipts.",
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "28ffee9fc0d31cdbd46ab9d7ddefeed6b76f27e01b83bd994d920969ba06c9e1",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "2a5da23431d8753293679ba11bdba1418207235aa95a66156a9797bdf2f7d56e",
+      "observedAt": "2026-11-12T04:40:03.158Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records the v0.48 skill/router upgrade and actual Windows, package, global installation and historical compatibility checks; other platforms and new host-session semantics remain unverified.",
+      "claim": "Implementation status distinguishes the v0.49 sync recovery candidate and actually completed verification from prior platform and host results.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "1e69c53e32739f7e7e8c6f75d167f3b129df83f2b9371789b97be50610bd276b",
-      "observedAt": "2026-11-11T16:51:08.407Z"
+      "hash": "28f42359998a2e9370e0f7b97831081a3c349d8c9b1296ba4f7aea7d479026d4",
+      "observedAt": "2026-11-12T04:40:03.158Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "Isolated package smoke exercises installed model maintain help/Schema and Git/directory modes alongside runtime fingerprint, history, skill and offline resource checks; definitions alone are not test success.",
+      "claim": "The actual npm consumer smoke checks candidate 0.1.2, native runtime/service identity, immutable historical handoff and existing browser gates.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "3d1dfa9b40c0f05f1c99c3574b3e5911a6f45f44c924e74b38bf012a355af400",
-      "observedAt": "2026-11-11T14:41:34.534Z"
+      "hash": "95942187ff732ebd9dc50a32c113a4ee3657f57514943b9acc3418a6fe64c086",
+      "observedAt": "2026-11-12T04:40:03.159Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC03/07/08/10/21/22/27 include model guidance modes, no source scan/file reset, invalid-model recovery, observed pending hints, view coverage and old-graph preservation; real semantic host coverage remains separate.",
+      "claim": "TC07/08/22/27 cover notification classification, bounded reads, ongoing activity, strict stale-proof rejection and executable scoped recovery.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "4dd16b594aecc32901f57cdd1e99794a7a4f2a1fff56d0e0296386a30f27a9e7",
-      "observedAt": "2026-11-11T14:41:34.567Z"
+      "hash": "8f6200b38545582dac1e4e56c4dabfad2485471f7c6620b075bd310a13db7619",
+      "observedAt": "2026-11-12T04:40:03.159Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,12 +554,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "v0.47 defines model maintain guidance result and sync status modelMaintenance hint while preserving JSON, failure, source/CAS and task archive contracts.",
+      "claim": "The CLI contract defines pending SOURCE_CHANGING status and additive structured SYNC_RACE recovery with immutable original receipts.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "c9b47b5385b2a10de51fb12d8b10cdf31f76b95e497e8da6084ce7ef23605e3a",
-      "observedAt": "2026-11-11T14:41:34.572Z"
+      "hash": "27e423e62845ecdacd4ac156b6f786edd09dd387950893856a7b77e79c99c0a8",
+      "observedAt": "2026-11-12T04:40:03.159Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -574,12 +574,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Specification baseline v0.47 adds versioned model maintenance and progressive evolution while retaining prior snapshot, source verification, permissions and history boundaries.",
+      "claim": "The current CLI specification includes v0.49 sync-notification handling and scoped recovery without relaxing proof CAS or history boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "09f7fead0bf8434b5418f1c592bcdd402b36ffde2260b970e2828ad7e938569e",
-      "observedAt": "2026-11-11T14:58:18.590Z"
+      "hash": "511aa1521e48399d3e3eab6a214e8ee38998eef7d1a54868eecfe9e52c518c5a",
+      "observedAt": "2026-11-12T04:40:03.160Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Agent conventions follow v0.47: source structural changes require model/relationship/evidence/view review in the authorized stage; continuing IDs/history and strict scoped verification remain.",
+      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "e910d7761287b1a093a6e3515e7da0c1a04c6ed0c915b32557188d082301cf36",
-      "observedAt": "2026-11-11T14:41:34.579Z"
+      "hash": "1d1e255342848fd686230e7bd7f7bdbc60c19dab267eb1703e629cbe2ddb692a",
+      "observedAt": "2026-11-12T04:40:03.160Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Installed usage explains supplement/revise/rebuild steps, guidance status, actual agent file edits, view coverage, source review and preserved historical graphs.",
+      "claim": "Installed usage explains unstable read readiness and authorized refresh/review/new-declaration recovery while keeping original receipts and real pending scope.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "c04c161c94132bf0ebabdaaa723aba8ee5eff35e7083407f7a9b94632333bd2e",
-      "observedAt": "2026-11-11T14:41:34.584Z"
+      "hash": "3e0053fc5446f55f9c84bcb494d311d698b9ae12095c8daa17502b3f759c209e",
+      "observedAt": "2026-11-12T04:40:03.160Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -754,22 +754,22 @@
     {
       "id": "d6370000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Static help checks cover installed schema paths, shared known guidance and guarded caller instructions without creating the data root.",
+      "claim": "Static help tests preserve schema discovery and explain SOURCE_CHANGING, scanPending and new-request scoped recovery.",
       "location": {
         "path": "tests/v1/cli-help.test.mjs"
       },
-      "hash": "252e639b3b900eb069cbc098c2ac8a359fb789a0b3707a406c885445c3bd707e",
-      "observedAt": "2026-11-10T14:07:55.621Z"
+      "hash": "6307d535ad37b7336138b2a2237b496d307bb76c128356b9cde3f86c10cfd688",
+      "observedAt": "2026-11-12T04:40:03.160Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Agent conventions follow v0.47: source structural changes require model/relationship/evidence/view review in the authorized stage; continuing IDs/history and strict scoped verification remain.",
+      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "e910d7761287b1a093a6e3515e7da0c1a04c6ed0c915b32557188d082301cf36",
-      "observedAt": "2026-11-11T14:41:34.592Z"
+      "hash": "1d1e255342848fd686230e7bd7f7bdbc60c19dab267eb1703e629cbe2ddb692a",
+      "observedAt": "2026-11-12T04:40:03.161Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -1034,12 +1034,12 @@
     {
       "id": "580a91f2-72da-4c49-938c-ef31d15863f5",
       "kind": "document",
-      "claim": "v0.46 reliability changes, original failure seams, preserved boundaries and actual verification destinations.",
+      "claim": "v0.49 records the isolated sync failure seams, conservative fixes and actual regression evidence alongside retained v0.46 reliability history.",
       "location": {
         "path": "docs/implementation/RELIABILITY.md"
       },
-      "hash": "a4c4655f0a72bd39178e68c5c24e1e5326cd6257f64eb32c6eb5101b39a6355f",
-      "observedAt": "2026-11-10T14:31:05.567Z"
+      "hash": "e66259e4e5bb129430929e2f46c35b0a7bbbfb54eea2dea58a6be2d56fb8e66e",
+      "observedAt": "2026-11-12T04:40:03.161Z"
     },
     {
       "id": "aa0b2a7a-539a-423c-9775-d95d64f6dc52",

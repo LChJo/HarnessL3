@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.49：`sync status`有界重新完整采集短时变化，持续活动仍成功返回pending、scanPending及SOURCE_CHANGING诊断。`sync verify`的SYNC_RACE继续退出3，原请求仍只重放原回执；recovery附cause（source-version-changed/model-changed/observation-changed）、reviewRequired:true、reviewScope（原声明paths/entities）、current（当次epoch/sourceVersion/modelRevision/sourceScanRevision）。恢复先刷新并审核实际范围，再提交新requestId；这些字段不是自动重基许可。错误message解释尚待核验和下一步，不要求用户理解代次数字。响应及声明Schema的既有开放错误details兼容，严格CAS未放宽。
+
 v0.48（2026-11-11）：默认文件型方法升级至上游1.3.2/4ae2317的L3适配版，共7类26项，保留quick；退役方法仅退出当前库，历史ID/group/原字节保留。Skill Hub skill-hub/2吸收ask-matt的正文先读与阶段判断，实际目录及同任务--stage仍为准；不恢复跨技能依赖或固定流程，不强制setup/Hook/agent/worktree。正常安装仍不覆盖已有用户库；本次已授权本机库采用备份、逐文件核对及保留修改的一次性迁移。FR06/15、TC19/20/26/27及实际范围见实施状态。
 
 v0.47：新增 `model maintain [--mode supplement|revise|rebuild]`（默认supplement）。只读当前模型和证据，返回[model-maintenance结果Schema](contracts/model-maintenance.schema.json)：promptVersion、mode、stage=guidance-ready、semanticStatus=not-assessed、worktreeRoot、sourceScan=not-requested、modelState/revision、files、topology、coverage、diagnostics、observedSource、agentPrompt和nextCommands。observedSource为最近真实状态，未观测保持unknown，命令不请求来源扫描；模型无效仍返回诊断和修复指引、topology/coverage=null，权限错误照常失败。不覆盖文件、不自动启动agent或改变同步状态。sync status附modelMaintenance提示及维护命令，完整检查/CAS不变。init共用版本化指引并返回maintenanceCommand；task路由说明结构演进义务。当前agent经文件工具修改模型、证据与视图后校验、核对覆盖及严格阶段声明；旧任务绑定与历史图不回写。

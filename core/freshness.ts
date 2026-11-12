@@ -21,6 +21,9 @@ const same = (left: unknown, right: unknown) => canonicalJson(left) === canonica
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort();
 const prefix = (parent: string, child: string) => child === parent || child.startsWith(parent + '/');
 const referenceKey = (relative: string) => process.platform === 'win32' ? relative.toLowerCase() : relative;
+const gitBookkeeping = (relative: string) => relative.endsWith('.lock') || prefix('.git/logs', relative) ||
+  /^\.git\/objects\/(?:[a-f0-9]{2}(?:\/|$)|pack(?:\/|$))/.test(relative) ||
+  ['.git/FETCH_HEAD', '.git/ORIG_HEAD', '.git/COMMIT_EDITMSG'].includes(relative);
 const evidenceFailures = new Set(['EVIDENCE_CHANGED', 'EVIDENCE_MISSING', 'EVIDENCE_UNREADABLE']);
 function referencedEvidenceProblems(model: ModelSnapshot): Diagnostic[] {
   const referenced = new Set(model.entities.flatMap(entity => entity.evidenceIds));
@@ -281,7 +284,13 @@ export class FreshnessManager {
   }
 
   private watchEvent(relative: string): void {
-    if (prefix('.git', relative)) { this.gap(); return; }
+    if (prefix('.git', relative)) {
+      // Git locks, reflogs and content-addressed object writes do not select the
+      // current worktree version. HEAD, refs, index, config, ignore rules and
+      // unknown/aggregate Git notifications still invalidate the declaration.
+      if (!gitBookkeeping(relative) || this.referencePaths.has(referenceKey(relative))) this.gap();
+      return;
+    }
     const referenced = this.referencePaths.get(referenceKey(relative));
     if (referenced) this.markReferences(referenced);
     if (prefix('.harness', relative)) {
@@ -478,13 +487,29 @@ export class FreshnessManager {
     if (this.closed) return this.currentState();
     if (this.archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Synchronization cannot refresh until archive recovery completes.', { diagnostics: this.archive.diagnostics });
     this.activate(skillsRoot);
-    const captured = await this.capture(skillsRoot);
+    let captured = await this.capture(skillsRoot);
     return this.serial(async () => {
       const before = this.facts();
-      await this.apply(captured.generation === this.changeGeneration ? captured : await this.capture(skillsRoot));
+      // A read may safely acquire a newer binding; an existing semantic proof
+      // may not. Each retry repeats the complete scan, never just its epoch.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await Promise.allSettled([...this.classifiers]);
+        if (captured.generation !== this.changeGeneration && attempt < 2) {
+          captured = await this.capture(skillsRoot);
+          continue;
+        }
+        await this.apply(captured);
+        await Promise.allSettled([...this.classifiers]);
+        if (captured.generation !== this.changeGeneration) this.state.scanPending = true;
+        if (!this.state.scanPending || attempt === 2) break;
+        captured = await this.capture(skillsRoot);
+      }
       if (!this.state.scanPending && this.state.sourceVersion.status !== 'unknown') {
         this.fullRequired = false; this.lastFullCheck = performance.now(); this.dirtyPaths.clear();
         delete this.state.sourceObservation;
+      }
+      if (this.state.scanPending && this.state.sourceVersion.status !== 'unknown') {
+        this.state.diagnostics.push({ code: 'SOURCE_CHANGING', severity: 'warning', message: 'Files are still changing during synchronization checks. Changes are preserved as pending; wait for current edits or builds to finish, then refresh sync status before reviewing and submitting a new declaration.' });
       }
       if (this.facts() !== before) await this.persist('reconciliation');
       return this.currentState();
@@ -553,9 +578,17 @@ export class FreshnessManager {
           ['sourceScanRevision', preflight.source.sourceScanRevision, current.source.sourceScanRevision],
           ['preflightModelRevision', preflight.model?.revision ?? null, current.model?.revision ?? null],
         ] as const;
-        return { code: 'SYNC_RACE', message: 'Source/model/epoch changed before verification could commit.', details: {
+        const cause = !same(proof.expectedSourceVersion, current.source.sourceVersion) ? 'source-version-changed'
+          : proof.expectedModelRevision !== current.model?.revision ? 'model-changed' : 'observation-changed';
+        const changed = cause === 'source-version-changed' ? 'Files or the Git revision changed'
+          : cause === 'model-changed' ? 'The project model or its evidence changed' : 'A new file or Git notification arrived';
+        return { code: 'SYNC_RACE', message: `${changed} after review. Synchronization is still pending. Refresh the current state, review the declared scope, then submit a new declaration.`, details: {
           conflicts: comparisons.filter(([, expected, actual]) => !same(expected, actual)).map(([field, expected, actual]) => ({ field, expected, actual })),
-          recovery: { nextAction: 'refresh-review-and-submit-new-proof', statusCommand: ['harnessl3', 'sync', 'status', '--json'], reuseRequestId: false },
+          recovery: {
+            nextAction: 'refresh-review-and-submit-new-proof', statusCommand: ['harnessl3', 'sync', 'status', '--json'], reuseRequestId: false,
+            cause, reviewRequired: true, reviewScope: structuredClone(proof.scope),
+            current: { sourceEpoch: this.state.sourceEpoch, sourceVersion: structuredClone(current.source.sourceVersion), modelRevision: current.model?.revision ?? null, sourceScanRevision: current.source.sourceScanRevision },
+          },
         } };
       };
       let scopeValid = false;

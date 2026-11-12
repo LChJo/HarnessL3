@@ -40,7 +40,7 @@ export async function packageSmoke() {
     await writeFile(path.join(consumer, 'package.json'), JSON.stringify({ private: true, name: 'harnessl3-package-consumer', version: '1.0.0' }))
     await npm(['install', tarball, '--prefix', consumer, '--global=false', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: consumer })
     const shim = await npm(['exec', '--offline', '--', 'harnessl3', '--version'], { cwd: consumer })
-    assert.equal(shim.stdout.trim(), '0.1.1', 'The installed npm bin shim must resolve and run the packaged entry')
+    assert.equal(shim.stdout.trim(), '0.1.2', 'The installed npm bin shim must resolve and run the packaged entry')
     installedBinary = path.join(consumer, 'node_modules', 'harnessl3', 'bin', 'harnessl3.mjs')
     const skillInstaller = path.join(consumer, 'node_modules', 'harnessl3', 'scripts', 'install-agent-skills.mjs')
     assert.deepEqual(await readFile(skillInstaller), await readFile(path.join(root, 'scripts', 'install-agent-skills.mjs')))
@@ -55,7 +55,7 @@ export async function packageSmoke() {
     const repeatedSkills = JSON.parse((await execFile(process.execPath, skillArguments, { cwd: consumer, windowsHide: true })).stdout)
     assert.ok(repeatedSkills.results.every(entry => entry.status === 'unchanged'))
     const help = await execFile(process.execPath, [installedBinary, '--help'], { cwd: project, windowsHide: true })
-    assert.match(help.stdout, /HarnessL3 0\.1\.1/)
+    assert.match(help.stdout, /HarnessL3 0\.1\.2/)
     const selectHelp = (await execFile(process.execPath, [installedBinary, 'task', 'select', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] \[--file/)
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
