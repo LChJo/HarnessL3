@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.50：`project register <path>`与`worktree register <path>`新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`。同仓库配置ID与登记不一致返回`PROJECT_ID_CONFLICT`、退出3；`error.details.recovery`含reason=same-git-common-dir、reviewRequired、worktreeRoot/gitCommonDir/configPath、configProjectId、registeredProjectId、configHash及command参数数组（含原数据根）。普通register/init/当前内容读取不自动修复。审核后执行恢复命令，只允许恢复该common-dir已登记ID；错误目标/不同仓库或普通目录继续冲突，配置字节改变为VERSION_CONFLICT，缺失/非法配对参数退出2。成功结果附identityRepair（previousProjectId、projectId、backupPath、recordPath、previousConfigHash、configHash），原字节和prepared/applied记录保存在本机数据根。已有工作区在改配置前持久记录pending；不请求来源全扫、不覆盖原任务或proof。配置修复后仍需原有来源/模型核验。管理写入响应丢失先查原requestId，unknown时核对备份记录、配置及登记，不盲目重发。开放的command-result/error.details保持兼容。
+
 v0.49：`sync status`有界重新完整采集短时变化，持续活动仍成功返回pending、scanPending及SOURCE_CHANGING诊断。`sync verify`的SYNC_RACE继续退出3，原请求仍只重放原回执；recovery附cause（source-version-changed/model-changed/observation-changed）、reviewRequired:true、reviewScope（原声明paths/entities）、current（当次epoch/sourceVersion/modelRevision/sourceScanRevision）。恢复先刷新并审核实际范围，再提交新requestId；这些字段不是自动重基许可。错误message解释尚待核验和下一步，不要求用户理解代次数字。响应及声明Schema的既有开放错误details兼容，严格CAS未放宽。
 
 v0.48（2026-11-11）：默认文件型方法升级至上游1.3.2/4ae2317的L3适配版，共7类26项，保留quick；退役方法仅退出当前库，历史ID/group/原字节保留。Skill Hub skill-hub/2吸收ask-matt的正文先读与阶段判断，实际目录及同任务--stage仍为准；不恢复跨技能依赖或固定流程，不强制setup/Hook/agent/worktree。正常安装仍不覆盖已有用户库；本次已授权本机库采用备份、逐文件核对及保留修改的一次性迁移。FR06/15、TC19/20/26/27及实际范围见实施状态。

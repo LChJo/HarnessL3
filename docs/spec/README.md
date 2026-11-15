@@ -1,5 +1,7 @@
 # HarnessL3 CLI 工作规格 v1.0
 
+v0.50（2026-11-15）：同Git common-dir的项目UUID冲突提供显式恢复。register新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`，仅允许恢复该仓库已登记身份；先保留原配置字节，持久记录已有工作区pending，核对范围与版本后校正当前配置，保留worktree UUID和历史。普通读取、init及无修复参数的register仍拒绝冲突，不合并独立clone/普通目录。FR01/12/15、TC01/02/22/27，实际范围见实施状态。
+
 v0.49（2026-11-12）：同步观测过滤Git锁/reflog/对象写入等确定的临时维护通知，保留HEAD/index/refs/配置/忽略规则及未知通知的失效语义。状态读取有界重做完整采集，持续变动返回pending和SOURCE_CHANGING；声明仍严格CAS，旧proof和字节回退不能自动升级。竞态回执附原因、声明范围及当次状态，agent重新审核后用新requestId恢复，持续问题说明具体范围及下一步。候选0.1.2，FR09/12/15及TC07/08/22/27。
 
 v0.48（2026-11-11）：默认文件型方法升级至上游1.3.2/4ae2317的L3适配版，共7类26项，保留quick；退役方法仅退出当前库，历史ID/group/原字节保留。Skill Hub skill-hub/2吸收ask-matt的正文先读与阶段判断，实际目录及同任务--stage仍为准；不恢复跨技能依赖或固定流程，不强制setup/Hook/agent/worktree。正常安装仍不覆盖已有用户库；本次已授权本机库采用备份、逐文件核对及保留修改的一次性迁移。FR06/15、TC19/20/26/27及实际范围见实施状态。

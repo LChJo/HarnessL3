@@ -32,11 +32,11 @@ model {
   app.core.runtime -[uses]-> app.core.workspace "定位工作区" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000004"
-      brief "Runtime通过WorkspaceRegistry核查登记和请求目标。"
+      brief "Runtime通过WorkspaceRegistry核查登记和请求目标，显式身份修复保留备份与工作区UUID。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.context "任务与交接" {
@@ -72,11 +72,11 @@ model {
   app.core.runtime -[uses]-> app.core.source "来源与同步" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000008"
-      brief "Runtime装配FreshnessManager并提供来源扫描与同步命令。"
+      brief "Runtime装配FreshnessManager，登记修复前持久pending；来源完整核验与同步命令独立执行。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.observation "显式日志绑定" {

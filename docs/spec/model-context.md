@@ -52,6 +52,8 @@ Git项目建议将上述权威文件与相关源码变更一并提交；引用�
 | sourceVersion | head/treeHash/status，区分已提交与未提交内容；status 为所选来源扫描范围内的 Git clean/dirty/unknown，不是语义已同步，不能照搬包含已排除技能/模型文件的全工作区 git status |
 | sourceScanRevision | 实际来源扫描 include/exclude 规则指纹；扫描策略改变不能复用旧核验 |
 
+项目定位与持久身份分开：普通目录按canonical根定位，Git同仓库按canonical common-dir归并，各worktree数据独立。同仓库配置ID被分支或复制内容改动时，按[身份恢复契约](storage.md)审核后显式校正当前配置；不修改harness_id、对象关系、其他检出或历史，不把不同common-dir的clone自动合并。配置ID校正不证明模型与源码已同步。
+
 重命名/移动对象或改关系描述、端点时保留同一实体的 harness_id；新增实体生成新的 UUID。相同关系端点/类型也可有多条关系，由各自 UUID 区分，不能靠文本行号或解析器生成 relation ID 充当稳定身份。删除仅从当前模型移除；已存档任务保留旧实体和旧依据，不回写或清空历史。
 
 [aliases.json](contracts/aliases.schema.json)只保存人工确认的“旧对象 qualified id → UUID”映射。重命名时同任务更新别名和所有当前引用；别名不能抢占当前另一个对象的定位，不能出现歧义或将两个 UUID 合并。别名目标需当前存在；删除实体时移除其当前别名，历史任务已经保存自己的定位，不依赖当前别名表。正式 query 输入只用 UUID；别名用于定位迁移和诊断，不使历史任务跟随当前内容。

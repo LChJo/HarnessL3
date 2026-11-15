@@ -110,6 +110,13 @@ export class FreshnessManager {
   currentModel(): ModelSnapshot | null { return structuredClone(this.observedModel); }
   /** Registration changed adapters; retained observations are no longer a current proof. */
   identityChanged(): void { this.identityGeneration++; this.gap(); }
+  /** Persist invalidation before an explicit identity repair can restore old bytes. No source scan. */
+  async identityRepairPending(): Promise<void> {
+    await this.ready();
+    if (this.closed) throw new HarnessError('BUSY', 'Synchronization is closed; retry identity repair after reactivating the workspace.');
+    this.identityChanged();
+    await this.serial(() => this.persist('identity-repair'));
+  }
   private instant(): string {
     const current = this.now();
     if (!(current instanceof Date) || !Number.isFinite(current.getTime())) throw new HarnessError('INTERNAL_ERROR', 'The synchronization clock must return a valid Date.');

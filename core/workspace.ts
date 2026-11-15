@@ -1,11 +1,12 @@
 import { execFile as callbackExecFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { lstat, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { validateContract } from './contract.js';
 import { HarnessError, permissionError } from './errors.js';
-import { ensureDir, isErrno, readJson, writeJson } from './io.js';
+import { atomicWrite, ensureDir, isErrno, readJson, writeJson } from './io.js';
+import { parseJsonStrict, sha256 } from './json.js';
 import { canonicalPath, isWithin, samePath, resolveInside } from './paths.js';
 import { seedSkills } from './skills.js';
 import { SEED_ROOT } from './package.js';
@@ -35,6 +36,13 @@ export interface WorkspaceRegistration {
   paths: { config: string };
   createdFiles?: string[];
   skillSeed?: 'created' | 'already-present';
+  identityRepair?: { previousProjectId: string; projectId: string; backupPath: string; recordPath: string; previousConfigHash: string; configHash: string };
+}
+
+interface RegistrationOptions {
+  repairProjectId?: string;
+  expectedConfigHash?: string;
+  beforeIdentityRepair?: (worktree: WorktreeRecord) => Promise<void>;
 }
 
 export interface WorkspaceTarget {
@@ -105,15 +113,23 @@ async function gitIdentity(location: string): Promise<WorkspaceIdentity> {
 
 /** Read the tracked configuration without following metadata outside its worktree. */
 export async function readConfig(root: string): Promise<ProjectConfig> {
+  return (await configSnapshot(root)).config;
+}
+
+async function configSnapshot(root: string): Promise<{ config: ProjectConfig; bytes: Buffer }> {
   const configPath = await resolveInside(root, '.harness/project.json', { noSymlinks: true });
-  const config = validateContract<ProjectConfig>('project-config', await readJson(configPath));
+  const bytes = await readFile(configPath);
+  let text: string;
+  try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes); }
+  catch { throw new HarnessError('INVALID_JSON', 'JSON file is not valid UTF-8', { file: configPath }); }
+  const config = validateContract<ProjectConfig>('project-config', parseJsonStrict(text));
   if (!config.name.trim()) throw new HarnessError('SCHEMA_INVALID', 'Project name must contain visible text.');
   for (const pattern of config.source.excludePatterns) {
     if (/(?:^|\/)\.{1,2}(?:\/|$)/.test(pattern) || /[!\[\]{}\u0000-\u001f]/.test(pattern) || pattern.endsWith('/') || pattern.includes('//')) {
       throw new HarnessError('SCHEMA_INVALID', 'Source exclusions use root-anchored posix-glob-v1 patterns.', { pattern });
     }
   }
-  return config;
+  return { config, bytes };
 }
 
 /**
@@ -249,12 +265,22 @@ export class WorkspaceRegistry {
     return seedSkills(this.seedRoot, path.join(this.dataRoot, 'skills'));
   }
 
-  private checkIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig): void {
+  private checkIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig, configHash?: string): void {
     const existing = data.worktrees.find(item => samePath(item.root, identity.root));
     const upgrade = existing?.kind === 'directory' && identity.kind === 'git';
-    if (existing && (existing.projectId !== config.projectId || !upgrade && (existing.kind !== identity.kind || !sameCommon(existing.gitCommonDir, identity.gitCommonDir)))) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
+    if (existing && !upgrade && (existing.kind !== identity.kind || !sameCommon(existing.gitCommonDir, identity.gitCommonDir))) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
     const common = identity.gitCommonDir === null ? undefined : data.projects.find(item => sameCommon(item.gitCommonDir, identity.gitCommonDir));
-    if (common && common.id !== config.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'This Git common directory belongs to another project.', { projectId: config.projectId });
+    if (common && existing && common.id !== existing.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'Git adoption conflicts with a separately registered project; identity repair cannot merge their histories.');
+    if (common && common.id !== config.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'This Git repository is already registered with a different project ID. Review the configuration and use the recovery command to restore its registered identity.', {
+      projectId: config.projectId,
+      recovery: {
+        reason: 'same-git-common-dir', reviewRequired: true, worktreeRoot: identity.root, gitCommonDir: identity.gitCommonDir,
+        configPath: path.join(identity.root, '.harness/project.json'), configProjectId: config.projectId, registeredProjectId: common.id,
+        configHash: configHash ?? null,
+        command: configHash ? ['worktree', 'register', identity.root, '--repair-project-id', common.id, '--expected-config-hash', configHash, '--data-dir', this.dataRoot] : null,
+      },
+    });
+    if (existing && existing.projectId !== config.projectId) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
     const project = data.projects.find(item => item.id === config.projectId);
     if (project && (project.kind === 'directory' ? !existing || existing.projectId !== project.id : identity.kind !== 'git' || !sameCommon(project.gitCommonDir, identity.gitCommonDir))) throw new HarnessError('PROJECT_ID_CONFLICT', 'This project ID belongs to another workspace.', { projectId: config.projectId });
   }
@@ -287,13 +313,45 @@ export class WorkspaceRegistry {
     return { project: { ...project }, worktree: { ...worktree }, paths: { config: configPath } };
   }
 
-  async register(location: string): Promise<WorkspaceRegistration> {
+  async register(location: string, options: RegistrationOptions = {}): Promise<WorkspaceRegistration> {
     return this.locked(async () => {
       const data = await this.load();
       const identity = await workspaceIdentity(location);
       await this.checkDataRoot(identity.root, data.worktrees);
       await this.checkMetadataRoot(identity.root);
-      return this.registerIdentity(data, identity, await readConfig(identity.root));
+      const snapshot = await configSnapshot(identity.root);
+      const configHash = sha256(snapshot.bytes);
+      if (Boolean(options.repairProjectId) !== Boolean(options.expectedConfigHash)) throw new HarnessError('INVALID_ARGUMENT', 'Identity repair requires both project ID and configuration hash.');
+      if (!options.repairProjectId) {
+        this.checkIdentity(data, identity, snapshot.config, configHash);
+        return this.registerIdentity(data, identity, snapshot.config);
+      }
+      requireUuid(options.repairProjectId, 'repairProjectId');
+      if (!/^[0-9a-f]{64}$/.test(options.expectedConfigHash!)) throw new HarnessError('INVALID_ARGUMENT', 'expectedConfigHash must be a lowercase SHA-256.');
+      const project = identity.kind === 'git' ? data.projects.find(item => sameCommon(item.gitCommonDir, identity.gitCommonDir)) : undefined;
+      if (!project || project.id !== options.repairProjectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'Identity repair only restores the project already registered to this Git common directory. Independent repositories and directories cannot be merged.');
+      if (configHash !== options.expectedConfigHash) throw new HarnessError('VERSION_CONFLICT', 'The configuration changed after review. Read the current identity conflict before preparing another repair.', { expectedConfigHash: options.expectedConfigHash, configHash });
+      if (snapshot.config.projectId === project.id) return this.registerIdentity(data, identity, snapshot.config);
+      const config = { ...snapshot.config, projectId: project.id };
+      this.checkIdentity(data, identity, config);
+      await this.checkedSkillsRoot(identity, config, data.worktrees);
+      const repairRoot = await resolveInside(this.dataRoot, `identity-repairs/${randomUUID()}`, { allowMissing: true, noSymlinks: true });
+      const backupPath = path.join(repairRoot, 'project.json');
+      const recordPath = path.join(repairRoot, 'repair.json');
+      const updated = JSON.stringify(config, null, 2) + '\n';
+      const identityRepair = { previousProjectId: snapshot.config.projectId, projectId: project.id, backupPath, recordPath, previousConfigHash: configHash, configHash: sha256(updated) };
+      const record = { schemaVersion: 1, ...identityRepair, worktreeRoot: identity.root, gitCommonDir: identity.gitCommonDir, createdAt: new Date().toISOString() };
+      await atomicWrite(backupPath, snapshot.bytes);
+      await writeJson(recordPath, { ...record, status: 'prepared' });
+      const existing = data.worktrees.find(item => samePath(item.root, identity.root));
+      if (existing) await options.beforeIdentityRepair?.({ ...existing, active: true, available: true });
+      const current = await workspaceIdentity(identity.root);
+      await this.checkMetadataRoot(identity.root);
+      if (current.kind !== 'git' || !samePath(current.root, identity.root) || !sameCommon(current.gitCommonDir, identity.gitCommonDir)) throw new HarnessError('WORKTREE_MOVED', 'The Git identity changed during repair. The original configuration backup is retained.', { backupPath });
+      if (sha256((await configSnapshot(identity.root)).bytes) !== configHash) throw new HarnessError('VERSION_CONFLICT', 'The configuration changed during repair. It was not overwritten; the original backup is retained.', { backupPath });
+      await atomicWrite(path.join(identity.root, '.harness/project.json'), updated);
+      await writeJson(recordPath, { ...record, status: 'applied' });
+      return { ...await this.registerIdentity(data, identity, config), identityRepair };
     });
   }
 
@@ -306,11 +364,12 @@ export class WorkspaceRegistry {
       await this.checkMetadataRoot(identity.root);
       const configPath = path.join(identity.root, '.harness', 'project.json');
       const commonProject = identity.gitCommonDir === null ? undefined : data.projects.find((item) => sameCommon(item.gitCommonDir, identity.gitCommonDir));
-      const config: ProjectConfig = await exists(configPath) ? await readConfig(identity.root) : {
+      const snapshot = await exists(configPath) ? await configSnapshot(identity.root) : undefined;
+      const config: ProjectConfig = snapshot ? snapshot.config : {
         schemaVersion: 1, projectId: commonProject?.id ?? randomUUID(), name: name ?? commonProject?.name ?? path.basename(identity.root), source: { excludePatterns: identity.kind === 'directory' ? [...DIRECTORY_EXCLUDES] : [] },
       };
       await this.checkedSkillsRoot(identity, config, data.worktrees);
-      this.checkIdentity(data, identity, config);
+      this.checkIdentity(data, identity, config, snapshot ? sha256(snapshot.bytes) : undefined);
       const createdFiles: string[] = [];
       const create = async (relative: string, contents: string): Promise<void> => {
         const destination = await resolveInside(identity.root, relative, { allowMissing: true, noSymlinks: true });
@@ -474,7 +533,13 @@ export class WorkspaceRegistry {
     const inspected = await this.inspectRecord(selected, observed);
     const current = inspected.record;
     if (options.allowInactive && explicitWorktree) return current;
-    if (!current.available) throw new HarnessError('WORKTREE_MOVED', 'The registered worktree is missing or no longer matches its stored Git/project identity.', { worktreeId: selected.id });
+    if (!current.available) {
+      if (inspected.identity && inspected.config && samePath(inspected.identity.root, selected.root)) {
+        const snapshot = await configSnapshot(selected.root);
+        this.checkIdentity(data, inspected.identity, snapshot.config, sha256(snapshot.bytes));
+      }
+      throw new HarnessError('WORKTREE_MOVED', 'The registered worktree is missing or no longer matches its stored Git/project identity.', { worktreeId: selected.id });
+    }
     await this.checkDataRoot(current.root, data.worktrees);
     await this.checkMetadataRoot(current.root);
     await this.checkedSkillsRoot(inspected.identity!, inspected.config!, data.worktrees);

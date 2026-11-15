@@ -391,15 +391,18 @@ export class Runtime extends EventEmitter {
             promptVersion: MODEL_GUIDANCE_VERSION, agentGuidance: modelGuidance('supplement'), maintenanceCommand: maintenanceCommand(),
           } }; break
         }
-        case 'project register': result = await registry.register(path.resolve(request.cwd, id)); break
+        case 'project register': case 'worktree register': {
+          const registered = await registry.register(path.resolve(request.cwd, id), {
+            repairProjectId: flag(request, 'repair-project-id'), expectedConfigHash: flag(request, 'expected-config-hash'),
+            beforeIdentityRepair: async worktree => { await (await this.worktreeResources(worktree)).freshness.identityRepairPending() },
+          })
+          target = { projectId: registered.worktree.projectId, worktreeId: registered.worktree.id }
+          result = request.operation === 'project register' ? registered : { worktree: registered.worktree, ...(registered.identityRepair ? { identityRepair: registered.identityRepair } : {}) }
+          break
+        }
         case 'project list': result = { items: await registry.projects() }; break
         case 'project show': { const project = await registry.project(id); result = { project, paths: { config: project.configPath } }; break }
         case 'project unregister': result = await this.bindingSerial(async () => { await this.stopObservations((await registry.worktrees(id)).map(item => item.id)); return registry.unregisterProject(id) }); break
-        case 'worktree register': {
-          const registered = await registry.register(path.resolve(request.cwd, id))
-          target = { projectId: registered.worktree.projectId, worktreeId: registered.worktree.id }
-          result = { worktree: registered.worktree }; break
-        }
         case 'worktree list': result = { items: await registry.worktrees(flag(request, 'project')) }; break
         case 'worktree show': { const worktree = await registry.worktree(id); result = { worktree }; target = { projectId: worktree.projectId, worktreeId: worktree.id }; break }
         case 'worktree unregister': result = await this.bindingSerial(async () => { await this.stopObservations([id]); return registry.unregisterWorktree(id) }); break

@@ -1,5 +1,13 @@
 # 正式首版实施状态
 
+## v0.50：同仓库配置身份冲突的显式恢复（2026-11-15）
+
+用户确认修复同Git仓库多个worktree因检出配置projectId不同而无法登记的边界。沿用UUID持久身份及canonical common-dir项目归属，普通目录仍按根定位；普通调用拒绝冲突并返回可审核的实际路径、双方ID、配置原字节哈希及含原数据根的恢复命令。project/worktree register的配对修复参数只允许恢复该common-dir已登记ID，不能合并独立clone/普通目录。先保存原字节与prepared/applied本机修复记录，已有工作区在写配置前持久pending，再复核Git和配置版本后校正当前projectId，保留其他设置、其他检出、原worktree UUID与旧任务字节。重启后旧proof不能因字节恢复重新生效；身份校正仍需当前模型/来源核验。配置与registry没有跨文件事务，中断按记录和实际状态恢复，不盲重发未知管理写入。
+
+Windows / Node24.12.0：三个新增隔离回归先在旧构建实际失败。首轮登记/目录/CLI相关37项全部通过；补充失败守卫、冷服务及旧proof检查后，身份恢复与帮助9项全部通过，轮次不合并。最终`npm run test:v1`共361项，357通过、4平台能力跳过、零失败（339835ms）。新增夹具覆盖误带独立仓库ID的新worktree、已登记工作区ID被改、原字节备份、错误ID/过时哈希、备份失败、修复期间新编辑、只读旧档案、冷服务修复、重启和旧proof拒绝；真实用户项目、技能实体和历史未用作破坏性夹具。输出与stderr分别在`.harness-local/validation/identity-repair-formal.stdout.txt`和`identity-repair-formal.stderr.txt`，JUnit为本轮`tests-win32.xml`。
+
+基准/spec/AGENTS/使用说明及运行时恢复参考已同步，现有模型对象和关系身份保留，登记与同步关系说明已修订；模型22对象/31关系，三个现有视图无未覆盖叶对象、无诊断。改动Markdown本地链接检查与diff空白检查通过。未运行本轮Linux/macOS、浏览器或安装包消费者，不继承旧平台结果；未更新本机全局CLI/宿主skill或实际处理截图中的其他项目登记，未提交、推送或发布。
+
 ## v0.49：同步通知收敛与可执行恢复（2026-11-12）
 
 候选0.1.2过滤确定的Git临时维护通知，保留HEAD/index/refs/配置/忽略及未知通知失效；只读status有界重做完整采集，持续活动返回pending与SOURCE_CHANGING。SYNC_RACE保留严格CAS及旧回执，新增原因、原声明范围和当次状态；help、任务提示与运行时skill指导agent重新核对后提交新声明。没有新增运行模块、Hook、agent或自动语义重基。原因、复现及实际验证范围见[可靠性记录](RELIABILITY.md)。

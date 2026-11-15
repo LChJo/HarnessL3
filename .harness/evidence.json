@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "The current v0.49 baseline defines bounded complete sync reads, conservative notification handling and authorized scoped recovery while preserving strict proof semantics.",
+      "claim": "The current v0.49 baseline defines bounded complete sync reads, conservative notification handling and authorized scoped recovery while preserving strict proof semantics. v0.50 review: The v0.50 baseline defines explicit same-repository identity recovery, stable UUIDs and isolated workspace history.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "a3b9c8698a740b9588454fb38923fb7b41486285caa672f47d2f7035b4a6d26c",
-      "observedAt": "2026-11-12T04:40:03.154Z"
+      "hash": "b7409b184113dba6c63ee3b9c7747371dc83e662d224e5078e172871ff8f8c05",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -34,22 +34,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime routes model maintain to model/view inspection and versioned current-agent guidance, shares guidance with init and adds pending review hints to sync status without changing strict verification.",
+      "claim": "Runtime routes model maintain to model/view inspection and versioned current-agent guidance, shares guidance with init and adds pending review hints to sync status without changing strict verification. v0.50 review: Runtime routes explicit identity repair and durably invalidates existing workspace proofs before configuration replacement, without scanning source.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "162ce37d297f5de160650162230972a20a1bd8da9dc4ec4d90f1593d6c49d87c",
-      "observedAt": "2026-11-11T05:21:57.603Z"
+      "hash": "f9eb7f671d070e0589bca01277988f00c27629e08418be0018aafa07c1fdace8",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "Workspace registry locates nearest directory/Git boundaries, keeps stable UUIDs across atomic Git adoption and rejects identity or path conflicts without Git downgrade.",
+      "claim": "Workspace registry locates nearest directory/Git boundaries, keeps stable UUIDs across atomic Git adoption and rejects identity or path conflicts without Git downgrade. v0.50 review: Registry resolves Git projects by canonical common directory and explicitly repairs only the current configuration ID using a reviewed hash, original-byte backup and repeated target checks; independent targets remain isolated.",
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "5504a65473e946ff91cc685bb2743f64e84b57c2bb17978c5b31f59b62721ead",
-      "observedAt": "2026-11-10T14:07:55.582Z"
+      "hash": "6adb0039605636e952145bacad22604a3a22964dc3740dcc7032f68505454252",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -114,12 +114,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "Freshness filters definite Git bookkeeping notifications, bounds complete read recaptures, retains pending under ongoing changes and returns actionable recovery while preserving strict proof CAS, byte rollback and evidence boundaries.",
+      "claim": "Freshness filters definite Git bookkeeping notifications, bounds complete read recaptures, retains pending under ongoing changes and returns actionable recovery while preserving strict proof CAS, byte rollback and evidence boundaries. v0.50 review: Freshness durably invalidates existing proofs before identity repair, retaining pending and strict source/model CAS across restart.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "3c6a4bc0c588786cda5e0b2f23703bc665395d5af5a332f975cc42904cf473a5",
-      "observedAt": "2026-11-12T04:40:03.155Z"
+      "hash": "cba066df43f5c12f3a681a48a9b45af2c4b5a9012d90924f59802352da0f8f4d",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Model/context contract retains current-agent text maintenance and historical bindings; v0.48 records the 26-method adaptation and dynamic routing without transitive skill selection.",
+      "claim": "Model/context contract retains current-agent text maintenance and historical bindings; v0.48 records the 26-method adaptation and dynamic routing without transitive skill selection. v0.50 review: Current text authority and persistent entity identities remain intact during explicit same-repository configuration recovery.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "a37276e92d0e7b2e23cbe013bfe131d5cb2836306a51cbc31eaf675944536ff7",
-      "observedAt": "2026-11-11T14:41:34.492Z"
+      "hash": "f747724e68953bdc2770c54a88e1ac30fa3e449d5b9d5c896960ee2c52f64edd",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -284,12 +284,12 @@
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Storage preserves original journals and snapshots; new freshness rows reference receipt state bytes, and compact derived indexes catch up continuous commits. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Storage preserves original journals and snapshots; new freshness rows reference receipt state bytes, and compact derived indexes catch up continuous commits. Reviewed for v0.44 directory workspace support and retained compatibility boundaries. v0.50 review: Storage defines original-byte repair backups, prepared/applied records, durable pending before replacement and interrupted registration recovery without historical rewriting.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "02cc93bf2089abf20fe039a602ab1dbd5056578b16e05d29014f3b57ed040238",
-      "observedAt": "2026-11-11T14:41:34.501Z"
+      "hash": "a0a74c6eb66386a96048be551c4701eb6e226b6bdb0bcd21e3ecdb043435724d",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -304,22 +304,22 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference orders sync readiness, structured conflict inspection, actual scoped review, a fresh declaration/request ID and honest pending reporting.",
+      "claim": "Runtime reference orders sync readiness, structured conflict inspection, actual scoped review, a fresh declaration/request ID and honest pending reporting. v0.50 review: Runtime recovery guidance requires inspection of repository IDs/hash and original data root, preserves other checkouts/history and handles unknown write outcomes before retry.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "b69e17502ecdca6adb600c0c50eea60a4fb62c2fb4919aa5e9648ea496c5f492",
-      "observedAt": "2026-11-12T04:40:03.157Z"
+      "hash": "b90a2fabd1e13e21423dd6eea468b5508ce7aaa7f6113036687ece0d5925c93a",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static help exposes installed schemas, stable-read readiness and structured sync recovery without starting the service or authorizing proof rebasing.",
+      "claim": "Static help exposes installed schemas, stable-read readiness and structured sync recovery without starting the service or authorizing proof rebasing. v0.50 review: Static help discovers the paired registration repair flags and explains backup and independent-repository isolation.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "a976a49996cedab1a2d643215e500be0687d4b44d285c041d1f4eede71c3031a",
-      "observedAt": "2026-11-12T04:40:03.157Z"
+      "hash": "6c396106ef6b03c64342ce5d150fc5259c455bc4e49f59dd9c4f495539021479",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status distinguishes the v0.49 sync recovery candidate and actually completed verification from prior platform and host results.",
+      "claim": "Implementation status distinguishes the v0.49 sync recovery candidate and actually completed verification from prior platform and host results. v0.50 review: Implementation status records the actual v0.50 identity-recovery scope and separates observed validation from unavailable platform, host and installation results.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "28f42359998a2e9370e0f7b97831081a3c349d8c9b1296ba4f7aea7d479026d4",
-      "observedAt": "2026-11-12T04:40:03.158Z"
+      "hash": "54f39ed13be4486180dbf931948bd6bc0bcf0860ac60cdc0939fb6d8e51c076d",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC07/08/22/27 cover notification classification, bounded reads, ongoing activity, strict stale-proof rejection and executable scoped recovery.",
+      "claim": "TC07/08/22/27 cover notification classification, bounded reads, ongoing activity, strict stale-proof rejection and executable scoped recovery. v0.50 review: TC01/02/08/22/27 include same-repository recovery, wrong-target/stale-byte guards, failed backups, concurrent edits, cold-service invalidation and retained history.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "8f6200b38545582dac1e4e56c4dabfad2485471f7c6620b075bd310a13db7619",
-      "observedAt": "2026-11-12T04:40:03.159Z"
+      "hash": "0f9c59823866d3e04d787a632a656150d933d1ec2c43d99eafca525965b99388",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "The CLI contract defines pending SOURCE_CHANGING status and additive structured SYNC_RACE recovery with immutable original receipts.",
+      "claim": "The CLI contract defines pending SOURCE_CHANGING status and additive structured SYNC_RACE recovery with immutable original receipts. v0.50 review: The CLI contract specifies paired explicit registration repair, structured recovery fields, exact configuration hashes, original data-root commands and additive repair results.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "27e423e62845ecdacd4ac156b6f786edd09dd387950893856a7b77e79c99c0a8",
-      "observedAt": "2026-11-12T04:40:03.159Z"
+      "hash": "cd846c662b31f1d51ede268d1da7b44de8978f19cf7ed7f24b3f93b2b9ad0ff4",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR02/03/07/09/12/15 require real structure/view coverage review and current-agent progressive maintenance without fabricated graph quotas or automatic background modeling.",
+      "claim": "FR02/03/07/09/12/15 require real structure/view coverage review and current-agent progressive maintenance without fabricated graph quotas or automatic background modeling. v0.50 review: FR01/12/15 distinguish canonical repository location from persistent UUIDs and require reviewed recovery within existing authorization.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "2ef4b0e294e4ef36f3b8b94a48c9ae5f86156059aa14143880aaa1cf6796bc2e",
-      "observedAt": "2026-11-11T14:41:34.574Z"
+      "hash": "38877cc01024def2476970e37ba5c7a5b93a3162cdb4efa41b20445bcc4cdaab",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "The current CLI specification includes v0.49 sync-notification handling and scoped recovery without relaxing proof CAS or history boundaries.",
+      "claim": "The current CLI specification includes v0.49 sync-notification handling and scoped recovery without relaxing proof CAS or history boundaries. v0.50 review: The current v0.50 specification adds explicit repository identity recovery while preserving current-source verification and history boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "511aa1521e48399d3e3eab6a214e8ee38998eef7d1a54868eecfe9e52c518c5a",
-      "observedAt": "2026-11-12T04:40:03.160Z"
+      "hash": "8d87c6cc9a3d8241d8ba4e7af2b24b4e7dc1290b4333233df7bbc8f6874d254e",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity.",
+      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity. v0.50 review: Agent obligations cover reviewed same-repository identity repair within existing authorization, byte backups and continued model/source verification.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "1d1e255342848fd686230e7bd7f7bdbc60c19dab267eb1703e629cbe2ddb692a",
-      "observedAt": "2026-11-12T04:40:03.160Z"
+      "hash": "2a9d29863d9f432f1323c5f34b2c3c5496ea5abf42d5ad4477d4e1a1f86726f9",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Installed usage explains unstable read readiness and authorized refresh/review/new-declaration recovery while keeping original receipts and real pending scope.",
+      "claim": "Installed usage explains unstable read readiness and authorized refresh/review/new-declaration recovery while keeping original receipts and real pending scope. v0.50 review: Usage explains how to inspect identity conflict recovery, apply reviewed registration repair and locate byte backups without merging independent targets.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "3e0053fc5446f55f9c84bcb494d311d698b9ae12095c8daa17502b3f759c209e",
-      "observedAt": "2026-11-12T04:40:03.160Z"
+      "hash": "82d83ddd1a244751aa1df89083fbce32a63a28453224c2cb4340e5bec69e7d37",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -754,22 +754,22 @@
     {
       "id": "d6370000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Static help tests preserve schema discovery and explain SOURCE_CHANGING, scanPending and new-request scoped recovery.",
+      "claim": "Static help tests preserve schema discovery and explain SOURCE_CHANGING, scanPending and new-request scoped recovery. v0.50 review: Static help tests discover paired identity repair arguments and preserve no-service-start behavior.",
       "location": {
         "path": "tests/v1/cli-help.test.mjs"
       },
-      "hash": "6307d535ad37b7336138b2a2237b496d307bb76c128356b9cde3f86c10cfd688",
-      "observedAt": "2026-11-12T04:40:03.160Z"
+      "hash": "1ec01a590a645de6c43aea76844dbd8152fd9ef9ac2e9d30f314a53f5ef41a0f",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity.",
+      "claim": "Current v0.49 agent obligations require bounded stable-state reads and re-review before a new declaration, with specific pending scope and next action under continued activity. v0.50 review: Agent obligations cover reviewed same-repository identity repair within existing authorization, byte backups and continued model/source verification.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "1d1e255342848fd686230e7bd7f7bdbc60c19dab267eb1703e629cbe2ddb692a",
-      "observedAt": "2026-11-12T04:40:03.161Z"
+      "hash": "2a9d29863d9f432f1323c5f34b2c3c5496ea5abf42d5ad4477d4e1a1f86726f9",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -978,8 +978,8 @@
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "338b128f4dd4f40b04ecf0bf43ea05b834896fe56076137b92a7898ced0e8536",
-      "observedAt": "2026-11-11T16:51:08.410Z"
+      "hash": "9a59a2c171d819d76a78dfdf3bd651aa6c7857bed1dc9bd80d8992970b4e93c4",
+      "observedAt": "2026-11-15T16:58:30.223Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1074,12 +1074,12 @@
     {
       "id": "9d99fef9-ad18-475c-b541-12a01049e49c",
       "kind": "source-code",
-      "claim": "Command parser accepts model maintain with its own three modes, retains task snapshot/verified validation and validates RPC flags through the same parser.",
+      "claim": "Command parser accepts model maintain with its own three modes, retains task snapshot/verified validation and validates RPC flags through the same parser. v0.50 review: The shared CLI/RPC parser validates paired identity repair UUID and exact SHA-256 arguments only on registration commands.",
       "location": {
         "path": "cli/args.ts"
       },
-      "hash": "facd3ff0634c004aa6120e7dcef1fe1b0c870b3c0bd26f8256bc48e41e40f53a",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "2d2a701d51d57e6e65b6c6a3617cad1e70da955f6d3f4d1b57faae45d6622f9e",
+      "observedAt": "2026-11-15T16:58:30.223Z"
     },
     {
       "id": "935b3fd1-92c7-4a66-ba57-119fcc15bc9a",
@@ -1128,8 +1128,8 @@
       "location": {
         "path": "docs/spec/implementation.md"
       },
-      "hash": "214bd1f8a26b3ac5b18184e62ee42a58fd99eca71d30d0ab08a0b5002504f704",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "259a213daccaf3799d0d6b1fab612d5f5cf8ab2a2001080422ab2df6699bf080",
+      "observedAt": "2026-11-15T16:58:30.223Z"
     },
     {
       "id": "f325ad00-2760-4dfd-9214-b15df2ac8dec",
@@ -1138,8 +1138,8 @@
       "location": {
         "path": "docs/spec/contracts/response.schema.json"
       },
-      "hash": "98701d6271410721b1d1c699149b9baa0f711d80c48c2443cbe8889cc029a6b2",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "83e6997fdf659d8bc23829344cf9e5a1cb0b596d18cd58d709c40e4eeb6a5b1f",
+      "observedAt": "2026-11-15T16:58:30.223Z"
     },
     {
       "id": "d6480000-0000-4000-8000-000000000001",
@@ -1170,6 +1170,16 @@
       },
       "hash": "30683334dd6597804d8c804791f58ba33c2364fbb264947d582adf0ffddd9a63",
       "observedAt": "2026-11-11T16:51:27.667Z"
+    },
+    {
+      "id": "d6500000-0000-4000-8000-000000000001",
+      "kind": "source-code",
+      "claim": "Isolated regression fixtures cover new and existing worktree identity repair, exact byte backup, foreign-target/stale-hash/backup-failure guards, concurrent edits, cold-service pending persistence, restart and old task/proof preservation.",
+      "location": {
+        "path": "tests/v1/identity-repair.test.mjs"
+      },
+      "hash": "24e7b093cf5e34afbec449ab696b06ef6177fdb79a6cf16efe286ca4f8e10e29",
+      "observedAt": "2026-11-15T15:15:26.190Z"
     }
   ]
 }

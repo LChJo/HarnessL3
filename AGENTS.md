@@ -2,9 +2,11 @@
 
 ## 首先读取
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.49。
+1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.50。
 2. [工作规格](docs/spec/README.md)：正式CLI v1.0契约、验收与实施顺序；产品编码前必须读相关子规格。
 3. [README](README.md)：项目导航；需要设计/历史时读[冻结原型](docs/prototype/README.md)。
+
+基准v0.50补充：同Git common-dir的配置projectId冲突先核对recovery的实际路径、配置ID/哈希和已登记ID，再在既有修复授权内使用显式register恢复命令；不能自动忽略配置、任意覆盖登记或合并独立clone/普通目录。原配置本机备份、已有工作区先持久pending，保留UUID/历史及其他检出。配置变化重新审核，未知管理写结果先查回执并核对记录，不盲重发。身份修复后仍按真实范围完成模型/来源核验。
 
 基准v0.49补充：同步状态仍scanPending或SOURCE_CHANGING时，有界等待当前写入/构建结束后重新读取，保持pending。SYNC_RACE按recovery的原因和声明范围刷新、重新核对源码/模型/证据后，用新requestId提交新声明；原ID保留旧回执，不能只改epoch。日常恢复在既有授权内完成，持续变动则用用户可理解的范围及下一步说明待核验，不以“已有竞态”代替恢复或伪报完成。
 

@@ -89,6 +89,12 @@ test('TC22 group help narrows discovery and sync help uses its own schema and pa
   const web = await f.help('web', 'open')
   assert.match(web, /Usage: harnessl3 web open \[--task <UUID>\] \[--no-open\]/)
   assert.match(web, /opened:false/)
+  for (const group of ['project', 'worktree']) {
+    const registration = await f.help(group, 'register')
+    assert.match(registration, /--repair-project-id <UUID>/)
+    assert.match(registration, /--expected-config-hash <SHA256>/)
+    assert.match(registration, /independent repositories cannot be merged/)
+  }
   await assert.rejects(access(f.dataRoot))
 })
 

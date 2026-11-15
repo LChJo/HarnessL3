@@ -156,7 +156,7 @@ test('TC22 explicit project/worktree ownership and UUIDs are validated without a
   await assert.rejects(registry.resolve({ cwd: f.root, worktreeId: randomUUID() }), code('NOT_FOUND'));
 });
 
-test('TC01 copied project IDs conflict across Git common directories; replaced roots cannot reuse identity', async (t) => {
+test('TC01 copied project IDs conflict across Git common directories; altered IDs require explicit repair', async (t) => {
   const f = await fixture(t);
   const a = await f.repository('original');
   const b = await f.repository('copied configuration');
@@ -167,8 +167,8 @@ test('TC01 copied project IDs conflict across Git common directories; replaced r
   const changed = JSON.parse(await readFile(x.paths.config, 'utf8'));
   changed.projectId = randomUUID();
   await writeFile(x.paths.config, JSON.stringify(changed));
-  await assert.rejects(registry.resolve({ cwd: a }), code('WORKTREE_MOVED'));
-  await assert.rejects(registry.register(a), code('WORKTREE_MOVED'));
+  await assert.rejects(registry.resolve({ cwd: a }), code('PROJECT_ID_CONFLICT'));
+  await assert.rejects(registry.register(a), code('PROJECT_ID_CONFLICT'));
 });
 
 test('TC01 inactive targets allow explicitly bound read-only history after their checkout disappears', async (t) => {

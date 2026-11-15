@@ -104,6 +104,8 @@ Keep authoritative .harness model/config/evidence/aliases, related source/docs a
 
 ## Retries, history and observation
 
+- For PROJECT_ID_CONFLICT with recovery.reason=same-git-common-dir, review the actual root/common directory, both project IDs and exact configuration hash. Within existing repair authorization, use the returned registration command with its registered project ID, expected hash and original data root. It backs up configuration bytes and invalidates existing workspace proofs before restoring only the current configuration's project ID. Never merge independent clones/directories, rewrite registry UUIDs by hand or modify other checkouts. Changed bytes require a fresh review; a lost response requires original request-status and inspection of repair records/configuration/registration before any new write. Identity repair does not finish source/model synchronization.
+
 - Save the request ID emitted on stderr. request status <request-id> inspects progress or the original durable receipt without dispatching the operation again. A timeout limits CLI waiting, not accepted server work; unknown after lookup/restart does not prove non-execution. Preserve the original ID and inspect before retrying. --timeout-ms sets a larger bounded wait only when appropriate; --quiet-progress suppresses stderr progress.
 - Correct cwd/target conflicts explicitly. New-version requests cannot use stale bindings; catalog-only changes before selection may use task prompt. Closed tasks cannot receive new batches.
 - history show restores captured batches without today's missing content. Browsing, handoff and skill reads do not extend the 60-day context retention window. Damage/uncollected evidence stays unknown.

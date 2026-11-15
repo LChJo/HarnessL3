@@ -6,8 +6,8 @@ export interface CommandRequest { operation: string; positionals: string[]; flag
 interface CommandDefinition { count: number; optionalPositional?: boolean; flags?: string[]; required?: string[] }
 export const commands: Record<string, CommandDefinition> = {
   init: { count: 0, flags: ['name'] },
-  'project register': { count: 1 }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
-  'worktree register': { count: 1 }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
+  'project register': { count: 1, flags: ['repair-project-id', 'expected-config-hash'] }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
+  'worktree register': { count: 1, flags: ['repair-project-id', 'expected-config-hash'] }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
   'task start': { count: 0, flags: ['title', 'session', 'mode'], required: ['title'] }, 'task prompt': { count: 1 },
   'task select': { count: 1, optionalPositional: true, flags: ['file', 'read', 'expand', 'skill', 'reason', 'stage'] }, 'task read': { count: 1, flags: ['file', 'batch', 'skill', 'path'] },
   'task show': { count: 1, flags: ['batch'] }, 'task handoff': { count: 1, flags: ['batch'] }, 'task close': { count: 1 },
@@ -56,7 +56,9 @@ export function parseArgs(args: string[], cwd = process.cwd()): CommandRequest {
   if (positionals.length !== definition.count && !(definition.optionalPositional && positionals.length === definition.count - 1)) throw new HarnessError('INVALID_ARGUMENT', 'Incorrect number of positional arguments', { operation, expected: definition.optionalPositional ? `0..${definition.count}` : definition.count })
   for (const name of Object.keys(flags)) if (!globals.includes(name) && !definition.flags?.includes(name)) throw new HarnessError('INVALID_ARGUMENT', 'Argument is not valid for this command', { operation, argument: name })
   for (const name of definition.required ?? []) if (flags[name] === undefined) throw new HarnessError('INVALID_ARGUMENT', 'Missing required argument', { argument: name })
-  for (const name of ['project', 'worktree', 'request-id', 'batch', 'task', 'binding']) if (typeof flags[name] === 'string') validateUuid(flags[name] as string, name)
+  for (const name of ['project', 'worktree', 'request-id', 'batch', 'task', 'binding', 'repair-project-id']) if (typeof flags[name] === 'string') validateUuid(flags[name] as string, name)
+  if (Boolean(flags['repair-project-id']) !== Boolean(flags['expected-config-hash'])) throw new HarnessError('INVALID_ARGUMENT', '--repair-project-id and --expected-config-hash must be supplied together')
+  if (flags['expected-config-hash'] && !/^[0-9a-f]{64}$/.test(String(flags['expected-config-hash']))) throw new HarnessError('INVALID_ARGUMENT', 'expected-config-hash must be a lowercase SHA-256')
   if (positionals.length && operation !== 'project register' && operation !== 'worktree register') validateUuid(positionals[0], 'id')
   for (const name of ['title', 'name', 'session']) if (typeof flags[name] === 'string' && !(flags[name] as string).trim()) throw new HarnessError('INVALID_ARGUMENT', 'Argument must not be blank', { argument: name })
   for (const name of ['limit', 'offset', 'port', 'timeout-ms']) {

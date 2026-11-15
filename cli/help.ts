@@ -53,6 +53,8 @@ const options: Record<string, [string, string]> = {
   help: ['', 'Show static top-level, command-group or command help; no service startup.'],
   version: ['', 'Show the installed package version; no service startup.'],
   name: ['name', 'Project display name; init defaults to the worktree directory name.'],
+  'repair-project-id': ['UUID', 'Restore this Git common directory\'s registered project ID in the current configuration, preserving a byte backup. Requires --expected-config-hash; independent repositories cannot be merged.'],
+  'expected-config-hash': ['SHA256', 'Exact configuration hash from the identity conflict recovery details; reject changed bytes before repair.'],
   title: ['purpose', 'Non-empty purpose for this context task.'],
   mode: ['snapshot|verified', 'Default snapshot reads the captured model with source status unknown. verified requires a complete current source fingerprint. Old bindings without mode stay verified.'],
   read: ['UUID,...', 'Exact context entity IDs; comma-separated. Use --file for complex requests.'],
