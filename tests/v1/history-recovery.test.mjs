@@ -20,21 +20,23 @@ test('TC17 snapshot entry and archived handoff do not wait for source-observatio
   assert.equal((await f.cli(['task', 'select', taskId], { cwd: root })).code, 0)
   await f.cli(['serve', 'stop'])
   const dataRoot = await realpath(f.dataRoot), runtime = new Runtime(dataRoot)
-  let release, timer
-  const gate = new Promise(resolve => { release = resolve })
-  const original = FreshnessManager.prototype.ready
-  t.mock.method(FreshnessManager.prototype, 'ready', function () { return gate.then(() => original.call(this)) })
+  // Fail on the forbidden dependency itself, independent of Git/filesystem speed.
+  const restore = t.mock.method(FreshnessManager.prototype, 'ready', async function () { throw new Error('Fixture source restoration is unavailable') })
   const request = runtime.execute({ operation: 'task handoff', requestId: randomUUID(), cwd: root, positionals: [taskId], flags: {} })
   try {
-    const result = await Promise.race([request, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Historical handoff waited for unrelated source state')), 2000) })])
+    const result = await request
     assert.equal(result.ok, true, JSON.stringify(result))
     assert.equal(result.data.kind, 'handoff')
     assert.equal(result.data.binding.sourceVersion.status, 'unknown')
-    const entry = await Promise.race([runtime.execute({ operation: 'task start', requestId: randomUUID(), cwd: root, positionals: [], flags: { title: 'Snapshot without source restoration' } }), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Snapshot entry waited for unrelated source state')), 2000) })])
+    const entry = await runtime.execute({ operation: 'task start', requestId: randomUUID(), cwd: root, positionals: [], flags: { title: 'Snapshot without source restoration' } })
     assert.equal(entry.ok, true, JSON.stringify(entry))
     assert.equal(entry.data.binding.mode, 'snapshot')
     assert.equal(entry.data.binding.sourceVersion.status, 'unknown')
-  } finally { clearTimeout(timer); release(); await request; await runtime.close() }
+    assert.equal(restore.mock.callCount(), 0, 'snapshot and archived reads must not request source-state restoration')
+    const live = await runtime.execute({ operation: 'sync status', requestId: randomUUID(), cwd: root, positionals: [], flags: {} })
+    assert.equal(live.ok, false, 'the same unavailable dependency must still block current source checks')
+    assert.equal(restore.mock.callCount(), 1, 'negative control proves the mocked dependency is reachable')
+  } finally { await request; await runtime.close() }
 })
 
 test('TC17 subscription resumption leaves unrelated snapshot recovery until its workspace is requested', async t => {
