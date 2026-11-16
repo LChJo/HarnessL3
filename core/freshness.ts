@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 import path from 'node:path';
 import { Archive, type ArchiveReference } from './archive.js';
+import { reportProgress } from './progress.js';
 import { HarnessError, permissionError } from './errors.js';
 import { validateContract } from './contract.js';
 import { canonicalJson } from './json.js';
@@ -48,6 +49,7 @@ interface SyncProof {
 }
 export interface VerificationResult extends FreshnessState {
   declaration: SyncProof; automaticChecks: { name: string; status: 'passed' | 'failed'; scope: string[] }[];
+  scopeStatus?: 'passed' | 'failed';
   replayed: boolean; seq: number;
 }
 interface VerifyReceipt { result: Omit<VerificationResult, 'replayed' | 'seq'>; error: { code: string; message: string; details?: Record<string, unknown> } | null }
@@ -125,17 +127,27 @@ export class FreshnessManager {
 
   private async restore(): Promise<void> {
     await this.archive.ready();
-    for await (const record of this.archive.scanAsync({ kind: 'freshness-state' })) {
-      const payload = record.payload as { kind?: string; state?: FreshnessState; stateHash?: string } | null;
-      if (payload?.kind !== 'freshness-state') continue;
-      if (payload.stateHash !== undefined && (typeof payload.stateHash !== 'string' || !/^[a-f0-9]{64}$/.test(payload.stateHash))) throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization state reference is invalid.');
-      let state = payload.state;
-      try { state ??= payload.stateHash ? await this.archive.readSnapshot<FreshnessState>(payload.stateHash) : undefined; }
-      catch (error) { if (this.archive.status !== 'ready') break; throw error; }
-      if (!state || state.schemaVersion !== 1 || !same(state.target, this.state.target) || !Number.isSafeInteger(state.sourceEpoch) || state.sourceEpoch < this.state.sourceEpoch || !Array.isArray(state.pendingPaths)) {
-        throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization record has an invalid identity or source epoch.');
+    const headers = this.archive.headers({ kind: 'freshness-state' });
+    recovery: for (let offset = 0; offset < headers.length; offset += 8) {
+      const states = await Promise.all(headers.slice(offset, offset + 8).map(async header => {
+        const record = await this.archive.record(header.seq);
+        const payload = record.payload as { kind?: string; state?: FreshnessState; stateHash?: string } | null;
+        if (payload?.kind !== 'freshness-state') throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization record has an invalid kind.');
+        if (payload.stateHash !== undefined && (typeof payload.stateHash !== 'string' || !/^[a-f0-9]{64}$/.test(payload.stateHash))) throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization state reference is invalid.');
+        let state = payload.state;
+        try { state ??= payload.stateHash ? await this.archive.readSnapshot<FreshnessState>(payload.stateHash) : undefined; }
+        catch (error) { if (this.archive.status !== 'ready') return undefined; throw error; }
+        return state;
+      }));
+      // Consume in journal order: parallel reads must not weaken epoch checks.
+      for (const state of states) {
+        if (!state && this.archive.status !== 'ready') break recovery;
+        if (!state || state.schemaVersion !== 1 || !same(state.target, this.state.target) || !Number.isSafeInteger(state.sourceEpoch) || state.sourceEpoch < this.state.sourceEpoch || !Array.isArray(state.pendingPaths)) {
+          throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization record has an invalid identity or source epoch.');
+        }
+        this.state = structuredClone(state);
       }
-      this.state = structuredClone(state);
+      if (offset % 1000 === 0) reportProgress({ phase: 'restoring-synchronization', completed: Math.min(offset + 8, headers.length), total: headers.length });
     }
     if (this.archive.status !== 'ready') {
       this.state.state = 'unknown'; this.state.scanPending = true; this.state.modelState = 'unknown';
@@ -246,20 +258,29 @@ export class FreshnessManager {
     this.activeSkillsRoot = skillsRoot;
     if (this.closed || this.watcher || !this.worktree.active || !this.worktree.available) return;
     try {
-      this.watcher = watch(this.worktree.root, { recursive: true, persistent: false, encoding: 'buffer' }, (_event, filename) => {
-        if (this.closed) return;
-        if (filename === null) { this.gap(); return; }
+      const watcher = watch(this.worktree.root, { recursive: true, persistent: false, encoding: 'buffer' }, (_event, filename) => {
+        if (this.closed || this.watcher !== watcher) return;
         let relative: string;
         try {
           // Native recursive watchers can return a decoded string despite encoding: 'buffer'.
+          if (filename === null) throw new Error('Native notification has no path');
           const decoded = typeof filename === 'string' ? filename : new TextDecoder('utf-8', { fatal: true }).decode(filename);
           relative = decoded.split(path.sep).join('/'); safeRelative(relative);
         }
-        catch { this.gap(); return; }
+        catch {
+          // Windows can repeatedly emit the absolute, extended-length root after
+          // deletion. Release incomplete coverage before invalidating once;
+          // periodic reconciliation can reattach when the directory returns.
+          watcher.close(); this.watcher = undefined; this.watchHealthy = false;
+          this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'warning', message: 'Source watcher coverage is incomplete; periodic reconciliation remains active.' };
+          this.gap(); return;
+        }
         this.watchEvent(relative);
       });
+      this.watcher = watcher;
       this.watchHealthy = true; this.watchDiagnostic = undefined;
       this.watcher.on('error', () => {
+        if (this.closed || this.watcher !== watcher) return;
         this.watcher?.close(); this.watcher = undefined; this.watchHealthy = false;
         this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'error', message: 'Source watcher coverage is incomplete; reconciliation remains active.' };
         this.gap();
@@ -274,6 +295,25 @@ export class FreshnessManager {
     }
     this.timer ??= setInterval(() => this.schedule(0), this.pollIntervalMs);
     this.timer.unref();
+  }
+
+  private async sourceRootAvailable(): Promise<boolean> {
+    try {
+      const info = await lstat(this.worktree.root);
+      if (!info.isDirectory() || info.isSymbolicLink()) throw new Error('Workspace root is no longer its registered directory');
+      return true;
+    } catch (error) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
+      const before = this.facts();
+      this.watcher?.close(); this.watcher = undefined; this.watchHealthy = false;
+      if (this.watchDiagnostic?.code !== 'SOURCE_ROOT_UNAVAILABLE') this.gap();
+      this.watchDiagnostic = { code: 'SOURCE_ROOT_UNAVAILABLE', severity: 'warning', message: 'The registered workspace directory is unavailable. History is preserved; restore the directory and refresh synchronization before reviewing changes.' };
+      this.state.state = 'unknown'; this.state.scanPending = true;
+      this.state.diagnostics = [this.watchDiagnostic]; this.dirtyPaths.clear();
+      if (before !== this.facts()) this.persistObserved('source-root-unavailable');
+      return false;
+    }
   }
 
   private schedule(milliseconds = 150): void {
@@ -373,6 +413,7 @@ export class FreshnessManager {
   async observe(skillsRoot: string): Promise<FreshnessState> {
     await this.ready();
     if (this.closed) return this.currentState();
+    if (!await this.sourceRootAvailable()) return this.currentState();
     // Periodic full reconciliation compensates for missed native notifications.
     // The two-second scheduler itself does no I/O when nothing needs updating.
     if (this.fullRequired || !this.watchHealthy || performance.now() - this.lastFullCheck >= 60_000) return this.status(skillsRoot);
@@ -493,6 +534,7 @@ export class FreshnessManager {
     await this.ready();
     if (this.closed) return this.currentState();
     if (this.archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Synchronization cannot refresh until archive recovery completes.', { diagnostics: this.archive.diagnostics });
+    if (!await this.sourceRootAvailable()) return this.currentState();
     this.activate(skillsRoot);
     let captured = await this.capture(skillsRoot);
     return this.serial(async () => {
@@ -625,7 +667,7 @@ export class FreshnessManager {
         if (this.state.state === 'verified') this.state.verifiedAt = this.instant();
       } else this.state.state = error!.code === 'SYNC_RACE' ? 'pending' : 'failed';
       const receipt: VerifyReceipt = {
-        result: { ...this.currentState(), declaration: proof, automaticChecks: [
+        result: { ...this.currentState(), declaration: proof, scopeStatus: successful ? 'passed' : 'failed', automaticChecks: [
           { name: 'current-model', status: current.model ? 'passed' : 'failed', scope: ['.harness/model', '.harness/evidence.json', '.harness/aliases.json'] },
           { name: 'source-model-epoch-cas', status: !current.model || error?.code === 'SYNC_RACE' || current.source.sourceVersion.status === 'unknown' ? 'failed' : 'passed', scope: [...proof.scope.paths] },
           { name: 'declared-scope', status: scopeValid ? 'passed' : 'failed', scope: [...proof.scope.paths, ...proof.scope.entities] },

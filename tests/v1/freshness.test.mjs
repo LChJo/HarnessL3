@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, rm, symlink, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, symlink, realpath, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFile as callbackExecFile } from 'node:child_process';
@@ -99,6 +99,43 @@ function proof(state, worktree, overrides = {}) {
     reason: 'Reviewed the stated source paths against the current model.', checks: [{ name: 'Fixture review', status: 'passed', evidence: ['README.md'] }], ...overrides,
   };
 }
+
+test('TC07 a removed watched workspace suspends observation and preserves its history', async t => {
+  const f = await fixture(t, { warm: true });
+  await rm(f.checkout, { recursive: true, force: true });
+  await f.manager.observe(f.skillsRoot);
+  await delay(400);
+  const epoch = f.manager.currentState().sourceEpoch;
+  const seq = f.archive.seq;
+  await f.manager.observe(f.skillsRoot);
+  await f.manager.observe(f.skillsRoot);
+  await delay(600);
+  assert.equal(f.manager.currentState().sourceEpoch, epoch, 'an absent root must not generate epochs indefinitely');
+  assert.equal(f.archive.seq, seq, 'an absent root must not append history indefinitely');
+  assert.equal(f.manager.watcher, undefined, 'native watcher must be released while its root is absent');
+  assert.equal(f.manager.currentState().scanPending, true);
+  assert.ok(f.manager.currentState().diagnostics.some(item => item.code === 'SOURCE_ROOT_UNAVAILABLE'));
+  assert.ok(f.archive.seq > 0, 'prior history remains available');
+});
+
+test('TC07 a returning workspace reattaches coverage and rejects its pre-disappearance proof', async t => {
+  const f = await fixture(t, { warm: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const old = proof(baseline, f.initialized.worktree);
+  const moved = path.join(f.root, 'temporarily moved');
+  await rename(f.checkout, moved);
+  await f.manager.observe(f.skillsRoot);
+  assert.equal(f.manager.currentState().scanPending, true);
+  await rename(moved, f.checkout);
+  const restored = await f.manager.status(f.skillsRoot);
+  assert.ok(restored.sourceEpoch > baseline.sourceEpoch);
+  assert.equal(restored.scanPending, false);
+  assert.ok(f.manager.watcher);
+  await assert.rejects(f.manager.verify(old, f.skillsRoot), { code: 'SYNC_RACE' });
+  await settle(f.manager);
+  const current = await f.manager.status(f.skillsRoot);
+  assert.equal((await f.manager.verify(proof(current, f.initialized.worktree), f.skillsRoot)).state, 'verified');
+});
 
 test('TC08 epoch-only conflicts explain the actual mismatch and preserve their receipt after recovery', async t => {
   const f = await fixture(t, { warm: true });
@@ -518,6 +555,7 @@ test('TC08 an unrelated local proof can be saved while referenced evidence remai
   const changed = await f.manager.status(f.skillsRoot);
   const local = await f.manager.verify(proof(changed, f.initialized.worktree, { scope: { paths: ['other.ts'], entities: [] } }), f.skillsRoot);
   assert.equal(local.state, 'pending');
+  assert.equal(local.scopeStatus, 'passed');
   assert.ok(local.pendingPaths.includes(f.relative));
   assert.equal(local.automaticChecks.find(item => item.name === 'referenced-evidence').status, 'passed');
   const entityScope = proof(local, f.initialized.worktree, { scope: { paths: [], entities: [f.entityId] } });

@@ -69,11 +69,19 @@
       }
     },
     "selection": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "status", "taskId", "binding", "result", "skillPlan", "packet"],
+      "type": "object", "additionalProperties": false, "required": ["kind", "status", "taskId", "binding", "result", "skillPlan"],
+      "oneOf": [{ "required": ["packet"], "not": { "required": ["packetRef"] } }, { "required": ["packetRef"], "not": { "required": ["packet"] } }],
       "properties": {
         "kind": { "const": "selection" }, "status": { "enum": ["complete", "partial"] }, "taskId": { "$ref": "common.schema.json#/$defs/uuid" },
         "binding": { "$ref": "common.schema.json#/$defs/binding" }, "result": { "$ref": "common.schema.json#/$defs/batchResult" },
-        "skillPlan": { "$ref": "#/$defs/skillPlan" }, "packet": { "$ref": "#/$defs/packet" }
+        "skillPlan": { "$ref": "#/$defs/skillPlan" }, "packet": { "$ref": "#/$defs/packet" },
+        "packetRef": {
+          "type": "object", "additionalProperties": false, "required": ["taskId", "throughBatchId", "contentHash", "restoreOperation"],
+          "properties": {
+            "taskId": { "$ref": "common.schema.json#/$defs/uuid" }, "throughBatchId": { "$ref": "common.schema.json#/$defs/uuid" },
+            "contentHash": { "$ref": "common.schema.json#/$defs/sha256" }, "restoreOperation": { "const": "task handoff" }
+          }
+        }
       }
     },
     "handoff": {

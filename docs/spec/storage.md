@@ -1,5 +1,11 @@
 # 本机存储、事务与历史恢复
 
+启动恢复的范围为显式日志订阅（recovery.scope=observation-subscriptions）。只读完整journal结构/哈希链检查可判定是否存在observation-state，不证明snapshot/blob完整；没有订阅的工作区不在后台预读全部历史正文。存在订阅或journal不能完整判定时，仍走原有完整档案恢复；用户请求任一目标历史时照常核验完整日志及所有引用。私有journal路由结果不能充当已恢复Archive、当前来源核验或业务成功。
+
+目标Archive完整核验之后，历史读取/历史图与snapshot任务不额外等待旧来源观测状态的逐条语义恢复；其绑定和历史正文仍来自原归档，不冒充当前来源已核验。verified任务、同步、身份失效、当前状态与task close需要时恢复原来源状态，仍按日志顺序检查全部同步记录及代次，保留原有pending和严格proof。
+
+v0.51：日志仍按序完整检查结构、哈希链、幂等身份和引用。独立不可变引用使用单轮共享去重及最多8路读取；同步状态最多8路读取、按日志顺序检查target和单调sourceEpoch，不能跳过中间记录或损坏引用。阶段进度区分recovering-history、verifying-archives、restoring-synchronization。未减少保留数据、未把派生索引或mtime变成信任来源。
+
 v0.50身份恢复：普通目录以canonical项目根定位，Git项目以canonical Git common-dir定位同仓库归属；两者仍使用持久projectId UUID，Git各worktree保持独立worktreeId/档案。common-dir一致而配置ID不同不表示新项目，也不能直接忽略配置。普通调用拒绝并返回当前配置ID、已登记ID、配置原字节SHA-256、实际路径及恢复命令；审核后显式register修复。独立clone的common-dir不同，即使远端、名称或配置UUID相同也不能借此自动合并。
 
 修复必须同时提交已登记ID和预期配置哈希，不能用参数任意重绑定项目。既有路径/技能/元数据边界检查仍适用；先在`<data-root>/identity-repairs/<UUID>/project.json`持久保存原始字节，并写`repair.json`的prepared记录。服务先持久记录已有工作区的pending（不请求来源扫描），再复核Git归属、元数据路径与配置字节，原子替换当前project.json（只改变projectId语义，其余配置保留），最后标记applied并登记。当前文件或Git身份变化时拒绝，保留已生成备份；备份、pending记录或写入失败不报告成功。配置写入与registry并非跨文件事务：中断后按prepared/applied记录和实际配置核对，配置已校正但未登记时执行普通register，不回写旧档案或盲重发未知写请求。记录是本机身份修复历史，不是缓存，不随源码提交或默认GC删除。已有工作区保留两个UUID及历史；新worktree只新增工作区UUID。修复不清pending，字节恢复不能复用旧proof；其他worktree和独立clone配置不自动修改。

@@ -1,5 +1,7 @@
 # 只读日志观测与源码同步
 
+v0.51：原生通知缺少安全相对路径时释放该监听器并使覆盖失效，定期完整核对补偿；目录消失/替换为链接时释放监听、返回SOURCE_ROOT_UNAVAILABLE并保留历史与pending，静止的缺失状态不持续写档或推进代次。原路径恢复后重新挂载并完整核验，旧声明不能复用。新verify回执增加scopeStatus=passed/failed表示原声明范围；state继续表示整个工作区，局部passed可同时state=pending，旧回执不补写。
+
 v0.49：Git临时锁、reflog、已知内容寻址对象/pack写入及FETCH_HEAD/ORIG_HEAD/COMMIT_EDITMSG不代表当前来源切换；显式证据引用仍优先，HEAD/index/refs/配置/忽略规则、对象查找配置、聚合及未知通知继续失效。只读status可在有界次数内重做完整采集以吸收短时通知；持续变化保留scanPending及SOURCE_CHANGING，不把不稳定绑定用于声明。verify保持原有完整检查及严格CAS，不自动重基或重试语义声明。SYNC_RACE回执recovery增加cause、reviewRequired、reviewScope和current；这些是原尝试的快照，恢复先刷新事实并重新审查，再用新requestId提交。旧回执和所有未覆盖pending保留。
 
 v0.47：结构演进由观测→pending→当前agent语义复核→文本模型/关系/证据/视图维护→完整sync proof构成闭环。新模块/入口/依赖、职责迁移、删除及重构需要核对模型；不要求每次文本变化都有图改动。sync status附modelMaintenance提示入口，model maintain提供补充/修订/重建指引及视图覆盖，不自行扫描来源、改模型或清pending。提示无法判断语义覆盖，unknown/no-pending-observed不代表架构完整。新项目模型随实际实现逐步补全，保留实体身份与历史图；不在watcher中调用模型，不改变严格来源核验/CAS。

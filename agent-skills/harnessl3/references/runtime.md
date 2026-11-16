@@ -19,6 +19,8 @@ For example, a ticket-writing turn may select planning/to-tickets and the implem
 
 Use a fresh requestId for each intentional read or stage; retain it for retries. Replay/reuse is not a new observed read, and skill reads do not renew context retention. Closed tasks supply only captured bytes. Use --stage to select edited skill versions on an open task; task prompt refreshes an unselected catalog. CLI --skill/--path resolve recorded references, including the requested historical --batch, and an explicit expectedHash remains checked.
 
+When supported, task select --compact returns the new result bodies and skill plan once, with a packetRef for the accumulated packet. Default output and full archived receipts are unchanged. Recover only if needed with task handoff <taskId> --batch <packetRef.throughBatchId> on the same target; digest('context-packet', packet) must match packetRef.contentHash. A compact flag changes display, not request identity or observed reads.
+
 Own edits still need stage synchronization, not automatic task creation. Plans, todos and replies do not close tasks; actual completion/cancellation of the recorded scope plus recorded sync state does. A skill switch alone does not close another unfinished task. Closed tasks remain read-only. Each new task follows the main skill's once-per-task card; repeated skill reads on an existing task do not repeat it.
 
 Use the main skill's ordered routing for missing CLI or project setup. Do not initialize a current project just to restore historical handoff/skill bytes. Declined/cancelled onboarding stays ordinary execution for the same task; valid parent handoffs inherit scope and selection.
@@ -94,6 +96,8 @@ Mechanical evidence anomalies cannot be cleared with a blanket passed claim. A h
 For SOURCE_NESTED_REPOSITORY or unsupported source entries, inspect the reported boundary and intended coverage. Do not silently exclude it, delete its .git, or rewrite ignore rules. An explicitly chosen project source exclusion changes coverage and never clears a referenced evidence failure.
 
 ### Sync recovery
+
+SOURCE_ROOT_UNAVAILABLE means the registered directory is missing or no longer its safe directory. History and pending changes are retained, and native watching is suspended. Restore the actual directory or review its registration, then refresh synchronization. Do not delete archives, merge identities, or claim current verification. A new proof's scopeStatus describes the declared scope; state/pendingPaths describe the whole workspace. A passed scope can leave other work pending; older receipts need not contain scopeStatus.
 
 1. Read `sync status`: when `scanPending:true` or `SOURCE_CHANGING` remains after its bounded complete recapture, let active edits/builds settle and refresh within a bounded wait. Keep the scope pending while activity continues.
 2. On `SYNC_RACE`, preserve the receipt and inspect `error.details.recovery.cause`, `reviewScope`, `current` and `conflicts`. These describe that attempt; refresh status to obtain current facts. Re-review changed source, model and evidence in the authorized scope, including relevant incoming links. Equal final hashes can follow a real byte rollback and do not make an old epoch valid.

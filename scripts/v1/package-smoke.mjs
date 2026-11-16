@@ -11,6 +11,7 @@ import { npm } from './npm-tool.mjs'
 const execFile = promisify(callbackExecFile)
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export async function packageSmoke() {
+  const expectedVersion = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')).version
   const temporary = await mkdtemp(path.join(tmpdir(), 'harnessl3-package-'))
   const dataRoot = path.join(temporary, 'machine data')
   const consumer = path.join(temporary, '中文 package consumer')
@@ -31,7 +32,8 @@ export async function packageSmoke() {
     const files = manifest.files.map(file => file.path)
     for (const required of ['bin/harnessl3.mjs', 'build/build-info.json', 'build/cli/main.js', 'build/cli/help.js', 'build/core/index-worker.js', 'build/web/index.html', 'skills/LICENSE', 'agent-skills/harnessl3/SKILL.md', 'agent-skills/harnessl3/references/install-update.md', 'agent-skills/harnessl3/references/project-init.md', 'agent-skills/harnessl3/references/runtime.md', 'agent-skills/harnessl3/references/subagent.md', 'scripts/install-agent-skills.mjs', 'scripts/verify-install.mjs', 'INSTALL.md', 'docs/USAGE.md', 'docs/spec/contracts/response.schema.json', 'docs/spec/contracts/examples/selection.json']) assert.ok(files.includes(required), `Missing packaged resource: ${required}`)
     assert.equal(files.filter(file => file.endsWith('/SKILL.md') && file.startsWith('skills/')).length, 26)
-    assert.ok(files.every(file => (['scripts/install-agent-skills.mjs', 'scripts/verify-install.mjs'].includes(file) || !/^(?:\.git|\.harness-local|node_modules|src|server|tests|examples|scripts)\//.test(file)) && !file.endsWith('.map')), 'Only the explicit installation tools may ship from development scripts')
+    assert.ok(files.includes('scripts/v1/usage-report.mjs'), 'The explicit artifact measurement tool must ship')
+    assert.ok(files.every(file => (['scripts/install-agent-skills.mjs', 'scripts/verify-install.mjs', 'scripts/v1/usage-report.mjs'].includes(file) || !/^(?:\.git|\.harness-local|node_modules|src|server|tests|examples|scripts)\//.test(file)) && !file.endsWith('.map')), 'Only the explicit installation and measurement tools may ship from development scripts')
     const tarball = path.join(temporary, manifest.filename)
     const bytes = await readFile(tarball)
     assert.equal('sha512-' + createHash('sha512').update(bytes).digest('base64'), manifest.integrity)
@@ -40,7 +42,7 @@ export async function packageSmoke() {
     await writeFile(path.join(consumer, 'package.json'), JSON.stringify({ private: true, name: 'harnessl3-package-consumer', version: '1.0.0' }))
     await npm(['install', tarball, '--prefix', consumer, '--global=false', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: consumer })
     const shim = await npm(['exec', '--offline', '--', 'harnessl3', '--version'], { cwd: consumer })
-    assert.equal(shim.stdout.trim(), '0.1.2', 'The installed npm bin shim must resolve and run the packaged entry')
+    assert.equal(shim.stdout.trim(), expectedVersion, 'The installed npm bin shim must resolve and run the packaged entry')
     installedBinary = path.join(consumer, 'node_modules', 'harnessl3', 'bin', 'harnessl3.mjs')
     const skillInstaller = path.join(consumer, 'node_modules', 'harnessl3', 'scripts', 'install-agent-skills.mjs')
     assert.deepEqual(await readFile(skillInstaller), await readFile(path.join(root, 'scripts', 'install-agent-skills.mjs')))
@@ -55,7 +57,7 @@ export async function packageSmoke() {
     const repeatedSkills = JSON.parse((await execFile(process.execPath, skillArguments, { cwd: consumer, windowsHide: true })).stdout)
     assert.ok(repeatedSkills.results.every(entry => entry.status === 'unchanged'))
     const help = await execFile(process.execPath, [installedBinary, '--help'], { cwd: project, windowsHide: true })
-    assert.match(help.stdout, /HarnessL3 0\.1\.2/)
+    assert.ok(help.stdout.includes('HarnessL3 ' + expectedVersion))
     const selectHelp = (await execFile(process.execPath, [installedBinary, 'task', 'select', '--help'], { cwd: project, windowsHide: true })).stdout
     assert.match(selectHelp, /Usage: harnessl3 task select \[<task-id>\] \[--file/)
     const installedSchema = selectHelp.match(/^Request schema: (.+)$/m)?.[1]
@@ -179,7 +181,26 @@ export async function packageSmoke() {
     assert.equal(snapshot.binding.mode, 'snapshot')
     assert.equal(snapshot.binding.sourceVersion.status, 'unknown')
     assert.equal(snapshot.binding.sourceScanRevision, null)
-    const quick = await plain(['task', 'select', snapshot.taskId, '--read', snapshot.directory.items[0].id, '--skill', 'development/implement', '--reason', 'Verify packaged shortcuts'])
+    const quickArgs = ['task', 'select', snapshot.taskId, '--read', snapshot.directory.items[0].id, '--skill', 'development/implement', '--reason', 'Verify packaged shortcuts']
+    const quickStarted = performance.now()
+    const quick = await plain(quickArgs)
+    const quickMs = performance.now() - quickStarted
+    const compactStarted = performance.now()
+    const compact = await plain([...quickArgs, '--request-id', quick.requestId, '--compact'])
+    const compactMs = performance.now() - compactStarted
+    assert.equal(compact.data.packet, undefined)
+    assert.deepEqual(compact.data.result, quick.data.result)
+    assert.deepEqual(compact.data.skillPlan, quick.data.skillPlan)
+    const { digest } = await import('../../build/core/json.js')
+    assert.equal(compact.data.packetRef.contentHash, digest('context-packet', quick.data.packet))
+    await writeFile(path.join(temporary, 'full.json'), JSON.stringify(quick))
+    await writeFile(path.join(temporary, 'compact.json'), JSON.stringify(compact))
+    await writeFile(path.join(temporary, 'samples.json'), JSON.stringify({ schemaVersion: 1, samples: [{ pairId: 'same-receipt', condition: 'baseline', operation: 'task select', elapsedMs: quickMs, exitCode: 0, stdout: 'full.json' }, { pairId: 'same-receipt', condition: 'candidate', operation: 'task select', elapsedMs: compactMs, exitCode: 0, stdout: 'compact.json' }] }))
+    const installedReporter = path.join(consumer, 'node_modules', 'harnessl3', 'scripts', 'v1', 'usage-report.mjs')
+    await execFile(process.execPath, [installedReporter, '--manifest', path.join(temporary, 'samples.json'), '--out', path.join(temporary, 'usage.json')], { cwd: consumer, windowsHide: true })
+    const measured = JSON.parse(await readFile(path.join(temporary, 'usage.json'), 'utf8'))
+    assert.equal(measured.interpretation.causalBusinessImprovement, 'unknown')
+    assert.ok(measured.summary.candidate.stdoutBytes < measured.summary.baseline.stdoutBytes)
     const firstStage = quick.data.result.batchId
     assert.equal((await plain(['task', 'read', snapshot.taskId, '--skill', 'development/implement'])).data.files.length, 1)
     await plain(['task', 'select', snapshot.taskId, '--stage', '--skill', 'quality/code-review', '--reason', 'Review packaged behavior'])
@@ -193,6 +214,8 @@ export async function packageSmoke() {
     const output = path.join(artifacts, manifest.filename)
     await copyFile(tarball, output)
     const report = { platform: process.platform, node: process.version, package: manifest.name, version: manifest.version, bytes: manifest.size, unpackedBytes: manifest.unpackedSize, files: files.length, skillCount: 26, runtimeSkillCopies: copiedSkills.results.length, runtimeSkillFilesPerHost: copiedSkills.results[0].files.length, runtimeSkillReinstall: true, sha512: manifest.integrity, assets: assets.length, installedBinShim: true, installedTaskRoundtrip: true, installedNoOpenLinks: true, installedScaffoldHandoff: true, installedServiceLoginLifetimes: true, installedVerification: verification, alteredHandoffRejected: true, directoryWithoutGit: { lifecycle: true, restartHandoff: true, browser: directoryBrowser }, tarball: output }
+    report.compactSelection = true
+    report.explicitArtifactMeasurement = true
     await writeFile(path.join(artifacts, 'package-smoke-' + process.platform + '.json'), JSON.stringify(report, null, 2) + '\n')
     return report
   } finally {

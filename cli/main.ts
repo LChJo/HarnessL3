@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { parseArgs, flag, validateUuid, type CommandRequest } from './args.js'
 import { renderHelp } from './help.js'
-import { canonicalJson, parseJsonStrict } from '../core/json.js'
+import { canonicalJson, digest, parseJsonStrict } from '../core/json.js'
 import { HarnessError, asHarnessError } from '../core/errors.js'
 import { resolveDataRoot } from '../core/environment.js'
 import { PACKAGE_VERSION } from '../core/package.js'
@@ -17,7 +17,15 @@ function serviceResult(operation: string, record: ServiceDescriptor | null) {
   return { kind: 'command-result', status: 'complete', operation, result: { state: record ? 'running' : 'stopped', url: record?.url ?? null, instanceId: record?.instanceId ?? null, protocolVersion: 1, startedAt: record?.startedAt ?? null, build: record?.build ?? null, ...serviceLifetime } }
 }
 function success(request: CommandRequest, data: unknown): Envelope { return { schemaVersion: 1, requestId: request.requestId, target: null, replayed: false, ok: true, data } }
-function output(response: Envelope, jsonMode: boolean): void {
+function output(response: Envelope, jsonMode: boolean, compact = false): void {
+  if (compact && response.ok) {
+    const data = response.data as { kind?: string; packet?: unknown; taskId?: string; result?: { batchId?: string } }
+    if (data.kind === 'selection' && data.packet) {
+      const { packet, ...remaining } = data
+      response = { ...response, data: { ...remaining, packetRef: { taskId: data.taskId, throughBatchId: data.result!.batchId,
+        contentHash: digest('context-packet', packet), restoreOperation: 'task handoff' } } }
+    }
+  }
   validateContract('response', response)
   if (jsonMode) process.stdout.write(canonicalJson(response) + '\n')
   else if (!response.ok) process.stderr.write(`${response.error.code}: ${response.error.message}\n${Object.keys(response.error.details).length ? JSON.stringify(response.error.details, null, 2) + '\n' : ''}`)
@@ -82,6 +90,7 @@ export async function runCli(args: string[]): Promise<void> {
   const jsonMode = args.some(argument => argument === '--json' || argument.startsWith('--json='))
   let request: CommandRequest | undefined
   let alreadyPrinted = false
+  let compact = false
   let deadline: ReturnType<typeof setTimeout> | undefined
   let heartbeat: ReturnType<typeof setInterval> | undefined
   let dispatched = false
@@ -92,6 +101,9 @@ export async function runCli(args: string[]): Promise<void> {
     request = parseArgs(args)
     if (request.operation === 'help') { process.stdout.write(renderHelp(request.positionals)); return }
     if (request.operation === 'version') { process.stdout.write(PACKAGE_VERSION + '\n'); return }
+    // Presentation is not part of the archived operation or request identity.
+    compact = request.flags.compact === true
+    delete request.flags.compact
     const timeoutMs = Number(flag(request, 'timeout-ms') ?? 120_000)
     deadline = setTimeout(() => {
       cancellation.abort(new HarnessError('REQUEST_TIMEOUT', 'The CLI wait budget was exhausted; accepted server work may still complete', {
@@ -164,7 +176,7 @@ export async function runCli(args: string[]): Promise<void> {
         } }
       }
     }
-    output(response, jsonMode)
+    output(response, jsonMode, compact)
   } catch (error) {
     const failure = cancellation.signal.aborted && !alreadyPrinted
       ? cancellation.signal.reason instanceof HarnessError ? cancellation.signal.reason

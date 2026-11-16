@@ -76,6 +76,7 @@ export class Archive {
   private journalBytes = 0;
   private state: 'ready' | 'recovery-required' = 'ready';
   private problems: ArchiveDiagnostic[] = [];
+  private journalKindsOnly = false;
 
   constructor(root: string, options: { readOnly?: boolean } = {}) {
     if (!isAbsolute(root)) throw new HarnessError('INVALID_ARGUMENT', 'Archive root must be absolute.');
@@ -85,6 +86,14 @@ export class Archive {
   get status(): 'ready' | 'recovery-required' { return this.state; }
   get diagnostics(): ArchiveDiagnostic[] { return structuredClone(this.problems); }
   get seq(): number { return this.commits.at(-1)?.seq ?? 0; }
+  /** Routing hint only: validates the journal chain, never attests to archived bodies. */
+  static async committedKind(root: string, kind: string): Promise<'present' | 'absent' | 'unknown'> {
+    const inspection = new Archive(root, { readOnly: true });
+    inspection.journalKindsOnly = true;
+    await inspection.ready();
+    if (inspection.status !== 'ready') return 'unknown';
+    return inspection.hasKind(kind) ? 'present' : 'absent';
+  }
   records(filter: RecordFilter = {}): CommitRecord[] { return [...this.scan(filter)]; }
   scan(filter: RecordFilter = {}): IterableIterator<CommitRecord> {
     const records = this.matching(filter);
@@ -182,9 +191,9 @@ export class Archive {
 
   private key(scope: string, requestId: string): string { return `${scope}\0${requestId}`; }
 
-  private async directory(name: string): Promise<string> {
+  private async directory(name: string, create = true): Promise<string> {
     const dir = join(this.root, name);
-    try { if (!this.readOnly) await mkdir(dir, { recursive: true, mode: 0o700 }); }
+    try { if (create && !this.readOnly) await mkdir(dir, { recursive: true, mode: 0o700 }); }
     catch (error) { throw new HarnessError('IO_ERROR', 'Cannot create archive directory.', { ...asHarnessError(error).details, path: dir, cause: String(error) }); }
     const info = await lstat(dir);
     if (!info.isDirectory() || info.isSymbolicLink()) throw corrupt('Archive directory is not a regular local directory.', { path: dir });
@@ -256,18 +265,32 @@ export class Archive {
       }
     }
     pending = [];
+    if (this.journalKindsOnly) return;
     // Recovery shares verification work, not decoded bodies or a lifetime trust cache.
     const verified = new Map<string, Promise<void>>();
-    for (const record of this.commits) {
-      try {
-        await this.verifyReferences(record, verified);
-      } catch (error) {
-        const permission = permissionError(error);
-        if (permission) throw permission;
-        this.state = 'recovery-required';
-        this.problems.push({ code: 'ARCHIVE_CORRUPT', message: String(error), seq: record.seq, verifiedThrough: this.seq });
+    // Independent immutable references share one pass-local verification map.
+    // Bound outstanding I/O rather than allocating one promise per journal row.
+    let nextReference = 0, completedReferences = 0;
+    const failures: { seq: number; error: unknown }[] = [];
+    reportProgress({ phase: 'verifying-archives', completed: 0, total: this.commits.length });
+    await Promise.all(Array.from({ length: Math.min(8, this.commits.length) }, async () => {
+      while (nextReference < this.commits.length) {
+        const record = this.commits[nextReference++];
+        try { await this.verifyReferences(record, verified); }
+        catch (error) { failures.push({ seq: record.seq, error }); }
+        if (++completedReferences % 1000 === 0) {
+          reportProgress({ phase: 'verifying-archives', completed: completedReferences, total: this.commits.length });
+          await setImmediate();
+        }
       }
+    }));
+    for (const { seq, error } of failures.sort((a, b) => a.seq - b.seq)) {
+      const permission = permissionError(error);
+      if (permission) throw permission;
+      this.state = 'recovery-required';
+      this.problems.push({ code: 'ARCHIVE_CORRUPT', message: String(error), seq, verifiedThrough: this.seq });
     }
+    reportProgress({ phase: 'verifying-archives', completed: completedReferences, total: this.commits.length });
     // Do not replace current projections from a journal with an unverifiable suffix.
     if (this.state === 'ready' && !this.readOnly) {
       try { for (const item of latest.values()) await this.materialize((await this.readRecord(this.stored(item.seq))).materializations[item.index]); }
@@ -321,8 +344,9 @@ export class Archive {
 
   async readSnapshot<T = unknown>(hash: string): Promise<T> {
     validateHash(hash);
-    const file = join(await this.directory('snapshots'), `${hash}.json`);
+    const file = join(this.root, 'snapshots', `${hash}.json`);
     try {
+      await this.directory('snapshots', false);
       await this.regularFile(file);
       const snapshot = parseJsonStrict(decode(await readFile(file))) as Snapshot;
       if (!snapshot || typeof snapshot !== 'object' || Object.keys(snapshot).length !== 4 || snapshot.schemaVersion !== 1 || typeof snapshot.kind !== 'string' || !snapshot.kind || snapshot.hash !== hash || digest(snapshot.kind, snapshot.content) !== hash) throw corrupt('Snapshot fingerprint or schema is invalid.', { path: file });
@@ -353,8 +377,9 @@ export class Archive {
 
   async readBlob(hash: string): Promise<Buffer> {
     validateHash(hash);
-    const file = join(await this.directory('skill-blobs'), hash);
+    const file = join(this.root, 'skill-blobs', hash);
     try {
+      await this.directory('skill-blobs', false);
       await this.regularFile(file);
       const bytes = await readFile(file);
       if (sha256(bytes) !== hash) throw corrupt('Archived skill bytes do not match their fingerprint.', { path: file, hash });

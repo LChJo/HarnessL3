@@ -1,11 +1,26 @@
 {
   "name": "harnessl3",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
-  "bin": { "harnessl3": "bin/harnessl3.mjs" },
+  "bin": {
+    "harnessl3": "bin/harnessl3.mjs"
+  },
   "type": "module",
   "description": "Project context and skill files for existing agents, with a local visual workbench",
-  "files": ["bin/", "build/", "skills/", "agent-skills/", "scripts/install-agent-skills.mjs", "scripts/verify-install.mjs", "docs/USAGE.md", "docs/spec/contracts/", "INSTALL.md", "README.md", "LICENSE"],
+  "files": [
+    "bin/",
+    "build/",
+    "skills/",
+    "agent-skills/",
+    "scripts/install-agent-skills.mjs",
+    "scripts/verify-install.mjs",
+    "scripts/v1/usage-report.mjs",
+    "docs/USAGE.md",
+    "docs/spec/contracts/",
+    "INSTALL.md",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=24.12.0 <25"
   },

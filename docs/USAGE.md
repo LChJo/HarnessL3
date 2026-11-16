@@ -1,5 +1,9 @@
 # HarnessL3 CLI 使用
 
+`task select --compact --json`保留当次result正文及skillPlan，以packetRef代替重复累计packet；默认输出和完整历史不变。需要累计内容时在相同目标执行`task handoff <taskId> --batch <packetRef.throughBatchId>`，其packet的`digest("context-packet", packet)`应等于packetRef.contentHash。compact不改变请求身份，同一requestId可取默认完整回执。`sync verify`新结果的scopeStatus表示声明范围，state/pendingPaths表示整个工作区；scopeStatus=passed且state=pending表示还有其他待核验范围。
+
+效果测量可运行随包`node <package-root>/scripts/v1/usage-report.mjs --manifest <samples.json> --out <new-report.json>`。工具仅读取清单指定的工件，新报告路径必须不存在。UTF-8清单为`{"schemaVersion":1,"samples":[{"pairId":"same-workload","condition":"baseline","operation":"task select","elapsedMs":123,"exitCode":0,"stdout":"baseline.stdout.json"}],"outcomes":[]}`；相对路径以清单目录为准，candidate使用同pairId和operation，调用条件由采样者控制。保存原始stdout/stderr、退出码与耗时，不把超时后的在途请求当作失败执行。可选outcomes填写pairId、condition、taskId、status（passed/failed/unknown）和evidence数组（path/sha256）；已知结果必须有匹配字节的验收工件。报告区分声明结果与因果关系，缺基线/日志/真实结果保持未知，字节量不等于token。已有明确日志授权时使用agent bind，不自动发现或猜测会话。
+
 正式首版实现与平台验证进度见仓库的[实施状态](implementation/STATUS.md)。需要Node.js 24.12.0或更新的24.x版本，普通目录运行无需Git；管理Git工作区或从源码安装时需要Git。CLI使用现有agent，不启动模型，不安装Hooks，也不执行所选技能。
 
 ## 安装与初始化

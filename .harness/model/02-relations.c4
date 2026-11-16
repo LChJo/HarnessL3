@@ -102,7 +102,7 @@ model {
   app.core.runtime -[uses]-> app.core.archive "装配文件档案" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000b"
-      brief "启动恢复及任务、同步、观测与普通维护复用同一worktree已验证的Archive。"
+      brief "显式订阅及已请求的任务、同步、观测与普通维护复用同一worktree完整核验的Archive；无订阅启动只做journal路由。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"

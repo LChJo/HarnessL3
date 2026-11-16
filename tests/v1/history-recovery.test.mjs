@@ -6,7 +6,58 @@ import { realpath } from 'node:fs/promises'
 import { fixture } from './helpers.mjs'
 import { Archive } from '../../build/core/archive.js'
 import { Runtime } from '../../build/core/runtime.js'
+import { FreshnessManager } from '../../build/core/freshness.js'
 import { startServer } from '../../build/service/main.js'
+
+test('TC17 snapshot entry and archived handoff do not wait for source-observation state restoration', async t => {
+  const f = await fixture(t)
+  const root = await f.repository()
+  const initialized = await f.cli(['init'], { cwd: root })
+  assert.equal(initialized.code, 0)
+  const started = await f.cli(['task', 'start', '--title', 'Historical context'], { cwd: root })
+  assert.equal(started.code, 0, started.stdout)
+  const taskId = started.body.data.taskId
+  assert.equal((await f.cli(['task', 'select', taskId], { cwd: root })).code, 0)
+  await f.cli(['serve', 'stop'])
+  const dataRoot = await realpath(f.dataRoot), runtime = new Runtime(dataRoot)
+  let release, timer
+  const gate = new Promise(resolve => { release = resolve })
+  const original = FreshnessManager.prototype.ready
+  t.mock.method(FreshnessManager.prototype, 'ready', function () { return gate.then(() => original.call(this)) })
+  const request = runtime.execute({ operation: 'task handoff', requestId: randomUUID(), cwd: root, positionals: [taskId], flags: {} })
+  try {
+    const result = await Promise.race([request, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Historical handoff waited for unrelated source state')), 2000) })])
+    assert.equal(result.ok, true, JSON.stringify(result))
+    assert.equal(result.data.kind, 'handoff')
+    assert.equal(result.data.binding.sourceVersion.status, 'unknown')
+    const entry = await Promise.race([runtime.execute({ operation: 'task start', requestId: randomUUID(), cwd: root, positionals: [], flags: { title: 'Snapshot without source restoration' } }), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Snapshot entry waited for unrelated source state')), 2000) })])
+    assert.equal(entry.ok, true, JSON.stringify(entry))
+    assert.equal(entry.data.binding.mode, 'snapshot')
+    assert.equal(entry.data.binding.sourceVersion.status, 'unknown')
+  } finally { clearTimeout(timer); release(); await request; await runtime.close() }
+})
+
+test('TC17 subscription resumption leaves unrelated snapshot recovery until its workspace is requested', async t => {
+  const f = await fixture(t)
+  const root = await f.repository()
+  const initialized = await f.cli(['init'], { cwd: root })
+  assert.equal(initialized.code, 0, initialized.stdout)
+  await f.cli(['serve', 'stop'])
+  const dataRoot = await realpath(f.dataRoot), worktree = initialized.body.data.result.worktree
+  const archiveRoot = path.join(dataRoot, 'worktrees', worktree.id), writer = new Archive(archiveRoot)
+  const hash = await writer.snapshot('unrelated-history', { historical: true })
+  await writer.commit({ scope: 'history', requestId: randomUUID(), request: {}, payload: { kind: 'synthetic-history' }, receipt: {}, archives: [{ kind: 'snapshot', hash }] })
+  let reads = 0
+  const original = Archive.prototype.readSnapshot
+  t.mock.method(Archive.prototype, 'readSnapshot', function (requested) { if (this.root === archiveRoot && requested === hash) reads++; return original.call(this, requested) })
+  const runtime = new Runtime(dataRoot)
+  try {
+    await runtime.ready()
+    assert.equal(reads, 0, 'no explicit log binding needs this historical body at startup')
+    await runtime.worktreeResources(worktree)
+    assert.equal(reads, 1, 'target access still performs full reference validation')
+  } finally { await runtime.close() }
+})
 
 test('TC23 control readiness and RPC remain available while archive recovery is pending', async t => {
   const f = await fixture(t)

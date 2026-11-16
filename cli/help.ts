@@ -44,6 +44,7 @@ const descriptions: Record<string, string> = {
 }
 const options: Record<string, [string, string]> = {
   json: ['', 'Emit one JSON envelope to stdout; diagnostics go to stderr. Help/version stay text.'],
+  compact: ['', 'Return new selection bodies and a packetRef instead of repeating the accumulated packet. Full archived receipts are unchanged; restore with task handoff <taskId> --batch <throughBatchId> on the same target.'],
   project: ['UUID', 'Explicit registered project; ambiguous worktrees require --worktree.'],
   worktree: ['UUID', 'Exact registered worktree; a conflicting registered cwd is rejected.'],
   'data-dir': ['absolute-path', 'Machine data root outside all registered worktree trees.'],

@@ -9,7 +9,7 @@ export const commands: Record<string, CommandDefinition> = {
   'project register': { count: 1, flags: ['repair-project-id', 'expected-config-hash'] }, 'project list': { count: 0 }, 'project show': { count: 1 }, 'project unregister': { count: 1 },
   'worktree register': { count: 1, flags: ['repair-project-id', 'expected-config-hash'] }, 'worktree list': { count: 0 }, 'worktree show': { count: 1 }, 'worktree unregister': { count: 1 },
   'task start': { count: 0, flags: ['title', 'session', 'mode'], required: ['title'] }, 'task prompt': { count: 1 },
-  'task select': { count: 1, optionalPositional: true, flags: ['file', 'read', 'expand', 'skill', 'reason', 'stage'] }, 'task read': { count: 1, flags: ['file', 'batch', 'skill', 'path'] },
+  'task select': { count: 1, optionalPositional: true, flags: ['file', 'read', 'expand', 'skill', 'reason', 'stage', 'compact'] }, 'task read': { count: 1, flags: ['file', 'batch', 'skill', 'path'] },
   'task show': { count: 1, flags: ['batch'] }, 'task handoff': { count: 1, flags: ['batch'] }, 'task close': { count: 1 },
   'task list': { count: 0, flags: ['limit', 'offset'] }, 'context query': { count: 1, flags: ['file', 'read', 'expand'] },
   'request status': { count: 1, flags: ['task'] },
@@ -24,7 +24,7 @@ export const commands: Record<string, CommandDefinition> = {
   gc: { count: 0, flags: ['dry-run', 'apply'] }, 'migrate prototype': { count: 0, flags: ['from', 'dry-run', 'apply'], required: ['from', 'worktree'] },
 }
 export const globals = ['json', 'project', 'worktree', 'data-dir', 'request-id', 'timeout-ms', 'quiet-progress', 'help', 'version']
-export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply', 'no-open', 'quiet-progress', 'stage'])
+export const booleanFlags = new Set(['json', 'help', 'version', 'foreground', 'dry-run', 'apply', 'no-open', 'quiet-progress', 'stage', 'compact'])
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 export function flag(request: CommandRequest, name: string): string | undefined { const value = request.flags[name]; return typeof value === 'string' ? value : undefined }
 export function validateUuid(value: string, field: string): string { if (!uuid.test(value)) throw new HarnessError('INVALID_ARGUMENT', 'Expected a lowercase UUID', { field }); return value }

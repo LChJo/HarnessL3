@@ -1,5 +1,7 @@
 # HarnessL3 CLI 工作规格 v1.0
 
+v0.51（2026-11-16）：多项目使用驱动的[六项优化](../implementation/USAGE_OPTIMIZATION.md)。目录消失时释放原生监听，保留历史/pending并在恢复后重新核验；档案独立引用及同步状态有界并行读取，完整校验不减少。task select显式--compact返回packetRef，完整归档与旧回执不改；新proof的scopeStatus与全局state分别表达。只读测量仅读取显式工件，缺基线/结果保持未知。FR09/12/14/15、TC07/08/17/18/22/26/27；本轮实际结果见实施状态。
+
 v0.50（2026-11-15）：同Git common-dir的项目UUID冲突提供显式恢复。register新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`，仅允许恢复该仓库已登记身份；先保留原配置字节，持久记录已有工作区pending，核对范围与版本后校正当前配置，保留worktree UUID和历史。普通读取、init及无修复参数的register仍拒绝冲突，不合并独立clone/普通目录。FR01/12/15、TC01/02/22/27，实际范围见实施状态。
 
 v0.49（2026-11-12）：同步观测过滤Git锁/reflog/对象写入等确定的临时维护通知，保留HEAD/index/refs/配置/忽略规则及未知通知的失效语义。状态读取有界重做完整采集，持续变动返回pending和SOURCE_CHANGING；声明仍严格CAS，旧proof和字节回退不能自动升级。竞态回执附原因、声明范围及当次状态，agent重新审核后用新requestId恢复，持续问题说明具体范围及下一步。候选0.1.2，FR09/12/15及TC07/08/22/27。

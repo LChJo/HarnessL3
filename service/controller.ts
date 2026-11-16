@@ -89,7 +89,7 @@ export async function probeService(dataRoot: string, record: ServiceDescriptor, 
     if (result.state === 'running' || result.state === 'draining') {
       const recovery = result.recovery
       const validRecovery = recovery && ['not-started', 'recovering', 'complete', 'degraded', 'stopping'].includes(recovery.state) && [recovery.totalWorktrees, recovery.completedWorktrees, recovery.failures].every(value => Number.isSafeInteger(value) && value >= 0)
-      return { state: result.state, ...(validRecovery ? { recovery: { state: recovery.state, totalWorktrees: recovery.totalWorktrees, completedWorktrees: recovery.completedWorktrees, failures: recovery.failures } } : {}) }
+      return { state: result.state, ...(validRecovery ? { recovery: { state: recovery.state, totalWorktrees: recovery.totalWorktrees, completedWorktrees: recovery.completedWorktrees, failures: recovery.failures, ...(recovery.scope === 'observation-subscriptions' ? { scope: recovery.scope } : {}) } } : {}) }
     }
     return { state: 'unavailable', reason: 'not-ready' }
   } catch (error) {

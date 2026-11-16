@@ -28,6 +28,30 @@ async function setup(t) {
   return { ...f, root, skills, call, target, start, json }
 }
 
+test('TC18 compact selection removes duplicate packet transport and replays the same full receipt', async t => {
+  const f = await setup(t)
+  const entry = (await f.start()).body.data
+  const requestId = randomUUID()
+  const args = ['task', 'select', entry.taskId, '--read', leafId, '--request-id', requestId]
+  const compact = await f.call([...args, '--compact'])
+  assert.equal(compact.code, 0, compact.stdout)
+  assert.equal(compact.body.data.packet, undefined)
+  assert.equal(compact.body.data.result.contexts[0].entity.description, 'EXACT WORKER CONTEXT')
+  const full = await f.call(args)
+  assert.equal(full.code, 0, full.stdout)
+  assert.equal(full.body.replayed, true)
+  const { digest } = await import('../../build/core/json.js')
+  assert.equal(compact.body.data.packetRef.contentHash, digest('context-packet', full.body.data.packet))
+  assert.deepEqual(compact.body.data.result, full.body.data.result)
+  assert.deepEqual(compact.body.data.skillPlan, full.body.data.skillPlan)
+  assert.ok(Buffer.byteLength(compact.stdout) < Buffer.byteLength(full.stdout))
+  const ref = compact.body.data.packetRef
+  const handoff = await f.call(['task', 'handoff', ref.taskId, '--batch', ref.throughBatchId])
+  assert.equal(handoff.code, 0, handoff.stdout)
+  assert.deepEqual(handoff.body.data.packet, full.body.data.packet)
+  t.diagnostic(JSON.stringify({ compactBytes: Buffer.byteLength(compact.stdout), fullBytes: Buffer.byteLength(full.stdout) }))
+})
+
 test('TC22 text routing is displayed once while structured entry data remains available', async t => {
   const f = await setup(t)
   const started = await f.start()

@@ -25,7 +25,7 @@ import type { Envelope, FileReadRequest, ModelSnapshot, Target, WorktreeRecord }
 
 export function commandResult(operation: string, result: unknown) { return { kind: 'command-result' as const, status: 'complete' as const, operation, result } }
 interface WorktreeResources { worktree: WorktreeRecord; archive: Archive; index: SearchIndex; tasks: TaskService; observation: ObservationManager; freshness: FreshnessManager; migration: MigrationService }
-export interface RecoveryStatus { state: 'not-started' | 'recovering' | 'complete' | 'degraded' | 'stopping'; totalWorktrees: number; completedWorktrees: number; failures: number }
+export interface RecoveryStatus { state: 'not-started' | 'recovering' | 'complete' | 'degraded' | 'stopping'; totalWorktrees: number; completedWorktrees: number; failures: number; scope?: 'observation-subscriptions' }
 const archivedOperations = new Set(['task show', 'history show', 'task handoff', 'task list', 'history list', 'task read'])
 const taskOperations = new Set([...archivedOperations, 'task start', 'task prompt', 'task select', 'task close', 'context query'])
 export class Runtime extends EventEmitter {
@@ -41,7 +41,7 @@ export class Runtime extends EventEmitter {
   private activeOperations = 0
   private startup?: Promise<void>
   private closing = false
-  private readonly recovery: RecoveryStatus = { state: 'not-started', totalWorktrees: 0, completedWorktrees: 0, failures: 0 }
+  private readonly recovery: RecoveryStatus = { state: 'not-started', totalWorktrees: 0, completedWorktrees: 0, failures: 0, scope: 'observation-subscriptions' }
   private bindingSerial<T>(operation: () => Promise<T>): Promise<T> { const next = this.bindingQueue.then(operation); this.bindingQueue = next.catch(() => {}); return next }
   constructor(dataRoot: string) { super(); this.dataRoot = dataRoot }
   registry(request?: CommandRequest): WorkspaceRegistry { return new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot: request?.skillsRoot }) }
@@ -69,6 +69,10 @@ export class Runtime extends EventEmitter {
       try {
         // Resume explicit subscriptions after restart. No session discovery or log-directory scan occurs.
         try { await lstat(path.join(this.dataRoot, 'worktrees', worktree.id, 'journal.jsonl')) } catch (error) { if (isErrno(error, 'ENOENT')) continue; throw error }
+        // No subscription means no background need for historical snapshot/blob
+        // bodies. A requested workspace still uses its fully verified Archive.
+        const subscription = await Archive.committedKind(path.join(this.dataRoot, 'worktrees', worktree.id), 'observation-state')
+        if (subscription === 'absent') continue
         const archive = await this.worktreeArchive(worktree)
         if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The worktree archive requires recovery')
         if (!this.closing && archive.hasKind('observation-state')) await this.bindingSerial(async () => {
@@ -97,7 +101,7 @@ export class Runtime extends EventEmitter {
     reportProgress({ phase: 'loading-workspace', target: { projectId: worktree.projectId, worktreeId: worktree.id } })
     return worktree
   }
-  async worktreeResources(worktree: WorktreeRecord): Promise<WorktreeResources> {
+  async worktreeResources(worktree: WorktreeRecord, deferSourceState = false): Promise<WorktreeResources> {
     if (this.closing) throw new HarnessError('BUSY', 'The runtime is stopping', {}, true)
     let pending = this.resources.get(worktree.id)
     if (!pending) {
@@ -113,8 +117,12 @@ export class Runtime extends EventEmitter {
       current = await replacement
     }
     // Registry activity/availability is resolved for each request; archived resources keep no live identity authority.
-    if ((current.worktree.kind ?? 'git') !== (worktree.kind ?? 'git') || current.worktree.gitCommonDir !== worktree.gitCommonDir) current.freshness.identityChanged()
+    if ((current.worktree.kind ?? 'git') !== (worktree.kind ?? 'git') || current.worktree.gitCommonDir !== worktree.gitCommonDir) {
+      await current.freshness.ready()
+      current.freshness.identityChanged()
+    }
     Object.assign(current.worktree, worktree)
+    if (!deferSourceState) await current.freshness.ready()
     return current
   }
   private async openWorktree(worktree: WorktreeRecord): Promise<WorktreeResources> {
@@ -155,7 +163,7 @@ export class Runtime extends EventEmitter {
       return pending
     }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) } })
     const observation = new ObservationManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: () => { this.emit('commit', { worktreeId: record.id, seq: archive.seq, kind: 'observation' }) } })
-    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await freshness.ready(); await observation.ready(); return { worktree: record, archive, index, tasks, observation, freshness, migration } }
+    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await observation.ready(); return { worktree: record, archive, index, tasks, observation, freshness, migration } }
     catch (error) { await index.close().catch(() => {}); throw error }
   }
   private async stopObservations(ids: string[]): Promise<void> {
@@ -247,7 +255,7 @@ export class Runtime extends EventEmitter {
     if (taskId) validateUuid(taskId, 'taskId')
     if (batchId) { validateUuid(batchId, 'batchId'); if (!taskId) throw new HarnessError('INVALID_ARGUMENT', 'A historical batch requires its task') }
     const worktree = await this.registry().resolve({ cwd: this.dataRoot, worktreeId, allowInactive: !!taskId })
-    const resource = await this.worktreeResources(worktree)
+    const resource = await this.worktreeResources(worktree, !!taskId)
     const viewSeq = resource.archive.seq
     if (taskId && await resource.migration.has(taskId)) {
       const legacy = await resource.migration.show(taskId, batchId)
@@ -351,7 +359,9 @@ export class Runtime extends EventEmitter {
       if (taskOperations.has(request.operation)) {
         const worktree = await this.resolve(request, true)
         target = { projectId: worktree.projectId, worktreeId: worktree.id }
-        const resource = await this.worktreeResources(worktree)
+        // Verified operations restore through beforeLive/status; snapshot entry
+        // and archived reads do not need unrelated source-observation states.
+        const resource = await this.worktreeResources(worktree, request.operation !== 'task close')
         const taskId = request.positionals[0]
         if (taskId && await resource.migration.has(taskId)) return await this.legacyCommand(request, resource)
         const skillsRoot = archivedOperations.has(request.operation) ? request.skillsRoot ?? path.join(this.dataRoot, 'skills') : () => registry.skillsRoot(worktree)

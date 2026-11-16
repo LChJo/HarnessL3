@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm, mkdir, stat, readdir } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm, mkdir, stat, readdir, access } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -13,6 +13,52 @@ async function fixture(t) {
   return { root, archive: new Archive(root) };
 }
 const operation = (extras = {}) => ({ scope: `task:${randomUUID()}`, requestId: randomUUID(), request: { operation: 'test', value: 1 }, payload: { event: 'created' }, receipt: { answer: 'original' }, ...extras });
+
+test('TC16 reading missing immutable content never creates archive directories', async t => {
+  const { root } = await fixture(t);
+  const reader = new Archive(join(root, 'not-created'));
+  await assert.rejects(reader.readSnapshot('0'.repeat(64)));
+  await assert.rejects(reader.readBlob('0'.repeat(64)));
+  await assert.rejects(access(join(root, 'not-created')), { code: 'ENOENT' });
+});
+
+test('TC17 journal routing never attests to deferred archive bodies or hides a broken chain', async t => {
+  const { archive, root } = await fixture(t);
+  const committed = await archive.commit(operation({ payload: { kind: 'synthetic-history' } }));
+  const first = await archive.record(committed.seq);
+  await writeFile(join(root, 'snapshots', first.receiptHash + '.json'), '{}');
+  assert.equal(await Archive.committedKind(root, 'observation-state'), 'absent');
+  const full = new Archive(root, { readOnly: true });
+  await full.ready();
+  assert.equal(full.status, 'recovery-required', 'requested history still checks its original bytes');
+  const journal = await readFile(join(root, 'journal.jsonl'), 'utf8');
+  await writeFile(join(root, 'journal.jsonl'), journal.replace(first.hash, '0'.repeat(64)));
+  assert.equal(await Archive.committedKind(root, 'observation-state'), 'unknown');
+});
+
+test('TC17 recovery overlaps bounded independent reference reads and still rejects damaged bytes', async t => {
+  const { archive, root } = await fixture(t);
+  for (let i = 0; i < 24; i++) await archive.commit(operation({ receipt: { ordinal: i } }));
+  const recovered = new Archive(root, { readOnly: true });
+  const original = recovered.readSnapshot.bind(recovered);
+  let active = 0, maximum = 0;
+  t.mock.method(recovered, 'readSnapshot', async hash => {
+    maximum = Math.max(maximum, ++active);
+    try { await new Promise(resolve => setTimeout(resolve, 8)); return await original(hash); }
+    finally { active--; }
+  });
+  const started = performance.now();
+  await recovered.ready();
+  t.diagnostic(JSON.stringify({ referenceReads: 24, maximumConcurrentReads: maximum, elapsedMs: performance.now() - started }));
+  assert.equal(recovered.status, 'ready');
+  assert.ok(maximum > 1 && maximum <= 8, 'recovery must overlap I/O with a fixed bound');
+  const first = await recovered.record(1);
+  await writeFile(join(root, 'snapshots', first.receiptHash + '.json'), '{}');
+  const damaged = new Archive(root, { readOnly: true });
+  await damaged.ready();
+  assert.equal(damaged.status, 'recovery-required');
+  assert.ok(damaged.diagnostics.some(item => item.seq === 1 && item.code === 'ARCHIVE_CORRUPT'));
+});
 
 test('TC17 journal recovery retains metadata while large history bodies stay on disk', async t => {
   const { archive, root } = await fixture(t);
