@@ -6,11 +6,11 @@ import { HarnessError } from '../core/errors.js'
 
 const descriptions: Record<string, string> = {
   init: 'Create missing context files and register this directory or Git worktree; the current agent authors/reviews its project model and reports progress.',
-  'project register': 'Register an existing configured project without creating its model.',
+  'project register': 'Register shared project context and local Git associations without changing project files; no init needed for an existing configuration.',
   'project list': 'List registered projects from any directory.',
   'project show': 'Show a registered project by its stable ID.',
   'project unregister': 'Deactivate registration; retain source, skills and archives.',
-  'worktree register': 'Register an existing configured directory or Git worktree; never create or switch branches.',
+  'worktree register': 'Register existing context without changing project files; associate matching Git repositories locally and preserve worktree/history IDs.',
   'worktree list': 'List registered worktrees, optionally filtered by project.',
   'worktree show': 'Show the exact worktree path and availability.',
   'worktree unregister': 'Deactivate this worktree registration while retaining its files and history.',

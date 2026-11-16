@@ -73,6 +73,45 @@ test('TC03 init creates portable missing templates and a seed once; repeat prese
   assert.equal((await f.registry().worktrees())[0].id, first.worktree.id);
 });
 
+test('TC01 separate clones of one origin form one project without rewriting legacy IDs or histories', async t => {
+  const f = await fixture(t), a = await f.repository('first clone'), b = await f.repository('other clone');
+  await git(a, 'remote', 'add', 'origin', 'git@example.invalid:team/shared.git');
+  await git(b, 'remote', 'add', 'origin', 'https://example.invalid/team/shared.git');
+  const registry = f.registry(), first = await registry.init(a, 'Shared'), second = await registry.init(b, 'Shared');
+  assert.notEqual(first.project.id, second.project.id);
+  const before = await readFile(path.join(b, '.harness/project.json'));
+  const groups = await registry.projects();
+  assert.equal(groups.length, 1);
+  assert.deepEqual(new Set(groups[0].memberProjectIds), new Set([first.project.id, second.project.id]));
+  assert.equal((await registry.worktrees(groups[0].id)).length, 2);
+  assert.equal((await registry.resolve({ cwd: b, projectId: groups[0].id, worktreeId: second.worktree.id })).projectId, second.project.id);
+  assert.deepEqual(await readFile(path.join(b, '.harness/project.json')), before);
+  assert.equal((await registry.register(b)).worktree.id, second.worktree.id);
+});
+
+test('TC01 a committed project ID registers on another machine and another clone without init', async t => {
+  const f = await fixture(t), a = await f.repository('portable original');
+  await git(a, 'remote', 'add', 'origin', 'ssh://git@example.invalid/team/portable.git');
+  const registry = f.registry(), original = await registry.init(a, 'Portable');
+  await git(a, 'add', '.harness'); await git(a, 'commit', '-m', 'Portable project context');
+  const b = path.join(f.root, 'portable clone');
+  await execFile('git', ['clone', a, b], { windowsHide: true });
+  await git(b, 'remote', 'set-url', 'origin', 'https://example.invalid/team/portable');
+  const config = await readFile(path.join(b, '.harness/project.json'));
+  const model = await readFile(path.join(b, '.harness/model/main.c4'));
+  const other = await registry.register(b);
+  assert.equal(other.project.id, original.project.id);
+  assert.notEqual(other.worktree.id, original.worktree.id);
+  assert.notEqual(other.worktree.gitCommonDir, original.worktree.gitCommonDir);
+  assert.equal((await registry.projects()).length, 1);
+  assert.equal((await registry.worktrees(original.project.id)).length, 2);
+  assert.equal((await registry.resolve({ cwd: b })).id, other.worktree.id);
+  const newMachine = new WorkspaceRegistry(path.join(f.root, 'other machine'), { seedRoot: f.seedRoot });
+  assert.equal((await newMachine.register(b)).project.id, original.project.id);
+  assert.deepEqual(await readFile(path.join(b, '.harness/project.json')), config);
+  assert.deepEqual(await readFile(path.join(b, '.harness/model/main.c4')), model);
+});
+
 test('TC03 an existing empty user skills directory is preserved; init never initializes a Git repository', async (t) => {
   const f = await fixture(t);
   await mkdir(path.join(f.dataRoot, 'skills'), { recursive: true });

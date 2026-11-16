@@ -35,9 +35,42 @@ try {
     samples.push({ requestId, committedAt: commit.committedAt, paintedAt: new Date(paintedAt).toISOString(), milliseconds: paintedAt - Date.parse(commit.committedAt) })
   }
   const times = samples.map(sample => sample.milliseconds).sort((a, b) => a - b)
+  // Explicit registration links two legacy project IDs; source and archived task bindings stay separate.
+  const pageErrors = []
+  page.on('pageerror', error => pageErrors.push(error.message))
+  const otherRoot = (await fixture.cli(['worktree', 'show', fixture.other.worktreeId])).data.result.worktree.root
+  for (const directory of [fixture.root, otherRoot]) {
+    await execFile('git', ['-C', directory, 'remote', 'add', 'origin', 'git@example.invalid:team/shared.git'], { windowsHide: true })
+    await fixture.cli(['worktree', 'register', directory], directory)
+  }
+  const grouped = (await fixture.cli(['project', 'list'])).data.result.items
+  assert.equal(grouped.length, 1)
+  assert.ok(grouped[0].memberProjectIds.includes(fixture.other.projectId))
+  await page.reload()
+  await page.getByTestId('project-select').waitFor()
+  await page.waitForFunction(() => document.querySelector('[data-testid="worktree-select"]')?.options.length === 3)
+  assert.equal(await page.getByTestId('project-select').locator('option').count(), 1)
+  assert.equal(await page.getByTestId('project-select').inputValue(), grouped[0].id)
+  const waitWorktree = id => page.waitForFunction(id => document.querySelector('[data-route-worktree]')?.getAttribute('data-route-worktree') === id && !document.querySelector('.view-loading'), id)
+  await page.getByTestId('worktree-select').selectOption(fixture.other.worktreeId)
+  await waitWorktree(fixture.other.worktreeId)
+  assert.equal(await page.getByTestId('project-select').inputValue(), grouped[0].id)
+  // Selectors replace the current URL; retain an explicit navigation entry for popstate coverage.
+  await page.evaluate(() => history.pushState(null, '', location.href))
+  await page.getByTestId('worktree-select').selectOption(fixture.target.worktreeId)
+  await waitWorktree(fixture.target.worktreeId)
+  await page.goBack()
+  await waitWorktree(fixture.other.worktreeId)
+  assert.equal(await page.getByTestId('project-select').inputValue(), grouped[0].id)
+  await page.reload()
+  await waitWorktree(fixture.other.worktreeId)
+  assert.equal(await page.getByTestId('project-select').inputValue(), grouped[0].id)
+  assert.deepEqual(pageErrors, [])
+  const gitProjectGrouping = { projects: 1, worktrees: 3, legacyIdsRetained: true, crossCloneNavigation: true, backAndReload: true }
   const report = { platform: process.platform, node: process.version, browser: await browser.version(), crlfSeed: fixture.crlfSeed, gates, eventDisplay: { definition: 'journal committedAt to two requestAnimationFrame callbacks after exact output count is visible; same machine wall clock, includes refresh and paint scheduling', samples, p50: times[Math.ceil(times.length * .5) - 1], p95: times[Math.ceil(times.length * .95) - 1] } }
   const reports = path.join(root, '.harness-local', 'validation')
   await mkdir(reports, { recursive: true })
-  await writeFile(path.join(reports, `browser-${process.platform}.json`), JSON.stringify(report, null, 2) + '\n')
+  await page.screenshot({ path: path.join(reports, `git-project-grouping-${process.platform}.png`) })
+  await writeFile(path.join(reports, `browser-${process.platform}.json`), JSON.stringify({ ...report, gitProjectGrouping }, null, 2) + '\n')
   console.log(JSON.stringify({ platform: process.platform, browser: report.browser, crlfSeed: fixture.crlfSeed, gates: gates.results.length, eventDisplaySamples: times.length, p50: report.eventDisplay.p50, p95: report.eventDisplay.p95 }))
 } finally { await browser?.close(); await fixture.stop() }

@@ -161,7 +161,7 @@ const gitCode = (error: unknown, expected: number): boolean => !!error && typeof
 async function gitState(run: GitRun, worktree: WorktreeRecord, config: ProjectConfig, prefixes: string[]): Promise<GitState> {
   const root = await canonicalPath(line(await run('rev-parse', '--show-toplevel')));
   const commonDir = await canonicalPath(line(await run('rev-parse', '--path-format=absolute', '--git-common-dir')));
-  if (!samePath(root, worktree.root) || worktree.gitCommonDir === null || !samePath(commonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The current Git/project identity does not match the registered target.');
+  if (!samePath(root, worktree.root) || worktree.gitCommonDir === null || !samePath(commonDir, worktree.gitCommonDir) || config.projectId !== (worktree.configProjectId ?? worktree.projectId)) throw new ScanFailure('SOURCE_TARGET_CHANGED', 'The current Git/project identity does not match the registered target.');
   let head: string | null = null;
   try { head = line(await run('rev-parse', '--verify', '--quiet', 'HEAD')); } catch (error) { if (!gitCode(error, 1)) throw error; }
   if (head !== null && !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(head)) throw new ScanFailure('SOURCE_GIT_OUTPUT', 'Git returned an invalid commit identifier.');

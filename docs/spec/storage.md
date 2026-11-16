@@ -1,12 +1,14 @@
 # 本机存储、事务与历史恢复
 
+v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
+
 启动恢复的范围为显式日志订阅（recovery.scope=observation-subscriptions）。只读完整journal结构/哈希链检查可判定是否存在observation-state，不证明snapshot/blob完整；没有订阅的工作区不在后台预读全部历史正文。存在订阅或journal不能完整判定时，仍走原有完整档案恢复；用户请求任一目标历史时照常核验完整日志及所有引用。私有journal路由结果不能充当已恢复Archive、当前来源核验或业务成功。
 
 目标Archive完整核验之后，历史读取/历史图与snapshot任务不额外等待旧来源观测状态的逐条语义恢复；其绑定和历史正文仍来自原归档，不冒充当前来源已核验。verified任务、同步、身份失效、当前状态与task close需要时恢复原来源状态，仍按日志顺序检查全部同步记录及代次，保留原有pending和严格proof。
 
 v0.51：日志仍按序完整检查结构、哈希链、幂等身份和引用。独立不可变引用使用单轮共享去重及最多8路读取；同步状态最多8路读取、按日志顺序检查target和单调sourceEpoch，不能跳过中间记录或损坏引用。阶段进度区分recovering-history、verifying-archives、restoring-synchronization。未减少保留数据、未把派生索引或mtime变成信任来源。
 
-v0.50身份恢复：普通目录以canonical项目根定位，Git项目以canonical Git common-dir定位同仓库归属；两者仍使用持久projectId UUID，Git各worktree保持独立worktreeId/档案。common-dir一致而配置ID不同不表示新项目，也不能直接忽略配置。普通调用拒绝并返回当前配置ID、已登记ID、配置原字节SHA-256、实际路径及恢复命令；审核后显式register修复。独立clone的common-dir不同，即使远端、名称或配置UUID相同也不能借此自动合并。
+v0.50历史身份恢复（普通登记及仓库关联以v0.52为准）：普通目录以canonical项目根定位，Git项目以canonical Git common-dir定位同仓库归属；两者仍使用持久projectId UUID，Git各worktree保持独立worktreeId/档案。common-dir一致而配置ID不同不表示新项目，也不能直接忽略配置。普通调用拒绝并返回当前配置ID、已登记ID、配置原字节SHA-256、实际路径及恢复命令；审核后显式register修复。独立clone的common-dir不同，即使远端、名称或配置UUID相同也不能借此自动合并。
 
 修复必须同时提交已登记ID和预期配置哈希，不能用参数任意重绑定项目。既有路径/技能/元数据边界检查仍适用；先在`<data-root>/identity-repairs/<UUID>/project.json`持久保存原始字节，并写`repair.json`的prepared记录。服务先持久记录已有工作区的pending（不请求来源扫描），再复核Git归属、元数据路径与配置字节，原子替换当前project.json（只改变projectId语义，其余配置保留），最后标记applied并登记。当前文件或Git身份变化时拒绝，保留已生成备份；备份、pending记录或写入失败不报告成功。配置写入与registry并非跨文件事务：中断后按prepared/applied记录和实际配置核对，配置已校正但未登记时执行普通register，不回写旧档案或盲重发未知写请求。记录是本机身份修复历史，不是缓存，不随源码提交或默认GC删除。已有工作区保留两个UUID及历史；新worktree只新增工作区UUID。修复不清pending，字节恢复不能复用旧proof；其他worktree和独立clone配置不自动修改。
 
@@ -26,6 +28,12 @@ v0.41派生索引：通用提交事件只索引提交头、类型、时间与rec
 - 关联：[运行架构](architecture.md)、[CLI 契约](cli-contract.md)、[模型与读取契约](model-context.md)、[日志与同步](observation-sync.md)、[验收矩阵](acceptance.md)。
 
 ## 1. 数据权威与身份
+
+稳定projectId继续是共享持久身份；origin仅为本机仓库关联依据，不替代UUID。registry可保存gitRepository（无凭证规范键）、gitCommonDirs及configProjectIds。网络键去掉用户信息、.git尾缀、尾斜杠和默认端口，主机不区分大小写，仓库路径保留大小写；非默认端口/不同主机或路径不合并，无法识别或带query/hash的origin不用于关联。无可用origin时沿用原common-dir边界。只有显式登记建立关联，读取列表不探查所有源码、不写登记。
+
+旧记录按相同已登记gitRepository投影为一个项目，memberProjectIds提供原UUID及配置兼容ID；代表ID取既有登记顺序，原记录不重写。相同共享UUID的其他clone增加本机common-dir，历史不同UUID的同仓库保留原记录及工作区归属。project show/list、worktree过滤及project unregister按组处理；取消登记保留全部历史。worktree/任务绑定仍使用其原projectId，不把代表ID写回源码或档案。工作区返回的configProjectId是本次实际观察且registry认可的精确配置ID；context/source继续核对该ID及完整配置哈希，不能把接受兼容ID变成任意配置替换许可。
+
+登记前后重读Git身份和原配置字节；并发变更拒绝持久化关联。新增本机关联只改registry，不改.git、project.json、模型或证据，不清同步pending。配置变动必须重新核验，旧proof保持原绑定。旧版配对修复参数仍可明确修改当前projectId并备份，但不是日常注册所必需；下文v0.50写配置流程仅描述该显式入口。
 
 业务仓库中的 `.harness/project.json`、`model/*.c4` / `*.likec4`、`evidence.json`、`aliases.json` 是可维护的长期上下文。普通技能仍是技能目录中的文件。运行服务读取这些文件，派生目录、模型投影和索引；数据库不提供第二套可编辑对象，也不把读取历史写回业务仓库。
 

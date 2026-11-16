@@ -32,11 +32,11 @@ model {
   app.core.runtime -[uses]-> app.core.workspace "定位工作区" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000004"
-      brief "Runtime通过WorkspaceRegistry核查登记和请求目标，显式身份修复保留备份与工作区UUID。"
+      brief "Runtime通过WorkspaceRegistry核对实际目标和本机Git关联；项目入口归组，工作区与任务UUID隔离。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "2"
+      version "3"
     }
   }
   app.core.runtime -[uses]-> app.core.context "任务与交接" {

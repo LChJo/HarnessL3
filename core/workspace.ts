@@ -28,6 +28,7 @@ interface WorkspaceIdentity {
   gitCommonDir: string | null;
   gitDir: string | null;
   branch: string | null;
+  gitRepository?: string;
 }
 
 export interface WorkspaceRegistration {
@@ -62,6 +63,55 @@ async function exists(file: string): Promise<boolean> {
 
 const sameCommon = (left: string | null, right: string | null): boolean => left === null || right === null ? left === right : samePath(left, right);
 const validCommon = (value: ProjectRecord | WorktreeRecord): boolean => value.kind === 'directory' ? value.gitCommonDir === null : value.kind === 'git' && typeof value.gitCommonDir === 'string' && path.isAbsolute(value.gitCommonDir);
+const commons = (project: ProjectRecord): string[] => project.gitCommonDirs ?? (project.gitCommonDir ? [project.gitCommonDir] : []);
+const ownsCommon = (project: ProjectRecord, common: string | null): boolean => common !== null && commons(project).some(item => samePath(item, common));
+const configIds = (project: ProjectRecord): string[] => [...new Set([project.id, ...(project.configProjectIds ?? [])])];
+function projectGroups(projects: ProjectRecord[]): ProjectRecord[] {
+  const groups = new Map<string, ProjectRecord>();
+  for (const project of projects) {
+    const key = project.gitRepository ?? `project:${project.id}`;
+    const group = groups.get(key);
+    if (!group) groups.set(key, { ...structuredClone(project), memberProjectIds: configIds(project) });
+    else {
+      group.active ||= project.active;
+      group.memberProjectIds = [...new Set([...group.memberProjectIds!, ...configIds(project)])];
+      group.gitCommonDirs = [...new Set([...commons(group), ...commons(project)])];
+    }
+  }
+  return [...groups.values()];
+}
+function groupMembers(data: RegistryFile, id: string): Set<string> {
+  requireUuid(id, 'projectId');
+  const group = projectGroups(data.projects).find(item => item.memberProjectIds!.includes(id));
+  if (!group) throw new HarnessError('NOT_FOUND', 'The project is not registered.', { projectId: id });
+  return new Set(group.memberProjectIds);
+}
+
+/** A local association hint, not a substitute for project/worktree UUIDs. Never stores credentials. */
+export async function gitRepositoryKey(remote: string, root: string): Promise<string | undefined> {
+  if (!remote || /[\r\n\0]/.test(remote)) return undefined;
+  let value = remote;
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(value) && !path.isAbsolute(value)) {
+    const scp = /^(?:[^/@:]+@)?(\[[^\]]+\]|[^/:]+):(.+)$/.exec(value);
+    if (scp) value = `ssh://${scp[1]}/${scp[2]}`;
+  }
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) {
+    const file = await canonicalPath(path.resolve(root, value));
+    return 'file:' + (process.platform === 'win32' ? file.toLowerCase() : file);
+  }
+  let url: URL;
+  try { url = new URL(value); } catch { return undefined; }
+  if (url.search || url.hash) return undefined;
+  if (url.protocol === 'file:') {
+    const { fileURLToPath } = await import('node:url');
+    try { const file = await canonicalPath(fileURLToPath(url)); return 'file:' + (process.platform === 'win32' ? file.toLowerCase() : file); } catch { return undefined; }
+  }
+  if (!['ssh:', 'https:', 'http:', 'git:'].includes(url.protocol)) return undefined;
+  const port = url.port && ({ 'ssh:': '22', 'git:': '9418', 'http:': '80', 'https:': '443' } as Record<string, string>)[url.protocol] !== url.port ? ':' + url.port : '';
+  const location = url.pathname.replace(/\/+$/, '').replace(/\.git$/, '').replace(/^\/+/, '');
+  if (!url.hostname || !location || location.split('/').some(part => !part || part === '.' || part === '..')) return undefined;
+  return `network:${url.hostname.toLowerCase()}${port}/${location}`;
+}
 export const DIRECTORY_EXCLUDES = ['**/node_modules', '**/.venv', '**/__pycache__', '**/.cache', '**/dist', '**/build', '**/coverage', '**/target'];
 
 /** The nearest explicit project or repository boundary owns the target. No Git process is needed for plain directories. */
@@ -92,17 +142,19 @@ async function gitIdentity(location: string): Promise<WorkspaceIdentity> {
       env: environment,
     })).stdout.trim();
     // These independent read-only observations share one request-local identity.
-    const [insideWorktree, rootPath, commonPath, directoryPath, branch] = await Promise.all([
+    const [insideWorktree, rootPath, commonPath, directoryPath, branch, origin] = await Promise.all([
       run('rev-parse', '--is-inside-work-tree'),
       run('rev-parse', '--show-toplevel'),
       run('rev-parse', '--path-format=absolute', '--git-common-dir'),
       run('rev-parse', '--absolute-git-dir'),
       run('symbolic-ref', '--quiet', '--short', 'HEAD').catch(() => null),
+      run('config', '--get', 'remote.origin.url').catch(error => { if (error.code === 1) return ''; throw error; }),
     ]);
     if (insideWorktree !== 'true') throw new Error('Not a Git worktree');
     const [root, gitCommonDir, gitDir] = await Promise.all([canonicalPath(rootPath), canonicalPath(commonPath), canonicalPath(directoryPath)]);
     if (!samePath(root, workingDirectory)) throw new Error('Invalid Git boundary');
-    return { kind: 'git', root, gitCommonDir, gitDir, branch };
+    const gitRepository = await gitRepositoryKey(origin, root);
+    return { kind: 'git', root, gitCommonDir, gitDir, branch, ...(gitRepository ? { gitRepository } : {}) };
   } catch (error) {
     const permission = permissionError(error);
     if (permission) throw permission;
@@ -177,14 +229,24 @@ export class WorkspaceRegistry {
     const ids = new Set<string>();
     for (const project of data.projects) {
       if (project && project.kind === undefined) project.kind = 'git';
-      if (!project || !uuidPattern.test(project.id) || projects.has(project.id) || typeof project.active !== 'boolean' || typeof project.name !== 'string' || !validCommon(project) || typeof project.configPath !== 'string' || !path.isAbsolute(project.configPath) || project.gitCommonDir !== null && [...projects.values()].some((item) => sameCommon(item.gitCommonDir, project.gitCommonDir))) {
+      if (!project || !uuidPattern.test(project.id) || projects.has(project.id) || typeof project.active !== 'boolean' || typeof project.name !== 'string' || !validCommon(project) || typeof project.configPath !== 'string' || !path.isAbsolute(project.configPath)
+        || project.gitRepository !== undefined && (project.kind !== 'git' || typeof project.gitRepository !== 'string' || !/^(network:[^/@\s]+\/[^?#\s]+|file:.+)$/.test(project.gitRepository))
+        || project.gitCommonDirs !== undefined && (project.kind !== 'git' || !Array.isArray(project.gitCommonDirs) || !project.gitCommonDirs.length || project.gitCommonDirs.some(item => typeof item !== 'string' || !path.isAbsolute(item)) || !project.gitCommonDirs.some(item => sameCommon(item, project.gitCommonDir)) || new Set(project.gitCommonDirs.map(item => process.platform === 'win32' ? item.toLowerCase() : item)).size !== project.gitCommonDirs.length)
+        || project.configProjectIds !== undefined && (project.kind !== 'git' || !Array.isArray(project.configProjectIds) || project.configProjectIds.some(item => !uuidPattern.test(item)) || new Set(project.configProjectIds).size !== project.configProjectIds.length)
+        || commons(project).some(common => [...projects.values()].some(item => ownsCommon(item, common)))) {
         throw new HarnessError('ARCHIVE_CORRUPT', 'The machine project registry is invalid.', { path: file });
       }
       projects.set(project.id, project);
     }
+    const aliases = new Map<string, ProjectRecord>();
+    for (const project of data.projects) for (const alias of configIds(project)) {
+      const other = aliases.get(alias);
+      if (other && other !== project && (!project.gitRepository || project.gitRepository !== other.gitRepository)) throw new HarnessError('ARCHIVE_CORRUPT', 'A project alias belongs to another repository.', { path: file });
+      aliases.set(alias, project);
+    }
     for (const worktree of data.worktrees) {
       if (worktree && worktree.kind === undefined) worktree.kind = 'git';
-      if (!worktree || !uuidPattern.test(worktree.id) || ids.has(worktree.id) || !projects.has(worktree.projectId) || typeof worktree.active !== 'boolean' || typeof worktree.available !== 'boolean' || !(worktree.branch === null || typeof worktree.branch === 'string') || !validCommon(worktree) || worktree.kind === 'directory' && worktree.branch !== null || typeof worktree.root !== 'string' || !path.isAbsolute(worktree.root) || roots.some((root) => samePath(root, worktree.root)) || projects.get(worktree.projectId)!.kind !== worktree.kind || !sameCommon(projects.get(worktree.projectId)!.gitCommonDir, worktree.gitCommonDir) || worktree.kind === 'directory' && data.worktrees.some(item => item !== worktree && item.projectId === worktree.projectId)) {
+      if (!worktree || !uuidPattern.test(worktree.id) || ids.has(worktree.id) || !projects.has(worktree.projectId) || typeof worktree.active !== 'boolean' || typeof worktree.available !== 'boolean' || !(worktree.branch === null || typeof worktree.branch === 'string') || !validCommon(worktree) || worktree.kind === 'directory' && worktree.branch !== null || typeof worktree.root !== 'string' || !path.isAbsolute(worktree.root) || roots.some((root) => samePath(root, worktree.root)) || projects.get(worktree.projectId)!.kind !== worktree.kind || (worktree.kind === 'git' ? !ownsCommon(projects.get(worktree.projectId)!, worktree.gitCommonDir) : projects.get(worktree.projectId)!.gitCommonDir !== null) || worktree.kind === 'directory' && data.worktrees.some(item => item !== worktree && item.projectId === worktree.projectId)) {
         throw new HarnessError('ARCHIVE_CORRUPT', 'The machine worktree registry is invalid.', { path: file });
       }
       ids.add(worktree.id);
@@ -253,7 +315,8 @@ export class WorkspaceRegistry {
   async skillsRoot(worktree: WorktreeRecord): Promise<string> {
     const [identity, data] = await Promise.all([workspaceIdentity(worktree.root), this.load()]);
     const config = await readConfig(identity.root);
-    if (!samePath(identity.root, worktree.root) || identity.kind !== (worktree.kind ?? 'git') || !sameCommon(identity.gitCommonDir, worktree.gitCommonDir) || config.projectId !== worktree.projectId) {
+    const project = data.projects.find(item => item.id === worktree.projectId);
+    if (!project || !samePath(identity.root, worktree.root) || identity.kind !== (worktree.kind ?? 'git') || !sameCommon(identity.gitCommonDir, worktree.gitCommonDir) || !configIds(project).includes(config.projectId) || project.gitRepository && project.gitRepository !== identity.gitRepository) {
       throw new HarnessError('WORKTREE_MOVED', 'The worktree no longer matches its registered identity.', { worktreeId: worktree.id });
     }
     return this.checkedSkillsRoot(identity, config, data.worktrees);
@@ -265,42 +328,67 @@ export class WorkspaceRegistry {
     return seedSkills(this.seedRoot, path.join(this.dataRoot, 'skills'));
   }
 
+  private async associateRepository(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig): Promise<void> {
+    if (identity.kind !== 'git') return;
+    const common = data.projects.find(item => ownsCommon(item, identity.gitCommonDir));
+    const configured = data.projects.find(item => item.id === config.projectId) ?? data.projects.find(item => configIds(item).includes(config.projectId));
+    // Legacy records acquire an association only during explicit registration.
+    const project = common ?? configured;
+    if (project?.gitRepository && project.gitRepository !== identity.gitRepository) throw new HarnessError('PROJECT_ID_CONFLICT', 'The Git origin no longer matches the registered repository. Review the remote and project identity; registration did not modify project files.', { projectId: project.id, reason: 'git-repository-changed' });
+    if (project && !project.gitRepository && identity.gitRepository) {
+      if (ownsCommon(project, identity.gitCommonDir)) project.gitRepository = identity.gitRepository;
+      else {
+        const original = await workspaceIdentity(path.dirname(path.dirname(project.configPath)));
+        if (original.kind === 'git' && ownsCommon(project, original.gitCommonDir) && original.gitRepository === identity.gitRepository) project.gitRepository = identity.gitRepository;
+      }
+    }
+    if (common && common.id !== config.projectId && common.gitRepository && common.gitRepository === identity.gitRepository) {
+      if (configured && configured !== common && configured.gitRepository !== common.gitRepository) throw new HarnessError('PROJECT_ID_CONFLICT', 'The configured project ID belongs to a different repository.', { projectId: config.projectId });
+      common.configProjectIds = [...new Set([...configIds(common), config.projectId])];
+    }
+  }
+
   private checkIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig, configHash?: string): void {
     const existing = data.worktrees.find(item => samePath(item.root, identity.root));
     const upgrade = existing?.kind === 'directory' && identity.kind === 'git';
     if (existing && !upgrade && (existing.kind !== identity.kind || !sameCommon(existing.gitCommonDir, identity.gitCommonDir))) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
-    const common = identity.gitCommonDir === null ? undefined : data.projects.find(item => sameCommon(item.gitCommonDir, identity.gitCommonDir));
+    const common = data.projects.find(item => ownsCommon(item, identity.gitCommonDir));
     if (common && existing && common.id !== existing.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'Git adoption conflicts with a separately registered project; identity repair cannot merge their histories.');
-    if (common && common.id !== config.projectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'This Git repository is already registered with a different project ID. Review the configuration and use the recovery command to restore its registered identity.', {
+    if (common && !configIds(common).includes(config.projectId)) throw new HarnessError('PROJECT_ID_CONFLICT', 'The project configuration has a different ID. Review the Git repository and register its local association; existing history is preserved.', {
       projectId: config.projectId,
       recovery: {
         reason: 'same-git-common-dir', reviewRequired: true, worktreeRoot: identity.root, gitCommonDir: identity.gitCommonDir,
         configPath: path.join(identity.root, '.harness/project.json'), configProjectId: config.projectId, registeredProjectId: common.id,
         configHash: configHash ?? null,
-        command: configHash ? ['worktree', 'register', identity.root, '--repair-project-id', common.id, '--expected-config-hash', configHash, '--data-dir', this.dataRoot] : null,
+        command: common.gitRepository && common.gitRepository === identity.gitRepository ? ['worktree', 'register', identity.root, '--data-dir', this.dataRoot] : configHash ? ['worktree', 'register', identity.root, '--repair-project-id', common.id, '--expected-config-hash', configHash, '--data-dir', this.dataRoot] : null,
       },
     });
-    if (existing && existing.projectId !== config.projectId) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
+    if (existing && !configIds(data.projects.find(item => item.id === existing.projectId)!).includes(config.projectId)) throw new HarnessError('WORKTREE_MOVED', 'The registered path now identifies a different workspace or project.', { worktreeId: existing.id });
     const project = data.projects.find(item => item.id === config.projectId);
-    if (project && (project.kind === 'directory' ? !existing || existing.projectId !== project.id : identity.kind !== 'git' || !sameCommon(project.gitCommonDir, identity.gitCommonDir))) throw new HarnessError('PROJECT_ID_CONFLICT', 'This project ID belongs to another workspace.', { projectId: config.projectId });
+    if (project && (project.kind === 'directory' ? !existing || existing.projectId !== project.id : identity.kind !== 'git' || !ownsCommon(project, identity.gitCommonDir) && (!project.gitRepository || project.gitRepository !== identity.gitRepository))) throw new HarnessError('PROJECT_ID_CONFLICT', 'This project ID belongs to another workspace.', { projectId: config.projectId });
   }
 
   private async registerIdentity(data: RegistryFile, identity: WorkspaceIdentity, config: ProjectConfig): Promise<WorkspaceRegistration> {
+    const before = await configSnapshot(identity.root);
+    if (JSON.stringify(before.config) !== JSON.stringify(config)) throw new HarnessError('VERSION_CONFLICT', 'The project configuration changed before registration. Project files were not modified.');
     await this.checkDataRoot(identity.root, data.worktrees);
     await this.checkMetadataRoot(identity.root);
     await this.checkedSkillsRoot(identity, config, data.worktrees);
     const existingRoot = data.worktrees.find((item) => samePath(item.root, identity.root));
+    await this.associateRepository(data, identity, config);
     this.checkIdentity(data, identity, config);
-    let project = data.projects.find((item) => item.id === config.projectId);
+    const skillSeed = !this.overrideSkillsRoot && !config.skills?.root ? await this.seedSkills() : undefined;
+    let project = data.projects.find(item => ownsCommon(item, identity.gitCommonDir)) ?? data.projects.find(item => configIds(item).includes(config.projectId));
     const configPath = path.join(identity.root, '.harness', 'project.json');
     if (!project) {
-      project = { id: config.projectId, name: config.name, kind: identity.kind, gitCommonDir: identity.gitCommonDir, active: true, configPath };
+      project = { id: config.projectId, name: config.name, kind: identity.kind, gitCommonDir: identity.gitCommonDir, active: true, configPath, ...(identity.gitRepository ? { gitRepository: identity.gitRepository } : {}) };
       data.projects.push(project);
     } else {
       project.active = true;
       project.name = config.name;
       project.kind = identity.kind;
-      project.gitCommonDir = identity.gitCommonDir;
+      if (project.gitCommonDir === null || identity.kind === 'directory') project.gitCommonDir = identity.gitCommonDir;
+      else if (!ownsCommon(project, identity.gitCommonDir)) project.gitCommonDirs = [...commons(project), identity.gitCommonDir!];
       // Keep a reachable configuration as the project's navigation hint.
       if (!(await exists(project.configPath))) project.configPath = configPath;
     }
@@ -309,8 +397,10 @@ export class WorkspaceRegistry {
       worktree = { id: randomUUID(), projectId: project.id, kind: identity.kind, root: identity.root, gitCommonDir: identity.gitCommonDir, branch: identity.branch, available: true, active: true };
       data.worktrees.push(worktree);
     } else Object.assign(worktree, { kind: identity.kind, gitCommonDir: identity.gitCommonDir, active: true, available: true, branch: identity.branch });
+    const current = await workspaceIdentity(identity.root);
+    if (current.kind !== identity.kind || !samePath(current.root, identity.root) || !sameCommon(current.gitCommonDir, identity.gitCommonDir) || current.gitRepository !== identity.gitRepository || sha256((await configSnapshot(identity.root)).bytes) !== sha256(before.bytes)) throw new HarnessError('VERSION_CONFLICT', 'The project or Git repository changed during registration. Project files were not modified.');
     await this.save(data);
-    return { project: { ...project }, worktree: { ...worktree }, paths: { config: configPath } };
+    return { project: { ...project }, worktree: { ...worktree, ...(identity.kind === 'git' ? { configProjectId: config.projectId } : {}) }, paths: { config: configPath }, ...(skillSeed ? { skillSeed } : {}) };
   }
 
   async register(location: string, options: RegistrationOptions = {}): Promise<WorkspaceRegistration> {
@@ -323,12 +413,13 @@ export class WorkspaceRegistry {
       const configHash = sha256(snapshot.bytes);
       if (Boolean(options.repairProjectId) !== Boolean(options.expectedConfigHash)) throw new HarnessError('INVALID_ARGUMENT', 'Identity repair requires both project ID and configuration hash.');
       if (!options.repairProjectId) {
+        await this.associateRepository(data, identity, snapshot.config);
         this.checkIdentity(data, identity, snapshot.config, configHash);
         return this.registerIdentity(data, identity, snapshot.config);
       }
       requireUuid(options.repairProjectId, 'repairProjectId');
       if (!/^[0-9a-f]{64}$/.test(options.expectedConfigHash!)) throw new HarnessError('INVALID_ARGUMENT', 'expectedConfigHash must be a lowercase SHA-256.');
-      const project = identity.kind === 'git' ? data.projects.find(item => sameCommon(item.gitCommonDir, identity.gitCommonDir)) : undefined;
+      const project = identity.kind === 'git' ? data.projects.find(item => ownsCommon(item, identity.gitCommonDir)) : undefined;
       if (!project || project.id !== options.repairProjectId) throw new HarnessError('PROJECT_ID_CONFLICT', 'Identity repair only restores the project already registered to this Git common directory. Independent repositories and directories cannot be merged.');
       if (configHash !== options.expectedConfigHash) throw new HarnessError('VERSION_CONFLICT', 'The configuration changed after review. Read the current identity conflict before preparing another repair.', { expectedConfigHash: options.expectedConfigHash, configHash });
       if (snapshot.config.projectId === project.id) return this.registerIdentity(data, identity, snapshot.config);
@@ -363,7 +454,7 @@ export class WorkspaceRegistry {
       await this.checkDataRoot(identity.root, data.worktrees);
       await this.checkMetadataRoot(identity.root);
       const configPath = path.join(identity.root, '.harness', 'project.json');
-      const commonProject = identity.gitCommonDir === null ? undefined : data.projects.find((item) => sameCommon(item.gitCommonDir, identity.gitCommonDir));
+      const commonProject = data.projects.find(item => ownsCommon(item, identity.gitCommonDir));
       const snapshot = await exists(configPath) ? await configSnapshot(identity.root) : undefined;
       const config: ProjectConfig = snapshot ? snapshot.config : {
         schemaVersion: 1, projectId: commonProject?.id ?? randomUUID(), name: name ?? commonProject?.name ?? path.basename(identity.root), source: { excludePatterns: identity.kind === 'directory' ? [...DIRECTORY_EXCLUDES] : [] },
@@ -398,19 +489,20 @@ export class WorkspaceRegistry {
     });
   }
 
-  async projects(): Promise<ProjectRecord[]> { return (await this.load()).projects.map((item) => ({ ...item })); }
+  async projects(): Promise<ProjectRecord[]> { return projectGroups((await this.load()).projects); }
 
   async project(id: string): Promise<ProjectRecord> {
     requireUuid(id, 'projectId');
-    const result = (await this.load()).projects.find((item) => item.id === id);
+    const result = projectGroups((await this.load()).projects).find(item => item.memberProjectIds!.includes(id));
     if (!result) throw new HarnessError('NOT_FOUND', 'The project is not registered.', { projectId: id });
     return { ...result };
   }
 
-  private async inspectRecord(record: WorktreeRecord, observedIdentity?: WorkspaceIdentity): Promise<{ record: WorktreeRecord; identity?: WorkspaceIdentity; config?: ProjectConfig }> {
+  private async inspectRecord(record: WorktreeRecord, observedIdentity?: WorkspaceIdentity, project?: ProjectRecord): Promise<{ record: WorktreeRecord; identity?: WorkspaceIdentity; config?: ProjectConfig }> {
     try {
       const identity = observedIdentity ?? await workspaceIdentity(record.root);
       const config = await readConfig(identity.root);
+      project ??= (await this.load()).projects.find(item => item.id === record.projectId)!;
       if (record.kind === 'directory' && identity.kind === 'git' && samePath(identity.root, record.root) && config.projectId === record.projectId) {
         return await this.locked(async () => {
           const data = await this.load();
@@ -424,43 +516,42 @@ export class WorkspaceRegistry {
           const current = data.worktrees.find(item => item.id === record.id)!;
           const project = data.projects.find(item => item.id === current.projectId)!;
           Object.assign(current, { kind: actual.kind, gitCommonDir: actual.gitCommonDir, branch: actual.branch });
-          Object.assign(project, { kind: actual.kind, gitCommonDir: actual.gitCommonDir });
+          Object.assign(project, { kind: actual.kind, gitCommonDir: actual.gitCommonDir, ...(actual.gitRepository ? { gitRepository: actual.gitRepository } : {}) });
           await this.save(data);
           return { record: { ...current, available: true }, identity: actual, config: currentConfig };
         });
       }
-      const available = samePath(identity.root, record.root) && identity.kind === record.kind && sameCommon(identity.gitCommonDir, record.gitCommonDir) && config.projectId === record.projectId;
-      return { record: { ...record, branch: available ? identity.branch : record.branch, available }, identity, config };
+      const available = samePath(identity.root, record.root) && identity.kind === record.kind && sameCommon(identity.gitCommonDir, record.gitCommonDir) && configIds(project).includes(config.projectId) && (!project.gitRepository || project.gitRepository === identity.gitRepository);
+      return { record: { ...record, branch: available ? identity.branch : record.branch, available, ...(available && identity.kind === 'git' ? { configProjectId: config.projectId } : {}) }, identity, config };
     } catch (error) { const permission = permissionError(error); if (permission) throw permission; return { record: { ...record, available: false } }; }
   }
 
-  private async liveRecord(record: WorktreeRecord): Promise<WorktreeRecord> {
-    return (await this.inspectRecord(record)).record;
+  private async liveRecord(record: WorktreeRecord, project?: ProjectRecord): Promise<WorktreeRecord> {
+    return (await this.inspectRecord(record, undefined, project)).record;
   }
 
   async worktrees(projectId?: string): Promise<WorktreeRecord[]> {
-    if (projectId !== undefined) await this.project(projectId);
-    return Promise.all((await this.load()).worktrees.filter((item) => projectId === undefined || item.projectId === projectId).map((item) => this.liveRecord(item)));
+    const data = await this.load(), members = projectId === undefined ? undefined : groupMembers(data, projectId);
+    return Promise.all(data.worktrees.filter(item => !members || members.has(item.projectId)).map(item => this.liveRecord(item, data.projects.find(project => project.id === item.projectId))));
   }
 
   async worktree(id: string): Promise<WorktreeRecord> {
     requireUuid(id, 'worktreeId');
-    const result = (await this.load()).worktrees.find((item) => item.id === id);
+    const data = await this.load(), result = data.worktrees.find((item) => item.id === id);
     if (!result) throw new HarnessError('NOT_FOUND', 'The worktree is not registered.', { worktreeId: id });
-    return this.liveRecord(result);
+    return this.liveRecord(result, data.projects.find(item => item.id === result.projectId));
   }
 
   async unregisterProject(id: string): Promise<{ unregisteredIds: string[]; archivesRetained: true }> {
     requireUuid(id, 'projectId');
     return this.locked(async () => {
       const data = await this.load();
-      const project = data.projects.find((item) => item.id === id);
-      if (!project) throw new HarnessError('NOT_FOUND', 'The project is not registered.', { projectId: id });
-      project.active = false;
-      const worktrees = data.worktrees.filter((item) => item.projectId === id);
+      const members = groupMembers(data, id), projects = data.projects.filter(item => members.has(item.id));
+      for (const project of projects) project.active = false;
+      const worktrees = data.worktrees.filter(item => members.has(item.projectId));
       for (const worktree of worktrees) worktree.active = false;
       await this.save(data);
-      return { unregisteredIds: [id, ...worktrees.map((item) => item.id)], archivesRetained: true };
+      return { unregisteredIds: [...projects.map(item => item.id), ...worktrees.map((item) => item.id)], archivesRetained: true };
     });
   }
 
@@ -480,12 +571,13 @@ export class WorkspaceRegistry {
     if (options.projectId !== undefined) requireUuid(options.projectId, 'projectId');
     if (options.worktreeId !== undefined) requireUuid(options.worktreeId, 'worktreeId');
     const data = await this.load();
-    const explicitProject = options.projectId === undefined ? undefined : data.projects.find((item) => item.id === options.projectId);
+    const explicitProject = options.projectId === undefined ? undefined : projectGroups(data.projects).find(item => item.memberProjectIds!.includes(options.projectId!));
+    const members = explicitProject ? new Set(explicitProject.memberProjectIds) : undefined;
     if (options.projectId !== undefined && !explicitProject) throw new HarnessError('NOT_FOUND', 'The project is not registered.', { projectId: options.projectId });
     const explicitWorktree = options.worktreeId === undefined ? undefined : data.worktrees.find((item) => item.id === options.worktreeId);
     if (options.worktreeId !== undefined && !explicitWorktree) throw new HarnessError('NOT_FOUND', 'The worktree is not registered.', { worktreeId: options.worktreeId });
-    if (explicitProject && explicitWorktree && explicitWorktree.projectId !== explicitProject.id) throw new HarnessError('TARGET_CONFLICT', 'Explicit project and worktree do not have the same ownership.');
-    if (explicitProject && !explicitWorktree && data.worktrees.filter((item) => item.projectId === explicitProject.id && item.active).length > 1) {
+    if (explicitProject && explicitWorktree && !members!.has(explicitWorktree.projectId)) throw new HarnessError('TARGET_CONFLICT', 'Explicit project and worktree do not have the same ownership.');
+    if (explicitProject && !explicitWorktree && data.worktrees.filter(item => members!.has(item.projectId) && item.active).length > 1) {
       throw new HarnessError('TARGET_REQUIRED', 'This project has multiple active worktrees; specify --worktree.');
     }
     const cwd = await canonicalPath(options.cwd);
@@ -495,7 +587,7 @@ export class WorkspaceRegistry {
     try { cwdIdentity = await workspaceIdentity(cwd); }
     catch (error) { if (!(options.allowInactive && explicitWorktree)) throw error; }
     const cwdRecord = cwdIdentity ? data.worktrees.find((item) => samePath(item.root, cwdIdentity!.root)) : undefined;
-    if (cwdRecord && (explicitWorktree && explicitWorktree.id !== cwdRecord.id || explicitProject && explicitProject.id !== cwdRecord.projectId)) {
+    if (cwdRecord && (explicitWorktree && explicitWorktree.id !== cwdRecord.id || explicitProject && !members!.has(cwdRecord.projectId))) {
       throw new HarnessError('TARGET_CONFLICT', 'The explicit target conflicts with the registered current worktree.', { cwdWorktreeId: cwdRecord.id });
     }
     if (!cwdRecord && !explicitWorktree) {
@@ -530,7 +622,7 @@ export class WorkspaceRegistry {
     // Explicit archive-only reads retain their original binding even if today's
     // configuration disappears. Callers must not use this for current content.
     const observed = cwdIdentity && samePath(cwdIdentity.root, selected.root) ? cwdIdentity : undefined;
-    const inspected = await this.inspectRecord(selected, observed);
+    const inspected = await this.inspectRecord(selected, observed, project);
     const current = inspected.record;
     if (options.allowInactive && explicitWorktree) return current;
     if (!current.available) {

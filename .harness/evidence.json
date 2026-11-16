@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "The current v0.51 baseline defines loss-of-coverage convergence, bounded/full archive validation, scoped proof status, optional compact output and explicit-artifact measurements without weakening identities/history or causal evidence boundaries.",
+      "claim": "Current v0.52 keeps stable shared UUIDs and read-only ordinary registration with local Git associations/legacy identity compatibility; worktree history, exact source checks and strict proof isolation remain.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "1347630c4daa57f79c18a20204b59f0b105d563ffa921edb702f19195717add1",
-      "observedAt": "2026-11-16T04:46:21.998Z"
+      "hash": "8d80b947be176e5b6e7524bd2432ce34b579a4a533381f5f15fae8fcca927e4c",
+      "observedAt": "2026-11-16T05:44:51.002Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -44,12 +44,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "Workspace registry locates nearest directory/Git boundaries, keeps stable UUIDs across atomic Git adoption and rejects identity or path conflicts without Git downgrade. v0.50 review: Registry resolves Git projects by canonical common directory and explicitly repairs only the current configuration ID using a reviewed hash, original-byte backup and repeated target checks; independent targets remain isolated.",
+      "claim": "Registry preserves stable shared project IDs, associates canonical Git origins/common directories and legacy config IDs only on explicit read-only registration, projects grouped entries, and rejects unrelated ownership/drift; worktree/archive IDs stay original.",
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "6adb0039605636e952145bacad22604a3a22964dc3740dcc7032f68505454252",
-      "observedAt": "2026-11-15T15:15:26.190Z"
+      "hash": "016e5321c036d2cdafb28db0a4b0c413f7ab52dd0117533f8baedef377f4367f",
+      "observedAt": "2026-11-16T05:48:47.405Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService preserves skill-hub/2 routing and archive boundaries, and directs authorized scoped sync recovery rather than stopping at an unexplained race.",
+      "claim": "TaskService checks the exact config identity observed by the registry while preserving original task bindings, selection and archived bytes.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "3a529eea510777a7b378f9074f5678ad8d243708b218af9d44ed54e83a5a1ecb",
-      "observedAt": "2026-11-12T04:40:03.155Z"
+      "hash": "c4eb2386666f05f64085cacbb17a1e22f96e1284ade789d393e17408b82fc2a9",
+      "observedAt": "2026-11-16T05:44:51.017Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -104,12 +104,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000b",
       "kind": "source-code",
-      "claim": "Git and filesystem adapters share byte/link capture; directory scans use hierarchical ignore rules and two enumerations plus byte checks, preserving unknown on failures.",
+      "claim": "Full Git source checks compare the exact registry-observed config ID and bytes; legacy ID compatibility does not bypass complete scans or strict epoch/proof CAS. Directory scans retain their original isolated policy.",
       "location": {
         "path": "core/source.ts"
       },
-      "hash": "563c8c02c6c62e4baa3411ab0348f5537bb48a07f7411c6f1efaa55cd2fa1e1d",
-      "observedAt": "2026-11-10T14:07:55.598Z"
+      "hash": "dbfb4f7c523efcc80a3dc6ded1e6905181d8d19f8fe293e3a1d01cb30302a63f",
+      "observedAt": "2026-11-16T05:44:51.023Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web labels actual directory workspaces and retains task, canvas, skill, structure and historical interactions.",
+      "claim": "Web resolves legacy member IDs into one associated project entry while worktree/task selection, deep links and popstate keep original isolated targets.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "3b4e5c34b4509b977334fa6a80c697476f6adbe6078034983feece71717f7df6",
-      "observedAt": "2026-11-10T05:10:12.421Z"
+      "hash": "1a6b398abac1fcf34993ba941462c97e555bde6f11a4b6c503efcda0669b4323",
+      "observedAt": "2026-11-16T05:44:51.040Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -188,8 +188,8 @@
       "location": {
         "path": "package.json"
       },
-      "hash": "821393a7be32b01f7712b211e4fb0fbf199a50a09a0decd55ef6f15a7ed0a2c5",
-      "observedAt": "2026-11-16T04:46:22.001Z"
+      "hash": "de1cfdd5128b02de73e26329be4cae369c27373eeaba25151cd80def5ed637c6",
+      "observedAt": "2026-11-16T05:44:51.052Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -284,12 +284,12 @@
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Current storage contract retains original archive bytes, scopes startup recovery to explicit subscriptions and defers unnecessary source-state replay without weakening complete requested archive validation.",
+      "claim": "Storage v0.52 specifies local Git associations/legacy aliases and derived member groups without rewriting shared project files or archived UUIDs; strict source/proof and full archive validation remain.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "00799f1386e321e6faa8f1f55cb30a35e8743783b9f616ecf92b28f158a76f9f",
-      "observedAt": "2026-11-16T04:46:22.002Z"
+      "hash": "fb0ae3e5b6f2ed763e6bf993ad42a59576ea946a38950feb7215f1b42f94bd37",
+      "observedAt": "2026-11-16T05:44:51.068Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -308,8 +308,8 @@
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "bd27107821be9b0e778e571a3d1cfd981349874ee732af0ecde6cfee977b816c",
-      "observedAt": "2026-11-16T04:46:22.002Z"
+      "hash": "202ab8db01fce642ea0456cc2d07be25f82a6b31c100abdd438eb2d096e5470f",
+      "observedAt": "2026-11-16T05:44:51.070Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -318,8 +318,8 @@
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "29c6982e286daa6f79a8eda505df92ace5cf61e7081faec38142a04d462f6e5e",
-      "observedAt": "2026-11-16T04:46:22.002Z"
+      "hash": "1cc956f4d724c17ff6bbd5ca6a92ff662f5adf9080a6be430796b7bd820a5cd6",
+      "observedAt": "2026-11-16T05:44:51.071Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "95b311df7442ffa983a9477e04f3c5677231c2c06f3a1f47a11a57657eef4eb5",
-      "observedAt": "2026-11-16T05:04:49.504Z"
+      "hash": "3ad7592d4441192c7ae5c9f7d36766585b08186e742c7ebd12a7648952387d9b",
+      "observedAt": "2026-11-16T05:52:01.038Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -538,8 +538,8 @@
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "8d31ff8a78983b81469693a3adc15168924ee59187416aa6d6618acfffc21c16",
-      "observedAt": "2026-11-16T04:46:22.004Z"
+      "hash": "9d49be734f59df3afcb28e478284f44acb8ed7d519c2b590b367840f7f610048",
+      "observedAt": "2026-11-16T05:44:51.099Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -548,18 +548,18 @@
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "f97007a2287a001869d6ae0565a4e79cbdc60f691666a4da1d0ac85370ae1a06",
-      "observedAt": "2026-11-10T14:07:55.614Z"
+      "hash": "b47010bf9816a59efa44c40b7ffa2454084b2c55eb5bfb41c4381dd411b52f03",
+      "observedAt": "2026-11-16T05:44:51.100Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Current CLI contract defines opt-in compact packet references and independent scopeStatus while preserving default full receipts and existing identity/CAS behavior.",
+      "claim": "CLI v0.52 defines register-only shared context use and local group projection with exact observed config identity, preserving advanced explicit config repair, original receipts and strict CAS.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "586ca9953913b8a94851f1a24be30b054f53934241a1af4bab5fc2ad3f1b4e3e",
-      "observedAt": "2026-11-16T04:46:22.004Z"
+      "hash": "81496ed212fdaf6d788c5cd02efdd7007594c0e2748abbb71b4c7e070f6bb871",
+      "observedAt": "2026-11-16T05:44:51.100Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "4d928726c34668d09b203da5a13376c432021a42c9c39f1e56e87487059c6175",
-      "observedAt": "2026-11-16T04:46:22.004Z"
+      "hash": "fff9bac5a10876a7436421b2bbb39eb1f4834f48bfd1d50bd7bf3963c5577eb3",
+      "observedAt": "2026-11-16T05:44:51.102Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -598,8 +598,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "1eb062a65c476427776a7f81a200766e0bdc0d6495655d6862fa9cee162b6350",
-      "observedAt": "2026-11-16T04:46:22.005Z"
+      "hash": "f77d3eaaa7977ca6f8d112ecfe57aa407da63ec672100b35abd0aba448d6d2ce",
+      "observedAt": "2026-11-16T05:44:51.107Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -654,22 +654,22 @@
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Initialization and follow-up maintenance require actual responsibilities/dependencies and view coverage review, three current-agent modes, gradual implemented scope and continuing identity/history.",
+      "claim": "Runtime onboarding uses registration only for shared existing context; missing context still needs initialization and current-agent semantic modeling. Local aliases preserve UUIDs/history and cannot clear pending.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "54bc0f981a4d65bca027fa2c06ec4fc409538ffe0e477b3a9d00a62e3dd3a7b5",
-      "observedAt": "2026-11-11T05:01:17.843Z"
+      "hash": "918fbb4fb2345130f5a36b9a0032b4f04efb4500ef56eca67c15de0ec8e3a439",
+      "observedAt": "2026-11-16T05:44:51.116Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "User guidance documents explicit compact restoration, scoped/global proof states and read-only measurement from explicit artifacts while retaining authorization and archive boundaries.",
+      "claim": "User guidance explains Git-shared stable context, register-only onboarding and local legacy compatibility without rewriting shared files, while preserving source/model review and ordinary Git conflict handling.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "5c53d1ea8b990496bd0e2cdfa19985c1697696c5136df9b4ca1f75d4dfd29e01",
-      "observedAt": "2026-11-16T04:46:22.005Z"
+      "hash": "8af3ffc2220757ddb0dcd5c2118b59b2e0c38b185df17dd9e1849fcfd5dce620",
+      "observedAt": "2026-11-16T05:44:51.117Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -768,8 +768,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "1eb062a65c476427776a7f81a200766e0bdc0d6495655d6862fa9cee162b6350",
-      "observedAt": "2026-11-16T04:46:22.005Z"
+      "hash": "f77d3eaaa7977ca6f8d112ecfe57aa407da63ec672100b35abd0aba448d6d2ce",
+      "observedAt": "2026-11-16T05:44:51.134Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -798,8 +798,8 @@
       "location": {
         "path": "README.md"
       },
-      "hash": "e1411910185f80e5b9c954708837e378ef5aed7e765004029f497c7c4b8d4eea",
-      "observedAt": "2026-11-16T04:46:22.005Z"
+      "hash": "2f2b55a48603f3699affac5a207b4fb27bc4d17034b7ddcc4ccb4bbac6cc8a32",
+      "observedAt": "2026-11-16T05:44:51.136Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -948,8 +948,8 @@
       "location": {
         "path": "docs/spec/contracts/workspace.schema.json"
       },
-      "hash": "eec2746cbb47f73fa74e79bea3d24a3fce1185d8b64125bae657eec3f610c6f4",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "0948c1a7f071838a212c027095bba615b78004e6c457e97ac3d6b833cbe83c4f",
+      "observedAt": "2026-11-16T05:44:51.165Z"
     },
     {
       "id": "f11ba75e-586a-4e73-916f-a588e214dc8a",
@@ -1210,6 +1210,26 @@
       },
       "hash": "1a013d8e8ed6c00715c1dbd8d4e586aaa67a9312ce6539e20ec73d6b67627941",
       "observedAt": "2026-11-16T05:04:49.506Z"
+    },
+    {
+      "id": "9a41ca91-cf24-42ec-8d0c-a9a9af21cf73",
+      "kind": "source-code",
+      "claim": "Isolated Git association contract tests cover fresh-machine register-only task use, legacy config IDs, full source validation, restart, retained ownership, drift rejection and corrupt aliases.",
+      "location": {
+        "path": "tests/v1/git-project.test.mjs"
+      },
+      "hash": "8ee7d06be044aad69708fb261ec49090007d9d8c3b0152395d00d0c05e1e64be",
+      "observedAt": "2026-11-16T05:44:51.229Z"
+    },
+    {
+      "id": "a4f7e468-1d4f-453a-97c0-0c7ce70dfe28",
+      "kind": "source-code",
+      "claim": "Isolated browser gates and same-origin legacy project grouping exercise cross-clone selection, back navigation and reload; reports record the actual platform separately.",
+      "location": {
+        "path": "scripts/v1/browser-smoke.mjs"
+      },
+      "hash": "82a6e3a2e2783bef68f5d049142a6c89cf0439237b15288b806d92dbae9ca143",
+      "observedAt": "2026-11-16T05:48:47.467Z"
     }
   ]
 }

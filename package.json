@@ -1,6 +1,6 @@
 {
   "name": "harnessl3",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "bin": {
     "harnessl3": "bin/harnessl3.mjs"

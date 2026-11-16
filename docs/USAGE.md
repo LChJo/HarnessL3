@@ -30,9 +30,15 @@ harnessl3 web open
 
 init只创建缺失的`.harness/project.json`、`.harness/model/*.c4`、证据和别名文件，以及首次全局技能库；不会执行Git init、切换分支或创建worktree。返回的`initialization.stage:scaffold-ready`表示基础接入就绪，`semanticStatus:not-assessed`表示CLI尚未评估语义；同时给出实际模型数量和当前agent的建模/审核动作。当前大模型随后直接阅读来源并维护模型，不另起模型或用生成脚本猜业务语义。已登记但仍是占位模型时也需要补全结构；已有有效内容保留。
 
-另一个已有worktree执行init或worktree register即可。同一Git common-dir下保持项目UUID相同，各工作区有独立UUID和本机历史。项目身份冲突会拒绝，不能复制其它仓库的projectId冒充同一项目。
+团队把.harness/project.json、model、evidence.json和aliases.json与源码一起提交，保留稳定projectId。其他人clone后，或同一台机器使用另一个已有上下文的工作目录时，只执行：
 
-若同一Git仓库检出的配置带了其他projectId，错误的`recovery`会列出当前配置ID、已登记ID、配置哈希及恢复命令。先核对实际仓库与配置，再执行其中的命令：`worktree register <path> --repair-project-id <已登记UUID> --expected-config-hash <配置SHA256> --data-dir <原数据根>`。修复前自动保留原始配置备份，成功结果返回`identityRepair.backupPath`和`recordPath`；只校正当前配置的projectId，保留其他设置、工作区身份及历史。独立clone或普通目录不能借此合并；配置变化时重新读取冲突并审核。来源仍待核验，随后按正常模型/同步流程继续。响应丢失先查原requestId；结果未知时核对备份记录、当前配置和登记，不能盲重发。中断后配置已校正但尚未登记时，核对后执行普通register。
+```sh
+harnessl3 worktree register <已有项目目录> --json
+```
+
+注册不修改项目文件，也不要求重新初始化；默认本机技能库缺失时创建，已有库保留。同一规范Git origin的多个clone/worktree在项目列表归为一个入口，每个工作区仍有独立UUID、任务与历史。旧版本产生不同projectId时，分别重新注册各目录，兼容关系只保存在本机；旧任务/归档不改写。配置被其他人提交为同仓库的旧ID后，核对仓库再普通注册即可，不必为了匹配本机登记改回共享文件。关联不会清除源码待核验状态。
+
+若origin已变更、不同远端复用projectId或普通目录复制相同ID，先核对实际项目和远端，不能借注册混用。没有可识别origin时保持原common-dir隔离。只有缺少.harness上下文才执行init并由当前agent建模。原--repair-project-id/--expected-config-hash仍是明确修改配置时的高级兼容入口，会备份原字节；日常团队接入不需要它。响应丢失先查原requestId，结果未知不盲重发。业务模型与源码本身的并发编辑仍按Git正常合并。
 
 普通目录向上以最近的.harness/project.json或.git为边界；都没有时使用当前目录。嵌套项目独立登记，不借外层身份。新建普通目录默认排除node_modules、.venv、__pycache__、.cache、dist、build、coverage及target（任意层），可在.harness/project.json的source.excludePatterns编辑；已有配置不覆盖。.gitignore在各层按所在目录生效，支持否定规则。普通目录完整来源状态为unversioned，扫描失败为unknown。以后原地git init会保留原projectId/worktreeId和历史，使当前来源重新待核验；旧任务保持原绑定，新来源通过新任务取得。已登记Git项目缺少Git或仓库损坏会报错，不会降级为普通目录。
 

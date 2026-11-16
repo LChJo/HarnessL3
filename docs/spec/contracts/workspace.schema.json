@@ -7,6 +7,7 @@
   "properties": {
     "id": { "$ref": "common.schema.json#/$defs/uuid" },
     "projectId": { "$ref": "common.schema.json#/$defs/uuid" },
+    "configProjectId": { "$ref": "common.schema.json#/$defs/uuid", "description": "Current Git configuration identity observed and accepted by the local registry. Task bindings retain projectId; source capture still checks this exact observed identity." },
     "kind": { "enum": ["git", "directory"], "description": "Missing kind is read as legacy git." },
     "root": { "type": "string", "minLength": 1 },
     "gitCommonDir": { "type": ["string", "null"], "minLength": 1 },

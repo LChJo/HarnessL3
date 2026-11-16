@@ -1,5 +1,7 @@
 # HarnessL3 CLI 工作规格 v1.0
 
+v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
+
 v0.51（2026-11-16）：多项目使用驱动的[六项优化](../implementation/USAGE_OPTIMIZATION.md)。目录消失时释放原生监听，保留历史/pending并在恢复后重新核验；档案独立引用及同步状态有界并行读取，完整校验不减少。task select显式--compact返回packetRef，完整归档与旧回执不改；新proof的scopeStatus与全局state分别表达。只读测量仅读取显式工件，缺基线/结果保持未知。FR09/12/14/15、TC07/08/17/18/22/26/27；本轮实际结果见实施状态。
 
 v0.50（2026-11-15）：同Git common-dir的项目UUID冲突提供显式恢复。register新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`，仅允许恢复该仓库已登记身份；先保留原配置字节，持久记录已有工作区pending，核对范围与版本后校正当前配置，保留worktree UUID和历史。普通读取、init及无修复参数的register仍拒绝冲突，不合并独立clone/普通目录。FR01/12/15、TC01/02/22/27，实际范围见实施状态。

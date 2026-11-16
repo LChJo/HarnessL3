@@ -1,8 +1,10 @@
 # CLI 与交换协议 v1
 
+v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
+
 v0.51：`task select --compact`是可选CLI显示投影，在同一target保留binding/result/skillPlan，把重复累计packet替换为packetRef={taskId,throughBatchId,contentHash,restoreOperation:"task handoff"}。contentHash为digest("context-packet",完整packet)，可用`task handoff <taskId> --batch <throughBatchId>`恢复核对。该选项不进入RPC业务请求、幂等指纹或完整归档；同requestId可获取默认完整回执，旧默认返回形状保持。选择Schema允许packet或packetRef二选一。新sync verify结果以scopeStatus表达声明范围是否通过；全局state/pendingPaths独立，旧历史回执不修改。
 
-v0.50：`project register <path>`与`worktree register <path>`新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`。同仓库配置ID与登记不一致返回`PROJECT_ID_CONFLICT`、退出3；`error.details.recovery`含reason=same-git-common-dir、reviewRequired、worktreeRoot/gitCommonDir/configPath、configProjectId、registeredProjectId、configHash及command参数数组（含原数据根）。普通register/init/当前内容读取不自动修复。审核后执行恢复命令，只允许恢复该common-dir已登记ID；错误目标/不同仓库或普通目录继续冲突，配置字节改变为VERSION_CONFLICT，缺失/非法配对参数退出2。成功结果附identityRepair（previousProjectId、projectId、backupPath、recordPath、previousConfigHash、configHash），原字节和prepared/applied记录保存在本机数据根。已有工作区在改配置前持久记录pending；不请求来源全扫、不覆盖原任务或proof。配置修复后仍需原有来源/模型核验。管理写入响应丢失先查原requestId，unknown时核对备份记录、配置及登记，不盲目重发。开放的command-result/error.details保持兼容。
+v0.50历史契约（普通登记以v0.52为准）：`project register <path>`与`worktree register <path>`新增配对参数`--repair-project-id <UUID>`和`--expected-config-hash <SHA256>`。同仓库配置ID与登记不一致返回`PROJECT_ID_CONFLICT`、退出3；`error.details.recovery`含reason=same-git-common-dir、reviewRequired、worktreeRoot/gitCommonDir/configPath、configProjectId、registeredProjectId、configHash及command参数数组（含原数据根）。普通register/init/当前内容读取不自动修复。审核后执行恢复命令，只允许恢复该common-dir已登记ID；错误目标/不同仓库或普通目录继续冲突，配置字节改变为VERSION_CONFLICT，缺失/非法配对参数退出2。成功结果附identityRepair（previousProjectId、projectId、backupPath、recordPath、previousConfigHash、configHash），原字节和prepared/applied记录保存在本机数据根。已有工作区在改配置前持久记录pending；不请求来源全扫、不覆盖原任务或proof。配置修复后仍需原有来源/模型核验。管理写入响应丢失先查原requestId，unknown时核对备份记录、配置及登记，不盲目重发。开放的command-result/error.details保持兼容。
 
 v0.49：`sync status`有界重新完整采集短时变化，持续活动仍成功返回pending、scanPending及SOURCE_CHANGING诊断。`sync verify`的SYNC_RACE继续退出3，原请求仍只重放原回执；recovery附cause（source-version-changed/model-changed/observation-changed）、reviewRequired:true、reviewScope（原声明paths/entities）、current（当次epoch/sourceVersion/modelRevision/sourceScanRevision）。恢复先刷新并审核实际范围，再提交新requestId；这些字段不是自动重基许可。错误message解释尚待核验和下一步，不要求用户理解代次数字。响应及声明Schema的既有开放错误details兼容，严格CAS未放宽。
 
@@ -73,7 +75,7 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 | `project register <path>` | 校验已有 `.harness/project.json` 和 Git 项目后本机登记；不隐式创建模型。返回 project 记录 |
 | `project list` / `project show <project-id>` | 返回已登记项目；show 不要求已有活动任务 |
 | `project unregister <project-id>` | 取消本机项目与其 worktree 登记、停用相应观测绑定；保留工作目录、用户技能和所有档案，返回取消的 ID；不永久清理 |
-| `worktree register <path>` | 只登记已有工作区，核对 projectId/common-dir，返回本机 worktree UUID |
+| `worktree register <path>` | 只登记已有上下文，核对projectId/common-dir/origin，写本机关联，返回原本机worktree UUID；不改项目文件 |
 | `worktree list [--project <id>]` / `worktree show <worktree-id>` | list 无 project 列出本机登记，带 project 过滤；返回根目录、Git 状态和可用性 |
 | `worktree unregister <worktree-id>` | 取消本机登记/观测绑定；保留目录和历史，不删除分支 |
 | `task start --title <purpose> [--mode snapshot\|verified] [--session <id>]` | 默认snapshot只捕获合法模型和技能目录；来源unknown/策略null。verified显式完整核验，旧无mode任务仍为verified |
@@ -120,7 +122,7 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 | 操作 | result 必需字段 |
 | --- | --- |
 | init / project register/show | `project:{id,name}`、`paths:{config}`；init 另有 `worktree`、`createdFiles:[]`、`skillSeed:"created"\|"already-present"` |
-| worktree register/show | `worktree:{id,projectId,root,gitCommonDir,branch,available}`，root/common-dir 为本机绝对路径；detached branch 为 null |
+| worktree register/show | `worktree:{id,projectId,root,gitCommonDir,branch,available,configProjectId?}`，root/common-dir 为本机绝对路径；detached branch 为 null |
 | project/worktree list | `items:[]`，元素为对应记录 |
 | project/worktree unregister | `unregisteredIds:[]`、`archivesRetained:true` |
 | task/history list | `items:[{id,title,binding,createdAt,lastReadAt,retentionBasisAt,expiresAt,closedAt,contextCount,skillCount,completeness,format}]`、`total,limit,offset,hasMore,retentionDays:60`；旧数据缺字段为 null |

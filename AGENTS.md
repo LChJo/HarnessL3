@@ -2,11 +2,11 @@
 
 ## 首先读取
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.51。
+1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.52。
 2. [工作规格](docs/spec/README.md)：正式CLI v1.0契约、验收与实施顺序；产品编码前必须读相关子规格。
 3. [README](README.md)：项目导航；需要设计/历史时读[冻结原型](docs/prototype/README.md)。
 
-基准v0.50补充：同Git common-dir的配置projectId冲突先核对recovery的实际路径、配置ID/哈希和已登记ID，再在既有修复授权内使用显式register恢复命令；不能自动忽略配置、任意覆盖登记或合并独立clone/普通目录。原配置本机备份、已有工作区先持久pending，保留UUID/历史及其他检出。配置变化重新审核，未知管理写结果先查回执并核对记录，不盲重发。身份修复后仍按真实范围完成模型/来源核验。
+基准v0.52补充：稳定projectId与模型等共享上下文随Git保留；已有配置的clone/worktree只注册，不重复init。显式register核对canonical common-dir与规范origin，在本机保存仓库关联及旧配置ID，普通注册不改项目文件。相同Git仓库的旧项目记录归为一个项目入口，各工作区UUID、原任务绑定和历史字节保留；已知origin漂移、不同远端复用ID及普通目录不能借此合并。不从列表读取自动迁移。当前操作仍核对实际配置ID/字节、源码与模型；关联不清pending或复用旧proof。原配对配置修复仅作明确要求修改配置时的兼容入口，先备份及pending；日常同仓库恢复优先普通register。配置变化重新审核，未知管理写结果先查回执并核对记录，不盲重发。
 
 基准v0.49补充：同步状态仍scanPending或SOURCE_CHANGING时，有界等待当前写入/构建结束后重新读取，保持pending。SYNC_RACE按recovery的原因和声明范围刷新、重新核对源码/模型/证据后，用新requestId提交新声明；原ID保留旧回执，不能只改epoch。日常恢复在既有授权内完成，持续变动则用用户可理解的范围及下一步说明待核验，不以“已有竞态”代替恢复或伪报完成。
 

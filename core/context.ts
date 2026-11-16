@@ -279,7 +279,7 @@ export class TaskService {
   private async current(skillsRoot: string, withCatalog: boolean): Promise<{ model: ModelSnapshot; source: SourceState; catalog?: SkillCatalog }> {
     this.active()
     const config = validateContract<ProjectConfig>('project-config', await readJson(path.join(this.worktree.root, '.harness', 'project.json')))
-    if (config.projectId !== this.worktree.projectId) throw new HarnessError('TARGET_CONFLICT', 'The live project identity differs from the registered worktree.')
+    if (config.projectId !== (this.worktree.configProjectId ?? this.worktree.projectId)) throw new HarnessError('TARGET_CONFLICT', 'The live project identity differs from the registered worktree.')
     const [model, source, catalog] = await Promise.all([loadModel(this.worktree.root), this.source(skillsRoot), withCatalog ? scanSkills(skillsRoot) : Promise.resolve(undefined)])
     if (!source || !hashPattern.test(source.sourceScanRevision ?? '') || source.sourceVersion?.status === 'unknown' || !hashPattern.test(source.sourceVersion?.treeHash ?? '')) throw new HarnessError('SOURCE_CHANGED', 'A complete current source fingerprint is required before retrieving live context.', { source })
     if (catalog && (!catalog.valid || !catalog.revision)) throw new HarnessError('CATALOG_INVALID', 'The current skill directory is invalid.', { diagnostics: catalog.diagnostics })

@@ -43,7 +43,7 @@ harnessl3 worktree register <actual-existing-worktree-path> --json
 harnessl3 model validate --json
 ```
 
-Run validation in the registered target directory, or use its returned --worktree UUID without a conflicting registered cwd. Another worktree lacking context uses init in that worktree; never copy another repository's projectId or replace configuration to bypass a conflict.
+Run validation in the registered target directory, or use its returned --worktree UUID without a conflicting registered cwd. A clone/worktree containing shared .harness context needs registration only, including on a new machine; registration preserves project files and creates the default local skill library only if missing. Keep the stable projectId in Git. Explicit registration associates canonical Git origin/common directories and compatible legacy config IDs locally, preserving original task/worktree IDs and archived bytes. Matching registered repositories appear as one project with separate worktrees. Re-register after reviewing a same-repository legacy ID change; never rewrite shared configuration just to match one machine's registry. Changed origins, unrelated repositories reusing an ID and ordinary directories remain isolated. Another worktree lacking context uses init and current-agent semantic modeling; do not copy unrelated IDs. Association does not verify source/model or clear pending.
 
 init only creates missing files, registers identity, initially seeds skills and parses the model. initialization.stage:scaffold-ready and semanticStatus:not-assessed are mechanical results, not semantic completion. Inspect actual project/worktree IDs, modelCreated, topology counts and nextAction.
 
