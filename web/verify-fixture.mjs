@@ -132,6 +132,27 @@ try {
   assert.equal(await page.getByRole('combobox', { name: '选择工作区', exact: true }).inputValue(), fixture.other.worktreeId)
   results.push({ targetIsolation: ['late-old-response-ignored', 'old-task-options-cleared', 'project-worktree-switch'] })
 
+  // Cross-project return paints the bounded in-memory archive immediately,
+  // while a deliberately held network refresh is still outstanding.
+  const projectId = (await page.locator('[data-testid="project-select"]').evaluate(select => [...select.options].map(option => ({ id: option.value, text: option.textContent })))).find(option => option.id !== fixture.other.projectId).id
+  let releaseCachedRefresh, refreshStarted
+  const refreshGate = new Promise(resolve => { releaseCachedRefresh = resolve })
+  const refreshEntered = new Promise(resolve => { refreshStarted = resolve })
+  const holdCached = async route => {
+    if (new URL(route.request().url()).searchParams.get('worktree') === fixture.target.worktreeId) { refreshStarted(); await refreshGate }
+    await route.continue().catch(() => {})
+  }
+  await page.route('**/view?**', holdCached)
+  try {
+    await page.getByRole('combobox', { name: '选择项目', exact: true }).selectOption(projectId)
+    await page.getByRole('combobox', { name: '选择工作区', exact: true }).selectOption(fixture.target.worktreeId)
+    await refreshEntered
+    await page.waitForFunction(id => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-route-worktree') === id && document.querySelector('[data-view-ready="true"]'), fixture.target.worktreeId)
+    assert.equal(await page.getByTestId('initial-view-loading').count(), 0)
+    assert.equal(await page.getByTestId('app-shell').getAttribute('data-task-id'), fixture.entry.taskId)
+    results.push({ projectReturn: 'cached-archive-visible-before-network-refresh' })
+  } finally { releaseCachedRefresh(); await page.unroute('**/view?**', holdCached) }
+
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1, reducedMotion: 'reduce' })
   await phone.addCookies(await page.context().cookies())
   const mobile = await phone.newPage()

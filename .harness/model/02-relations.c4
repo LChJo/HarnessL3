@@ -22,11 +22,11 @@ model {
   app.service -[uses]-> app.core.runtime "分派公共用例" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000003"
-      brief "HTTP服务将已校验命令交给Runtime执行，视图来自同一Runtime。"
+      brief "HTTP按CLI完整用例或Web只读浏览分派；SSE只读取提交游标，不恢复同步历史。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000003"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.workspace "定位工作区" {
@@ -42,11 +42,11 @@ model {
   app.core.runtime -[uses]-> app.core.context "任务与交接" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000005"
-      brief "Runtime为每worktree创建TaskService并分派任务命令。"
+      brief "Runtime装配完整任务资源或不打开SQLite/不扫描源码的Web浏览TaskService。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.runtime -[uses]-> app.core.model "校验与投影" {
@@ -102,21 +102,21 @@ model {
   app.core.runtime -[uses]-> app.core.archive "装配文件档案" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000b"
-      brief "显式订阅及已请求的任务、同步、观测与普通维护复用同一worktree完整核验的Archive；无订阅启动只做journal路由。"
+      brief "CLI/订阅复用完整Archive；Web复用已加载档案或requested定位读者，不等待无关引用完整恢复。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "2"
+      version "3"
     }
   }
   app.core.runtime -[uses]-> app.core.index "装配派生索引" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000c"
-      brief "Runtime为worktree创建独立SQLite索引并交给TaskService。"
+      brief "完整任务资源使用工作区SQLite索引；只读浏览列表不等待索引打开或追赶。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "1"
+      version "2"
     }
   }
   app.core.context -[uses]-> app.core.model "取得精确上下文" {

@@ -25,6 +25,7 @@ import type { Envelope, FileReadRequest, ModelSnapshot, Target, WorktreeRecord }
 
 export function commandResult(operation: string, result: unknown) { return { kind: 'command-result' as const, status: 'complete' as const, operation, result } }
 interface WorktreeResources { worktree: WorktreeRecord; archive: Archive; index: SearchIndex; tasks: TaskService; observation: ObservationManager; freshness: FreshnessManager; migration: MigrationService }
+interface BrowseResources { worktree: WorktreeRecord; archive: Archive; tasks: TaskService; observation: ObservationManager; migration: MigrationService }
 export interface RecoveryStatus { state: 'not-started' | 'recovering' | 'complete' | 'degraded' | 'stopping'; totalWorktrees: number; completedWorktrees: number; failures: number; scope?: 'observation-subscriptions' }
 const archivedOperations = new Set(['task show', 'history show', 'task handoff', 'task list', 'history list', 'task read'])
 const taskOperations = new Set([...archivedOperations, 'task start', 'task prompt', 'task select', 'task close', 'context query'])
@@ -32,6 +33,7 @@ export class Runtime extends EventEmitter {
   readonly dataRoot: string
   readonly requests = new RequestTracker()
   private readonly resources = new Map<string, Promise<WorktreeResources>>()
+  private readonly liveResources = new Map<string, WorktreeResources>()
   private readonly catalogs = new CatalogObserver()
   private readonly archives = new Map<string, Promise<Archive>>()
   private readonly lastValidModel = new Map<string, ModelSnapshot>()
@@ -163,8 +165,27 @@ export class Runtime extends EventEmitter {
       return pending
     }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) } })
     const observation = new ObservationManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: () => { this.emit('commit', { worktreeId: record.id, seq: archive.seq, kind: 'observation' }) } })
-    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await observation.ready(); return { worktree: record, archive, index, tasks, observation, freshness, migration } }
+    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await observation.ready(); const resource = { worktree: record, archive, index, tasks, observation, freshness, migration }; this.liveResources.set(record.id, resource); return resource }
     catch (error) { await index.close().catch(() => {}); throw error }
+  }
+  private async browseResources(worktree: WorktreeRecord, taskId?: string): Promise<BrowseResources> {
+    if (this.closing) throw new HarnessError('BUSY', 'The runtime is stopping', {}, true)
+    const root = path.join(this.dataRoot, 'worktrees', worktree.id)
+    const archive = this.liveResources.get(worktree.id)?.archive ?? new Archive(root, { readOnly: true, verification: 'requested' })
+    await archive.ready()
+    if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The journal needs recovery before browsing.', { diagnostics: archive.diagnostics })
+    const tasks = new TaskService({ worktree, archive, index: new SearchIndex(path.join(root, 'index.sqlite')), browse: true, browseTaskId: taskId, source: async () => { throw new HarnessError('INTERNAL_ERROR', 'Browsing cannot capture source.') } })
+    const migration = new MigrationService({ worktree, archive, serial: operation => operation() })
+    const observation = new ObservationManager({ worktree, archive, readOnly: true, pollIntervalMs: 0, serial: operation => operation() })
+    await tasks.ready()
+    return { worktree, archive, tasks, migration, observation }
+  }
+  async browseSequence(worktreeId: string): Promise<number> {
+    const worktree = await this.registry().worktree(worktreeId)
+    const archive = new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true, verification: 'requested' })
+    await archive.ready()
+    if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The event cursor requires an intact journal.', { diagnostics: archive.diagnostics })
+    return archive.seq
   }
   private async stopObservations(ids: string[]): Promise<void> {
     for (const id of ids) {
@@ -255,28 +276,43 @@ export class Runtime extends EventEmitter {
     if (taskId) validateUuid(taskId, 'taskId')
     if (batchId) { validateUuid(batchId, 'batchId'); if (!taskId) throw new HarnessError('INVALID_ARGUMENT', 'A historical batch requires its task') }
     const worktree = await this.registry().resolve({ cwd: this.dataRoot, worktreeId, allowInactive: !!taskId })
-    const resource = await this.worktreeResources(worktree, !!taskId)
+    const resource = await this.browseResources(worktree, taskId)
     const viewSeq = resource.archive.seq
     if (taskId && await resource.migration.has(taskId)) {
       const legacy = await resource.migration.show(taskId, batchId)
       return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: true, task: null, model: null, legacy, modelState: { state: 'unknown', currentRevision: null, displayRevision: legacy.binding.modelRevision, diagnostics: [] }, catalog: { root: null, revision: legacy.binding.catalogRevision, skills: [], valid: false, diagnostics: [], checkedAt: null }, freshness: { state: 'unknown', historical: true }, observation: { bindings: [], events: [] }, archive: resource.tasks.status() }
     }
-    const task = taskId ? await resource.tasks.archivedTask(taskId, batchId) : null
+    const archived = taskId ? await resource.tasks.archivedView(taskId, batchId) : null
+    const task = archived?.task ?? null
+    const live = this.liveResources.get(worktreeId)
+    let observed = live?.freshness.currentState()
+    if (!observed && !task) {
+      const header = resource.archive.headers({ kind: 'freshness-state' }).at(-1)
+      if (header) {
+        const record = await resource.archive.record(header.seq)
+        const payload = record.payload as { state?: ReturnType<FreshnessManager['currentState']>; stateHash?: string }
+        const saved = payload.state ?? (payload.stateHash ? await resource.archive.readSnapshot<ReturnType<FreshnessManager['currentState']>>(payload.stateHash) : undefined)
+        if (saved) {
+          if (saved.schemaVersion !== 1 || saved.target.projectId !== worktree.projectId || saved.target.worktreeId !== worktree.id || !Number.isSafeInteger(saved.sourceEpoch) || !Array.isArray(saved.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'The recorded synchronization identity is invalid.')
+          observed = { ...saved, state: 'pending', scanPending: true, modelState: 'unknown' }
+        }
+      }
+    }
     let model: ModelSnapshot | null = null
     let modelState: { state: 'valid' | 'invalid' | 'unknown'; currentRevision: string | null; displayRevision: string | null; diagnostics: unknown[] }
     if (task) {
-      model = await resource.tasks.snapshot(task.id)
+      model = archived!.model
       modelState = { state: 'valid', currentRevision: null, displayRevision: model.revision, diagnostics: model.diagnostics }
     } else {
       try {
-        model = resource.freshness.currentModel()
+        model = live?.freshness.currentModel() ?? null
+        if (!model && observed?.lastValidModelSnapshotHash) model = await resource.archive.readSnapshot<ModelSnapshot>(observed.lastValidModelSnapshotHash)
         if (!model) {
           for (const saved of resource.tasks.tasks().reverse()) {
             try { model = await resource.tasks.snapshot(saved.id); break } catch { /* Keep an unavailable recorded model unknown. */ }
           }
         }
-        const observed = resource.freshness.currentState()
-        modelState = { state: observed.modelState === 'invalid' ? 'invalid' : observed.modelState === 'valid' && model ? 'valid' : 'unknown', currentRevision: observed.modelRevision, displayRevision: model?.revision ?? null, diagnostics: observed.diagnostics }
+        modelState = { state: observed?.modelState === 'invalid' ? 'invalid' : observed?.modelState === 'valid' && model ? 'valid' : 'unknown', currentRevision: observed?.modelRevision ?? null, displayRevision: model?.revision ?? null, diagnostics: observed?.diagnostics ?? [] }
       } catch (error) {
         const failure = asHarnessError(error)
         model = this.lastValidModel.get(worktreeId) ?? null
@@ -297,7 +333,7 @@ export class Runtime extends EventEmitter {
       } catch (error) { const failure = asHarnessError(error); catalog = { root: null, revision: null, skills: [], valid: false, diagnostics: [{ code: failure.code, message: failure.message }], checkedAt: null } }
     }
     const observation = await resource.observation.status()
-    const freshness = task ? { state: 'unknown', historical: true, sourceVersion: task.binding.sourceVersion } : resource.freshness.currentState()
+    const freshness = task ? { state: 'unknown', historical: true, sourceVersion: task.binding.sourceVersion } : observed ?? { state: 'unknown', scanPending: true }
     return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: !!taskId, task, model, modelState, catalog, freshness, observation, archive: resource.tasks.status() }
   }
   async execute(request: CommandRequest): Promise<Envelope> {
@@ -359,6 +395,12 @@ export class Runtime extends EventEmitter {
       if (taskOperations.has(request.operation)) {
         const worktree = await this.resolve(request, true)
         target = { projectId: worktree.projectId, worktreeId: worktree.id }
+        if (request.source === 'web' && ['task list', 'history list', 'task show', 'history show', 'task handoff'].includes(request.operation)) {
+          const browse = await this.browseResources(worktree, request.positionals[0])
+          if (['task list', 'history list'].includes(request.operation)) return await browse.tasks.browseList(request, await browse.migration.list())
+          if (await browse.migration.has(request.positionals[0])) return validateContract<Envelope>('response', { schemaVersion: 1, requestId: request.requestId, target, replayed: false, ok: true, data: await browse.migration.show(request.positionals[0], flag(request, 'batch')) })
+          return await browse.tasks.execute(request, '')
+        }
         // Verified operations restore through beforeLive/status; snapshot entry
         // and archived reads do not need unrelated source-observation states.
         const resource = await this.worktreeResources(worktree, request.operation !== 'task close')
@@ -464,6 +506,7 @@ export class Runtime extends EventEmitter {
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.freshness.close()] : []))
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.tasks.close()] : []))
     this.resources.clear()
+    this.liveResources.clear()
     await this.catalogs.close()
     this.archives.clear()
   }

@@ -234,7 +234,7 @@ export class MigrationService {
   }
   private async load(taskId: string, context?: { inspector: Archive; entries: Map<string, MigrationTask> }): Promise<{ inspector: Archive; stored: StoredLegacy; record: any; snapshots: Map<string, RawFile> }> {
     if (!UUID.test(taskId)) throw new HarnessError('INVALID_ARGUMENT', 'Legacy task ID must retain its original UUID.');
-    const inspector = context?.inspector ?? this.inspector();
+    const inspector = context?.inspector ?? (this.options.archive.verificationScope === 'requested' ? this.options.archive : this.inspector());
     const entries = context?.entries ?? await this.entries(inspector);
     const entry = entries.get(taskId);
     if (!entry?.archiveHash) throw new HarnessError('NOT_FOUND', 'No imported legacy task belongs to this worktree.', { taskId });

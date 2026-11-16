@@ -155,8 +155,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
           try { return json(response, await runtime.view(worktreeId, endpoint.searchParams.get('task') ?? undefined, endpoint.searchParams.get('batch') ?? undefined)) }
           finally { active--; if (!active) for (const waiter of drainWaiters.splice(0)) waiter() }
         }
-        const worktree = await runtime.registry().worktree(worktreeId)
-        const resource = await runtime.worktreeResources(worktree)
+        const seq = await runtime.browseSequence(worktreeId)
         const after = endpoint.searchParams.get('after') ?? request.headers['last-event-id'] ?? '0'
         if (typeof after !== 'string' || !/^\d+$/.test(after) || !Number.isSafeInteger(Number(after))) throw new HarnessError('INVALID_ARGUMENT', 'The event cursor must be a nonnegative integer')
         response.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-cache, no-transform', 'connection': 'keep-alive', 'x-content-type-options': 'nosniff' })
@@ -164,7 +163,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
         const send = (kind: string, data: { worktreeId: string; seq: number; kind?: string }) => { if (!response.destroyed && !response.writableEnded) response.write(`id: ${data.seq}\nevent: ${kind}\ndata: ${canonicalJson(data)}\n\n`) }
         const changed = (event: { worktreeId: string; seq: number; kind: string }) => { if (event.worktreeId === worktreeId) send('commit', event) }
         runtime.on('commit', changed)
-        send(Number(after) === resource.archive.seq ? 'ready' : 'reset', { worktreeId, seq: resource.archive.seq })
+        send(Number(after) === seq ? 'ready' : 'reset', { worktreeId, seq })
         const heartbeat = setInterval(() => { if (!response.destroyed) response.write(': keep-alive\n\n') }, 15_000)
         heartbeat.unref()
         response.once('close', () => { clearInterval(heartbeat); runtime.off('commit', changed); streams.delete(response) })

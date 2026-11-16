@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Current v0.52 keeps stable shared UUIDs and read-only ordinary registration with local Git associations/legacy identity compatibility; worktree history, exact source checks and strict proof isolation remain.",
+      "claim": "The v0.53 baseline separates scoped read-only Web browsing from complete archive/source recovery, preserving requested bytes and unknown full-workspace integrity.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "8d80b947be176e5b6e7524bd2432ce34b579a4a533381f5f15fae8fcca927e4c",
-      "observedAt": "2026-11-16T05:44:51.002Z"
+      "hash": "255d743cd39db579a7f7bdb19bbe603503f64203a07885315321a2d11bcd0a26",
+      "observedAt": "2026-11-16T06:36:24.857Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -24,22 +24,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Authenticated loopback service exposes request progress and preserves accepted work, single-writer admission and browser session boundaries.",
+      "claim": "Authenticated Web browsing uses scoped Runtime reads; event streams obtain journal sequence without initializing source history, retaining origin/authentication and committed event routing.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "01f5e34b52a3087e5cbceb9f8338d1d2e7607a344805664d520631e54ae2c657",
-      "observedAt": "2026-11-10T14:07:55.575Z"
+      "hash": "d80b0d93bcd404ba51da721c73abb8941b774688056e97bac765d731f86257a0",
+      "observedAt": "2026-11-16T06:36:24.858Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime resumes explicit observation subscriptions after journal routing and defers unrelated source-state restoration for snapshot/archive task paths. Verified/sync/current-state/close and identity invalidation restore required prior state; requested archive validation remains complete.",
+      "claim": "Runtime separates Web lists/views and SSE cursors from full task/source/index recovery, including in-flight full restore; cold observations remain pending/unknown.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "9a3c6589d9dfc475d2e34c8fa75c1b90a3ad0011cd88ecf97aa1304fbe2640f9",
-      "observedAt": "2026-11-16T04:46:22.000Z"
+      "hash": "5aca9339f0cdd65a676d720a0eeb901c32bcc23d3b8bf831157fc82e06585fab",
+      "observedAt": "2026-11-16T06:36:24.859Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService checks the exact config identity observed by the registry while preserving original task bindings, selection and archived bytes.",
+      "claim": "TaskService supports read-only task restoration/listing without SQLite, verifies selected committed references and returns one task/model view while preserving original CLI contracts and retention.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "c4eb2386666f05f64085cacbb17a1e22f96e1284ade789d393e17408b82fc2a9",
-      "observedAt": "2026-11-16T05:44:51.017Z"
+      "hash": "e77ce89fa706ef0bb5cd706b5664c79de0119f48e91d42457e08712006c2c898",
+      "observedAt": "2026-11-16T06:36:24.859Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -84,12 +84,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000009",
       "kind": "source-code",
-      "claim": "Requested archives validate the full journal chain and all immutable references with bounded shared I/O. Private journal-kind inspection routes subscription recovery only; immutable reads do not create directories or attest to deferred bytes.",
+      "claim": "Archive keeps complete CLI recovery while a versioned, reconstructable browse locator reads actual journal records and requested immutable references; size/time only invalidate caches and do not attest to content.",
       "location": {
         "path": "core/archive.ts"
       },
-      "hash": "6c3bcc67e12cd9ac01168ef83af3ed17e4b097c4e6a05faa1bd73e2b82a32a65",
-      "observedAt": "2026-11-16T04:46:22.000Z"
+      "hash": "4dbeea37de350a9ae927ad8865a98dc1c1275ebf67d243f0594c5e5689f1364d",
+      "observedAt": "2026-11-16T06:36:24.860Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000a",
@@ -124,32 +124,32 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
       "kind": "source-code",
-      "claim": "ObservationManager restores explicit log bindings and checkpoint/events from the file archive.",
+      "claim": "Read-only archived observation projection does not acquire log leases or start polling; explicit live bindings retain their original behavior.",
       "location": {
         "path": "core/observation.ts"
       },
-      "hash": "56ebcdf87eaba35f2fcc7f08a9be41153543319e2998d7211dc39cb9668a1909",
-      "observedAt": "2026-11-10T14:07:55.601Z"
+      "hash": "5c9f147ca9be52440649f0d965174fcc2ba36e34e2729f448279a84602d64aa1",
+      "observedAt": "2026-11-16T06:36:24.861Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000e",
       "kind": "source-code",
-      "claim": "Ordinary legacy discovery uses the owning verified archive and ordered commit metadata; explicit migration/requested legacy bytes and conservative GC retain existing checks and protected content.",
+      "claim": "Web legacy reads reuse scoped archive locators and still verify original legacy closure; explicit migration and conservative GC boundaries remain unchanged.",
       "location": {
         "path": "core/maintenance.ts"
       },
-      "hash": "b8b691b3e820d8c0f22a752760fa73d16789e3def3e28023fe153bac4d9c9118",
-      "observedAt": "2026-11-09T05:37:20.132Z"
+      "hash": "9a3c53adf07e745081babb0e14764616dee77d6006e12402a5093139106b49ed",
+      "observedAt": "2026-11-16T06:36:24.861Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web resolves legacy member IDs into one associated project entry while worktree/task selection, deep links and popstate keep original isolated targets.",
+      "claim": "Web project returns reuse bounded exact target/task/batch archives while refreshing; expired/invalid targets are evicted and stale responses stay isolated.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "1a6b398abac1fcf34993ba941462c97e555bde6f11a4b6c503efcda0669b4323",
-      "observedAt": "2026-11-16T05:44:51.040Z"
+      "hash": "6063fc6b415a84f407dd5217d08295c81c2c90f16a9fd4cc79ed05f329ce99d6",
+      "observedAt": "2026-11-16T06:36:24.862Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -188,8 +188,8 @@
       "location": {
         "path": "package.json"
       },
-      "hash": "de1cfdd5128b02de73e26329be4cae369c27373eeaba25151cd80def5ed637c6",
-      "observedAt": "2026-11-16T05:44:51.052Z"
+      "hash": "52d31651fd1c66af63080e11cb99ee74f197826c4c52dec01586f145a22a622e",
+      "observedAt": "2026-11-16T06:56:37.399Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -284,12 +284,12 @@
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Storage v0.52 specifies local Git associations/legacy aliases and derived member groups without rewriting shared project files or archived UUIDs; strict source/proof and full archive validation remain.",
+      "claim": "Current storage contract retains original archive bytes, scopes startup recovery to explicit subscriptions and defers unnecessary source-state replay without weakening complete requested archive validation.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "fb0ae3e5b6f2ed763e6bf993ad42a59576ea946a38950feb7215f1b42f94bd37",
-      "observedAt": "2026-11-16T05:44:51.068Z"
+      "hash": "ee794121111e40d5cde82b77667eb34c7d5b130158be276d2731e2b7317f988d",
+      "observedAt": "2026-11-16T06:36:24.862Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "a67fc0949a9944ae9ce23d695ceb9bd90837523d9f8502b1ca22f6810b6c7a9d",
-      "observedAt": "2026-11-16T06:26:40.223Z"
+      "hash": "943797ec9791aee6c3edd762adc3796affe99a8b7d34958f9ea67b819c11a826",
+      "observedAt": "2026-11-16T06:56:37.410Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -538,8 +538,8 @@
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "9d49be734f59df3afcb28e478284f44acb8ed7d519c2b590b367840f7f610048",
-      "observedAt": "2026-11-16T05:44:51.099Z"
+      "hash": "a82be76b9419691483b4022e9cbadaf9a5d3dd591b4a19936f149fd170b539a3",
+      "observedAt": "2026-11-16T06:36:24.863Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -548,8 +548,8 @@
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "b47010bf9816a59efa44c40b7ffa2454084b2c55eb5bfb41c4381dd411b52f03",
-      "observedAt": "2026-11-16T05:44:51.100Z"
+      "hash": "24a30d20c41477f3a046935f7674311e7284ba8f207a14d44fa013f85cf6ba92",
+      "observedAt": "2026-11-16T06:36:24.864Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "fff9bac5a10876a7436421b2bbb39eb1f4834f48bfd1d50bd7bf3963c5577eb3",
-      "observedAt": "2026-11-16T05:44:51.102Z"
+      "hash": "6e55da2820731976ce273a55fd2ec9ae5d4d29832b596c7c464957ed4fc43c47",
+      "observedAt": "2026-11-16T06:36:24.865Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -588,8 +588,8 @@
       "location": {
         "path": "docs/implementation/PERFORMANCE.md"
       },
-      "hash": "f02c77833f5d279ab4bf335b2a56ad2f8ba5d3635aca82dbcd31363dd6f8b8ae",
-      "observedAt": "2026-11-09T10:19:54.760Z"
+      "hash": "c754fda203992413a2655039de6250afbe1a517a5a0ee87b88dbdabaa5104075",
+      "observedAt": "2026-11-16T06:36:24.865Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000011",
@@ -598,8 +598,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "f77d3eaaa7977ca6f8d112ecfe57aa407da63ec672100b35abd0aba448d6d2ce",
-      "observedAt": "2026-11-16T05:44:51.107Z"
+      "hash": "d37e77f970fc0b563012b886218bd2a281bf24e07e4343e24009ef953637450d",
+      "observedAt": "2026-11-16T06:36:24.866Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -648,8 +648,8 @@
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "66b145d6ce535d0f214132189aff49cee99fa3cb1b0a8abb5aceed1d650a1937",
-      "observedAt": "2026-11-10T04:53:34.995Z"
+      "hash": "9da6c02bd0f6f10755895b290ad651dd53e4eceba6be90074dc66445994e83ed",
+      "observedAt": "2026-11-16T06:36:24.867Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
@@ -768,8 +768,8 @@
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "f77d3eaaa7977ca6f8d112ecfe57aa407da63ec672100b35abd0aba448d6d2ce",
-      "observedAt": "2026-11-16T05:44:51.134Z"
+      "hash": "d37e77f970fc0b563012b886218bd2a281bf24e07e4343e24009ef953637450d",
+      "observedAt": "2026-11-16T06:36:24.868Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -978,8 +978,8 @@
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "20a50b0008b4e46faff6a683735b06126588a26f6450ebdf8db21efd0d8c15d0",
-      "observedAt": "2026-11-16T04:46:22.006Z"
+      "hash": "2600c8dfa3ab99838842e76d466a15412c3b0f7d051186293e5e53dbf7e8f5b4",
+      "observedAt": "2026-11-16T06:58:36.714Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1228,8 +1228,38 @@
       "location": {
         "path": "scripts/v1/browser-smoke.mjs"
       },
-      "hash": "82a6e3a2e2783bef68f5d049142a6c89cf0439237b15288b806d92dbae9ca143",
-      "observedAt": "2026-11-16T05:48:47.467Z"
+      "hash": "8bfa84486eac53230cde586cbcb6c02ee36315a091e6200ef3117ec8178d2eee",
+      "observedAt": "2026-11-16T06:58:09.961Z"
+    },
+    {
+      "id": "e477f084-e25b-4733-a542-64986ce9f392",
+      "kind": "source-code",
+      "claim": "Isolated browse regressions cover unrelated bytes, selected corruption, full CLI diagnostics, invalid locators, concurrent restore and appended journal/changed bytes.",
+      "location": {
+        "path": "tests/v1/browse.test.mjs"
+      },
+      "hash": "212da96af2be746722f779a7d9880b24dc387ebae72c0bfff559ff13dfbb6f52",
+      "observedAt": "2026-11-16T06:36:24.869Z"
+    },
+    {
+      "id": "99c891dd-28b7-4f76-83e9-4709a6f6fc31",
+      "kind": "source-code",
+      "claim": "Browser gates exercise cross-project selection, immediate archived output while refresh is held, stale target rejection and unchanged historical/retention behavior.",
+      "location": {
+        "path": "web/verify-fixture.mjs"
+      },
+      "hash": "723b81cdd1b678cfad5666c599a226bbfc1bdf8dde54caeba7bd8b70e876da9f",
+      "observedAt": "2026-11-16T06:36:24.870Z"
+    },
+    {
+      "id": "b34c74e1-cdf9-44c7-8faa-206148cf3c0e",
+      "kind": "source-code",
+      "claim": "Explicit source histories are copied into a new isolated data root for baseline/candidate comparison with task/model/journal fingerprints; original histories are not modified.",
+      "location": {
+        "path": "scripts/v1/browse-benchmark.mjs"
+      },
+      "hash": "01e60ab860314d22c39e253acacbbdbdb9708d15f23a6272fbd5202ceddd1b2a",
+      "observedAt": "2026-11-16T06:36:24.870Z"
     }
   ]
 }

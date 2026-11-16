@@ -26,6 +26,8 @@ interface Options {
   source: (skillsRoot: string) => Promise<SourceState>
   now?: () => Date; onCommit?: (seq: number) => void; syncStatus?: () => unknown | Promise<unknown>; beforeLive?: (skillsRoot: string) => Promise<void>
   externalDocuments?: () => IndexDocument[]
+  browse?: boolean
+  browseTaskId?: string
 }
 const emptyPacket = (): Packet => ({ scope: 'returned-entities-only', contexts: [], evidence: [] })
 const same = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b)
@@ -51,6 +53,8 @@ export class TaskService {
   private readonly cachedSizes = new Map<string, number>()
   private cachedBytes = 0
   private indexProblem: unknown
+  private readonly browsing: boolean
+  private readonly browseTaskId?: string
 
   constructor(options: Options) {
     this.worktree = options.worktree
@@ -62,6 +66,8 @@ export class TaskService {
     this.synchronization = options.syncStatus
     this.beforeLive = options.beforeLive
     this.externalDocuments = options.externalDocuments
+    this.browsing = options.browse ?? false
+    this.browseTaskId = options.browseTaskId
   }
   ready(): Promise<void> { return this.loading ??= this.load() }
   async close(): Promise<void> { await this.queue.catch(() => {}); await this.index.close() }
@@ -71,7 +77,7 @@ export class TaskService {
     return next
   }
   tasks(): TaskRecord[] { return [...this.latestTasks.keys()].map(id => this.task(id)) }
-  status() { return { archive: { state: this.archive.status, seq: this.archive.seq, diagnostics: this.archive.diagnostics }, index: this.index.status, indexError: this.indexProblem ? String(this.indexProblem) : null } }
+  status() { return { archive: { state: this.archive.status, seq: this.archive.seq, diagnostics: this.archive.diagnostics, verificationScope: this.browsing ? 'requested' : this.archive.verificationScope, workspaceIntegrity: this.browsing ? 'unknown' : this.archive.status }, index: this.browsing ? { state: 'not-opened' } : this.index.status, indexError: this.indexProblem ? String(this.indexProblem) : null } }
 
   private target(): Target { return { projectId: this.worktree.projectId, worktreeId: this.worktree.id } }
   private instant(): Date {
@@ -89,6 +95,7 @@ export class TaskService {
   private async load(): Promise<void> {
     await this.archive.ready()
     await this.restore()
+    if (this.browsing) return
     if (this.archive.status !== 'ready') { this.indexProblem = new HarnessError('INDEX_UNAVAILABLE', 'The journal has an unverified region; history search is unavailable.', { diagnostics: this.archive.diagnostics }, true); return }
     try {
       await this.index.ready()
@@ -98,7 +105,10 @@ export class TaskService {
   private async restore(): Promise<void> {
     reportProgress({ phase: 'restoring-tasks' })
     this.latestTasks.clear(); this.records.clear(); this.cachedSizes.clear(); this.cachedBytes = 0
-    for await (const record of this.archive.scanAsync({ kind: 'task' })) {
+    const latest = new Map<string, number>()
+    if (this.browsing) for (const header of this.archive.headers({ kind: 'task', taskId: this.browseTaskId })) if (header.taskId) latest.set(header.taskId, header.seq)
+    const records = this.browsing ? (async function* (archive: Archive) { for (const seq of latest.values()) yield await archive.record(seq) })(this.archive) : this.archive.scanAsync({ kind: 'task' })
+    for await (const record of records) {
       const payload = record.payload as TaskPayload
       const task = this.checkedTask(payload.task)
       this.latestTasks.set(task.id, record.seq)
@@ -228,7 +238,13 @@ export class TaskService {
   }
   private async verifyTask(task: TaskRecord): Promise<void> {
     const references = new Map<string, ArchiveReference>()
-    for (const reference of this.archive.references({ kind: 'task', taskId: task.id })) references.set(`${reference.kind}:${reference.hash}`, reference)
+    if (this.browsing) {
+      for (const header of this.archive.headers({ kind: 'task', taskId: task.id })) {
+        const record = await this.archive.record(header.seq)
+        if ((record.payload as TaskPayload).task.id !== task.id) throw new HarnessError('ARCHIVE_CORRUPT', 'The task locator does not match its committed identity.')
+        for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, reference)
+      }
+    } else for (const reference of this.archive.references({ kind: 'task', taskId: task.id })) references.set(`${reference.kind}:${reference.hash}`, reference)
     references.set(`snapshot:${task.modelSnapshotHash}`, { kind: 'snapshot', hash: task.modelSnapshotHash })
     for (const reference of references.values()) {
       if (reference.kind === 'snapshot') await this.archive.readSnapshot(reference.hash)
@@ -248,6 +264,28 @@ export class TaskService {
     const task = this.task(taskId)
     await this.verifyTask(task)
     return this.atBatch(task, throughBatchId)
+  }
+  async archivedView(taskId: string, throughBatchId?: string): Promise<{ task: TaskRecord; model: ModelSnapshot }> {
+    const task = await this.archivedTask(taskId, throughBatchId)
+    const model = await this.archive.readSnapshot<ModelSnapshot>(task.modelSnapshotHash)
+    if (model.revision !== task.binding.modelRevision || !Array.isArray(model.entities) || !Array.isArray(model.views)) throw new HarnessError('ARCHIVE_CORRUPT', 'The archived model snapshot does not match its task binding.')
+    return { task, model }
+  }
+  async browseList(request: CommandRequest, legacy: Record<string, any>[] = []): Promise<Envelope> {
+    await this.ready()
+    if (this.archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The journal needs recovery before task discovery.', { diagnostics: this.archive.diagnostics })
+    const limit = Number(flag(request, 'limit') ?? (request.operation === 'history list' ? 20 : 50)), offset = Number(flag(request, 'offset') ?? 0)
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 200 || !Number.isSafeInteger(offset) || offset < 0) throw new HarnessError('INVALID_ARGUMENT', 'Search limit must be 1–200 and offset nonnegative.')
+    const now = this.instant().getTime(), query = (flag(request, 'query') ?? '').trim().toLocaleLowerCase()
+    const from = flag(request, 'from'), to = flag(request, 'to')
+    const date = (value: string) => /^\d{4}-\d\d-\d\d$/.test(value) && Number.isFinite(Date.parse(value + 'T00:00:00.000Z')) && new Date(value + 'T00:00:00.000Z').toISOString().slice(0, 10) === value
+    if (from && !date(from) || to && !date(to) || from && to && from > to) throw new HarnessError('INVALID_ARGUMENT', 'Search date bounds must be valid ordered UTC calendar dates.')
+    const tasks = this.tasks(), sessions = new Map(tasks.map(task => [task.id, task.declaredSession]))
+    const items = [...tasks.map(task => this.summary(task)), ...legacy].filter(item => {
+      const activity = item.retentionBasisAt as string | null, expires = item.expiresAt as string | null
+      return activity && expires && now <= Date.parse(expires) && (!from || activity >= from) && (!to || activity <= (to.length === 10 ? to + 'T23:59:59.999Z' : to)) && (!query || [item.id, item.title, sessions.get(String(item.id)) ?? ('declaredSession' in item ? item.declaredSession : ''), item.binding.modelRevision].join(' ').toLocaleLowerCase().includes(query))
+    }).sort((a, b) => String(b.retentionBasisAt).localeCompare(String(a.retentionBasisAt)) || String(a.id).localeCompare(String(b.id)))
+    return this.envelope(request, commandResult(request.operation, { items: items.slice(offset, offset + limit), total: items.length, limit, offset, hasMore: offset + limit < items.length, retentionDays: 60, seq: this.archive.seq }))
   }
   private atBatch(task: TaskRecord, batchId?: string): TaskRecord {
     if (!batchId) return structuredClone(task)

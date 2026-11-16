@@ -2,7 +2,9 @@
 
 v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
 
-启动恢复的范围为显式日志订阅（recovery.scope=observation-subscriptions）。只读完整journal结构/哈希链检查可判定是否存在observation-state，不证明snapshot/blob完整；没有订阅的工作区不在后台预读全部历史正文。存在订阅或journal不能完整判定时，仍走原有完整档案恢复；用户请求任一目标历史时照常核验完整日志及所有引用。私有journal路由结果不能充当已恢复Archive、当前来源核验或业务成功。
+启动恢复的范围为显式日志订阅（recovery.scope=observation-subscriptions）。完整journal结构/哈希链检查可判定是否存在observation-state，并可生成可重建的浏览定位索引，不证明snapshot/blob完整；没有订阅的工作区不在后台预读全部历史正文。存在订阅或journal不能完整判定时，仍走原有完整档案恢复；CLI任务、管理、来源及同步请求照常核验完整日志及所有引用。Web浏览按v0.53独立核对所请求范围，不冒充已恢复完整Archive、当前来源核验或业务成功。
+
+v0.53浏览定位：worktrees/<UUID>/browse-index.json是本机派生缓存，保存task/legacy/observation记录、最后同步状态及首尾提交的日志位置与指纹，不保存另一份可编辑正文。日志身份/长度/变更时间只用于失效，不证明内容；使用缓存时读取并重核实际首尾和所请求记录字节，所请求任务的原引用继续完整核对。索引有版本及内容哈希，缺失/无效可重读完整journal链重建；合法追加先核对原首尾指纹，再从原末端校验新增提交；不因缓存替换、修复或截断原journal。完整恢复/提交可更新索引，缓存写入失败不改变已持久提交结果。浏览报告verificationScope=requested、workspaceIntegrity=unknown，未请求的快照完整性保持未知；完整恢复仍检查所有引用并报告损坏。它不供写请求、proof或完整同步历史代次校验使用。
 
 目标Archive完整核验之后，历史读取/历史图与snapshot任务不额外等待旧来源观测状态的逐条语义恢复；其绑定和历史正文仍来自原归档，不冒充当前来源已核验。verified任务、同步、身份失效、当前状态与task close需要时恢复原来源状态，仍按日志顺序检查全部同步记录及代次，保留原有pending和严格proof。
 
@@ -69,6 +71,7 @@ sourceVersion、sourceManifest、sourceScanRevision 的唯一形状与排序见 
     snapshots/<sha256>.json
     skill-blobs/<sha256>
     index.sqlite
+    browse-index.json
     checkpoints/
     cache/
 ```
@@ -78,6 +81,7 @@ sourceVersion、sourceManifest、sourceScanRevision 的唯一形状与排序见 
 | `registry.json` | 本机登记、canonical path、Git common directory、停用状态；原子替换，机器路径不随 Git |
 | `skills/` | 默认的机器全局用户可编辑技能来源，包含方法、附件与许可；不是缓存，不能重建覆盖用户编辑 |
 | `journal.jsonl` | 按 worktree 单调提交序号保存任务、批次、读取回执、绑定、观测、同步及迁移提交；运行历史的提交依据，只追加 |
+| `browse-index.json` | 可重建的Web日志定位缓存；核对所请求原记录，不等于完整档案恢复或来源核验 |
 | `tasks/<id>.json` | 任务当前物化结果，含最后提交序号和校验值；从已提交日志与归档重建，不接受 CLI/Web 直接编辑 |
 | `snapshots/<sha>.json` | 不可变的当时模型、关系、依据、C4 数据、批次结果及协议响应；按 `kind` 区分用途，不借当前内容补旧历史 |
 | `skill-blobs/<sha>` | 当时所选技能及附件的原始字节；按原字节校验，不因目录迁移重新写历史 ID/group |

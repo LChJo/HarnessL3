@@ -18,6 +18,7 @@ import './styles.css'
 import './formal.css'
 
 interface Route { worktree: string; task?: string; batch?: string; frozen: boolean; browse?: boolean; listed?: boolean }
+interface CachedView { route: Route; data: ViewData; bytes: number }
 type Detail = { kind: 'node'; id: string } | { kind: 'skills'; id?: string; file?: string } | { kind: 'history' | 'records' | 'packet' | 'workspace' | 'structure' }
 interface Command { operation: string; options: Parameters<Rpc>[1] }
 interface Catalog { root: string | null; revision: string | null; skills: SkillBrief[]; valid: boolean; diagnostics: { message: string }[]; checkedAt: string | null }
@@ -47,6 +48,7 @@ function App() {
   const pendingView = useRef<{ token: number; wantedSeq: number; dirty: boolean; promise: Promise<void> } | null>(null)
   const pendingTasks = useRef<{ token: number; worktree: string; wantedSeq: number; promise: Promise<TaskSummary[]> } | null>(null)
   const taskListSeq = useRef(new Map<string, number>())
+  const viewCache = useRef(new Map<string, CachedView>())
   const anchor = useRef<{ id: string; x: number; y: number } | null>(null), skillAnchor = useRef<{ id: string; x: number; y: number } | null>(null)
   const task = data?.task ?? null, legacy = data?.legacy ?? null, historical = !!route?.frozen || !!legacy, unavailable = !!task?.closedAt || !!task && Date.now() > Date.parse(task.expiresAt)
   const displayedId = task?.id ?? legacy?.taskId, displayedTitle = task?.title ?? legacy?.record.title, displayedBatches = task?.batches.length ?? legacy?.record.batches?.length ?? 0
@@ -67,12 +69,17 @@ function App() {
   const showDock = selectedCount > 0 || !!task && !task.skillPlan && !readonly
   const packet = task ? pretty({ taskId: task.id, binding: task.binding, packet: task.packet, skillPlan: task.skillPlan }) : legacy ? pretty(legacy) : ''
 
-  const chooseRoute = useCallback((next: Route) => {
+  const chooseRoute = useCallback((requested: Route) => {
+    const cached = viewCache.current.get(requested.worktree)
+    const valid = cached?.data.task && Date.now() <= Date.parse(cached.data.task.expiresAt)
+    const reuse = valid && (requested.browse || requested.task === cached.route.task && requested.batch === cached.route.batch)
+    const next: Route = requested.browse && reuse ? { ...cached.route, frozen: true, browse: false, listed: false } : requested
     setDirectory(null)
     if (routeRef.current?.worktree !== next.worktree) { tasksRef.current = []; setTaskList([]); setBatchOptions({ task: '', batches: [] }); latestBatch.current = { task: '', batch: '' } }
     ++generation.current; ++loadCounter.current; abort.current?.abort(); routeRef.current = next
     if (next.task) { try { sessionStorage.setItem('harnessl3:view:' + next.worktree, JSON.stringify({ task: next.task, batch: next.batch, frozen: next.frozen })) } catch { /* Browsing works without session storage. */ } }
-    setData(null); setLoading(true); setLiveCatalog(null); setRoute(next); setExpanded([]); setHubOpen(false); setFolders(new Set()); setSkillsOpen(new Set()); setReads([]); setExpands([]); setSkillChoices(new Map()); setDetail(null); setFresh([]); setUpdates(false); setError(''); setViewError(''); setRetry(null); setBusy(false); setRefreshing(false)
+    setData(reuse ? cached.data : null); setLoading(!reuse); setLiveCatalog(null); setRoute(next); setExpanded([]); setHubOpen(false); setFolders(new Set()); setSkillsOpen(new Set()); setReads([]); setExpands([]); setSkillChoices(new Map()); setDetail(null); setFresh([]); setUpdates(false); setError(''); setViewError(''); setRetry(null); setBusy(false); setRefreshing(false)
+    if (reuse && cached.data.task) setBatchOptions({ task: cached.data.task.id, batches: cached.data.task.batches })
     const url = new URL(location.href); url.hash = ''; url.searchParams.set('worktree', next.worktree); url.searchParams.delete('directory')
     if (!next.task && !next.browse) url.searchParams.set('overview', '1'); else url.searchParams.delete('overview')
     for (const name of ['task', 'batch']) { const value = next[name as 'task' | 'batch']; if (value) url.searchParams.set(name, value); else url.searchParams.delete(name) }
@@ -109,7 +116,8 @@ function App() {
     if (pending?.token === token) { if (eventSeq === undefined) pending.dirty = true; else pending.wantedSeq = Math.max(pending.wantedSeq, eventSeq); return pending.promise }
     const sequence = ++loadCounter.current
     abort.current?.abort(); const controller = new AbortController(); abort.current = controller
-    setLoading(true)
+    const cached = viewCache.current.get(target.worktree)
+    setLoading(!(cached && cached.route.task === target.task && cached.route.batch === target.batch && cached.data.task && Date.now() <= Date.parse(cached.data.task.expiresAt)))
     const flight = { token, wantedSeq: eventSeq ?? 0, dirty: false, promise: Promise.resolve() }
     pendingView.current = flight
     flight.promise = (async () => {
@@ -119,6 +127,10 @@ function App() {
           const result = await view(target.worktree, target.task, target.batch, controller.signal)
           if (token !== generation.current || sequence !== loadCounter.current || result.target.worktreeId !== target.worktree) return
           if (result.legacy && !target.frozen) { chooseRoute({ ...target, frozen: true }); return }
+          const bytes = JSON.stringify(result).length * 2
+          viewCache.current.delete(target.worktree)
+          if (result.task && bytes <= 16 * 1024 * 1024) viewCache.current.set(target.worktree, { route: target, data: result, bytes })
+          while (viewCache.current.size > 8 || [...viewCache.current.values()].reduce((sum, value) => sum + value.bytes, 0) > 16 * 1024 * 1024) viewCache.current.delete(viewCache.current.keys().next().value!)
           setData(result); setLoading(false); setViewError(''); lastSeq.current.set(target.worktree, Math.max(lastSeq.current.get(target.worktree) ?? 0, result.seq))
           if (target.frozen) setUpdates(flight.wantedSeq > result.seq)
           else if (flight.wantedSeq > result.seq) flight.dirty = true
@@ -140,7 +152,10 @@ function App() {
               void rpc<LegacyArchive>('task show', { id: archive.taskId, worktree: target.worktree }).then(value => { if (token === generation.current) setBatchOptions(options(value)) }).catch(error => { if (token === generation.current) setViewError(errorMessage(error)) })
             }
           }
-        } catch (error) { if (!controller.signal.aborted && token === generation.current && sequence === loadCounter.current) setViewError(errorMessage(error)) }
+        } catch (error) { if (!controller.signal.aborted && token === generation.current && sequence === loadCounter.current) {
+          if (error instanceof ApiError && ['ARCHIVE_CORRUPT', 'NOT_FOUND', 'TARGET_CONFLICT', 'WORKTREE_MOVED'].includes(error.code)) { viewCache.current.delete(target.worktree); setData(null) }
+          setViewError(errorMessage(error))
+        } }
       } while (flight.dirty && token === generation.current && !controller.signal.aborted)
     })().finally(() => {
       if (pendingView.current === flight) pendingView.current = null

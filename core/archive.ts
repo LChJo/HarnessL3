@@ -70,6 +70,7 @@ export class Archive {
   private loaded?: Promise<void>;
   private queue: Promise<unknown> = Promise.resolve();
   private commits: StoredRecord[] = [];
+  private readonly bySequence = new Map<number, StoredRecord>();
   private requests = new Map<string, StoredRecord>();
   private byKind = new Map<string, StoredRecord[]>();
   private byTask = new Map<string, StoredRecord[]>();
@@ -77,11 +78,15 @@ export class Archive {
   private state: 'ready' | 'recovery-required' = 'ready';
   private problems: ArchiveDiagnostic[] = [];
   private journalKindsOnly = false;
+  readonly verificationScope: 'workspace' | 'requested';
 
-  constructor(root: string, options: { readOnly?: boolean } = {}) {
+  constructor(root: string, options: { readOnly?: boolean; verification?: 'requested' } = {}) {
     if (!isAbsolute(root)) throw new HarnessError('INVALID_ARGUMENT', 'Archive root must be absolute.');
     this.root = resolve(root);
     this.readOnly = options.readOnly === true;
+    this.verificationScope = options.verification ?? 'workspace';
+    if (this.verificationScope === 'requested' && !this.readOnly) throw new HarnessError('INVALID_ARGUMENT', 'Scoped archive browsing must be read-only.');
+    this.journalKindsOnly = this.verificationScope === 'requested';
   }
   get status(): 'ready' | 'recovery-required' { return this.state; }
   get diagnostics(): ArchiveDiagnostic[] { return structuredClone(this.problems); }
@@ -127,7 +132,7 @@ export class Archive {
     } finally { closeSync(descriptor); }
   }
   private stored(seq: number): StoredRecord {
-    const record = this.commits[seq - 1];
+    const record = this.bySequence.get(seq);
     if (!Number.isSafeInteger(seq) || !record || record.seq !== seq) throw new HarnessError('NOT_FOUND', 'This committed sequence is not in the verified journal.', { seq });
     return record;
   }
@@ -181,6 +186,7 @@ export class Archive {
     const header = this.header(record);
     const stored: StoredRecord = { ...header, hash: record.hash, requestHash: record.requestHash, archives: record.archives.map(reference => ({ ...reference })), offset, length };
     this.commits.push(stored);
+    this.bySequence.set(stored.seq, stored);
     this.requests.set(this.key(record.scope, record.requestId), stored);
     for (const [index, key] of [[this.byKind, header.kind], [this.byTask, header.taskId]] as const) if (key !== null) {
       let records = index.get(key);
@@ -216,14 +222,15 @@ export class Archive {
       if (isErrno(error, 'ENOENT')) return;
       throw error;
     }
+    if (this.verificationScope === 'requested' && await this.loadBrowseIndex() && (await this.journalStamp()).size === this.journalBytes) return;
     const latest = new Map<string, { seq: number; index: number }>();
-    let offset = 0, yieldedThrough = 0, pendingBytes = 0;
+    let offset = this.journalBytes, yieldedThrough = offset, pendingBytes = 0;
     let pending: Buffer[] = [];
     const reader = await open(journal, 'r');
     const total = (await reader.stat()).size;
     reportProgress({ phase: 'recovering-history', completed: 0, total });
     try {
-      chunks: for await (const chunk of reader.createReadStream({ autoClose: false, highWaterMark: 256 * 1024 })) {
+      chunks: for await (const chunk of reader.createReadStream({ start: offset, autoClose: false, highWaterMark: 256 * 1024 })) {
         const bytes = chunk as Buffer;
         let start = 0, newline: number;
         while ((newline = bytes.indexOf(10, start)) >= 0) {
@@ -265,7 +272,7 @@ export class Archive {
       }
     }
     pending = [];
-    if (this.journalKindsOnly) return;
+    if (this.journalKindsOnly) { if (this.state === 'ready') await this.saveBrowseIndex(); return; }
     // Recovery shares verification work, not decoded bodies or a lifetime trust cache.
     const verified = new Map<string, Promise<void>>();
     // Independent immutable references share one pass-local verification map.
@@ -299,6 +306,57 @@ export class Archive {
         this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), verifiedThrough: this.seq });
       }
     }
+  }
+
+  /** Derived locators never replace journal bytes or a complete recovery proof. */
+  private async journalStamp() {
+    const info = await lstat(join(this.root, 'journal.jsonl'));
+    if (!info.isFile() || info.isSymbolicLink()) throw corrupt('Journal is not a regular local file.');
+    return { dev: info.dev, ino: info.ino, birthtimeMs: info.birthtimeMs, size: info.size, mtimeMs: info.mtimeMs, ctimeMs: info.ctimeMs };
+  }
+  private async saveBrowseIndex(): Promise<void> {
+    try {
+      if (this.state !== 'ready') return;
+      const journal = await this.journalStamp();
+      if (journal.size !== this.journalBytes) return;
+      const lastFreshness = this.byKind.get('freshness-state')?.at(-1)?.seq;
+      const records = this.commits.filter(record => ['task', 'legacy-migration', 'legacy-read', 'observation-state'].includes(record.kind ?? '') || record.seq === lastFreshness || record.seq === 1 || record.seq === this.seq);
+      const content = { version: 1, journal, records };
+      await atomicWrite(join(this.root, 'browse-index.json'), JSON.stringify({ ...content, hash: digest('browse-index', content) }) + '\n');
+    } catch { /* Cache failure must not change a durable commit or recovery result. */ }
+  }
+  private async loadBrowseIndex(): Promise<boolean> {
+    try {
+      const journal = await this.journalStamp();
+      const file = join(this.root, 'browse-index.json');
+      await this.regularFile(file);
+      const { hash, ...content } = parseJsonStrict(decode(await readFile(file))) as { hash: string; version: number; journal: Awaited<ReturnType<Archive['journalStamp']>>; records: StoredRecord[] };
+      if (content.version !== 1 || digest('browse-index', content) !== hash || !Array.isArray(content.records)) return false;
+      const prior = content.journal;
+      const appended = prior && journal.size > prior.size && ['dev', 'ino', 'birthtimeMs'].every(key => journal[key as keyof typeof journal] === prior[key as keyof typeof prior]);
+      if (!appended && canonicalJson(prior) !== canonicalJson(journal)) return false;
+      let previous = 0;
+      for (const record of content.records) {
+        if (!Number.isSafeInteger(record.seq) || record.seq <= previous || !Number.isSafeInteger(record.offset) || !Number.isSafeInteger(record.length) || record.offset < 0 || record.length < 1 || record.offset + record.length >= prior.size || !HASH.test(record.hash) || !Array.isArray(record.archives)) return false;
+        previous = record.seq;
+      }
+      if (prior.size && (!content.records.length || content.records[0].seq !== 1 || content.records.at(-1)!.offset + content.records.at(-1)!.length + 1 !== prior.size)) return false;
+      for (const record of [content.records[0], content.records.at(-1)].filter((item): item is StoredRecord => !!item)) {
+        const actual = await this.readRecord(record);
+        const header = Object.fromEntries(Object.entries(record).filter(([key]) => !['hash', 'requestHash', 'archives', 'offset', 'length'].includes(key)));
+        if (canonicalJson(this.header(actual)) !== canonicalJson(header)) return false;
+      }
+      if (canonicalJson(await this.journalStamp()) !== canonicalJson(journal)) return false;
+      for (const record of content.records) {
+        this.commits.push(record); this.bySequence.set(record.seq, record);
+        this.requests.set(this.key(record.scope, record.requestId), record);
+        for (const [index, key] of [[this.byKind, record.kind], [this.byTask, record.taskId]] as const) if (key !== null) {
+          const values = index.get(key) ?? []; values.push(record); index.set(key, values);
+        }
+      }
+      this.journalBytes = prior.size;
+      return true;
+    } catch { return false; }
   }
 
   private validateRecord(record: CommitRecord): void {
@@ -481,6 +539,7 @@ export class Archive {
       this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), seq: record.seq });
       throw new HarnessError('IO_ERROR', 'Commit is durable but its materialized projection needs recovery.', { ...asHarnessError(error).details, committed: true, seq: record.seq, requestId: record.requestId, outcome: 'committed', nextAction: 'query-request', cause: String(error) });
     }
+    await this.saveBrowseIndex();
     return { receipt: await this.readSnapshot<T>(receiptHash), replayed: false, seq: record.seq };
   }
 

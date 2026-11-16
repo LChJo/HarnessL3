@@ -42,7 +42,7 @@ type BindInput = { agent: Agent; sessionId: string; logFile: string; taskId?: st
 type Result = { bindings: ObservationBinding[]; replayed: boolean };
 type Options = {
   worktree: WorktreeRecord; archive: Archive; serial: <T>(work: () => Promise<T>) => Promise<T>;
-  onCommit?: (events: ObservationEvent[]) => void | Promise<void>; now?: () => string; pollIntervalMs?: number;
+  onCommit?: (events: ObservationEvent[]) => void | Promise<void>; now?: () => string; pollIntervalMs?: number; readOnly?: boolean;
   validatedHostVersions?: Partial<Record<Agent, string[]>>;
 };
 type Decoded = { code: number | null; runningSession: string | null; failed: boolean; cancelled: boolean; denied: boolean; truncated: boolean; explicitSuccess: boolean; range: Range | null };
@@ -278,11 +278,11 @@ export class ObservationManager {
       this.bindings.set(snapshot.binding.id, snapshot.binding);
       for (const event of snapshot.events) this.events.set(event.eventId, event);
     }
-    for (const binding of this.bindings.values()) if (binding.active) {
+    for (const binding of this.bindings.values()) if (binding.active && !this.options.readOnly) {
       const lease = leases.get(this.lease(binding));
       if (!lease || lease.worktreeId === this.options.worktree.id) leases.set(this.lease(binding), { worktreeId: this.options.worktree.id, bindingId: binding.id, owner: this });
     }
-    this.startTimer();
+    if (!this.options.readOnly) this.startTimer();
   }
   private startTimer(): void {
     const interval = this.options.pollIntervalMs ?? 250;
