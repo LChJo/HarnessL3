@@ -4,11 +4,11 @@ Skill Hub 是 CLI 入口能力；普通技能是当前 agent 可按需读取的�
 
 ## 按任务用途分类
 
-当前为 **7 类、26 项方法**。类别描述主要用途，不要求 agent 按类别顺序执行；跨类方法可一次联合选择。
+当前为 **7 类、27 项方法**。类别描述主要用途，不要求 agent 按类别顺序执行；跨类方法可一次联合选择。
 
 | 目录 | 用途 | 方法 |
 | --- | --- | --- |
-| `discovery/` | 需求澄清与研究：找事实、澄清未决选择 | [grilling](discovery/grilling/SKILL.md)、[grill-with-docs](discovery/grill-with-docs/SKILL.md)、[research](discovery/research/SKILL.md)、[to-questionnaire](discovery/to-questionnaire/SKILL.md) |
+| `discovery/` | 需求澄清与研究：找事实、澄清未决选择 | [grill-me](discovery/grill-me/SKILL.md)、[grilling](discovery/grilling/SKILL.md)、[grill-with-docs](discovery/grill-with-docs/SKILL.md)、[research](discovery/research/SKILL.md)、[to-questionnaire](discovery/to-questionnaire/SKILL.md) |
 | `planning/` | 规格与任务规划：形成规格、拆分工作和管理决策 | [to-spec](planning/to-spec/SKILL.md)、[to-tickets](planning/to-tickets/SKILL.md)、[triage](planning/triage/SKILL.md)、[wayfinder](planning/wayfinder/SKILL.md) |
 | `architecture/` | 架构与领域建模：接口边界、术语和架构改进 | [codebase-design](architecture/codebase-design/SKILL.md)、[domain-modeling](architecture/domain-modeling/SKILL.md)、[improve-codebase-architecture](architecture/improve-codebase-architecture/SKILL.md) |
 | `development/` | 快速任务、开发与原型：简单问答、明确小改动、实现、设计验证、PR正文与人工向导 | [quick](development/quick/SKILL.md)、[implement](development/implement/SKILL.md)、[prototype](development/prototype/SKILL.md)、[implement-spec](development/implement-spec/SKILL.md)、[pr](development/pr/SKILL.md)、[wizard](development/wizard/SKILL.md) |
@@ -16,7 +16,7 @@ Skill Hub 是 CLI 入口能力；普通技能是当前 agent 可按需读取的�
 | `knowledge/` | 知识传递：跨工作阶段交接与教学 | [handoff](knowledge/handoff/SKILL.md)、[teach](knowledge/teach/SKILL.md)、[wait-what](knowledge/wait-what/SKILL.md) |
 | `meta/` | 技能与项目约定维护：改进方法文件、梳理项目工作约定 | [writing-for-agents](meta/writing-for-agents/SKILL.md)、[setup-matt-pocock-skills](meta/setup-matt-pocock-skills/SKILL.md) |
 
-`grill-me` 原来只转引 grilling，没有独立步骤或附件，已删除；通用访谈统一使用 [grilling](discovery/grilling/SKILL.md)。[grill-with-docs](discovery/grill-with-docs/SKILL.md) 保留：它在访谈之外还关联领域术语和设计决策记录。目录和方法分工以实际文件为准，本表仅供维护导航。
+用户显式要求 `grill-me` 或 `grillme` 时可选择 [grill-me](discovery/grill-me/SKILL.md)：2026-11-17 恢复该名称，并内联实际访谈方法以独立归档。通用访谈仍可选择 [grilling](discovery/grilling/SKILL.md)，两者均按独立问题分轮。[grill-with-docs](discovery/grill-with-docs/SKILL.md) 在访谈之外还维护领域术语和设计决策。目录和方法分工以实际文件为准，本表仅供维护导航。
 
 编辑 `SKILL.md` 或附件、添加或删除技能目录后，无需重新编译 CLI。Hub 自动重建当前目录，也可手动刷新；目录更新不会改写技能正文或替 agent 作选择。文件内容变化会改变版本，已有任务仍保留选择时的归档文件；新选择须使用当前有效目录。无效 YAML、重名、失效引用或文件越界应按目录诊断处理，不能当作有效技能执行。
 
@@ -26,6 +26,6 @@ Skill Hub 是 CLI 入口能力；普通技能是当前 agent 可按需读取的�
 
 默认方法独立使用：不含跨技能 `SKILL.md` 链接、`related` 清单或指向库根目录的维护说明；保留本方法目录内真实附件的相对链接，必要行为写入正文。任务仅归档显式所选方法的文件夹，不能假定其它方法或共享说明也已提供。用户自有技能的可选 `related` 仍兼容，作为目录候选展示，不自动加入选择。移动或删除时检查附件入链、CLI 示例及调用方。执行和归档约定见 [文件引用约定](FILE-REFERENCES.md)。
 
-当前适配来源为 [Matt Pocock skills](https://github.com/mattpocock/skills) **1.3.2**，本地只读参考提交 [4ae2317](https://github.com/mattpocock/skills/commit/4ae2317ddb22b046e26455e4f9c9b3aaaf62212d)；上一轮来源为 LChJo/skills 的2ab9580。更新原因、26项映射、依赖适配及未分发内容见[来源与升级核对](UPSTREAM.md)。保留 [MIT许可](LICENSE)、copyright 2026 Matt Pocock及pr附件中的作者致谢。来源库未回写；本版本不声称是网络最新版本。
+当前适配来源为 [Matt Pocock skills](https://github.com/mattpocock/skills) **1.3.2**，本地只读参考提交 [4ae2317](https://github.com/mattpocock/skills/commit/4ae2317ddb22b046e26455e4f9c9b3aaaf62212d)；上一轮来源为 LChJo/skills 的2ab9580。更新原因、27项映射、依赖适配及未分发内容见[来源与升级核对](UPSTREAM.md)。保留 [MIT许可](LICENSE)、copyright 2026 Matt Pocock及pr附件中的作者致谢。来源库未回写；本版本不声称是网络最新版本。
 
-其中quick为HarnessL3方法，其余25项来自上述稳定范围。ask-matt由内置Hub路由承担，grill-me的重复包装继续省略；chief-of-staff、software-factory仍是beta，不随默认库分发。writing-great-skills已由writing-for-agents替代，resolving-merge-conflicts退出当前目录；旧任务仍读取选择时的文件。
+其中quick为HarnessL3方法，其余26项来自上述稳定范围。ask-matt由内置Hub路由承担；chief-of-staff、software-factory仍是beta，不随默认库分发。writing-great-skills已由writing-for-agents替代，resolving-merge-conflicts退出当前目录；旧任务仍读取选择时的文件。

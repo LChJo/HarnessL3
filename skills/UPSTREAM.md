@@ -1,12 +1,14 @@
 # 技能来源与升级核对
 
-2026-11-11；HarnessL3候选0.1.1，默认7类26项方法。此文件记录内容来源与适配判断，目录与版本仍从真实文件派生，不是运行时注册表。
+2026-11-11 导入，2026-11-17 增补；默认7类27项方法。此文件记录内容来源与适配判断，目录与版本仍从真实文件派生，不是运行时注册表。
+
+2026-11-17 用户明确要求从 `E:/Ai/skills/skills/productivity/grill-me` 恢复 grill-me。该来源仅转调 grilling；恢复为 discovery/grill-me，并将已适配的 grilling 方法内联，避免宿主 Skill 工具及跨方法依赖。描述面向显式 grill-me/grillme 请求，保持分轮访谈、项目权威和授权边界；不复制 agents/openai.yaml，也不把宿主 invocation 标志当成 Hub 策略。其余现有方法保持。来源提交仍为下述4ae2317，未联网声称最新或回写参考库。
 
 ## 对照范围
 
 用户确认以只读本地参考库 `E:/Ai/skills` 为源：上游版本 **1.3.2**，提交 [4ae2317ddb22b046e26455e4f9c9b3aaaf62212d](https://github.com/mattpocock/skills/commit/4ae2317ddb22b046e26455e4f9c9b3aaaf62212d)。上一轮导入基点为 [2ab9580](https://github.com/LChJo/skills/commit/2ab958093e83e0ec752e6c1c5932da465bf23e0c)。核对两点间的提交、CHANGELOG、实际正文、附件及L3既有适配；没有联网核对“最新”，没有回写参考库。
 
-最初给出的 `I:/aimana/mldesigner/skills` 实际包含另一组插件开发技能，未作为本次来源。当前分发普通方法25项来自稳定范围，quick为L3方法。保留[MIT许可](LICENSE)，pr另外保留[CREDITS](development/pr/CREDITS.md)。
+最初给出的 `I:/aimana/mldesigner/skills` 实际包含另一组插件开发技能，未作为本次来源。当前分发普通方法26项来自稳定范围，quick为L3方法。保留[MIT许可](LICENSE)，pr另外保留[CREDITS](development/pr/CREDITS.md)。
 
 ## 当前方法与处理
 
@@ -21,6 +23,7 @@
 | development/prototype | engineering/prototype | 逻辑分支由终端原型改为可分享的单HTML，保留纯逻辑、场景按钮和可运行证据；不强制建分支或删除 |
 | development/pr | engineering/pr | 新增面向审阅的摘要、实际证据与合并影响；项目模板优先，图示按用途选择，保留作者致谢 |
 | development/wizard | engineering/wizard | 新增仅人能完成的操作向导；保留最新template.sh，修复Readline、env引号/链接、EOF、清屏及运行中编辑问题 |
+| discovery/grill-me | productivity/grill-me → productivity/grilling | 2026-11-17按明确要求恢复名称；访谈正文内联，显式请求可选，不依赖宿主Skill转调或另一方法归档 |
 | discovery/grilling | productivity/grilling | 访谈由逐问升级为独立问题frontier分轮；事实自行查找，按宿主询问工具限制组织并等待回答 |
 | discovery/grill-with-docs | engineering/grill-with-docs | 保留访谈及领域建模的必要行为内联，复用已确认决策，不恢复grilling/domain-modeling硬依赖 |
 | discovery/research | engineering/research | 保留原始来源和引用要求；获授权的读者用新上下文，保留本地研究位置和知识维护 |

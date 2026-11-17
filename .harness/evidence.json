@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "The v0.53 baseline separates scoped read-only Web browsing from complete archive/source recovery, preserving requested bytes and unknown full-workspace integrity.",
+      "claim": "The v0.54 baseline restores the explicit grill-me method as a self-contained file, preserves user libraries and historical bytes, and distinguishes the five planned skill-adoption improvements from implemented behavior.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "255d743cd39db579a7f7bdb19bbe603503f64203a07885315321a2d11bcd0a26",
-      "observedAt": "2026-11-16T06:36:24.857Z"
+      "hash": "a456f13271f3e911f6ac3c14f744354204c1abebb42998721c46de080ac04a99",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -174,22 +174,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000012",
       "kind": "document",
-      "claim": "The bundled library has seven categories and 26 self-contained editable methods, with current upstream provenance, retired IDs and explicit user-library preservation.",
+      "claim": "The bundled library has seven categories and 27 self-contained editable methods, including explicit grill-me requests, with provenance and user-library preservation.",
       "location": {
         "path": "skills/README.md"
       },
-      "hash": "4c3bfcf3e5cff56a897747979abf3f8869722df923f4ca127575abba8edb4c73",
-      "observedAt": "2026-11-11T14:41:34.489Z"
+      "hash": "1ef16f3147cf38098288ec31581d4ad436c32bd41f4a790297296473de0494f3",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Candidate package 0.1.2 retains the Node 24 and dependency contracts; this patch adds sync recovery without changing dependency scope.",
+      "claim": "Package 0.1.6 distributes the restored standalone grill-me method while retaining the Node 24, dependency, text-authority and runtime contracts; skill-adoption improvements remain planned.",
       "location": {
         "path": "package.json"
       },
-      "hash": "52d31651fd1c66af63080e11cb99ee74f197826c4c52dec01586f145a22a622e",
-      "observedAt": "2026-11-16T06:56:37.399Z"
+      "hash": "790b2a068a682d32772977a32f4e60acdb949e0b16bb3b6aad0dc719e39975e7",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -204,12 +204,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000015",
       "kind": "document",
-      "claim": "Model/context contract retains current-agent text maintenance and historical bindings; v0.48 records the 26-method adaptation and dynamic routing without transitive skill selection. v0.50 review: Current text authority and persistent entity identities remain intact during explicit same-repository configuration recovery.",
+      "claim": "The model/context contract preserves text authority, task/batch versions and file-derived catalogs; v0.54 restores a self-contained discovery/grill-me without transitive selection or rewriting historical bytes.",
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "f747724e68953bdc2770c54a88e1ac30fa3e449d5b9d5c896960ee2c52f64edd",
-      "observedAt": "2026-11-15T15:15:26.190Z"
+      "hash": "405c0a919456eddf997d3185ac81f6097e3c4ee070bd8d8a238d758bab786e7b",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -378,8 +378,8 @@
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "7acb95fd3a14adc8e8ef4aac053cb194c487d5a4c6c2dfcb7a0859142096cd47",
-      "observedAt": "2026-11-16T07:15:22.228Z"
+      "hash": "43b578361dd2358075daaf9f4675da7df6e8fc4c52909af9f1459dfa3a1a53d6",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,12 +394,12 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "The actual npm consumer smoke checks candidate 0.1.2, native runtime/service identity, immutable historical handoff and existing browser gates.",
+      "claim": "The npm consumer smoke requires 27 packaged and discoverable method files and reports the actual catalog count while retaining existing service, archive and browser gates.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "97dc44a774a4dac9823e555dfa15fedc0f0ab0408d597852c22d01039b78b27d",
-      "observedAt": "2026-11-16T04:46:22.003Z"
+      "hash": "61cc439d718c65486e7dee6c37de5e9361a1df03efefd56a1038dca055b8ec85",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "Current acceptance matrix covers missing-root convergence, bounded/deferred recovery, intact archive references, compact/full replay equality and explicitly scoped measurements.",
+      "claim": "The acceptance matrix adds the 27-method catalog and standalone grill-me archive checks, while distinguishing byte/fixture validation from actual host adoption and compaction behavior.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "a82be76b9419691483b4022e9cbadaf9a5d3dd591b4a19936f149fd170b539a3",
-      "observedAt": "2026-11-16T06:36:24.863Z"
+      "hash": "cf83e8a704956aee47da0bb9a899ef9f59027350d31620b7ef4835bd4a1c7bb8",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -564,22 +564,22 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR02/03/07/09/12/15 require real structure/view coverage review and current-agent progressive maintenance without fabricated graph quotas or automatic background modeling. v0.50 review: FR01/12/15 distinguish canonical repository location from persistent UUIDs and require reviewed recovery within existing authorization.",
+      "claim": "FR06/15 records the user-requested standalone grill-me restoration alongside retained methods, without claiming that planned adoption improvements or host behavior are implemented.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "38877cc01024def2476970e37ba5c7a5b93a3162cdb4efa41b20445bcc4cdaab",
-      "observedAt": "2026-11-15T15:15:26.190Z"
+      "hash": "2910865cd60c1f8e2ea52b465f5967af1c141b0c932c1cbc13f01336ef9eb310",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Current spec navigation includes usage-driven optimization scope and separates actual implementation/verification from the complete target.",
+      "claim": "Current spec navigation records v0.54 method restoration, links the five-item skill-adoption backlog and separates implemented/file validation from host-effect verification.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "6e55da2820731976ce273a55fd2ec9ae5d4d29832b596c7c464957ed4fc43c47",
-      "observedAt": "2026-11-16T06:36:24.865Z"
+      "hash": "bf5f84f0f67ce841a6f5328677a2ad3a4ecd2d02f6f6a65da327885dc6370e9d",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Current v0.51 agent entry retains real observations, scoped synchronization, stable identities, original receipts and explicit authorization boundaries.",
+      "claim": "The v0.54 agent entry distinguishes the restored grill-me name from ordinary grilling, requires standalone method bytes and preserves real observations, scoped synchronization, identities, original receipts and authorization.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "d37e77f970fc0b563012b886218bd2a281bf24e07e4343e24009ef953637450d",
-      "observedAt": "2026-11-16T06:36:24.866Z"
+      "hash": "3b3205b94fcf068f652859747925147ce4a06b4f36675ac366284d972d957e2b",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Current v0.51 agent entry retains real observations, scoped synchronization, stable identities, original receipts and explicit authorization boundaries.",
+      "claim": "The v0.54 agent entry distinguishes the restored grill-me name from ordinary grilling, requires standalone method bytes and preserves real observations, scoped synchronization, identities, original receipts and authorization.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "d37e77f970fc0b563012b886218bd2a281bf24e07e4343e24009ef953637450d",
-      "observedAt": "2026-11-16T06:36:24.868Z"
+      "hash": "3b3205b94fcf068f652859747925147ce4a06b4f36675ac366284d972d957e2b",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -798,8 +798,8 @@
       "location": {
         "path": "README.md"
       },
-      "hash": "2f2b55a48603f3699affac5a207b4fb27bc4d17034b7ddcc4ccb4bbac6cc8a32",
-      "observedAt": "2026-11-16T05:44:51.136Z"
+      "hash": "7a0abc0c80fb3606d7daadc6a6386e0ec24c0e943f030f4ff06a0ac8ff3f3977",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -808,8 +808,8 @@
       "location": {
         "path": "docs/implementation/CLI_SKILL_REVIEW.md"
       },
-      "hash": "8829854e22799b35a772274b502ac72fb25d9595131e75f8e90586649ecdbfec",
-      "observedAt": "2026-11-10T14:07:55.624Z"
+      "hash": "f2ee2633eca97cb0a2d64553d75baeec79e0fcec54134e5fdc9c1270be8719c8",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "2b9a98f4-94bc-4d27-a3e3-f7ed9b3c712f",
@@ -978,8 +978,8 @@
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "2600c8dfa3ab99838842e76d466a15412c3b0f7d051186293e5e53dbf7e8f5b4",
-      "observedAt": "2026-11-16T06:58:36.714Z"
+      "hash": "46caff3dce8f857f9864277e0c973721138da9e2c90804d4c62096d32a5c6b7f",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1144,12 +1144,12 @@
     {
       "id": "d6480000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "The per-method provenance audit maps 26 local methods to upstream 1.3.2/4ae2317, explains local dependency inlining and ask-matt routing decisions, and records beta/governance exclusions.",
+      "claim": "The provenance audit maps 27 local methods to upstream 1.3.2/4ae2317, records the user-requested grill-me restoration by inlining its adapted interview, and preserves authorization, standalone archives and beta exclusions.",
       "location": {
         "path": "skills/UPSTREAM.md"
       },
-      "hash": "9ded9cda0aff7dc8bf7a0477fb0ff6656455c6a9ce402389c8043df2fc232b4b",
-      "observedAt": "2026-11-11T15:00:36.289Z"
+      "hash": "3264386dc032933971db659232a7f4874605ec7b23694d16ab5e46250939620b",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     },
     {
       "id": "d6480000-0000-4000-8000-000000000002",
@@ -1260,6 +1260,46 @@
       },
       "hash": "01e60ab860314d22c39e253acacbbdbdb9708d15f23a6272fbd5202ceddd1b2a",
       "observedAt": "2026-11-16T06:36:24.870Z"
+    },
+    {
+      "id": "8ee6057d-117d-471b-b399-2052e36e38dd",
+      "kind": "document",
+      "claim": "A scoped read-only investigation verified full archived skill delivery and two observed question rounds in one Claude Code transcript; causal attribution, complete adherence, native adaptation and post-compaction retention remain unverified.",
+      "location": {
+        "path": "docs/research/cli-skill-activation-2026-11-17.md"
+      },
+      "hash": "8f828f868567f3f64605cd245a5bfc0c18896d1a60af512ab9b2dcfdd98e53f1",
+      "observedAt": "2026-11-17T07:09:25.693Z"
+    },
+    {
+      "id": "73ce212b-538a-4759-93d6-67a076cdeadd",
+      "kind": "document",
+      "claim": "The determined backlog defines priorities, blockers and acceptance for complete delivery, method adoption, actual host comparison, original-version recovery and conditional native adaptation; only grill-me restoration is implemented in this phase.",
+      "location": {
+        "path": "docs/implementation/SKILL_ADOPTION_PLAN.md"
+      },
+      "hash": "953eb60cbbeca6f12818df1d0b583ec581ce90048c3dc29d04bc79a1a18f1afd",
+      "observedAt": "2026-11-17T07:09:25.693Z"
+    },
+    {
+      "id": "12d7a3b5-ab2e-4b80-b794-268de4402b48",
+      "kind": "document",
+      "claim": "The restored explicit grill-me/grillme method contains the adapted decision-tree interview, host question use and answer-waiting behavior within its own archived file, without a native Skill redirect or cross-method dependency.",
+      "location": {
+        "path": "skills/discovery/grill-me/SKILL.md"
+      },
+      "hash": "638bcb699640e7b3eeffc465a9d9ef29a3fdcd7206bae414e6b0f5a6c5e3e335",
+      "observedAt": "2026-11-17T07:09:25.693Z"
+    },
+    {
+      "id": "f6e2468e-0f9a-4c08-860f-da8721f16599",
+      "kind": "source-code",
+      "claim": "Skill regressions check 27 methods, standalone grill-me capture and recovery without another method, per-method local links, and preservation of existing user library roots and bytes.",
+      "location": {
+        "path": "tests/v1/skills.test.mjs"
+      },
+      "hash": "2a630d1b14550aa051e50c6d9707bcff034cb0a02cb9375575cbabb02ab3ead5",
+      "observedAt": "2026-11-17T07:09:25.693Z"
     }
   ]
 }

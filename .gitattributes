@@ -140,3 +140,7 @@ web/verify-fixture.mjs text eol=lf
 scripts/v1/browse-benchmark.mjs text eol=lf
 tests/v1/git-project.test.mjs text eol=lf
 scripts/v1/browser-smoke.mjs text eol=lf
+skills/discovery/grill-me/SKILL.md text eol=lf
+tests/v1/skills.test.mjs text eol=lf
+docs/research/cli-skill-activation-2026-11-17.md text eol=lf
+docs/implementation/SKILL_ADOPTION_PLAN.md text eol=lf

@@ -2,11 +2,13 @@
 
 ## 首先读取
 
-1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.53。
+1. [项目基准](docs/PROJECT_BASELINE.md)：唯一当前目标/决策/验收入口，当前v0.54。
 2. [工作规格](docs/spec/README.md)：正式CLI v1.0契约、验收与实施顺序；产品编码前必须读相关子规格。
 3. [README](README.md)：项目导航；需要设计/历史时读[冻结原型](docs/prototype/README.md)。
 
 基准v0.52补充：稳定projectId与模型等共享上下文随Git保留；已有配置的clone/worktree只注册，不重复init。显式register核对canonical common-dir与规范origin，在本机保存仓库关联及旧配置ID，普通注册不改项目文件。相同Git仓库的旧项目记录归为一个项目入口，各工作区UUID、原任务绑定和历史字节保留；已知origin漂移、不同远端复用ID及普通目录不能借此合并。不从列表读取自动迁移。当前操作仍核对实际配置ID/字节、源码与模型；关联不清pending或复用旧proof。原配对配置修复仅作明确要求修改配置时的兼容入口，先备份及pending；日常同仓库恢复优先普通register。配置变化重新审核，未知管理写结果先查回执并核对记录，不盲重发。
+
+基准v0.54补充：默认库恢复discovery/grill-me，面向显式grill-me/grillme请求；正文按自包含约定内联，普通grilling及grill-with-docs保留，历史原ID/字节不回写。当前为7类27项。技能采用优化以待办和真实宿主证据区分；新增方法、完整正文返回和部分相符行为不代表全部执行或压缩后持续有效。正常安装仍不覆盖用户库；本次增补沿用明确授权，保持活动junction及其他用户文件。
 
 基准v0.53补充：跨项目Web浏览使用可重建日志定位并核对所请求任务的原字节，requested范围不能描述为完整历史或当前来源已核验；索引缺失/损坏可重建，不能改写权威历史或清pending。完整CLI/订阅/来源/proof核验不走浏览捷径，浏览缓存不产生读取或续期。
 
@@ -61,7 +63,7 @@
 - src/server/scripts/tests、模型、技能和许可证均为有效内容，包括尚未纳入Git的文件；清理按明确用途名单，禁止用git clean推断无价值。
 - .harness-local中的任务、快照、已选技能字节和机器配置必须保护；开发临时输出可再生，回收前保留最终证据并核查依赖。清理不能跟随越界链接或删除未知用途文件。
 - skills/是可编辑被管理内容；阅读方法不等于执行流程。脚本、tracker、提交、会话与并行agent行为仍服从用户授权和实际能力。保留MIT与来源，不回写E:/Ai/skills参考库。
-- 目录迁移/去重同步Markdown/related/附件和当前调用示例；历史不迁原ID/字节。grill-me已删除，普通访谈为discovery/grilling，grill-with-docs保留术语/决策记录职责。
+- 目录迁移/去重同步Markdown/related/附件和当前调用示例；历史不迁原ID/字节。显式grill-me/grillme请求可选discovery/grill-me，普通访谈为discovery/grilling；两者正文自包含且按独立问题分轮，grill-with-docs保留术语/决策记录职责。
 - 产品任务/内容快照按自身worktree数据保存，不写Codux共享notes。终端summary是开发里程碑，不是产品任务数据库。
 
 ## 长期维护与留痕

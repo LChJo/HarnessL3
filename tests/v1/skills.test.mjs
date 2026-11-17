@@ -78,13 +78,32 @@ test('missing related methods diagnose without automatically selecting or invali
   assert.equal(catalog.diagnostics.length, 2)
 })
 
-test('actual library includes 7 categories and 26 editable methods without built-in router files', async () => {
+test('actual library includes 7 categories and 27 editable methods without built-in router files', async () => {
   const catalog = await scanSkills(resolve('skills'))
   assert.equal(catalog.valid, true, JSON.stringify(catalog.diagnostics))
-  assert.equal(catalog.skills.length, 26)
+  assert.equal(catalog.skills.length, 27)
   assert.equal(new Set(catalog.skills.map(item => item.group)).size, 7)
-  assert.ok(catalog.skills.every(item => !['ask-matt', 'skill-hub', 'grill-me'].includes(item.name)))
+  assert.ok(catalog.skills.every(item => !['ask-matt', 'skill-hub'].includes(item.name)))
   assert.ok(catalog.skills.find(item => item.id === 'quality/tdd').files.some(file => file.path === 'tests.md'))
+})
+
+test('TC19 grill-me alone archives a complete interview rather than a native Skill redirect', async t => {
+  const catalog = await scanSkills(resolve('skills'))
+  const requested = catalog.skills.find(item => item.id === 'discovery/grill-me')
+  assert.ok(requested, 'The explicitly requested grill-me name must be available')
+  assert.equal(requested.name, 'grill-me')
+  const captured = captureSkills(catalog, [{ id: requested.id, reason: 'User explicitly requested grill-me' }])
+  assert.deepEqual(captured.skills.map(item => item.id), ['discovery/grill-me'])
+  const archived = captured.blobs.get(requested.files.find(file => file.path === 'SKILL.md').hash)
+  assert.match(archived.toString('utf8'), /design tree/)
+  assert.match(archived.toString('utf8'), /frontier/)
+  assert.match(archived.toString('utf8'), /Wait for actual answers/)
+  assert.doesNotMatch(archived.toString('utf8'), /Call the Skill tool|related:/)
+  const isolated = await fixture(t)
+  await skill(isolated, 'discovery/grill-me', archived)
+  const recovered = await scanSkills(isolated)
+  assert.equal(recovered.valid, true, JSON.stringify(recovered.diagnostics))
+  assert.deepEqual(recovered.skills.map(item => item.id), ['discovery/grill-me'])
 })
 
 test('bundled library navigation resolves within the seeded library without repository-only documents', async () => {
@@ -201,7 +220,7 @@ test('seed publishes all original files once and preserves any existing director
   const physical = await realpath(target)
   assert.equal(dirname(physical), await realpath(root))
   assert.match(basename(physical), /^\.new-library-library-[0-9a-f-]{36}$/)
-  assert.equal((await scanSkills(target)).skills.length, 26)
+  assert.equal((await scanSkills(target)).skills.length, 27)
   assert.deepEqual(await readFile(join(target, 'LICENSE')), await readFile(resolve('skills/LICENSE')))
   await writeFile(join(target, 'quality/tdd/SKILL.md'), 'user edits')
   assert.equal(await seedSkills(resolve('skills'), target), 'already-present')
@@ -217,7 +236,7 @@ test('concurrent seed publication leaves one complete seed and no partially merg
   const target = join(root, 'seeded')
   const result = await Promise.all([seedSkills(resolve('skills'), target), seedSkills(resolve('skills'), target)])
   assert.deepEqual(result.sort(), ['already-present', 'created'])
-  assert.equal((await scanSkills(target)).skills.length, 26)
+  assert.equal((await scanSkills(target)).skills.length, 27)
   assert.deepEqual((await readdir(root)).sort(), [basename(await realpath(target)), 'seeded'].sort())
 })
 
@@ -271,7 +290,7 @@ test('a publication error cannot delete a complete entity already referenced by 
   syncBuiltinESMExports()
   try { assert.equal(await seedSkills(resolve('skills'), target), 'already-present') }
   finally { fsPromises.symlink = original; syncBuiltinESMExports() }
-  assert.equal((await scanSkills(target)).skills.length, 26)
+  assert.equal((await scanSkills(target)).skills.length, 27)
   assert.deepEqual(await readFile(join(target, 'LICENSE')), await readFile(resolve('skills/LICENSE')))
   assert.deepEqual((await readdir(root)).sort(), [basename(await realpath(target)), 'seeded'].sort())
 })
@@ -312,7 +331,7 @@ test('the default linked library passes workspace canonical guards and stays edi
   const actual = await registry.skillsRoot(initialized.worktree)
   assert.equal(actual, await realpath(logical))
   assert.equal((await lstat(logical)).isSymbolicLink(), true)
-  assert.equal((await scanSkills(actual)).skills.length, 26)
+  assert.equal((await scanSkills(actual)).skills.length, 27)
   const edit = body('tdd', 'User-edited default method')
   await writeFile(join(logical, 'quality/tdd/SKILL.md'), edit)
   const repeated = await registry.init(worktree)
