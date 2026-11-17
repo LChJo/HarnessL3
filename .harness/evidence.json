@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Current implementation state links six usage-driven optimizations and their explicit platform, installation, archive and semantic verification scope.",
+      "claim": "Implementation status records the standalone grill-me restoration and five planned adoption improvements, scoped Windows validation, pushed 0.1.6 source and verified clean local installation with unchanged user library and matched original handoff; other-platform results remain unconfirmed.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "43b578361dd2358075daaf9f4675da7df6e8fc4c52909af9f1459dfa3a1a53d6",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "654b3353aa8d92a0ae6afdae9ee73355a619cd54ea785d3c94f6dcea158c110a",
+      "observedAt": "2026-11-17T07:19:36.876Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",

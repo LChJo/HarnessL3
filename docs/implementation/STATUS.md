@@ -4,11 +4,15 @@
 
 本轮分发版本提升为0.1.6，用于区分新增默认方法与旧0.1.5包；用户已授权提交、推送及本机更新。0.1.6候选在Windows完成CLI/Web构建、25项技能测试和164文件/27方法的真实npm包消费者验收，服务/RPC/旧交接及普通目录Edge157流程通过。推送后干净源码的本机安装结果在后续留证，尚未实施的技能采用优化保持待办。
 
+发布提交[f2b7635](https://github.com/LChJo/HarnessL3/commit/f2b7635756d84eb4bd23d96934e359f140a7f8fa)已推送main。本机从GitHub独立临时clone该干净提交，npm ci、CLI/Web构建、打包和全局安装0.1.6完成。实际命令和服务均为该提交、sourceDirty=false、runtimeHash=5ec62323…；包/运行指纹/帮助/服务构建/RPC/原任务交接检查通过，historyCheck=matched-before-update，2份上下文/1项技能的原packet、plan和binding匹配，核验63678ms。两个宿主各5份运行时文件均unchanged且字节核对通过；活动用户库原junction及全部55个文件字节保持，当前CLI目录27项。
+
+首次停止旧服务返回BUSY，随后只读查询同一实例，确认正常停止后才替换包；没有强杀或删除锁，也未重新生成原始更新前交接。旧包、干净源码、原UTF-8交接及安装报告保留在worktree外harnessl3-install-016-vf5aej31。新服务的14个显式观测订阅工作区恢复完成、零失败；这不代表14处当前源码语义已核验。GitHub CI结果本轮未取得，未将Windows本机结果外推为三平台通过。
+
 用户明确要求恢复指定只读参考中的 grill-me，并确定后续优化项。[五项待办](SKILL_ADOPTION_PLAN.md)已记录优先级、依赖及验收：P0完整交付/阶段采用，P1真实宿主对照/原版本恢复，P2条件原生适配；这些优化尚未实施。本轮恢复[discovery/grill-me](../../skills/discovery/grill-me/SKILL.md)，内联已适配的访谈正文，显式grill-me/grillme请求可选；grilling与grill-with-docs保留，默认7类27项，未复制宿主Skill转调或agents元数据。
 
 Windows / Node24.12.0：先实跑两个失败检查，分别发现原目录只有26项、grill-me不存在；恢复后技能/播种/独立归档25项全部通过，CLI构建通过。真实npm包消费者通过，164文件/27方法，含双宿主运行时文件复制、服务构建/RPC、旧交接、普通目录生命周期及Edge157页面；未运行新方法的真实模型访谈或其它平台，不继承旧平台结论。CLI在本机活动库发现27项、零目录诊断，实际select --stage及固定批次read返回1526 UTF-8字节，SHA-256为638bcb699640e7b3eeffc465a9d9ef29a3fdcd7206bae414e6b0f5a6c5e3e335。原截图任务仍保留26项目录、原grilling文件哈希及开放状态，没有回写历史。
 
-本机活动技能实体先完整备份至worktree外的harnessl3-grillme-restore-sbhvmx。原junction实体保持；54→55文件，仅新增方法并同步两份原本未修改的导航，其余52个文件字节一致，E盘参考文件未变。正常安装不覆盖已有库的机制未改，全局CLI包未重装或发布；本机现有服务已可按新文件读取。基准、AGENTS、规格、来源导航及现有模型实体/证据同阶段维护，未新建重复模型对象。
+方法增补阶段先完整备份本机活动实体至worktree外harnessl3-grillme-restore-sbhvmx。原junction保持；54→55文件，仅新增方法并同步两份原本未修改的导航，其余52个文件字节一致，E盘参考文件未变。正常安装不覆盖已有库的机制未改；方法增补时未重装全局CLI，之后按上文授权更新0.1.6。基准、AGENTS、规格、来源导航及现有模型实体/证据同阶段维护，未新建重复模型对象。
 
 ## 技能后续采用调研（2026-11-17）
 
