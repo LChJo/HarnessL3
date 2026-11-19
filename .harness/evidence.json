@@ -1214,12 +1214,12 @@
     {
       "id": "9a41ca91-cf24-42ec-8d0c-a9a9af21cf73",
       "kind": "source-code",
-      "claim": "Isolated Git association contract tests cover fresh-machine register-only task use, legacy config IDs, full source validation, restart, retained ownership, drift rejection and corrupt aliases.",
+      "claim": "Isolated Git association contract tests cover fresh-machine register-only task use and discovery of the bundled grill-me method, legacy config IDs, full source validation, restart, retained ownership, drift rejection and corrupt aliases.",
       "location": {
         "path": "tests/v1/git-project.test.mjs"
       },
-      "hash": "8ee7d06be044aad69708fb261ec49090007d9d8c3b0152395d00d0c05e1e64be",
-      "observedAt": "2026-11-16T05:44:51.229Z"
+      "hash": "3dd4959720ed21cf29c845f91ec011c39cd861a624090c108561bbde367d0a8e",
+      "observedAt": "2026-11-19T04:42:10.663Z"
     },
     {
       "id": "a4f7e468-1d4f-453a-97c0-0c7ce70dfe28",

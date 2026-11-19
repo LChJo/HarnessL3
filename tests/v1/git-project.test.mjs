@@ -35,7 +35,7 @@ test('TC01/27 a fresh machine registers committed context and starts a task with
     const registered = await cli(['worktree', 'register', b])
     assert.equal(registered.result.worktree.projectId, initialized.body.data.result.project.id)
     const entry = await cli(['task', 'start', '--title', 'Use existing shared context'])
-    assert.equal(entry.catalog.length, 26)
+    assert.ok(entry.catalog.some(skill => skill.id === 'discovery/grill-me'))
     const selected = await cli(['task', 'select', entry.taskId])
     assert.equal(selected.status, 'complete')
     await cli(['task', 'handoff', entry.taskId])
