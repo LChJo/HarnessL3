@@ -1,6 +1,6 @@
 ---
 name: grilling
-description: Interview the user to resolve or stress-test open decisions in a plan or design. Use for a plain interview; maintain durable domain terms and decisions only when that is also in scope.
+description: Interview the user before complex work when unresolved choices could change scope, behavior or acceptance. Use for a plain interview or to stress-test a design. Maintain durable terms and decisions when that is in scope.
 ---
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.

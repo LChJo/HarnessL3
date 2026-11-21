@@ -9,7 +9,9 @@ description: >
 
 # Route skills each turn; reuse project context
 
-For every user turn, reassess skills for the current action. Reuse identifiable captured bodies that are still available and suitable; read only missing or newly required skill versions and project context. Follow the stages below; ask questions and report progress in the user's language.
+Before making changes, determine the current stage: investigate, discuss, plan, or implement. For new complex work, resolve consequential decisions through discussion or present a reviewable plan, then wait for actual confirmation before dependent changes. Check the agreed scope and acceptance criteria. Reuse approval for that scope; when explicitly authorized to plan and proceed, show the short plan first. Clear, low-impact work can proceed directly. See [planning decisions](references/runtime.md#planning-before-complex-changes).
+
+Route skills for the current stage each turn. Read or reuse complete, version-matched selected method bodies and apply their actions, waiting conditions and deliverables. Recover missing content from the original receipt or archived batch before relying on it. Ask questions and report progress in the user's language.
 
 ## 1. Route the current turn
 

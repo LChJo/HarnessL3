@@ -117,6 +117,8 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 
 非JSON模式先展示一次路由规则，再展示其余结构化数据，避免同一规则又作为JSON字符串重复打印；JSON模式仍保留原有`routingPrompt`字段与完整封套。
 
+v0.55 使用 `skill-hub/3` 标记新生成的路由和技能方案，start 与 prompt 共用规则。路由前部要求当前 agent 在修改前判断阶段、对尚未确认的复杂改动先讨论或交方案审阅，并把完整方法正文用于本阶段。阶段授权来自用户与项目规则。选择与技能正文回执仍使用 v1 形状，截断可从原回执或选中批次恢复，历史方案、旧回执及其路由版本按原内容回放。
+
 [response.schema.json](contracts/response.schema.json)严格定义核心读取结果。管理命令使用 `data.kind:"command-result"`、`status:"complete"`、`operation`（上述完整命令名）、`result`；result 最小字段如下，未列的扩展诊断不改变语义。
 
 | 操作 | result 必需字段 |

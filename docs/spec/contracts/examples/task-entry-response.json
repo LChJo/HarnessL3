@@ -23,8 +23,8 @@
       },
       "sourceScanRevision": "6f3d695e98b115831225b9f1cf7371d22ffd2b1b08d6d4c0bc3db0e4f70b88d2"
     },
-    "routerVersion": "skill-hub/2",
-    "routingPrompt": "Select the needed context and skills in one request; read file references only as needed.",
+    "routerVersion": "skill-hub/3",
+    "routingPrompt": "Determine the current stage before making changes. Present a reviewable plan and wait for confirmation before dependent changes in new complex work. Apply complete selected method bodies to the current stage.",
     "directory": {
       "parentId": null,
       "items": [

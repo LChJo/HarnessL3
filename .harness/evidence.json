@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "The v0.54 baseline restores the explicit grill-me method as a self-contained file, preserves user libraries and historical bytes, and distinguishes the five planned skill-adoption improvements from implemented behavior.",
+      "claim": "Baseline v0.55 defines planning before new complex changes, stage adoption of complete methods, original receipt and batch recovery, and separate host acceptance.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "a456f13271f3e911f6ac3c14f744354204c1abebb42998721c46de080ac04a99",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "0cc87eece0c6bd817d4f4fa40f57121f07b105ae5c3b6d4c3555a20af267d252",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService supports read-only task restoration/listing without SQLite, verifies selected committed references and returns one task/model view while preserving original CLI contracts and retention.",
+      "claim": "TaskService emits skill-hub/3 stage, approval and adoption guidance from task start and prompt while preserving archived v1 receipts, exact recovery and retention.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "e77ce89fa706ef0bb5cd706b5664c79de0119f48e91d42457e08712006c2c898",
-      "observedAt": "2026-11-16T06:36:24.859Z"
+      "hash": "867c0a9c5eeadc521ce3b837a0c95655b438c338ae1244092f49f44729dd463c",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -164,12 +164,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "The runtime entry routes context and skills and points sync races to authorized recovery rather than unexplained task termination; real setup, history and authorization boundaries remain.",
+      "claim": "The runtime entry determines stage before changes, requires actual confirmation for new complex work, reuses applicable approvals and applies complete version-matched method bodies.",
       "location": {
         "path": "agent-skills/harnessl3/SKILL.md"
       },
-      "hash": "83aaeb90e78ba10d376b6803dd26f550d7583266c60f4423fa2cc5fb42cc1978",
-      "observedAt": "2026-11-12T04:40:03.156Z"
+      "hash": "8a8deae289d9d264960d914f077e22417ec840630252e43d0735b0ed4901a3a8",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000012",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Package 0.1.6 distributes the restored standalone grill-me method while retaining the Node 24, dependency, text-authority and runtime contracts; skill-adoption improvements remain planned.",
+      "claim": "Package 0.1.7 carries the skill-hub/3 router, updated runtime entry and stage-specific default methods. The manifest retains the Node 24 dependency and distribution contracts.",
       "location": {
         "path": "package.json"
       },
-      "hash": "790b2a068a682d32772977a32f4e60acdb949e0b16bb3b6aad0dc719e39975e7",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "2c03beac5fc410e169fae6b6ed27a6c75f14c72a8d004f41de9ef9c73ca64bb1",
+      "observedAt": "2026-11-21T17:41:19.636Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -304,12 +304,12 @@
     {
       "id": "7f0df0da-7a72-47aa-8953-343a7927cb24",
       "kind": "document",
-      "claim": "Runtime reference explains optional compact restoration, unavailable-root recovery and scoped/global proof interpretation without changing task authorization or captured context reuse.",
+      "claim": "Runtime reference defines review and approval conditions, named method resolution, adoption, partial or truncated response recovery and the exact historic batch path.",
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "202ab8db01fce642ea0456cc2d07be25f82a6b31c100abdd438eb2d096e5470f",
-      "observedAt": "2026-11-16T05:44:51.070Z"
+      "hash": "60925bade1990b76498ab447624191873d17ce4d6e106460b1e4b4ebe5b0069d",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records the standalone grill-me restoration and five planned adoption improvements, scoped Windows validation, pushed 0.1.6 source and verified clean local installation with unchanged user library and matched original handoff; other-platform results remain unconfirmed.",
+      "claim": "Implementation status records v0.55 candidate verification and the actual 0.1.7 local update, matching runtime fingerprint and historical handoff. GitHub and model behavior are tracked separately.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "654b3353aa8d92a0ae6afdae9ee73355a619cd54ea785d3c94f6dcea158c110a",
-      "observedAt": "2026-11-17T07:19:36.876Z"
+      "hash": "9f98887bef98b0cf11d0d43a9f5207ade88b50f560dbaa104c20b0ecfcadb804",
+      "observedAt": "2026-11-21T17:41:19.636Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "The acceptance matrix adds the 27-method catalog and standalone grill-me archive checks, while distinguishing byte/fixture validation from actual host adoption and compaction behavior.",
+      "claim": "TC19/22/26/27 check full method transport and original batch restoration, with real host approval, first write and context-loss outcomes assessed separately.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "cf83e8a704956aee47da0bb9a899ef9f59027350d31620b7ef4835bd4a1c7bb8",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "2d0607acb956c886e87ffc1831817c43db8593c35f29dd7424cbe88678183ff1",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -554,32 +554,32 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "CLI v0.52 defines register-only shared context use and local group projection with exact observed config identity, preserving advanced explicit config repair, original receipts and strict CAS.",
+      "claim": "Current CLI v1 describes skill-hub/3 and preserves the existing response envelope, one text display and the original archived router version on replay.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "81496ed212fdaf6d788c5cd02efdd7007594c0e2748abbb71b4c7e070f6bb871",
-      "observedAt": "2026-11-16T05:44:51.100Z"
+      "hash": "ba45c9780f18b63c53c3578ffa10ff65024e091185e0884ec810a988c003bceb",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR06/15 records the user-requested standalone grill-me restoration alongside retained methods, without claiming that planned adoption improvements or host behavior are implemented.",
+      "claim": "FR15 defines phase routing and approval before dependent changes in complex work, with reusable authorization, selected method adoption and original receipt and batch recovery.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "2910865cd60c1f8e2ea52b465f5967af1c141b0c932c1cbc13f01336ef9eb310",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "f48f241d6998474b16cfd959dbf2263cedeaaf6bcce1e0ea5a0d48e6e7a8cc77",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Current spec navigation records v0.54 method restoration, links the five-item skill-adoption backlog and separates implemented/file validation from host-effect verification.",
+      "claim": "Current spec navigation links the v0.55 approved workflow and skill adoption specification and its acceptance scope.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "bf5f84f0f67ce841a6f5328677a2ad3a4ecd2d02f6f6a65da327885dc6370e9d",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "4c128c47cc5dda4e1f5fd5b2f87d4a5f797866795a3698450ab067a3bf6ed669",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "The v0.54 agent entry distinguishes the restored grill-me name from ordinary grilling, requires standalone method bytes and preserves real observations, scoped synchronization, identities, original receipts and authorization.",
+      "claim": "The current agent rules require first-change review of new complex work and adoption of full selected methods, with exact receipt recovery and real-host evidence.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "3b3205b94fcf068f652859747925147ce4a06b4f36675ac366284d972d957e2b",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "ec64fb5f0e8f41acbf554631e67802d428b8a3e0c4cf1ad00a60654a6328f796",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "User guidance explains Git-shared stable context, register-only onboarding and local legacy compatibility without rewriting shared files, while preserving source/model review and ordinary Git conflict handling.",
+      "claim": "Usage guidance states planning before changes, method adoption, same-task stage continuation and recovery from the original receipt or archived batch.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "8af3ffc2220757ddb0dcd5c2118b59b2e0c38b185df17dd9e1849fcfd5dce620",
-      "observedAt": "2026-11-16T05:44:51.117Z"
+      "hash": "0e31c7bbc7b94e5ede2c4438dc2550c07508d701abb225e02d0645b21ebaa149",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "The v0.54 agent entry distinguishes the restored grill-me name from ordinary grilling, requires standalone method bytes and preserves real observations, scoped synchronization, identities, original receipts and authorization.",
+      "claim": "The current agent rules require first-change review of new complex work and adoption of full selected methods, with exact receipt recovery and real-host evidence.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "3b3205b94fcf068f652859747925147ce4a06b4f36675ac366284d972d957e2b",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "ec64fb5f0e8f41acbf554631e67802d428b8a3e0c4cf1ad00a60654a6328f796",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -814,12 +814,12 @@
     {
       "id": "2b9a98f4-94bc-4d27-a3e3-f7ed9b3c712f",
       "kind": "source-code",
-      "claim": "Native CLI regressions verify compact/full replay of one request, equal current context/skill results, exact packet hashes and batch handoff recovery.",
+      "claim": "Native CLI checks cover the new route in start and prompt, one text display, exact compact/full receipt and handoff consistency.",
       "location": {
         "path": "tests/v1/task-cli.test.mjs"
       },
-      "hash": "a73141035df3c0e2d438667a87088ad491f4b514fb63244d2404ab9d90cf00ce",
-      "observedAt": "2026-11-16T04:46:22.006Z"
+      "hash": "68409967401841d2c264a5504ecb3d785404bade223cd6c22072df1d391b202d",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000001",
@@ -1014,12 +1014,12 @@
     {
       "id": "eacd2b8f-d6ba-4aa7-9d8a-1536b33662d9",
       "kind": "source-code",
-      "claim": "CLI regression cases distinguish snapshot and verified reads, resolve recorded references and preserve historical skill stages.",
+      "claim": "CLI regressions exercise a larger catalog and full long method, partial receipts, compact handoff and archived original bytes after a skill-stage and live library change.",
       "location": {
         "path": "tests/v1/agent-flow.test.mjs"
       },
-      "hash": "777fdd7dc145ae3805e1b5c209c1bc642697e1514516234f07dfc8458b36afc4",
-      "observedAt": "2026-11-10T14:07:55.629Z"
+      "hash": "baacc7719a4f5147bea9047133b73e676d687c4b51181d35810385bb53ee13a0",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "4eeb09b0-6fc6-4ef1-b5bd-6dcec624f049",
@@ -1274,12 +1274,12 @@
     {
       "id": "73ce212b-538a-4759-93d6-67a076cdeadd",
       "kind": "document",
-      "claim": "The determined backlog defines priorities, blockers and acceptance for complete delivery, method adoption, actual host comparison, original-version recovery and conditional native adaptation; only grill-me restoration is implemented in this phase.",
+      "claim": "SA01–SA04 track the implemented entry and archive recovery paths and pending real-host comparison and compaction checks. Native adaptation remains conditional.",
       "location": {
         "path": "docs/implementation/SKILL_ADOPTION_PLAN.md"
       },
-      "hash": "953eb60cbbeca6f12818df1d0b583ec581ce90048c3dc29d04bc79a1a18f1afd",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "2fa3758b4d9cac6f24fd09467c75527c595d7aa60fa4b99c06714cf32174eda8",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     },
     {
       "id": "12d7a3b5-ab2e-4b80-b794-268de4402b48",
@@ -1300,6 +1300,26 @@
       },
       "hash": "2a630d1b14550aa051e50c6d9707bcff034cb0a02cb9375575cbabb02ab3ead5",
       "observedAt": "2026-11-17T07:09:25.693Z"
+    },
+    {
+      "id": "943b8e1b-1833-4d35-87f7-3da781ae450e",
+      "kind": "document",
+      "claim": "The November 22 local audit fingerprinted 316 task records and distinguished selection and delivery from behavior in identified Codex and Claude Code sessions. It proposes earlier planning and explicit adoption guidance; candidate host behavior remains untested.",
+      "location": {
+        "path": "docs/research/local-skill-adoption-2026-11-22.md"
+      },
+      "hash": "8d682d9b7fa49516942625208f75e55fe63ee6da3fe743eeb18b8d94e8190484",
+      "observedAt": "2026-11-21T16:54:39.066Z"
+    },
+    {
+      "id": "0c1398a9-6ab0-4b53-be3d-af27170df29f",
+      "kind": "document",
+      "claim": "Approved SA01–SA04 specification defines pre-implementation approval, complete delivery and adoption, original-batch recovery and reproducible real-host acceptance.",
+      "location": {
+        "path": "docs/implementation/SKILL_ADOPTION_SPEC.md"
+      },
+      "hash": "7f40e8aa46d4c90cde6809a158155aa309adc49a31a031ac0cdee4b8e22aab57",
+      "observedAt": "2026-11-21T17:31:31.598Z"
     }
   ]
 }

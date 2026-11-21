@@ -1,6 +1,6 @@
 ---
 name: to-spec
-description: Synthesize the current conversation and project evidence into a buildable spec using the project's existing artifact convention. Use when discussion is ready to become a spec rather than starting another interview.
+description: Turn an agreed goal and sufficiently settled decisions into a reviewable, buildable spec when a complex change needs one. Use the project's existing artifact convention.
 ---
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.

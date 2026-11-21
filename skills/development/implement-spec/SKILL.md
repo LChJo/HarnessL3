@@ -1,6 +1,6 @@
 ---
 name: implement-spec
-description: Implement a whole agreed spec and its dependency-linked tickets. Use when the user requests the complete build rather than one ticket; parallel workers are optional and require actual support and authorization.
+description: Implement a complete, already approved specification on the agreed target with defined acceptance criteria and dependency-linked tickets. Parallel workers require host support and authorization.
 ---
 
 > Apply this method within the target project's rules and task authorization. Selecting or reading it does not execute commands or grant additional permissions.

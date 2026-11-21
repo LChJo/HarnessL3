@@ -2,6 +2,24 @@
 
 Read only when current CLI help is insufficient, or for complex requests, synchronization, retries/history or explicit read-only log binding. The installed CLI and its JSON Schemas define fields and commands.
 
+## Planning before complex changes
+
+Determine the user's current intent from the request, the actual target and the agreed scope and acceptance criteria. Deliver the requested research, discussion, spec or tickets when the user asks for those outputs. Read-only investigation and authorized planning artifacts can proceed while a decision is pending.
+
+Treat a change as complex when it shifts responsibilities across components, changes a public contract, stored data, permissions, compatibility, migration or rollback, or leaves consequential choices, scope or acceptance unclear. Narrow the impact with read-only evidence first.
+
+| Facts at this stage | Next action |
+| --- | --- |
+| A consequential decision still belongs to the user | Investigate facts, give a recommendation and tradeoff, ask independent questions within the host's limits and wait for actual answers before dependent changes. Use the native question tool when available and permitted. Otherwise make the question and waiting state visible in a review draft or reply. |
+| The goal is clear and the complex work lacks a confirmed plan | Present a reviewable short plan with scope, key decisions, sequence and acceptance criteria. Use a durable spec where the project needs one and split tickets when independently verifiable slices or blocking edges matter. Wait for confirmation before modifying behavior, configuration, behavior tests, or external state. |
+| The plan or ticket is already agreed | Read the actual artifact and proceed within its agreed scope. Reopen only material scope, acceptance or rollback changes. |
+| The user expressly authorizes showing a plan and proceeding | Show the short plan before the first change. Resolve any material choice outside that authorization first. |
+| A small change has clear scope, location and approach | Proceed with the project's required checks. Use a quick method only if its body fits the needed work. Reassess before expanding into a complex change. |
+
+Actual answers, explicit delegation and a verifiable approval of the current scope can authorize continuation. Silence, defaults, an async tool acknowledgement and a plan written by the agent leave confirmation pending. When the final decision answer covers the visible plan's scope, decisions and acceptance, use it as confirmation. If it covers only one branch, update the plan and keep the rest pending. Follow the separate onboarding rules for project consent.
+
+Choose applicable methods from this task's actual catalog using their descriptions and IDs. Honor an explicit method name when it exists, including grill-me/grillme for the separate grill-me method. Report a missing named method accurately; use another available path only within the request's scope. An empty selection is valid when the catalog has no suitable method. Keep the phase decision independent of the presence of a particular skill.
+
 ## Continuation and skill routing
 
 At every user turn, reassess the current action against skill descriptions. Reuse suitable captured project and skill bodies that remain identifiable in context; this reuse is not a new CLI read. Obtain only missing material or required new versions. Descriptions filter candidates; an explanation, procedure recommendation or advice to skip a step requires the relevant selected body (or its suitable captured version). Distinguish single-ticket work, complete-spec work, research, explanations and retrospectives by actual purpose rather than a mandatory pipeline. Do not read the whole catalog for a judgement about one method. The agent chooses skills; the CLI records selection and returns bytes, without executing a model.
@@ -74,7 +92,13 @@ For SCHEMA_INVALID, follow details.diagnostics field pointers, constraints and a
 
 task start/prompt returns routing material; select/query returns exact content. Use handoff to recover accumulated content only when needed. expand gives direct-child briefs; read gives exact bodies. Ancestors, endpoints and references do not imply their bodies were read. routingPrompt carries rules; taskId/binding/directory/catalog come from structured data, not parsing the prompt.
 
-One joint selection records candidates, not execution. Read needed archived skill bodies, then use ordinary authorized tools. Do not automatically select related methods or claim understanding. Known-content declarations require bytes actually returned and retained in this task. New prompt wording never rewrites historical receipts.
+One joint selection records the current stage's methods. Read complete version-matched bodies, then apply their actions, waiting conditions and deliverables within project rules and user authorization. Use selected methods for distinct needs of this stage and defer future-stage methods until the stage changes. Apply an interview through actual questions and answers, a planning method through its reviewable output, and an implementation method through its agreed scope and checks. Selection, delivery and observable behavior have separate evidence. Related entries remain optional; known context requires actual bodies retained in this task.
+
+### Recover incomplete delivery
+
+Keep the original envelope, exit status and stderr separately. Expose the complete routing prompt, relevant catalog entries, and all required method text to the current agent. Use structured field selection for metadata and `task select --compact` for duplicate packet content. If a tool display is truncated, read the missing text from the preserved response or the original request receipt. If the specific result is still missing, resolve the correct batch and read just the required archived file. Verify target, task, batch, method ID, path, byte count and hash. A saved response, hash, excerpt or missing tail on its own leaves delivery incomplete. A single oversized body can be read in ordered ranges from the intact response while the needed text remains available.
+
+For partial responses, retain successful items and the individual errors; use the correct references to recover missing items only. After compaction or transfer, recover the exact task and batch with `task handoff` when the references were lost, then use `task read --batch` for the missing selected body. A change to the current library does not change that batch. Missing or corrupt archived bytes leave that content unavailable; preserve existing user decisions whose scope can still be verified. Explain the affected phase and continue independent work when a required body or decision cannot be recovered.
 
 After actual context and required skill bodies return, follow the main skill's once-per-task commentary card. Empty selections also qualify. Do not repeat for continuation or final replies, invent links, or infer task completion from the card.
 
