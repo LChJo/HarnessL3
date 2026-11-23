@@ -4,32 +4,32 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.55 defines planning before new complex changes, stage adoption of complete methods, original receipt and batch recovery, and separate host acceptance.",
+      "claim": "Baseline v0.56 defines independently issued reusable 24-hour loopback links, their restart behavior, and the current acceptance scope.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "0cc87eece0c6bd817d4f4fa40f57121f07b105ae5c3b6d4c3555a20af267d252",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "498ad8711ac12759ce200c26f9c132ea48653876f33e36773575f2111f028b9d",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "CLI resolves shorthand inputs, preserves bounded waiting and original request identities; optional compact selection projects the returned packet only after RPC, leaving the complete authoritative receipt unchanged.",
+      "claim": "The CLI binds signed Web links to the resolved worktree/task and returns the absolute link deadline, independently of the resident service lifetime.",
       "location": {
         "path": "cli/main.ts"
       },
-      "hash": "1d35ff6aa86c27005fdcf9052a5ae94bfb6603582b7f4e8581d737f191155442",
-      "observedAt": "2026-11-16T04:46:22.000Z"
+      "hash": "69e95efa16bbc5995fa1cddae0664dfaa517c9d96dcf7792bd0d53c80c162203",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "Authenticated Web browsing uses scoped Runtime reads; event streams obtain journal sequence without initializing source history, retaining origin/authentication and committed event routing.",
+      "claim": "The loopback HTTP service authenticates and routes CLI/Web operations, validates each explicit link and target, enforces browser expiry, and reuses the saved port on normal restart.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "d80b0d93bcd404ba51da721c73abb8941b774688056e97bac765d731f86257a0",
-      "observedAt": "2026-11-16T06:36:24.858Z"
+      "hash": "71e6863d187521b77249d2f1aaac4f9c678afd6df3a573f0fa2b8ba8b7f4da73",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
@@ -148,18 +148,18 @@
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "6063fc6b415a84f407dd5217d08295c81c2c90f16a9fd4cc79ed05f329ce99d6",
-      "observedAt": "2026-11-16T06:36:24.862Z"
+      "hash": "feaf55d976c77a308dcd87cb7740602c0bf26e4e0a1f56ce667105742f21a25c",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
       "kind": "source-code",
-      "claim": "Web confirms browser cookies before clearing successful sign-in credentials, retains the original URL on transient failures, clears explicitly rejected credentials with targets preserved, and keeps actual HTTP 401 reasons.",
+      "claim": "Web exchanges a reusable link against its original target, confirms the browser cookie before clearing the fragment, and preserves retriable links on interrupted requests or blocked cookies.",
       "location": {
         "path": "web/api.ts"
       },
-      "hash": "f324f9d3afcb3c8e21cd2f5be6381fca603d2916e3b7686bc4d7011925e3d23e",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "31c881f0699e2499aebb2573b2557ea46ea2825217b88112c0b79f008114210a",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000011",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Package 0.1.7 carries the skill-hub/3 router, updated runtime entry and stage-specific default methods. The manifest retains the Node 24 dependency and distribution contracts.",
+      "claim": "Package 0.1.8 carries 24-hour local Web links and retains the Node 24 engine, runtime skill package and default skill distribution.",
       "location": {
         "path": "package.json"
       },
-      "hash": "2c03beac5fc410e169fae6b6ed27a6c75f14c72a8d004f41de9ef9c73ca64bb1",
-      "observedAt": "2026-11-21T17:41:19.636Z"
+      "hash": "a896d0eccfb99528b2d2eb84762b833a6c5382252fd1de805070df76d7186cab",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -228,8 +228,8 @@
       "location": {
         "path": "web/README.md"
       },
-      "hash": "f9d7947d30e14ea167270d7c0e737b2bc19b285d142a55291a48f3c197e6165d",
-      "observedAt": "2026-11-09T14:34:41.702Z"
+      "hash": "38ea02b1bfc6126b597d2470a90bc57df298d4561dbb834765ca8dbf1c7aa4b6",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000018",
@@ -288,8 +288,8 @@
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "ee794121111e40d5cde82b77667eb34c7d5b130158be276d2731e2b7317f988d",
-      "observedAt": "2026-11-16T06:36:24.862Z"
+      "hash": "de71cd8bd4bd38a0c5318a6c64afa0218dc34e1cdbf9709eb026b67aff6927fe",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -318,8 +318,8 @@
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "1cc956f4d724c17ff6bbd5ca6a92ff662f5adf9080a6be430796b7bd820a5cd6",
-      "observedAt": "2026-11-16T05:44:51.071Z"
+      "hash": "e67d4983083a05395db5927b05895d9e8073ec4d5003f7406be631b382dd61c1",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records v0.55 candidate verification and the actual 0.1.7 local update, matching runtime fingerprint and historical handoff. GitHub and model behavior are tracked separately.",
+      "claim": "Implementation status records the v0.56 Windows build, isolated deadlines, real Edge restart, package consumer and actual local 0.1.8 deployment evidence.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "9f98887bef98b0cf11d0d43a9f5207ade88b50f560dbaa104c20b0ecfcadb804",
-      "observedAt": "2026-11-21T17:41:19.636Z"
+      "hash": "594442476f43cf2dfef80e0ee8508e633ce07b865826363c91f8a7c9584aa260",
+      "observedAt": "2026-11-23T05:41:31.012Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -398,8 +398,8 @@
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "61cc439d718c65486e7dee6c37de5e9361a1df03efefd56a1038dca055b8ec85",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "dd7561ce00d81e117091cd73479e457d3ec31554d31c2d3cbf7dbde8c40bd7f5",
+      "observedAt": "2026-11-23T05:33:46.327Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
@@ -534,12 +534,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC19/22/26/27 check full method transport and original batch restoration, with real host approval, first write and context-loss outcomes assessed separately.",
+      "claim": "TC23 defines independent deadline, repeat access and same-root restart checks, including target and origin rejection. TC19/22/26/27 retain skill transport and real host scope.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "2d0607acb956c886e87ffc1831817c43db8593c35f29dd7424cbe88678183ff1",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "5c8635659b25fc1c062382b033c2fa2504f6360d4b646d42eff3957d8a8e13f6",
+      "observedAt": "2026-11-23T05:33:46.327Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
@@ -548,18 +548,18 @@
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "24a30d20c41477f3a046935f7674311e7284ba8f207a14d44fa013f85cf6ba92",
-      "observedAt": "2026-11-16T06:36:24.864Z"
+      "hash": "0bf53a2e270643920b6221142ea087ccf0451a9c40e093e8594944b757e8acd3",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Current CLI v1 describes skill-hub/3 and preserves the existing response envelope, one text display and the original archived router version on replay.",
+      "claim": "CLI v1 specifies reusable 24-hour link results alongside the original command envelope and archived router behavior.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "ba45c9780f18b63c53c3578ffa10ff65024e091185e0884ec810a988c003bceb",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "c83a058ec7eeb6f22521a74faa99b2cb7545c12b4a17a973b70e12513aa5d436",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
@@ -568,18 +568,18 @@
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "f48f241d6998474b16cfd959dbf2263cedeaaf6bcce1e0ea5a0d48e6e7a8cc77",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "fef8bc28651e669fda18f7e88cb27eb1962b30f2e14dc116e1900c28c7ac074a",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Current spec navigation links the v0.55 approved workflow and skill adoption specification and its acceptance scope.",
+      "claim": "Current spec navigation includes the v0.56 Web and CLI contract and the approved skill adoption specification.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "4c128c47cc5dda4e1f5fd5b2f87d4a5f797866795a3698450ab067a3bf6ed669",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "08b04af2a8f28024c557125a025e830d9e761c3e88b39976a8ef8fc11c5ca8f0",
+      "observedAt": "2026-11-23T05:33:46.328Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "The current agent rules require first-change review of new complex work and adoption of full selected methods, with exact receipt recovery and real-host evidence.",
+      "claim": "Current agent rules retain phase approval and original receipt recovery, and require the original target when reissuing an expired Web link.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "ec64fb5f0e8f41acbf554631e67802d428b8a3e0c4cf1ad00a60654a6328f796",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "97b99c66ba20e4f5e074b13a5153dc02edf9de2e26b53236b760a8d0144d54a6",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -618,18 +618,18 @@
       "location": {
         "path": "tests/v1/web-auth.test.mjs"
       },
-      "hash": "f40c17b1ae5e8152bb00b910fe1f23e935e07b5157ff541c6d10734adac113f0",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "deb7a5b4f5e5c520547c962a46f1862f0819399014e6b3e046e25f91709bc4ae",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "da230000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "An isolated real HTTP service distinguishes missing, invalid/used and expired login codes with a test clock, while valid cookies, fixed expiry and origin rejection remain enforced.",
+      "claim": "Isolated HTTP checks cover reuse after five minutes, staggered 24-hour deadlines, target and origin checks, data-root isolation, and restart continuity.",
       "location": {
         "path": "tests/v1/web-session-service.test.mjs"
       },
-      "hash": "9bf9df6ed438320fb9e026a5c37ae14efe8078f791ba4ddb2788ead1992ae5e4",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "5f9283610d666604cf01a02934c744b64dd0bd7eb421cb13119ee7ce7868abc0",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "da230000-0000-4000-8000-000000000003",
@@ -638,38 +638,38 @@
       "location": {
         "path": "scripts/v1/web-login-recovery-smoke.mjs"
       },
-      "hash": "025043ac83426128d424b43f85ef7f251f0dc14f1590dac981413865b1fa72b2",
-      "observedAt": "2026-11-09T06:07:05.388Z"
+      "hash": "ae5c6185258b3bcb4803d9e23e303ff08bd9fec1ddeddc055779b8f4907400f9",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "da230000-0000-4000-8000-000000000004",
       "kind": "document",
-      "claim": "Web restores recorded targets without source reconciliation, deduplicates covered events and counts complete hidden subtrees while preserving authentication and fixed history. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Web specifies link issuance, target binding, repeated access, same-deadline cookies, restart, conflict and browser recovery.",
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "9da6c02bd0f6f10755895b290ad651dd53e4eceba6be90074dc66445994e83ed",
-      "observedAt": "2026-11-16T06:36:24.867Z"
+      "hash": "0368484c9c0623c154fc9a7dea653868b6cd279b0273fda4846b1af60d551c55",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Runtime onboarding uses registration only for shared existing context; missing context still needs initialization and current-agent semantic modeling. Local aliases preserve UUIDs/history and cannot clear pending.",
+      "claim": "Project entry guidance preserves semantic onboarding and storage boundaries. Each reusable local link has a 24-hour deadline independent of the resident service.",
       "location": {
         "path": "agent-skills/harnessl3/references/project-init.md"
       },
-      "hash": "918fbb4fb2345130f5a36b9a0032b4f04efb4500ef56eca67c15de0ec8e3a439",
-      "observedAt": "2026-11-16T05:44:51.116Z"
+      "hash": "3e0ed30aca701d9fec12b838db4e9911ffbe00f904d8923fc1808ccf69754b7f",
+      "observedAt": "2026-11-23T05:33:46.329Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage guidance states planning before changes, method adoption, same-task stage continuation and recovery from the original receipt or archived batch.",
+      "claim": "Usage documents reusable 24-hour local access, saving the original link, resetting browser authorization and reissuing the same task link.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "0e31c7bbc7b94e5ede2c4438dc2550c07508d701abb225e02d0645b21ebaa149",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "f55dd31652b9939b02898174027ec176bd4711fe699d6ed1d79a903f69a10b09",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -678,8 +678,8 @@
       "location": {
         "path": "tests/v1/first-use.test.mjs"
       },
-      "hash": "983314783eaa22fd9db3443985a2a2d97664d993ccc6eef9c98a8b49df799b4b",
-      "observedAt": "2026-11-09T07:28:53.727Z"
+      "hash": "6b891c5357b498879033f9122150af508268130e2c756edde576e1ec09043334",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "bf342397-819c-4a86-8c9c-1b9686af9b17",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "The current agent rules require first-change review of new complex work and adoption of full selected methods, with exact receipt recovery and real-host evidence.",
+      "claim": "Current agent rules retain phase approval and original receipt recovery, and require the original target when reissuing an expired Web link.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "ec64fb5f0e8f41acbf554631e67802d428b8a3e0c4cf1ad00a60654a6328f796",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "97b99c66ba20e4f5e074b13a5153dc02edf9de2e26b53236b760a8d0144d54a6",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -858,8 +858,8 @@
       "location": {
         "path": "tests/v1/web-service.test.mjs"
       },
-      "hash": "5b8a622f687bccddf289e5a84f5e46d8a8f167d6e136b6dc79f36c45254ddfe0",
-      "observedAt": "2026-11-09T14:34:41.707Z"
+      "hash": "9c8fdc87f53104646b0e13ae97869d77aa10659b4d2904bca3544e811e548a4a",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000005",
@@ -974,12 +974,12 @@
     {
       "id": "116a4c91-d92b-427b-8016-2fcaca15b51d",
       "kind": "document",
-      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts. Permission error mapping and its test are also fixed to LF for stable evidence bytes.",
+      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts. Permission error mapping and its test are also fixed to LF for stable evidence bytes. The Web access source evidence uses the same LF policy.",
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "46caff3dce8f857f9864277e0c973721138da9e2c90804d4c62096d32a5c6b7f",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "df89c8a5a5a2dcf0577efeea69372e6278e8749049bead0d9e407397b4b1de4e",
+      "observedAt": "2026-11-23T10:22:58.661Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1229,7 +1229,7 @@
         "path": "scripts/v1/browser-smoke.mjs"
       },
       "hash": "8bfa84486eac53230cde586cbcb6c02ee36315a091e6200ef3117ec8178d2eee",
-      "observedAt": "2026-11-16T06:58:09.961Z"
+      "observedAt": "2026-11-23T10:22:58.676Z"
     },
     {
       "id": "e477f084-e25b-4733-a542-64986ce9f392",
@@ -1248,8 +1248,8 @@
       "location": {
         "path": "web/verify-fixture.mjs"
       },
-      "hash": "723b81cdd1b678cfad5666c599a226bbfc1bdf8dde54caeba7bd8b70e876da9f",
-      "observedAt": "2026-11-16T06:36:24.870Z"
+      "hash": "09466be845dc6699f3a67e6ba49bc49ebb9003fcbded536800a3dce7be886271",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     },
     {
       "id": "b34c74e1-cdf9-44c7-8faa-206148cf3c0e",
@@ -1320,6 +1320,16 @@
       },
       "hash": "7f40e8aa46d4c90cde6809a158155aa309adc49a31a031ac0cdee4b8e22aab57",
       "observedAt": "2026-11-21T17:31:31.598Z"
+    },
+    {
+      "id": "fa0b94b7-6a85-464d-980a-79b8a1ec8598",
+      "kind": "source-code",
+      "claim": "Web access uses a data-root-private key, origin-specific signatures and absolute issuance-based deadlines. The preferred port and key are written atomically under the startup lock.",
+      "location": {
+        "path": "service/web-access.ts"
+      },
+      "hash": "ac89da706e38c9dac7a916e3123e5fe40414875866ba2e2bf7a056ee99556224",
+      "observedAt": "2026-11-23T05:24:43.005Z"
     }
   ]
 }

@@ -12,11 +12,21 @@ model {
   app.web -[uses]-> app.service "Web API与事件流" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000002"
-      brief "Web确认同源浏览会话后访问RPC、view及worktree事件流，登录中断保留凭证供显式重试。"
+      brief "Web以24小时目标链接取得同源会话后访问RPC、view及事件流，中断时可用同一链接重试。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000003 d6250000-0000-4000-8000-000000000010"
-      version "2"
+      version "3"
+    }
+  }
+  app.cli -[uses]-> app.service.webAccess "请求签发本机网页授权" {
+    metadata {
+      harness_id "2db81737-d50b-403d-a12c-940b271066ce"
+      brief "CLI经认证服务请求按实际目标签发链接，并返回该链接的独立到期时间。"
+      source "fact"
+      status "verified"
+      evidence "fa0b94b7-6a85-464d-980a-79b8a1ec8598 d6250000-0000-4000-8000-000000000003"
+      version "1"
     }
   }
   app.service -[uses]-> app.core.runtime "分派公共用例" {

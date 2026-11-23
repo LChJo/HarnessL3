@@ -11,7 +11,7 @@ if (!descriptor) throw new Error('Usage: node web/verify-fixture.mjs <isolated-b
 const fixture = JSON.parse(await readFile(descriptor, 'utf8'))
 assert.ok(path.basename(fixture.directory).startsWith('harnessl3-browser-'), 'requires an isolated browser fixture')
 const service = JSON.parse(await readFile(path.join(fixture.dataRoot, 'service.json'), 'utf8'))
-const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => { assert.equal(response.status, 200); return response.json() })
+const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token, 'content-type': 'application/json' }, body: JSON.stringify({ worktree: fixture.target.worktreeId, task: fixture.entry.taskId }) }).then(response => { assert.equal(response.status, 200); return response.json() })
 const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
 const results = [], pageErrors = []
 try {
@@ -19,7 +19,7 @@ try {
   page.on('pageerror', error => pageErrors.push(error.message))
   const original = service.url + '/#' + new URLSearchParams({ code: nonce.code, worktree: fixture.target.worktreeId, task: fixture.entry.taskId })
   results.push(await verifyCanvas(page, original))
-  assert.equal(new URL(page.url()).hash, '', 'one-use code is removed')
+  assert.equal(new URL(page.url()).hash, '', 'access credential is removed')
   await mkdir('web/validation', { recursive: true })
   await page.screenshot({ path: 'web/validation/formal-overview.png', fullPage: true })
   const targetView = await page.evaluate(async worktree => await fetch('/view?' + new URLSearchParams(worktree)).then(response => response.json()), { worktree: fixture.target.worktreeId, task: fixture.entry.taskId })

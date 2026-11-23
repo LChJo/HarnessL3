@@ -79,18 +79,17 @@ try {
   await missingCookie.goto(missingCookieUrl)
   await missingCookie.getByTestId('session-required').waitFor()
   assert.match(await missingCookie.getByTestId('session-required').innerText(), /Cookie/)
-  assert.equal(new URL(missingCookie.url()).hash, '')
-  assert.equal(new URL(missingCookie.url()).searchParams.get('task'), fixture.entry.taskId)
+  assert.equal(missingCookie.url(), missingCookieUrl)
   await missingCookie.screenshot({ path: reportRoot + '/missing-cookie.png' })
   await missingCookie.unroute('**/session')
-  await missingCookie.goto(await fixture.url())
+  await missingCookie.getByRole('button', { name: '重试登录', exact: true }).click()
   await ready(missingCookie)
   assert.equal(new URL(missingCookie.url()).searchParams.get('task'), fixture.entry.taskId)
 
   const after = (await fixture.cli(['task', 'show', fixture.entry.taskId])).data.result.task
   assert.deepEqual(after, before, 'login and browser inspection must not change task records')
   assert.deepEqual(errors, [])
-  const report = { platform: process.platform, browser: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : 'chromium'), interruptedRequestRetry: true, interruptedConfirmationRetry: true, sameDocumentFreshLinkRecovery: true, missingCookieExplained: true, freshLinkRecovery: true, successfulLoginClearsCode: true, rejectedCodeCleared: true, targetPreserved: true, repeatedLinkKeepsCookie: true, taskUnchanged: true, pageErrors: errors }
+  const report = { platform: process.platform, browser: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : 'chromium'), interruptedRequestRetry: true, interruptedConfirmationRetry: true, sameDocumentFreshLinkRecovery: true, missingCookieExplained: true, originalLinkRetryAfterCookieLoss: true, successfulLoginClearsCode: true, targetPreserved: true, repeatedLinkKeepsCookie: true, taskUnchanged: true, pageErrors: errors }
   await writeFile(reportRoot + '/browser.json', JSON.stringify(report, null, 2) + '\n')
   process.stdout.write(JSON.stringify(report) + '\n')
 } finally { await browser?.close(); await fixture.stop() }

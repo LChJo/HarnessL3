@@ -15,7 +15,7 @@ const service = JSON.parse(await readFile(path.join(fixture.dataRoot, 'service.j
 const execFile = promisify(callbackExecFile)
 const createTask = async title => JSON.parse((await execFile(process.execPath, [fileURLToPath(new URL('../bin/harnessl3.mjs', import.meta.url)), 'task', 'start', '--title', title, '--data-dir', fixture.dataRoot, '--json'], { cwd: fixture.root, env: { ...process.env, HARNESS_SKILLS_ROOT: '', HARNESSL3_HOME: '' }, windowsHide: true, maxBuffer: 32e6 })).stdout).data
 const entry = await createTask('CLI task with Web manual selection ' + new Date().toISOString())
-const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
+const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token, 'content-type': 'application/json' }, body: JSON.stringify({ worktree: fixture.target.worktreeId, task: entry.taskId }) }).then(response => response.json())
 const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
 const errors = []
 try {

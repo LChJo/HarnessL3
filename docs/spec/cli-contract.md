@@ -94,7 +94,7 @@ v0.43：请求命令的静态帮助递归列出本地`$ref`的真实绝对路径
 | `agent unbind <binding-id>` / `agent status [--binding <id>]` | 停止本机尾读或查询绑定、游标、解析器版本、覆盖缺口；不删除日志/历史 |
 | `sync status` / `sync verify --file <proof.json>` | 查看来源 epoch/指纹/扫描策略与待核验范围；提交阶段核验声明并执行 CAS/模型及引用校验，详见[同步规格](observation-sync.md) |
 | `serve start [--port <0..65535>] [--foreground]` / `serve status` / `serve stop` | 同一用户/数据根管理单实例，默认 port=0 由系统分配，实际 URL 由握手返回；可显式指定端口，若占用且非同实例则明确冲突，不接入未知服务。仅绑定回环地址；不同隔离数据根可并行 |
-| `web open [--task <id>] [--no-open]` | 自动启动/复用本机服务并取得短时一次性Web登录链接。默认打开浏览器；--no-open仅返回链接供agent输出流展示，opened:false。无显式目标/task且cwd未登记可返回无目标工作台；显式目标/task失败不能静默降级。浏览器打开失败给可复制URL，不伪报已打开 |
+| `web open [--task <id>] [--no-open]` | 自动启动/复用本机服务，签发独立有效24小时的本机访问链接。默认打开浏览器；--no-open仅返回链接供agent输出流展示，opened:false。无显式目标/task且cwd未登记可返回无目标工作台；显式目标/task失败不能静默降级。浏览器打开失败给可复制URL，不伪报已打开 |
 | `model validate` | 解析当前 LikeC4 并校验[模型字段/引用](model-context.md)，返回诊断；不格式化、不补字段、不编辑模型 |
 | `gc --dry-run` / `gc --apply` | 仅枚举/清理[明确可重建派生数据](storage.md)。两个开关互斥，省略默认 dry-run；不清任务、事件、快照、注册信息、技能或源码 |
 | `migrate prototype --from <directory> --worktree <uuid> [--dry-run\|--apply]` | 唯一原型导入入口；默认 dry-run，显式来源与目标，复制不删源，ID 冲突不同内容则拒绝；只读 legacy wrapper，不重写旧 ID 或续期。见[迁移规格](storage.md) |
@@ -134,14 +134,14 @@ v0.55 使用 `skill-hub/3` 标记新生成的路由和技能方案，start 与 p
 | agent bind/unbind/status | `bindings:[{id,agent,sessionId,logFile,taskId,state,parserVersion,cursor,coverage}]`；unbind 返回停止后的记录 |
 | sync status/verify | `state`、`sourceEpoch`、`sourceVersion`、`sourceScanRevision`、`modelRevision`、`pendingPaths:[]`、`proofId`（无则 null）；verify 包含声明与自动检查各自结果 |
 | serve start/status/stop | `state:"running"\|"stopped"`、`url`、`instanceId`、`protocolVersion:1`；停止时 url/instanceId 为 null。status另可返回`draining`、`unavailable`或`conflict`，并附`diagnostic:{state,reason?,httpStatus?,systemCode?}`；表示查询完成，不把服务暂时不可达伪报为已停止 |
-| web open | `url`、`opened:boolean`；默认成功为true，--no-open为false；URL带一次性浏览会话码，首次登录有效期5分钟。同浏览器有效会话可重复打开原链接，不续期；无有效会话且码过期/已用时重新取链接，不包含CLI连接凭据 |
+| web open | `url`、`opened:boolean`；默认成功为true，--no-open为false。URL包含与初始目标绑定的本机访问凭证，签发后24小时内可反复使用。每次签发分别计算到期时间；访问凭证与CLI连接凭证分离 |
 | model validate | `valid:true`、`modelRevision`、`objectCount`、`relationCount`、`diagnostics:[]`；非法模型用错误封套及 details.diagnostics |
 | gc | `mode`、`candidates:[{path,kind,bytes,reason}]`、`totalBytes`、`removed:[]`，dry-run removed 为空 |
 | migrate prototype | `mode`、`migrationId`、`source`、`target`、`tasks:[{id,action:"copy"\|"skip"\|"conflict",completeness}]`、`sourcePreserved:true`；dry-run 不写注册/档案 |
 
 该 result 表是 v1 字段契约，JSON Schema 对管理 result 仅检查对象封装，额外语义/字段存在性须由各命令验收测试验证。核心请求和结果不允许未知字段。未来破坏性字段变化须提升 schemaVersion；protocolVersion 是服务握手版本，不等于 npm 版本。
 
-v0.25的管理result增量：init增加`initialization:{stage:"scaffold-ready",semanticStatus:"not-assessed",modelCreated:boolean,nextAction:"model-project"|"review-project-model",model:{objects,relations,views},agentGuidance}`；数量只表示当前可解析模型，不证明完整性。当前agent按实际项目阅读/建模/校验并报告进度，直接用文件工具维护LikeC4和证据。serve结果增加`startedAt`（未运行为null）、`scope:"user-data-root"`及`lifetime:"until-stopped"`；默认全用户项目共享当前用户数据根服务，显式数据根隔离继续有效。web open增加`service:{instanceId,scope:"user-data-root",lifetime:"until-stopped"}`和`login:{oneTime:true,expiresAt,browserSessionTtlMs:43200000}`，expiresAt是一次登录码到期时间，非进程退出时间。JSON stdout仍只返回一个封套，不代agent显示进度或注入宿主提示；当前v0.32由agent在实际上下文和必要技能正文返回后取得链接，在进度消息中展示一次“查看HarnessL3的输出”引用卡片，再继续用户工作。
+管理result：init返回`initialization:{stage:"scaffold-ready",semanticStatus:"not-assessed",modelCreated:boolean,nextAction:"model-project"|"review-project-model",model:{objects,relations,views},agentGuidance}`；数量只表示当前可解析模型，不证明完整性。当前agent按实际项目阅读/建模/校验并报告进度，直接用文件工具维护LikeC4和证据。serve返回`startedAt`（未运行为null）、`scope:"user-data-root"`及`lifetime:"until-stopped"`；默认全用户项目共享当前用户数据根服务，显式数据根隔离继续有效。自v0.56起，web open返回`service:{instanceId,scope:"user-data-root",lifetime:"until-stopped"}`与`login:{oneTime:false,expiresAt,browserSessionTtlMs:86400000}`。expiresAt是该链接的绝对到期时间。browserSessionTtlMs为从签发起计算的最大窗口，Cookie只有剩余时间。JSON stdout只返回一个封套；由agent在实际上下文和必要技能正文返回后取得链接，在进度消息中展示一次“查看HarnessL3的输出”引用卡片。
 
 `model validate`保留本地证据内容和Git归属诊断，文件诊断可附`evidenceId`。`sync status`同样返回成功加载模型时的证据诊断；`sync verify`新增自动检查`referenced-evidence`，命中当前引用changed/missing/unreadable的路径或实体范围返回`SYNC_UNRESOLVED`，无关局部proof仍可保存且全局保持pending。Git未跟踪/被忽略/无法核查为只读建议，不要求先暂存。请求和封套Schema不变，历史/幂等回执保留原文。
 

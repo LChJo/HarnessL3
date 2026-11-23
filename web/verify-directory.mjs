@@ -21,7 +21,7 @@ assert.ok(path.basename(fixture.directory).startsWith('harnessl3-browser-'))
 const dataRoot = await realpath(fixture.dataRoot)
 const inside = (root, file) => { const local = path.relative(root, file); return local && !path.isAbsolute(local) && local !== '..' && !local.startsWith('..' + path.sep) }
 const service = JSON.parse(await readFile(path.join(dataRoot, 'service.json'), 'utf8'))
-const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
+const nonce = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token, 'content-type': 'application/json' }, body: JSON.stringify({ worktree: fixture.target.worktreeId }) }).then(response => response.json())
 const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : undefined) })
 const stamp = Date.now().toString(36), originalGroup = 'ui-fixture-' + stamp, renamedGroup = originalGroup + '-renamed'
 const renamedQuality = 'quality-ui-fixture-' + stamp, method = 'probe-method', name = 'ui-method-' + stamp

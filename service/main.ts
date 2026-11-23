@@ -13,6 +13,7 @@ import { validateRpcRequest } from '../cli/args.js'
 import { processAlive, removeOwnedFile, validateServiceFile, type ServiceDescriptor } from './controller.js'
 import { resolveInside, safeRelative } from '../core/paths.js'
 import { validateUuid } from '../cli/args.js'
+import { linkTarget, loadWebAccess } from './web-access.js'
 
 async function body(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = []
@@ -60,14 +61,9 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
   let record: ServiceDescriptor
   let draining = false, active = 0, cancelledBeforeReady = false
   const drainWaiters: (() => void)[] = []
-  const browserCodes = new Map<string, number>(), sessions = new Map<string, number>()
-  const loginCodeTtlMs = 5 * 60_000, browserSessionTtlMs = 12 * 3600_000
+  let webAccess: Awaited<ReturnType<typeof loadWebAccess>>
   const streams = new Set<ServerResponse>()
   const bearer = (request: IncomingMessage) => secureEqual(request.headers.authorization ?? '', 'Bearer ' + token)
-  const browser = (request: IncomingMessage) => {
-    const cookie = /(?:^|;\s*)harnessl3_session=([a-f0-9]{64})(?:;|$)/.exec(request.headers.cookie ?? '')?.[1]
-    return !!cookie && (sessions.get(cookie) ?? 0) >= Date.now()
-  }
   let finish: (() => void) | undefined
   let rejectFinish: ((error: unknown) => void) | undefined
   const done = new Promise<void>((resolve, reject) => { finish = resolve; rejectFinish = reject })
@@ -89,7 +85,9 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
       const host = new URL(record.url).host
       if (request.headers.host !== host || (request.headers.origin && request.headers.origin !== record.url)) return json(response, { error: 'Forbidden origin or host' }, 403)
       const endpoint = new URL(request.url ?? '/', record.url)
-      const auth = bearer(request), web = browser(request)
+      const auth = bearer(request)
+      const cookieExpiry = webAccess.cookieExpiry(record.url, request.headers.cookie)
+      const web = cookieExpiry !== undefined && Date.now() < cookieExpiry
       if (request.headers['x-harness-protocol'] && request.headers['x-harness-protocol'] !== '1') return json(response, { error: 'Incompatible protocolVersion', protocolVersion: 1 }, 409)
       if ((request.headers['x-harness-instance'] && request.headers['x-harness-instance'] !== instanceId) || (request.headers['x-harness-data-root'] && request.headers['x-harness-data-root'] !== record.dataRootHash)) return json(response, { error: 'Incompatible service identity' }, 409)
       if (endpoint.pathname === '/health') {
@@ -104,26 +102,27 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
       }
       if (endpoint.pathname === '/browser-session' && request.method === 'POST') {
         if (!auth) return json(response, { error: 'Unauthorized' }, 401)
-        const code = randomBytes(32).toString('hex')
-        const expires = Date.now() + loginCodeTtlMs
-        browserCodes.set(code, expires)
-        return json(response, { code, expiresAt: new Date(expires).toISOString(), browserSessionTtlMs })
+        const hasBody = Number(request.headers['content-length']) > 0 || request.headers['transfer-encoding']
+        const target = hasBody ? linkTarget(await body(request)) : {}
+        return json(response, webAccess.issue(record.url, target))
       }
       if (endpoint.pathname === '/session' && request.method === 'POST') {
         if (request.headers.origin !== record.url) return json(response, { error: 'Forbidden origin' }, 403)
-        const value = await body(request) as { code?: string }
-        if (web) {
-          if (typeof value?.code === 'string') browserCodes.delete(value.code)
-          return json(response, { authenticated: true })
-        }
+        const value = await body(request) as { code?: string; worktree?: string; task?: string; batch?: string } | null
+        const now = Date.now()
         const rejected = (reason: string, message: string) => json(response, { error: { code: 'AUTH_REQUIRED', message, details: { reason } } }, 401)
-        if (!value || typeof value.code !== 'string' || !value.code) return rejected('session-missing', '当前浏览器尚未登录或会话已失效，请让当前 agent 重新生成访问链接。')
-        const expires = browserCodes.get(value.code)
-        if (expires === undefined) return rejected('code-invalid-or-used', '登录链接无效或已使用，请让当前 agent 重新生成访问链接。')
-        if (expires < Date.now()) return rejected('code-expired', '登录链接已超过有效期，请让当前 agent 重新生成访问链接。')
-        browserCodes.delete(value.code)
-        const cookie = randomBytes(32).toString('hex'); sessions.set(cookie, Date.now() + browserSessionTtlMs)
-        response.setHeader('set-cookie', `harnessl3_session=${cookie}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${browserSessionTtlMs / 1000}`)
+        if (!value || typeof value.code !== 'string' || !value.code) {
+          if (cookieExpiry !== undefined && now < cookieExpiry) return json(response, { authenticated: true })
+          if (cookieExpiry !== undefined) return rejected('session-expired', '访问授权已到期，请让当前 agent 重新生成访问链接。')
+          return rejected('session-missing', '当前浏览器没有访问授权，请打开有效的访问链接。')
+        }
+        const link = webAccess.verifyLink(record.url, value.code)
+        if (!link) return rejected('code-invalid-or-used', '访问链接无效，请让当前 agent 重新生成访问链接。')
+        if (link.expires <= now) return rejected('code-expired', '访问链接已超过有效期，请让当前 agent 重新生成访问链接。')
+        if (link.target.worktree !== value.worktree || link.target.task !== value.task || link.target.batch !== value.batch) {
+          return rejected('target-mismatch', '访问链接与目标不匹配，请打开原始访问链接。')
+        }
+        if ((cookieExpiry ?? 0) < link.expires) response.setHeader('set-cookie', webAccess.cookie(record.url, link.expires, now))
         return json(response, { authenticated: true })
       }
       if (endpoint.pathname === '/rpc' && request.method === 'POST') {
@@ -156,6 +155,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
           finally { active--; if (!active) for (const waiter of drainWaiters.splice(0)) waiter() }
         }
         const seq = await runtime.browseSequence(worktreeId)
+        if (!auth && Date.now() >= cookieExpiry!) return json(response, { error: 'Unauthorized' }, 401)
         const after = endpoint.searchParams.get('after') ?? request.headers['last-event-id'] ?? '0'
         if (typeof after !== 'string' || !/^\d+$/.test(after) || !Number.isSafeInteger(Number(after))) throw new HarnessError('INVALID_ARGUMENT', 'The event cursor must be a nonnegative integer')
         response.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-cache, no-transform', 'connection': 'keep-alive', 'x-content-type-options': 'nosniff' })
@@ -164,9 +164,11 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
         const changed = (event: { worktreeId: string; seq: number; kind: string }) => { if (event.worktreeId === worktreeId) send('commit', event) }
         runtime.on('commit', changed)
         send(Number(after) === seq ? 'ready' : 'reset', { worktreeId, seq })
+        const deadline = auth ? undefined : setTimeout(() => response.end(), Math.max(0, cookieExpiry! - Date.now()))
+        deadline?.unref()
         const heartbeat = setInterval(() => { if (!response.destroyed) response.write(': keep-alive\n\n') }, 15_000)
         heartbeat.unref()
-        response.once('close', () => { clearInterval(heartbeat); runtime.off('commit', changed); streams.delete(response) })
+        response.once('close', () => { clearTimeout(deadline); clearInterval(heartbeat); runtime.off('commit', changed); streams.delete(response) })
         return
       }
       if (request.method !== 'GET') return json(response, { error: 'Not found' }, 404)
@@ -198,10 +200,22 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
   process.once('SIGINT', signal); process.once('SIGTERM', signal)
   try {
     await runtime.preflight()
+    webAccess = await loadWebAccess(dataRoot)
     if (cancelledBeforeReady) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')
-    await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.removeListener('error', reject); resolve() }) })
+    const listen = (requested: number) => new Promise<void>((resolve, reject) => {
+      const fail = (error: Error) => { server.off('listening', ready); reject(error) }
+      const ready = () => { server.off('error', fail); resolve() }
+      server.once('error', fail).once('listening', ready).listen(requested, '127.0.0.1')
+    })
+    try { await listen(port || webAccess.port || 0) }
+    catch (error) {
+      if (port || !webAccess.port || !isErrno(error, 'EADDRINUSE')) throw error
+      await listen(0)
+    }
+    const actualPort = (server.address() as { port: number }).port
+    await webAccess.rememberPort(actualPort)
     if (cancelledBeforeReady) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')
-    record = { schemaVersion: 1, protocolVersion: 1, pid: process.pid, instanceId, startedAt: lock.startedAt, dataRootHash: digest('data-root', dataRoot), url: `http://127.0.0.1:${(server.address() as { port: number }).port}`, token, build: PACKAGE_BUILD }
+    record = { schemaVersion: 1, protocolVersion: 1, pid: process.pid, instanceId, startedAt: lock.startedAt, dataRootHash: digest('data-root', dataRoot), url: `http://127.0.0.1:${actualPort}`, token, build: PACKAGE_BUILD }
     await writeJson(descriptorFile, record)
     void runtime.ready().catch(error => { process.stderr.write(JSON.stringify({ code: 'STARTUP_RECOVERY_FAILED', cause: asHarnessError(error).code }) + '\n') })
     onReady?.(record)

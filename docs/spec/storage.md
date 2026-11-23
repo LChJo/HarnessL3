@@ -64,6 +64,7 @@ sourceVersion、sourceManifest、sourceScanRevision 的唯一形状与排序见 
 ```text
 <data-root>/
   registry.json
+  web-access.json
   skills/
   worktrees/<worktreeId>/
     journal.jsonl
@@ -79,6 +80,7 @@ sourceVersion、sourceManifest、sourceScanRevision 的唯一形状与排序见 
 | 内容 | 职责及恢复依据 |
 | --- | --- |
 | `registry.json` | 本机登记、canonical path、Git common directory、停用状态；原子替换，机器路径不随 Git |
+| `web-access.json` | 本机私有签名密钥与首选回环端口；在单实例锁内原子写入，独立于运行时描述文件、任务档案及派生缓存 |
 | `skills/` | 默认的机器全局用户可编辑技能来源，包含方法、附件与许可；不是缓存，不能重建覆盖用户编辑 |
 | `journal.jsonl` | 按 worktree 单调提交序号保存任务、批次、读取回执、绑定、观测、同步及迁移提交；运行历史的提交依据，只追加 |
 | `browse-index.json` | 可重建的Web日志定位缓存；核对所请求原记录，不等于完整档案恢复或来源核验 |

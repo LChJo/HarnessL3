@@ -51,23 +51,33 @@ try {
   await ready(page)
   const anonymous = await browser.newContext({ viewport: { width: 900, height: 700 } })
   const signedOut = await anonymous.newPage()
-  await signedOut.goto(original)
+  const invalid = new URL(original)
+  const params = new URLSearchParams(invalid.hash.slice(1))
+  params.set('code', 'invalid-link')
+  invalid.hash = params.toString()
+  await signedOut.goto(invalid.toString())
   await signedOut.getByTestId('session-required').waitFor()
   assert.ok(!(await signedOut.locator('body').innerText()).includes('本机服务不可用'))
   const target = new URL(signedOut.url()).searchParams
   assert.equal(target.get('worktree'), fixture.target.worktreeId)
   assert.equal(target.get('task'), entry.taskId)
-  assert.equal(new URL(signedOut.url()).hash, '', 'The spent credential must not remain in the address bar')
+  assert.equal(new URL(signedOut.url()).hash, '', 'The invalid credential must not remain in the address bar')
   await signedOut.screenshot({ path: '.harness-local/validation/hit-session-auth-required.png' })
   await signedOut.reload()
   await signedOut.getByTestId('session-required').waitFor()
-  await signedOut.goto(await fixture.url(entry.taskId))
+  await signedOut.goto(original)
+  await ready(signedOut)
+  await fixture.cli(['serve', 'stop'])
+  const restart = (await fixture.cli(['serve', 'start'])).data.result
+  assert.equal(restart.url, fixture.origin, 'a normal restart must retain the original link address')
+  await anonymous.clearCookies()
+  await signedOut.goto(original)
   await ready(signedOut)
   const after = (await fixture.cli(['task', 'show', entry.taskId])).data.result.task
   assert.deepEqual(after, before)
   assert.deepEqual(mutations, [])
   assert.deepEqual(errors, [])
-  const report = { platform: process.platform, browser: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : 'chromium'), directParentHitLeaf: true, categoryCount: 1, unmatchedChildren: 2, exactParentDetails: true, outputPath: true, repeatedOriginalLink: logins, sessionCookieUnchanged: true, reload: true, signedOutErrorAccurate: true, targetPreserved: true, freshLinkRecovery: true, taskUnchanged: true, pageErrors: errors }
+  const report = { platform: process.platform, browser: process.env.BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'msedge' : 'chromium'), directParentHitLeaf: true, categoryCount: 1, unmatchedChildren: 2, exactParentDetails: true, outputPath: true, repeatedOriginalLink: logins.slice(0, 4), sessionCookieUnchanged: true, reload: true, signedOutErrorAccurate: true, targetPreserved: true, sameLinkInFreshContext: true, sameLinkAfterRestart: true, taskUnchanged: true, pageErrors: errors }
   await writeFile('.harness-local/validation/hit-session-browser.json', JSON.stringify(report, null, 2) + '\n')
   console.log(JSON.stringify(report))
 } finally { await browser?.close(); await fixture.stop() }

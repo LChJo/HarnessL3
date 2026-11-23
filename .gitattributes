@@ -37,6 +37,7 @@ package.json text eol=lf
 package-lock.json text eol=lf
 service/controller.ts text eol=lf
 service/main.ts text eol=lf
+service/web-access.ts text eol=lf
 scripts/install-agent-skills.mjs text eol=lf
 scripts/v1/package-smoke.mjs text eol=lf
 scripts/v1/skill-content-smoke.mjs text eol=lf

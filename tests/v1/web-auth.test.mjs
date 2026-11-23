@@ -27,7 +27,7 @@ test('TC23 interrupted sign-in retains the original code and retries it after re
   await assert.rejects(session(), { code: 'SIGN_IN_RETRY' })
   assert.equal(location.href, original, 'an unsuccessful sign-in must not discard its only retry credential')
   assert.deepEqual(await session(), target)
-  assert.deepEqual(requests, [{ code: 'fresh-code' }, { code: 'fresh-code' }, {}])
+  assert.deepEqual(requests, [{ code: 'fresh-code', ...target }, { code: 'fresh-code', ...target }, {}])
   assert.equal(new URL(location.href).hash, '')
   assert.equal(new URL(location.href).searchParams.get('history'), '1')
   for (const [key, value] of Object.entries(target)) assert.equal(new URL(location.href).searchParams.get(key), value)
@@ -45,7 +45,7 @@ test('TC23 sign-in only clears the code after the browser session has been confi
   assert.equal(location.href, original)
   release(authenticated())
   await new Promise(resolve => setImmediate(resolve))
-  assert.deepEqual(requested, [{ code: 'fresh-code' }, {}])
+  assert.deepEqual(requested, [{ code: 'fresh-code', ...target }, {}])
   assert.equal(location.href, original, 'issuing a cookie is not proof that the browser accepted it')
   release(authenticated())
   assert.deepEqual(await pending, target)
@@ -57,8 +57,7 @@ test('TC23 missing browser cookies are reported without claiming a fresh link ex
   let calls = 0
   t.mock.method(globalThis, 'fetch', async () => ++calls === 1 ? authenticated() : response({ error: { code: 'AUTH_REQUIRED', message: 'No browser session', details: { reason: 'session-missing' } } }, 401))
   await assert.rejects(session(), error => error.code === 'AUTH_REQUIRED' && error.details.reason === 'cookie-not-retained' && /Cookie/.test(error.message))
-  assert.equal(new URL(location.href).hash, '', 'a consumed code without a browser session cannot be retried')
-  assert.equal(new URL(location.href).searchParams.get('task'), target.task)
+  assert.equal(location.href, original, 'a reusable link remains available to retry after enabling cookies')
 })
 
 test('TC23 rejected codes retain their target and actual authentication reason', async t => {

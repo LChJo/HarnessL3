@@ -107,8 +107,12 @@ export async function createBrowserFixture({ crlfSeed = process.env.HARNESS_TEST
     await cli(['migrate', 'prototype', '--from', legacySource, '--worktree', initialized.target.worktreeId, '--apply'])
     const service = JSON.parse(await readFile(path.join(dataRoot, 'service.json'), 'utf8'))
     const url = async (taskId = entry.taskId, batchId) => {
-      const { code } = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token } }).then(response => response.json())
-      return service.url + '/#' + new URLSearchParams({ code, worktree: initialized.target.worktreeId, ...(taskId ? { task: taskId } : {}), ...(batchId ? { batch: batchId } : {}) })
+      if (!batchId) return (await cli(['web', 'open', '--no-open', ...(taskId ? ['--task', taskId] : [])])).data.result.url
+      const target = { worktree: initialized.target.worktreeId, task: taskId, batch: batchId }
+      const response = await fetch(service.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + service.token, 'content-type': 'application/json' }, body: JSON.stringify(target) })
+      if (!response.ok) throw new Error('Could not create the fixture batch link')
+      const { code } = await response.json()
+      return service.url + '/#' + new URLSearchParams({ code, ...target })
     }
     const stop = async () => {
       await cli(['serve', 'stop'], directory)

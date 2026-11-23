@@ -158,13 +158,18 @@ export async function runCli(args: string[]): Promise<void> {
         record = connected.record; response = connected.response
       }
       if (request.operation === 'web open' && response.ok) {
-        const session = await fetch(record.url + '/browser-session', { method: 'POST', headers: { authorization: 'Bearer ' + record.token, 'x-harness-protocol': '1' }, signal: cancellation.signal })
+        const target = { worktree: response.target?.worktreeId, task: flag(request, 'task') }
+        const session = await fetch(record.url + '/browser-session', { method: 'POST',
+          headers: { authorization: 'Bearer ' + record.token, 'x-harness-protocol': '1', 'content-type': 'application/json' },
+          body: JSON.stringify(target), signal: cancellation.signal })
         if (!session.ok) throw new HarnessError('SERVICE_CONFLICT', 'Could not create a local browser session')
-        const { code, expiresAt, browserSessionTtlMs } = await session.json() as { code: string; expiresAt: string; browserSessionTtlMs: number }
-        if (typeof expiresAt !== 'string' || typeof browserSessionTtlMs !== 'number') throw new HarnessError('SERVICE_CONFLICT', 'Restart the local service to refresh Web sign-in metadata')
+        const { code, expiresAt, browserSessionTtlMs, oneTime } = await session.json() as { code: string; expiresAt: string; browserSessionTtlMs: number; oneTime: boolean }
+        if (oneTime !== false || typeof code !== 'string' || typeof expiresAt !== 'string' || typeof browserSessionTtlMs !== 'number') {
+          throw new HarnessError('SERVICE_CONFLICT', 'Restart the local service to create a 24-hour Web access link')
+        }
         const parameters = new URLSearchParams({ code })
-        if (response.target) parameters.set('worktree', response.target.worktreeId)
-        if (flag(request, 'task')) parameters.set('task', flag(request, 'task')!)
+        if (target.worktree) parameters.set('worktree', target.worktree)
+        if (target.task) parameters.set('task', target.task)
         const url = record.url + '/#' + parameters
         const opened = !request.flags['no-open']
         if (opened) {
@@ -172,7 +177,7 @@ export async function runCli(args: string[]): Promise<void> {
         }
         response.data = { kind: 'command-result', status: 'complete', operation: 'web open', result: { url, opened,
           service: { instanceId: record.instanceId, ...serviceLifetime },
-          login: { oneTime: true, expiresAt, browserSessionTtlMs },
+          login: { oneTime, expiresAt, browserSessionTtlMs },
         } }
       }
     }
