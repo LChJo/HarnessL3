@@ -3,10 +3,11 @@ import { resolve, join, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { setImmediate } from 'node:timers/promises';
 import { openSync, closeSync, readSync, lstatSync } from 'node:fs';
-import { reportProgress } from './progress.js';
+import { checkAuditCancellation, reportProgress } from './progress.js';
 import { HarnessError, asHarnessError, permissionError } from './errors.js';
 import { canonicalJson, digest, parseJsonStrict, sha256 } from './json.js';
-import { atomicWrite, ensureDir, isErrno } from './io.js';
+import { atomicWrite, ensureDir, isErrno, requireWriteCapacity } from './io.js';
+import { packedArchive } from './packed-archive.js';
 
 const HASH = /^[a-f0-9]{64}$/;
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -40,7 +41,7 @@ export type CommitInput<T> = {
   materializations?: { path: string; content: unknown }[];
 };
 export type CommitResult<T> = { receipt: T; replayed: boolean; seq: number };
-export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[]; afterSeq?: number }
+export interface RecordFilter { kind?: string; taskId?: string; excludeKinds?: readonly string[]; afterSeq?: number; businessOnly?: boolean; requestId?: string }
 export interface CommitHeader { seq: number; operationId: string; committedAt: string; scope: string; requestId: string; receiptHash: string; kind: string | null; taskId: string | null; operation: string | null; source: string | null }
 interface StoredRecord extends CommitHeader { hash: string; requestHash: string; archives: ArchiveReference[]; offset: number; length: number }
 
@@ -63,6 +64,61 @@ function recordContent(record: CommitRecord): Omit<CommitRecord, 'hash'> {
   return content;
 }
 
+/** Shared format verifier for the legacy reader, packed writer and explicit migration. */
+export function validateCommitRecord(record: CommitRecord, previousSeq: number, previousHash: string | null, hasRequest: (scope: string, requestId: string) => boolean): void {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) throw corrupt('Commit must be an object.');
+  const fields = ['schemaVersion', 'seq', 'operationId', 'scope', 'requestId', 'requestHash', 'committedAt', 'previousHash', 'payload', 'receiptHash', 'archives', 'materializations', 'hash'];
+  if (Object.keys(record).length !== fields.length || fields.some(key => !Object.hasOwn(record, key))) throw corrupt('Commit fields are invalid.');
+  if (record.schemaVersion !== 1 || record.seq !== previousSeq + 1 || !Number.isSafeInteger(record.seq) || !UUID.test(record.operationId)) throw corrupt('Commit schema or sequence is invalid.');
+  validateRequest(record.scope, record.requestId);
+  validateHash(record.requestHash); validateHash(record.receiptHash); validateHash(record.hash);
+  if (record.previousHash !== previousHash) throw corrupt('Commit hash chain is broken.');
+  if (typeof record.committedAt !== 'string' || !Number.isFinite(Date.parse(record.committedAt))) throw corrupt('Commit time is invalid.');
+  if (digest('commit', recordContent(record)) !== record.hash) throw corrupt('Commit fingerprint does not match.');
+  if (hasRequest(record.scope, record.requestId)) throw corrupt('Duplicate committed request.');
+  if (!Array.isArray(record.archives) || !Array.isArray(record.materializations)) throw corrupt('Commit archive references must be arrays.');
+  for (const reference of record.archives) {
+    if (!reference || Object.keys(reference).length !== 2 || !['snapshot', 'blob'].includes(reference.kind)) throw corrupt('Invalid archive reference.');
+    validateHash(reference.hash);
+  }
+  if (!record.archives.some(reference => reference.kind === 'snapshot' && reference.hash === record.receiptHash)) throw corrupt('Commit receipt archive is not referenced.');
+  const paths = new Set<string>();
+  for (const item of record.materializations) {
+    if (!item || Object.keys(item).length !== 3 || !MATERIALIZATION.test(item.path) || paths.has(item.path)) throw corrupt('Invalid materialization path.');
+    paths.add(item.path);
+    if (digest('materialization', { path: item.path, content: item.content }) !== item.contentHash) throw corrupt('Materialization fingerprint does not match.');
+  }
+}
+
+export function verifySnapshotBytes(hash: string, bytes: Uint8Array): unknown {
+  validateHash(hash);
+  const text = decode(bytes);
+  // Most immutable snapshots were emitted in canonical JSON. The fast path
+  // proves native round-trip byte equality (no collapsed duplicate keys or
+  // normalized numbers/escapes), lexical key order at every object and no
+  // potentially unpaired escaped surrogate. Any noncanonical form uses the
+  // original strict parser and JCS encoder, not a weaker checksum shortcut.
+  const lexical = (value: unknown): boolean => {
+    if (!value || typeof value !== 'object') return true;
+    if (Array.isArray(value)) return value.every(lexical);
+    const keys = Object.keys(value);
+    for (let i = 1; i < keys.length; i++) if (keys[i - 1]! > keys[i]!) return false;
+    return keys.every(key => lexical((value as Record<string, unknown>)[key]));
+  };
+  if (!/\\u[dD][89a-fA-F][0-9a-fA-F]{2}/.test(text)) {
+    try {
+      const candidate = JSON.parse(text) as Snapshot;
+      if (candidate && typeof candidate === 'object' && Object.keys(candidate).length === 4 && Object.hasOwn(candidate, 'content') && candidate.schemaVersion === 1 && typeof candidate.kind === 'string' && candidate.kind && candidate.hash === hash && lexical(candidate)) {
+        const encoded = JSON.stringify(candidate);
+        if ((text === encoded || text === encoded + '\n') && sha256(JSON.stringify({ content: candidate.content, kind: candidate.kind, schemaVersion: 1 })) === hash) return candidate.content;
+      }
+    } catch { /* Strict verification below preserves all old rejection behavior. */ }
+  }
+  const snapshot = parseJsonStrict(text) as Snapshot;
+  if (!snapshot || typeof snapshot !== 'object' || Object.keys(snapshot).length !== 4 || snapshot.schemaVersion !== 1 || typeof snapshot.kind !== 'string' || !snapshot.kind || snapshot.hash !== hash || digest(snapshot.kind, snapshot.content) !== hash) throw corrupt('Snapshot fingerprint or schema is invalid.', { hash });
+  return snapshot.content;
+}
+
 /** The durable file journal is authoritative. No command is executed during recovery. */
 export class Archive {
   readonly root: string;
@@ -78,11 +134,17 @@ export class Archive {
   private state: 'ready' | 'recovery-required' = 'ready';
   private problems: ArchiveDiagnostic[] = [];
   private journalKindsOnly = false;
-  readonly verificationScope: 'workspace' | 'requested';
+  private readonly packed: ReturnType<typeof packedArchive>;
+  private readonly capacity: typeof requireWriteCapacity;
+  private readonly counters = { recordReads: 0, snapshotReads: 0, blobReads: 0, logicalReadBytes: 0, logicalWriteBytes: 0, newSnapshots: 0, newBlobs: 0, businessCommits: 0 };
+  readonly verificationScope: 'workspace' | 'requested' | 'operational';
 
-  constructor(root: string, options: { readOnly?: boolean; verification?: 'requested' } = {}) {
+  constructor(root: string, options: { readOnly?: boolean; verification?: 'requested' | 'operational'; packedSource?: NonNullable<ReturnType<typeof packedArchive>>; capacity?: typeof requireWriteCapacity } = {}) {
     if (!isAbsolute(root)) throw new HarnessError('INVALID_ARGUMENT', 'Archive root must be absolute.');
     this.root = resolve(root);
+    if (options.packedSource && !options.readOnly) throw new HarnessError('INVALID_ARGUMENT', 'An unpublished packed source is read-only.');
+    this.packed = options.packedSource ?? packedArchive(this.root);
+    this.capacity = options.capacity ?? requireWriteCapacity;
     this.readOnly = options.readOnly === true;
     this.verificationScope = options.verification ?? 'workspace';
     if (this.verificationScope === 'requested' && !this.readOnly) throw new HarnessError('INVALID_ARGUMENT', 'Scoped archive browsing must be read-only.');
@@ -90,7 +152,10 @@ export class Archive {
   }
   get status(): 'ready' | 'recovery-required' { return this.state; }
   get diagnostics(): ArchiveDiagnostic[] { return structuredClone(this.problems); }
-  get seq(): number { return this.commits.at(-1)?.seq ?? 0; }
+  get seq(): number { return this.packed ? this.packed.store.latest(this.packed.worktree).seq : this.commits.at(-1)?.seq ?? 0; }
+  get format(): 'loose-v1' | 'packed-sqlite/1' { return this.packed ? 'packed-sqlite/1' : 'loose-v1'; }
+  metrics() { return { ...this.counters, format: this.format, seq: this.seq, bytesScope: 'logical-archive-payloads; not physical disk I/O' }; }
+  private previousHash(): string | null { return this.packed ? this.packed.store.latest(this.packed.worktree).hash : this.commits.at(-1)?.hash ?? null; }
   /** Routing hint only: validates the journal chain, never attests to archived bodies. */
   static async committedKind(root: string, kind: string): Promise<'present' | 'absent' | 'unknown'> {
     const inspection = new Archive(root, { readOnly: true });
@@ -107,12 +172,22 @@ export class Archive {
   }
   async *scanAsync(filter: RecordFilter = {}): AsyncIterableIterator<CommitRecord> {
     const boundary = this.headers(filter);
-    for (const header of boundary) yield await this.record(header.seq);
+    for (let i = 0; i < boundary.length; i++) {
+      checkAuditCancellation(); yield await this.record(boundary[i].seq);
+      if (i % 128 === 127) await setImmediate();
+    }
   }
   headers(filter: RecordFilter = {}): CommitHeader[] { return Array.from(this.matching(filter), record => {
     const { hash: _hash, requestHash: _requestHash, archives: _archives, offset: _offset, length: _length, ...header } = record;
     return { ...header };
   }); }
+  lastHeader(filter: RecordFilter = {}): CommitHeader | undefined {
+    if (!this.packed) return this.headers(filter).at(-1);
+    const record = this.packed.store.lastHeader(this.packed.worktree, filter);
+    if (!record) return undefined;
+    const { hash: _hash, requestHash: _requestHash, archives: _archives, offset: _offset, length: _length, ...header } = record;
+    return header;
+  }
   async record(seq: number): Promise<CommitRecord> { await this.ready(); return this.readRecord(this.stored(seq)); }
   async receipt(seq: number): Promise<unknown> {
     const record = await this.record(seq);
@@ -121,6 +196,8 @@ export class Archive {
   }
   recordSync(seq: number): CommitRecord {
     const stored = this.stored(seq), file = join(this.root, 'journal.jsonl');
+    this.counters.recordReads++; this.counters.logicalReadBytes += stored.length;
+    if (this.packed) return this.packed.store.record(this.packed.worktree, seq);
     const info = lstatSync(file);
     if (!info.isFile() || info.isSymbolicLink()) throw corrupt('Journal is not a regular local file.');
     const descriptor = openSync(file, 'r');
@@ -132,7 +209,7 @@ export class Archive {
     } finally { closeSync(descriptor); }
   }
   private stored(seq: number): StoredRecord {
-    const record = this.bySequence.get(seq);
+    const record = this.packed ? this.packed.store.bySeq(this.packed.worktree, seq) : this.bySequence.get(seq);
     if (!Number.isSafeInteger(seq) || !record || record.seq !== seq) throw new HarnessError('NOT_FOUND', 'This committed sequence is not in the verified journal.', { seq });
     return record;
   }
@@ -144,6 +221,8 @@ export class Archive {
     } catch (error) { if (error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT') throw error; throw corrupt('Committed journal bytes are invalid.', { seq: stored.seq }); }
   }
   private async readRecord(stored: StoredRecord): Promise<CommitRecord> {
+    this.counters.recordReads++; this.counters.logicalReadBytes += stored.length;
+    if (this.packed) return this.packed.store.record(this.packed.worktree, stored.seq);
     const file = join(this.root, 'journal.jsonl');
     await this.regularFile(file);
     const handle = await open(file, 'r');
@@ -159,8 +238,8 @@ export class Archive {
     for (const record of this.matching(filter)) for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, { ...reference });
     return [...references.values()];
   }
-  hasKind(kind: string): boolean { return this.byKind.has(kind); }
-  hasRequest(scope: string, requestId: string): boolean { return this.requests.has(this.key(scope, requestId)); }
+  hasKind(kind: string): boolean { return this.packed ? !!this.packed.store.lastHeader(this.packed.worktree, { kind }) : this.byKind.has(kind); }
+  hasRequest(scope: string, requestId: string): boolean { return this.packed ? !!this.packed.store.byRequest(this.packed.worktree, scope, requestId) : this.requests.has(this.key(scope, requestId)); }
   ready(): Promise<void> { return this.loaded ??= this.load(); }
 
   private header(record: CommitRecord): CommitHeader {
@@ -171,13 +250,14 @@ export class Archive {
       operation: typeof payload?.operation === 'string' ? payload.operation : null, source: typeof payload?.source === 'string' ? payload.source : null };
   }
   private matching(filter: RecordFilter): IterableIterator<StoredRecord> {
+    if (this.packed) return this.packed.store.headers(this.packed.worktree, filter);
     const { kind, taskId } = filter, excluded = new Set(filter.excludeKinds);
     const records = taskId !== undefined ? this.byTask.get(taskId) ?? [] : kind !== undefined ? this.byKind.get(kind) ?? [] : this.commits;
     const length = records.length;
     return (function* () {
       for (let i = 0; i < length; i++) {
         const record = records[i], meta = record;
-        if (record.seq <= (filter.afterSeq ?? 0) || kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind)) continue;
+        if (record.seq <= (filter.afterSeq ?? 0) || kind !== undefined && meta.kind !== kind || taskId !== undefined && meta.taskId !== taskId || meta.kind !== null && excluded.has(meta.kind) || filter.requestId !== undefined && meta.requestId !== filter.requestId || filter.businessOnly && meta.kind === 'freshness-state' && meta.scope.startsWith('freshness-state:')) continue;
         yield record;
       }
     })();
@@ -212,6 +292,41 @@ export class Archive {
   }
 
   private async load(): Promise<void> {
+    if (this.packed) {
+      if (!this.readOnly) await ensureDir(this.root);
+      const { store, worktree } = this.packed;
+      const end = store.latest(worktree).seq;
+      if (this.verificationScope !== 'workspace' || this.journalKindsOnly) {
+        if (end) {
+          const head = store.record(worktree, end), previous = end > 1 ? store.bySeq(worktree, end - 1) : null;
+          if (head.previousHash !== (previous?.hash ?? null)) throw corrupt('The current packed journal head does not link to its predecessor.');
+        }
+        return;
+      }
+      // Explicit audit of the migrated format walks original records, not
+      // derived materializations. Ordinary operations use indexed locators.
+      const verified = new Set<string>(), requests = new Set<string>();
+      let seq = 0, previousHash: string | null = null;
+      reportProgress({ phase: 'verifying-archives', completed: 0, total: end });
+      try {
+        for (let next = 1; next <= end; next++) {
+          const record = store.record(worktree, next);
+          validateCommitRecord(record, seq, previousHash, (scope, id) => requests.has(this.key(scope, id)));
+          for (const reference of record.archives) {
+            const key = `${reference.kind}:${reference.hash}`;
+            if (verified.has(key)) continue;
+            if (reference.kind === 'snapshot') await this.readSnapshot(reference.hash); else await this.readBlob(reference.hash);
+            verified.add(key);
+          }
+          seq = record.seq; previousHash = record.hash; requests.add(this.key(record.scope, record.requestId));
+          if (seq % 16 === 0) { checkAuditCancellation(); if (seq % 1000 === 0) reportProgress({ phase: 'verifying-archives', completed: seq, total: end }); await setImmediate(); }
+        }
+        if (seq !== end) throw corrupt('Packed journal has an incomplete sequence during audit.');
+        checkAuditCancellation();
+      } catch (error) { if (error instanceof HarnessError && error.code === 'CANCELLED') throw error; this.state = 'recovery-required'; this.problems.push({ code: 'ARCHIVE_CORRUPT', message: String(error), seq: seq + 1, verifiedThrough: seq }); }
+      if (store.latest(worktree).seq !== end) throw new HarnessError('BUSY', 'The packed journal changed during the explicit audit; retry after writes settle.', {}, true);
+      return;
+    }
     if (!this.readOnly) {
       await ensureDir(this.root);
       for (const dir of ['snapshots', 'skill-blobs', 'tasks', 'checkpoints', 'diagnostics']) await this.directory(dir);
@@ -273,6 +388,14 @@ export class Archive {
     }
     pending = [];
     if (this.journalKindsOnly) { if (this.state === 'ready') await this.saveBrowseIndex(); return; }
+    // Operational use establishes the actual journal chain and request index,
+    // not the integrity of every historical body. Each requested transaction,
+    // receipt or referenced object is verified at its operation seam. Full
+    // archive audit remains the default for an explicitly opened Archive.
+    if (this.verificationScope === 'operational') {
+      if (this.state === 'ready') await this.saveBrowseIndex();
+      return;
+    }
     // Recovery shares verification work, not decoded bodies or a lifetime trust cache.
     const verified = new Map<string, Promise<void>>();
     // Independent immutable references share one pass-local verification map.
@@ -360,28 +483,7 @@ export class Archive {
   }
 
   private validateRecord(record: CommitRecord): void {
-    if (!record || typeof record !== 'object' || Array.isArray(record)) throw corrupt('Commit must be an object.');
-    const fields = ['schemaVersion', 'seq', 'operationId', 'scope', 'requestId', 'requestHash', 'committedAt', 'previousHash', 'payload', 'receiptHash', 'archives', 'materializations', 'hash'];
-    if (Object.keys(record).length !== fields.length || fields.some(key => !Object.hasOwn(record, key))) throw corrupt('Commit fields are invalid.');
-    if (record.schemaVersion !== 1 || record.seq !== this.seq + 1 || !Number.isSafeInteger(record.seq) || !UUID.test(record.operationId)) throw corrupt('Commit schema or sequence is invalid.');
-    validateRequest(record.scope, record.requestId);
-    validateHash(record.requestHash); validateHash(record.receiptHash); validateHash(record.hash);
-    if (record.previousHash !== (this.commits.at(-1)?.hash ?? null)) throw corrupt('Commit hash chain is broken.');
-    if (typeof record.committedAt !== 'string' || !Number.isFinite(Date.parse(record.committedAt))) throw corrupt('Commit time is invalid.');
-    if (digest('commit', recordContent(record)) !== record.hash) throw corrupt('Commit fingerprint does not match.');
-    if (this.requests.has(this.key(record.scope, record.requestId))) throw corrupt('Duplicate committed request.');
-    if (!Array.isArray(record.archives) || !Array.isArray(record.materializations)) throw corrupt('Commit archive references must be arrays.');
-    for (const reference of record.archives) {
-      if (!reference || Object.keys(reference).length !== 2 || !['snapshot', 'blob'].includes(reference.kind)) throw corrupt('Invalid archive reference.');
-      validateHash(reference.hash);
-    }
-    if (!record.archives.some(reference => reference.kind === 'snapshot' && reference.hash === record.receiptHash)) throw corrupt('Commit receipt archive is not referenced.');
-    const paths = new Set<string>();
-    for (const item of record.materializations) {
-      if (!item || Object.keys(item).length !== 3 || !MATERIALIZATION.test(item.path) || paths.has(item.path)) throw corrupt('Invalid materialization path.');
-      paths.add(item.path);
-      if (digest('materialization', { path: item.path, content: item.content }) !== item.contentHash) throw corrupt('Materialization fingerprint does not match.');
-    }
+    validateCommitRecord(record, this.seq, this.previousHash(), (scope, requestId) => this.hasRequest(scope, requestId));
   }
 
   async snapshot(kind: string, content: unknown): Promise<string> {
@@ -391,11 +493,14 @@ export class Archive {
     const hash = digest(kind, captured);
     await this.ready();
     if (this.state !== 'ready') throw corrupt('New snapshots are blocked until archive recovery is complete.', { diagnostics: this.diagnostics });
-    const file = join(await this.directory('snapshots'), `${hash}.json`);
     try { await this.readSnapshot(hash); }
     catch (error) {
       if (!(error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT' && error.details.missing === true)) throw error;
-      await atomicWrite(file, `${canonicalJson({ schemaVersion: 1, kind, content: captured, hash })}\n`);
+      const raw = Buffer.from(`${canonicalJson({ schemaVersion: 1, kind, content: captured, hash })}\n`, 'utf8');
+      await this.capacity(this.root, raw.length);
+      if (this.packed) this.packed.store.putFile(this.packed.worktree, 'snapshot', `${hash}.json`, raw);
+      else await atomicWrite(join(await this.directory('snapshots'), `${hash}.json`), raw);
+      this.counters.newSnapshots++; this.counters.logicalWriteBytes += raw.length;
     }
     return hash;
   }
@@ -404,11 +509,15 @@ export class Archive {
     validateHash(hash);
     const file = join(this.root, 'snapshots', `${hash}.json`);
     try {
-      await this.directory('snapshots', false);
-      await this.regularFile(file);
-      const snapshot = parseJsonStrict(decode(await readFile(file))) as Snapshot;
-      if (!snapshot || typeof snapshot !== 'object' || Object.keys(snapshot).length !== 4 || snapshot.schemaVersion !== 1 || typeof snapshot.kind !== 'string' || !snapshot.kind || snapshot.hash !== hash || digest(snapshot.kind, snapshot.content) !== hash) throw corrupt('Snapshot fingerprint or schema is invalid.', { path: file });
-      return snapshot.content as T;
+      if (this.packed) {
+        const bytes = this.packed.store.getFile(this.packed.worktree, 'snapshot', `${hash}.json`);
+        if (!bytes) throw corrupt('Packed snapshot is missing.', { hash, missing: true });
+        this.counters.snapshotReads++; this.counters.logicalReadBytes += bytes.length;
+        return verifySnapshotBytes(hash, bytes) as T;
+      }
+      await this.directory('snapshots', false); await this.regularFile(file);
+      const bytes = await readFile(file); this.counters.snapshotReads++; this.counters.logicalReadBytes += bytes.length;
+      return verifySnapshotBytes(hash, bytes) as T;
     } catch (error) {
       const permission = permissionError(error);
       if (permission) throw permission;
@@ -424,11 +533,13 @@ export class Archive {
     const hash = sha256(captured);
     await this.ready();
     if (this.state !== 'ready') throw corrupt('New skill archives are blocked until archive recovery is complete.', { diagnostics: this.diagnostics });
-    const file = join(await this.directory('skill-blobs'), hash);
     try { await this.readBlob(hash); }
     catch (error) {
       if (!(error instanceof HarnessError && error.code === 'ARCHIVE_CORRUPT' && error.details.missing === true)) throw error;
-      await atomicWrite(file, captured);
+      await this.capacity(this.root, captured.length);
+      if (this.packed) this.packed.store.putFile(this.packed.worktree, 'blob', hash, captured);
+      else await atomicWrite(join(await this.directory('skill-blobs'), hash), captured);
+      this.counters.newBlobs++; this.counters.logicalWriteBytes += captured.length;
     }
     return hash;
   }
@@ -437,9 +548,13 @@ export class Archive {
     validateHash(hash);
     const file = join(this.root, 'skill-blobs', hash);
     try {
-      await this.directory('skill-blobs', false);
-      await this.regularFile(file);
-      const bytes = await readFile(file);
+      let bytes: Buffer;
+      if (this.packed) {
+        const raw = this.packed.store.getFile(this.packed.worktree, 'blob', hash);
+        if (!raw) throw corrupt('Packed skill bytes are missing.', { hash, missing: true });
+        bytes = raw;
+      } else { await this.directory('skill-blobs', false); await this.regularFile(file); bytes = await readFile(file); }
+      this.counters.blobReads++; this.counters.logicalReadBytes += bytes.length;
       if (sha256(bytes) !== hash) throw corrupt('Archived skill bytes do not match their fingerprint.', { path: file, hash });
       return bytes;
     } catch (error) {
@@ -469,14 +584,15 @@ export class Archive {
     validateRequest(scope, requestId);
     const requestHash = digest('request', request);
     await this.ready();
-    const record = this.requests.get(this.key(scope, requestId));
+    const record = this.packed ? this.packed.store.byRequest(this.packed.worktree, scope, requestId) : this.requests.get(this.key(scope, requestId));
     if (!record) {
       if (this.state !== 'ready') throw corrupt('The journal cannot prove whether this request committed.', { verifiedThrough: this.seq, diagnostics: this.diagnostics });
       return null;
     }
-    if (record.requestHash !== requestHash) throw new HarnessError('REQUEST_ID_CONFLICT', 'requestId was already committed with different request content.', { requestId, seq: record.seq });
-    await this.verifyReferences(record);
-    return { receipt: await this.readSnapshot<T>(record.receiptHash), replayed: true, seq: record.seq };
+    const actual = await this.readRecord(record);
+    if (actual.requestHash !== requestHash) throw new HarnessError('REQUEST_ID_CONFLICT', 'requestId was already committed with different request content.', { requestId, seq: record.seq });
+    await this.verifyReferences(actual);
+    return { receipt: await this.readSnapshot<T>(actual.receiptHash), replayed: true, seq: record.seq };
   }
 
   commit<T>(input: CommitInput<T>): Promise<CommitResult<T>> {
@@ -514,15 +630,21 @@ export class Archive {
     const content: Omit<CommitRecord, 'hash'> = {
       schemaVersion: 1, seq: this.seq + 1, operationId: randomUUID(), scope: captured.scope, requestId: captured.requestId,
       requestHash: digest('request', captured.request), committedAt: new Date().toISOString(),
-      previousHash: this.commits.at(-1)?.hash ?? null, payload: captured.payload, receiptHash,
+      previousHash: this.previousHash(), payload: captured.payload, receiptHash,
       archives: [...references.values()].sort((a, b) => `${a.kind}:${a.hash}` < `${b.kind}:${b.hash}` ? -1 : 1), materializations,
     };
     const record: CommitRecord = { ...content, hash: digest('commit', content) };
     this.validateRecord(record);
+    const bytes = Buffer.from(`${canonicalJson(record)}\n`, 'utf8');
+    await this.capacity(this.root, bytes.length);
+    if (this.packed) {
+      this.packed.store.putRecord(this.packed.worktree, record, bytes);
+      this.counters.businessCommits++; this.counters.logicalWriteBytes += bytes.length;
+      return { receipt: await this.readSnapshot<T>(receiptHash), replayed: false, seq: record.seq };
+    }
     const journal = join(this.root, 'journal.jsonl');
     try { await this.regularFile(journal); } catch (error) { if (!isErrno(error, 'ENOENT')) throw error; }
     const handle = await open(journal, 'a', 0o600);
-    const bytes = Buffer.from(`${canonicalJson(record)}\n`, 'utf8');
     try {
       if ((await handle.stat()).size !== this.journalBytes) throw corrupt('The journal length changed outside the current writer.');
       await handle.writeFile(bytes);
@@ -534,6 +656,7 @@ export class Archive {
     } finally { await handle.close(); }
     this.remember(record, this.journalBytes, bytes.length - 1);
     this.journalBytes += bytes.length;
+    this.counters.businessCommits++; this.counters.logicalWriteBytes += bytes.length;
     try { for (const item of materializations) await this.materialize(item); }
     catch (error) {
       this.problems.push({ code: 'MATERIALIZATION_FAILED', message: String(error), seq: record.seq });

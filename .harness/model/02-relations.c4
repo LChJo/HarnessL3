@@ -112,21 +112,21 @@ model {
   app.core.runtime -[uses]-> app.core.archive "装配文件档案" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000b"
-      brief "CLI/订阅复用完整Archive；Web复用已加载档案或requested定位读者，不等待无关引用完整恢复。"
+      brief "普通用例按目标定位并验证实际原字节；历史全量审计为独立操作，旧格式结构链仍核对。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "3"
+      version "4"
     }
   }
   app.core.runtime -[uses]-> app.core.index "装配派生索引" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000c"
-      brief "完整任务资源使用工作区SQLite索引；只读浏览列表不等待索引打开或追赶。"
+      brief "按需初始化派生索引及追赶，普通task入口不等待无关搜索重建。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000004"
-      version "2"
+      version "3"
     }
   }
   app.core.context -[uses]-> app.core.model "取得精确上下文" {
@@ -152,11 +152,11 @@ model {
   app.core.context -[uses]-> app.core.archive "提交任务与文件" {
     metadata {
       harness_id "e6250000-0000-4000-8000-00000000000f"
-      brief "任务、回执、快照和所选技能字节写入Archive，历史按提交恢复。"
+      brief "业务回执/内容引用事务提交；packed后续任务采用增量记录。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000007"
-      version "1"
+      version "2"
     }
   }
   app.core.context -[uses]-> app.core.index "投影与检索" {
@@ -182,11 +182,11 @@ model {
   app.core.source -[uses]-> app.core.archive "保存核验事实" {
     metadata {
       harness_id "e6250000-0000-4000-8000-000000000012"
-      brief "来源manifest、扫描策略、状态与核验声明保存到文件档案。"
+      brief "只有显式核验声明、失败/成功回执及其必要来源模型引用进入不可变历史；普通同步态独立。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-00000000000c"
-      version "1"
+      version "2"
     }
   }
   app.core.observation -[uses]-> app.core.archive "归档有限观测" {
@@ -316,6 +316,76 @@ model {
       source "fact"
       status "verified"
       evidence "47a9761c-8c69-4907-926f-744ddf8e6ce5 d6250000-0000-4000-8000-000000000011"
+      version "1"
+    }
+  }
+  app.core.archive -[uses]-> app.core.packedArchive "使用事务档案" {
+    metadata {
+      harness_id "0c5717e0-9ab3-4e32-82ea-15fa36d2f5a0"
+      brief "Archive按版本读取/提交packed内容及旧格式。"
+      source "fact"
+      status "verified"
+      evidence "1fe2d2d4-20ef-40ae-b642-e9c9c30daf41"
+      version "1"
+    }
+  }
+  app.core.source -[uses]-> app.core.currentState "替换当前核验态" {
+    metadata {
+      harness_id "77091bb7-8d81-4719-bb38-59feb8b9fab2"
+      brief "显式status和身份失效在事务中替换当前值，不产生完整业务状态历史。"
+      source "fact"
+      status "verified"
+      evidence "4a573c42-e1d3-4ca8-9d60-0a8b0e91a6a1"
+      version "1"
+    }
+  }
+  app.core.context -[uses]-> app.core.taskDelta "编码任务增量" {
+    metadata {
+      harness_id "1baa8b92-1f2b-4e3c-b1d9-1de1b6c74650"
+      brief "后续packed任务基于原提交编码并核对精确重构。"
+      source "fact"
+      status "verified"
+      evidence "a857a5c6-bb0e-4fed-9ff2-efedb4729ff1"
+      version "1"
+    }
+  }
+  app.core.runtime -[uses]-> app.core.currentState "装配当前态" {
+    metadata {
+      harness_id "c2e16cf0-394b-457b-8561-91948a0667de"
+      brief "按工作区装配持久当前态及只读Web投影。"
+      source "fact"
+      status "verified"
+      evidence "4a573c42-e1d3-4ca8-9d60-0a8b0e91a6a1"
+      version "1"
+    }
+  }
+  app.core.storageMigration -[uses]-> app.core.packedArchive "转换原始字节" {
+    metadata {
+      harness_id "f10c3b6b-8a35-4ff0-87d1-e613b1384c83"
+      brief "独立目标压缩/分块并校验原始文件和提交行。"
+      source "fact"
+      status "verified"
+      evidence "de36567a-6bed-40e3-bf15-acde3ca652fd"
+      version "1"
+    }
+  }
+  app.core.storageMigration -[uses]-> app.core.archive "核验原始记录" {
+    metadata {
+      harness_id "e3370e4b-b91e-441a-b2ee-90ef4e93419e"
+      brief "复用原format严格字节与提交验证及已捕获业务记录检查。"
+      source "fact"
+      status "verified"
+      evidence "de36567a-6bed-40e3-bf15-acde3ca652fd"
+      version "1"
+    }
+  }
+  app.core.workspace -[uses]-> app.core.packedArchive "核对机器格式" {
+    metadata {
+      harness_id "98570b91-b763-4b3d-9ade-26a2f5922c28"
+      brief "registry版本绑定实际运行格式，保留项目身份。"
+      source "fact"
+      status "verified"
+      evidence "1fe2d2d4-20ef-40ae-b642-e9c9c30daf41"
       version "1"
     }
   }

@@ -105,6 +105,7 @@ test('TC17 non-task commits catch up a compact index without rebuilding or rewri
     const initialized = await call('init')
     assert.equal(initialized.ok, true)
     const resource = await runtime.worktreeResources(await runtime.registry().worktree(initialized.target.worktreeId))
+    assert.equal((await call('task list')).ok, true, 'Explicit history discovery initializes the derived index')
     const rebuild = t.mock.method(resource.index, 'rebuild', () => { throw new Error('Unexpected complete index rebuild') })
     for (let i = 0; i < 3; i++) await resource.archive.commit({ scope: 'compact-fixture', requestId: randomUUID(), request: {}, payload: { kind: 'diagnostic-fixture', large: 'x'.repeat(100_000) }, receipt: { i } })
     const before = await readFile(path.join(resource.archive.root, 'journal.jsonl'))

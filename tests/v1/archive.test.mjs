@@ -4,7 +4,8 @@ import { mkdtemp, readFile, writeFile, rm, mkdir, stat, readdir, access } from '
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { Archive } from '../../build/core/archive.js';
+import { Archive, verifySnapshotBytes } from '../../build/core/archive.js';
+import { canonicalJson, digest, sha256 } from '../../build/core/json.js';
 import { execFile } from './helpers.mjs';
 
 async function fixture(t) {
@@ -13,6 +14,19 @@ async function fixture(t) {
   return { root, archive: new Archive(root) };
 }
 const operation = (extras = {}) => ({ scope: `task:${randomUUID()}`, requestId: randomUUID(), request: { operation: 'test', value: 1 }, payload: { event: 'created' }, receipt: { answer: 'original' }, ...extras });
+
+test('TC34 canonical snapshot fast verification preserves strict duplicate, Unicode and noncanonical checks', () => {
+  const content = { a: 'value', z: [1, true, '\\unicode', '😊'] }, kind = 'fixture';
+  const hash = digest(kind, content), snapshot = { schemaVersion: 1, kind, content, hash };
+  assert.deepEqual(verifySnapshotBytes(hash, Buffer.from(canonicalJson(snapshot) + '\n')), content);
+  assert.deepEqual(verifySnapshotBytes(hash, Buffer.from(JSON.stringify(snapshot, null, 2))), content);
+  const repeated = canonicalJson(snapshot).replace('"a":"value"', '"a":"value","a":"value"');
+  assert.throws(() => verifySnapshotBytes(hash, Buffer.from(repeated)));
+  const missing = { extra: true, hash: sha256(JSON.stringify({ kind, schemaVersion: 1 })), kind, schemaVersion: 1 };
+  assert.throws(() => verifySnapshotBytes(missing.hash, Buffer.from(canonicalJson(missing))));
+  const lone = '{"content":"\\ud800","hash":"' + hash + '","kind":"fixture","schemaVersion":1}';
+  assert.throws(() => verifySnapshotBytes(hash, Buffer.from(lone)));
+});
 
 test('TC16 reading missing immutable content never creates archive directories', async t => {
   const { root } = await fixture(t);

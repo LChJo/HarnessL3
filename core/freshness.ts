@@ -3,13 +3,14 @@ import { lstat } from 'node:fs/promises';
 import { execFile as callbackExecFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { randomUUID } from 'node:crypto';
-import { performance } from 'node:perf_hooks';
+import { setImmediate } from 'node:timers/promises';
 import path from 'node:path';
 import { Archive, type ArchiveReference } from './archive.js';
-import { reportProgress } from './progress.js';
+import type { CurrentStateStore } from './current-state.js';
+import { checkAuditCancellation, reportProgress } from './progress.js';
 import { HarnessError, permissionError } from './errors.js';
 import { validateContract } from './contract.js';
-import { canonicalJson } from './json.js';
+import { canonicalJson, digest } from './json.js';
 import { loadModel } from './model.js';
 import { readConfig } from './workspace.js';
 import { resolveInside, safeRelative } from './paths.js';
@@ -37,6 +38,7 @@ export interface FreshnessState {
   schemaVersion: 1; target: Target; state: FreshnessKind; sourceEpoch: number; sourceVersion: SourceVersion;
   sourceScanRevision: string | null; modelRevision: string | null; attemptedModelRevision: string | null;
   modelState: 'unknown' | 'parsing' | 'valid' | 'invalid'; pendingPaths: string[]; modelPending: boolean; scanPending: boolean;
+  pendingWorkspace?: boolean;
   proofId: string | null; verifiedAt: string | null; lastCheckedAt: string | null; diagnostics: Diagnostic[];
   lastCompleteSource: CompleteSource | null; lastValidModelSnapshotHash: string | null;
   sourceObservation?: SourceObservation;
@@ -56,7 +58,8 @@ interface VerifyReceipt { result: Omit<VerificationResult, 'replayed' | 'seq'>; 
 interface Capture { source: SourceScan; model: ModelSnapshot | null; modelDiagnostics: Diagnostic[]; attemptedModelRevision: string | null; epoch: number; generation: number }
 interface Options {
   worktree: WorktreeRecord; archive: Archive; serial: <T>(operation: () => Promise<T>) => Promise<T>;
-  onCommit?: (seq: number) => void; now?: () => Date; pollIntervalMs?: number;
+  onCommit?: (seq: number) => void; onObserved?: () => void; now?: () => Date; leaseMs?: number;
+  stateStore?: CurrentStateStore;
   background?: (operation: () => Promise<void>) => Promise<void>;
 }
 
@@ -66,8 +69,10 @@ export class FreshnessManager {
   private readonly archive: Archive;
   private readonly serial: Options['serial'];
   private readonly onCommit?: Options['onCommit'];
+  private readonly onObserved?: Options['onObserved'];
+  private readonly stateStore?: CurrentStateStore;
   private readonly now: () => Date;
-  private readonly pollIntervalMs: number;
+  private readonly leaseMs: number;
   private state: FreshnessState;
   private lastScan: SourceScan | null = null;
   private referencePaths = new Map<string, Set<string>>();
@@ -78,26 +83,38 @@ export class FreshnessManager {
   private debounce?: NodeJS.Timeout;
   private activeSkillsRoot?: string;
   private running?: Promise<void>;
-  private readonly classifiers = new Set<Promise<void>>();
-  private readonly writes = new Set<Promise<unknown>>();
+  private readonly classifiers = new Map<string, Promise<void>>();
   private closed = false;
   private closing?: Promise<void>;
   private changeGeneration = 0;
-  private observedWrite?: Promise<unknown>;
+  private observedNotification?: NodeJS.Timeout;
+  private lastPersistedFacts?: string;
   private readonly refreshes = new Map<string, { identity: number; pending: Promise<FreshnessState> }>();
   private identityGeneration = 0;
   private readonly dirtyPaths = new Set<string>();
   private fullRequired = true;
-  private lastFullCheck = 0;
+  private pendingArray?: string[];
+  private pendingSet = new Set<string>();
+  private pendingDirty = false;
+  private pendingLimit = 4096;
+  private manifestSource?: SourceScan;
+  private manifestPaths = new Set<string>();
   private observedModel: ModelSnapshot | null = null;
+  private modelEventGeneration = 0;
+  private capturedModelEvent = 0;
+  private modelEpoch = -1;
+  private readonly modelRevisions = new Set<string>();
   private watchHealthy = false;
   private watchDiagnostic?: Diagnostic;
   private readonly background: NonNullable<Options['background']>;
+  private readonly counters = { nativeEvents: 0, sourceEvents: 0, coverageGaps: 0, classifiedPaths: 0, incrementalBatches: 0, completeCaptures: 0, checkpointWrites: 0 };
 
   constructor(options: Options) {
     this.worktree = options.worktree; this.archive = options.archive; this.serial = options.serial;
     this.onCommit = options.onCommit; this.now = options.now ?? (() => new Date());
-    this.pollIntervalMs = Math.max(100, options.pollIntervalMs ?? 2000);
+    this.onObserved = options.onObserved;
+    this.stateStore = options.stateStore;
+    this.leaseMs = Math.max(100, options.leaseMs ?? 5 * 60_000);
     this.background = options.background ?? (operation => operation());
     this.state = {
       schemaVersion: 1, target: { projectId: options.worktree.projectId, worktreeId: options.worktree.id }, state: 'unknown', sourceEpoch: 0,
@@ -108,8 +125,9 @@ export class FreshnessManager {
   }
 
   ready(): Promise<void> { return this.loading ??= this.restore(); }
-  currentState(): FreshnessState { return structuredClone(this.state); }
+  currentState(): FreshnessState { this.materializePending(); return structuredClone(this.state); }
   currentModel(): ModelSnapshot | null { return structuredClone(this.observedModel); }
+  metrics() { this.syncPendingSet(); return { ...this.counters, activeLease: !!this.activeSkillsRoot && !!this.timer, watcher: !!this.watcher, pendingWorkspace: this.state.pendingWorkspace === true, pendingPaths: this.pendingSet.size, dirtyPaths: this.dirtyPaths.size, classifiers: this.classifiers.size, backgroundRunning: !!this.running }; }
   /** Registration changed adapters; retained observations are no longer a current proof. */
   identityChanged(): void { this.identityGeneration++; this.gap(); }
   /** Persist invalidation before an explicit identity repair can restore old bytes. No source scan. */
@@ -127,9 +145,12 @@ export class FreshnessManager {
 
   private async restore(): Promise<void> {
     await this.archive.ready();
-    const headers = this.archive.headers({ kind: 'freshness-state' });
+    const lastHeader = this.archive.lastHeader({ kind: 'freshness-state' });
+    const headers = this.archive.verificationScope === 'operational' ? (lastHeader ? [lastHeader] : []) : this.archive.headers({ kind: 'freshness-state' });
     recovery: for (let offset = 0; offset < headers.length; offset += 8) {
+      checkAuditCancellation();
       const states = await Promise.all(headers.slice(offset, offset + 8).map(async header => {
+        if (this.archive.verificationScope === 'operational') await this.archive.receipt(header.seq);
         const record = await this.archive.record(header.seq);
         const payload = record.payload as { kind?: string; state?: FreshnessState; stateHash?: string } | null;
         if (payload?.kind !== 'freshness-state') throw new HarnessError('ARCHIVE_CORRUPT', 'A synchronization record has an invalid kind.');
@@ -148,15 +169,32 @@ export class FreshnessManager {
         this.state = structuredClone(state);
       }
       if (offset % 1000 === 0) reportProgress({ phase: 'restoring-synchronization', completed: Math.min(offset + 8, headers.length), total: headers.length });
+      if (offset % 128 === 120) await setImmediate();
     }
     if (this.archive.status !== 'ready') {
       this.state.state = 'unknown'; this.state.scanPending = true; this.state.modelState = 'unknown';
       this.state.diagnostics = [{ code: 'ARCHIVE_CORRUPT', severity: 'error', message: 'Synchronization archives need recovery; independently intact history remains read-only.' }];
       return;
     }
+    const checkpoint = await this.stateStore?.load();
+    let currentCheckpoint = false;
+    if (checkpoint) {
+      if (checkpoint.seq > this.archive.seq) throw new HarnessError('ARCHIVE_CORRUPT', 'Current state points past the committed archive.');
+      if (checkpoint.seq >= (headers.at(-1)?.seq ?? 0)) {
+        const state = checkpoint.state;
+        if (!state || state.schemaVersion !== 1 || !same(state.target, this.state.target) || !Number.isSafeInteger(state.sourceEpoch) || state.sourceEpoch < this.state.sourceEpoch || !Array.isArray(state.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'Current synchronization checkpoint has an invalid identity or epoch.');
+        this.state = structuredClone(state);
+        currentCheckpoint = true;
+      }
+    }
+    this.lastPersistedFacts = this.facts();
     const last = this.state.lastCompleteSource;
     if (last) {
-      this.lastScan = {
+      const saved = currentCheckpoint ? checkpoint?.source : null;
+      if (saved) {
+        if (!same(saved.sourceVersion, last.sourceVersion) || saved.sourceScanRevision !== last.sourceScanRevision || !saved.manifest || !saved.policy || !saved.ignoreRules || !same(this.sourceReferences(saved), last.references)) throw new HarnessError('ARCHIVE_CORRUPT', 'The current source manifest does not match its checkpoint reference.');
+        this.lastScan = saved;
+      } else this.lastScan = {
         sourceVersion: structuredClone(last.sourceVersion), sourceScanRevision: last.sourceScanRevision, diagnostics: [],
         manifest: { schemaVersion: 1, kind: 'source-manifest', content: await this.archive.readSnapshot<SourceManifest['content']>(last.references.manifest) },
         policy: { schemaVersion: 1, kind: 'source-scan-policy', content: await this.archive.readSnapshot<SourcePolicy['content']>(last.references.policy) },
@@ -165,14 +203,18 @@ export class FreshnessManager {
       };
     }
     if (this.state.lastValidModelSnapshotHash) {
-      this.observedModel = await this.archive.readSnapshot<ModelSnapshot>(this.state.lastValidModelSnapshotHash);
+      const saved = currentCheckpoint ? checkpoint?.model : null;
+      if (saved && digest('model-snapshot', saved) !== this.state.lastValidModelSnapshotHash) throw new HarnessError('ARCHIVE_CORRUPT', 'The current model does not match its checkpoint reference.');
+      this.observedModel = saved ?? await this.archive.readSnapshot<ModelSnapshot>(this.state.lastValidModelSnapshotHash);
       await this.rememberModel(this.observedModel);
     }
     // A stopped watcher cannot attest to the downtime. Retain the actual epoch,
     // but require a new declaration before treating an old proof as current.
-    if (this.state.lastCompleteSource) {
-      this.state.state = 'pending'; this.state.scanPending = true;
-      this.state.pendingPaths = sorted([...this.state.pendingPaths, ...(this.lastScan?.manifest?.content.entries.map(entry => entry.path) ?? [])]);
+    if (headers.length || checkpoint) {
+      // Every returned status/verification binding has a committed epoch. A
+      // downtime gap invalidates even a declaration whose bytes reverted.
+      this.gap();
+      this.state.modelState = 'unknown';
     }
   }
 
@@ -208,20 +250,43 @@ export class FreshnessManager {
     this.referenceTargets = targets;
   }
 
-  private track<T>(promise: Promise<T>): Promise<T> {
-    this.writes.add(promise);
-    void promise.finally(() => this.writes.delete(promise)).catch(() => {});
-    return promise;
-  }
-
   private references(): ArchiveReference[] {
     const hashes = this.state.lastCompleteSource ? Object.values(this.state.lastCompleteSource.references) : [];
     if (this.state.lastValidModelSnapshotHash) hashes.push(this.state.lastValidModelSnapshotHash);
     return sorted(hashes).map(hash => ({ kind: 'snapshot', hash }));
   }
 
+  private sourceReferences(scan: SourceScan): SourceReferences {
+    return { manifest: digest('source-manifest', scan.manifest!.content), policy: digest('source-scan-policy', scan.policy!.content), ignoreRules: digest('git-ignore-rules', scan.ignoreRules!.content), ruleBytes: digest('source-rule-bytes', scan.ignoreRuleFiles) };
+  }
+
+  private async archiveCurrentFacts(): Promise<void> {
+    const scan = this.lastScan;
+    if (this.state.lastCompleteSource && scan?.manifest && scan.policy && scan.ignoreRules) {
+      const hashes = await Promise.all([
+        this.archive.snapshot('source-manifest', scan.manifest.content), this.archive.snapshot('source-scan-policy', scan.policy.content),
+        this.archive.snapshot('git-ignore-rules', scan.ignoreRules.content), this.archive.snapshot('source-rule-bytes', scan.ignoreRuleFiles),
+      ]);
+      if (!same(this.state.lastCompleteSource.references, { manifest: hashes[0], policy: hashes[1], ignoreRules: hashes[2], ruleBytes: hashes[3] })) throw new HarnessError('ARCHIVE_CORRUPT', 'Source checkpoint references changed before verification commit.');
+    }
+    if (this.observedModel && this.state.lastValidModelSnapshotHash && await this.archive.snapshot('model-snapshot', this.observedModel) !== this.state.lastValidModelSnapshotHash) throw new HarnessError('ARCHIVE_CORRUPT', 'Model checkpoint reference changed before verification commit.');
+  }
+
   private async persist(reason: string, proof?: SyncProof, receipt?: VerifyReceipt): Promise<{ seq: number; receipt: VerifyReceipt | FreshnessState }> {
     const captured = this.currentState();
+    if (!proof && this.stateStore) {
+      // Status and identity invalidation update a current transactional value;
+      // they are not immutable business receipts. Only an explicit proof
+      // creates a committed verification record.
+      const seq = this.archive.seq;
+      try { await this.stateStore.save({ seq, state: captured, source: this.lastScan, model: this.observedModel }); }
+      catch (error) { this.gap(); this.state.state = 'unknown'; throw error; }
+      this.counters.checkpointWrites++;
+      this.lastPersistedFacts = this.facts(captured);
+      this.notifyObserved();
+      return { seq, receipt: captured };
+    }
+    if (this.stateStore) await this.archiveCurrentFacts();
     const archives = this.references();
     // Ordinary state commits already archive this exact receipt. Reference its
     // bytes rather than repeating the entire pending-path set in every journal row.
@@ -233,30 +298,37 @@ export class FreshnessManager {
       requestId: proof?.requestId ?? randomUUID(), request: proof ?? { reason, state: captured },
       payload: { kind: 'freshness-state', stateHash, reason, declaration: proof ?? null }, receipt: receipt ?? captured, archives,
     });
+    this.lastPersistedFacts = this.facts(captured);
     this.onCommit?.(result.seq);
     return { seq: result.seq, receipt: result.receipt };
   }
 
-  private persistObserved(reason: string): void {
-    if (this.closed || this.observedWrite) return;
-    let capturedFacts: string | undefined;
-    const pending = this.track(this.serial(async () => { capturedFacts = this.facts(); return this.persist(reason); }));
-    this.observedWrite = pending;
-    void pending.then(() => {
-      this.observedWrite = undefined;
-      // Burst notifications may share one durable state, but an event arriving
-      // during the write still gets a subsequent commit with the newer epoch.
-      if (!this.closed && capturedFacts !== this.facts()) this.persistObserved('observed-after-commit');
-    }, () => {
-      this.observedWrite = undefined;
-      this.state.state = 'unknown'; this.state.scanPending = true;
-      this.state.diagnostics = [{ code: 'FRESHNESS_PERSIST_FAILED', severity: 'error', message: 'Observed changes could not be committed; synchronization remains unknown.' }];
-    });
+  private notifyObserved(): void {
+    // Native events have no durable business receipt. Invalidation is immediate
+    // in memory; an explicit status persists its issued binding. On downtime
+    // recovery always advances that persisted epoch before accepting a proof.
+    if (this.closed || !this.onObserved || this.observedNotification) return;
+    this.observedNotification = setTimeout(() => {
+      this.observedNotification = undefined;
+      if (!this.closed) this.onObserved?.();
+    }, 250);
+    this.observedNotification.unref();
   }
 
   private activate(skillsRoot: string): void {
     this.activeSkillsRoot = skillsRoot;
-    if (this.closed || this.watcher || !this.worktree.active || !this.worktree.available) return;
+    if (this.closed || !this.worktree.active || !this.worktree.available) return;
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.timer = undefined;
+      if (this.refreshes.size || this.state.state === 'verifying') { this.activate(skillsRoot); return; }
+      // Only explicit live work renews coverage; idle workspaces stop watching.
+      this.watcher?.close(); this.watcher = undefined; this.watchHealthy = false;
+      this.activeSkillsRoot = undefined;
+      this.gap();
+    }, this.leaseMs);
+    this.timer.unref();
+    if (this.watcher) return;
     try {
       const watcher = watch(this.worktree.root, { recursive: true, persistent: false, encoding: 'buffer' }, (_event, filename) => {
         if (this.closed || this.watcher !== watcher) return;
@@ -270,9 +342,9 @@ export class FreshnessManager {
         catch {
           // Windows can repeatedly emit the absolute, extended-length root after
           // deletion. Release incomplete coverage before invalidating once;
-          // periodic reconciliation can reattach when the directory returns.
+          // explicit synchronization can reattach when the directory returns.
           watcher.close(); this.watcher = undefined; this.watchHealthy = false;
-          this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'warning', message: 'Source watcher coverage is incomplete; periodic reconciliation remains active.' };
+          this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'warning', message: 'Source watcher coverage is incomplete; refresh synchronization before reviewing changes.' };
           this.gap(); return;
         }
         this.watchEvent(relative);
@@ -282,19 +354,17 @@ export class FreshnessManager {
       this.watcher.on('error', () => {
         if (this.closed || this.watcher !== watcher) return;
         this.watcher?.close(); this.watcher = undefined; this.watchHealthy = false;
-        this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'error', message: 'Source watcher coverage is incomplete; reconciliation remains active.' };
+        this.watchDiagnostic = { code: 'SOURCE_WATCH_ERROR', severity: 'error', message: 'Source watcher coverage is incomplete; refresh synchronization before reviewing changes.' };
         this.gap();
         this.state.state = 'unknown'; this.state.scanPending = true;
         this.state.diagnostics = [this.watchDiagnostic];
-        this.persistObserved('watch-error');
+        this.notifyObserved();
       });
     } catch {
       this.watchHealthy = false;
-      this.watchDiagnostic = { code: 'SOURCE_WATCH_UNAVAILABLE', severity: 'warning', message: 'Native source watching is unavailable; periodic reconciliation remains active.' };
+      this.watchDiagnostic = { code: 'SOURCE_WATCH_UNAVAILABLE', severity: 'warning', message: 'Native source watching is unavailable; refresh synchronization before reviewing changes.' };
       this.state.diagnostics = [this.watchDiagnostic];
     }
-    this.timer ??= setInterval(() => this.schedule(0), this.pollIntervalMs);
-    this.timer.unref();
   }
 
   private async sourceRootAvailable(): Promise<boolean> {
@@ -311,7 +381,7 @@ export class FreshnessManager {
       this.watchDiagnostic = { code: 'SOURCE_ROOT_UNAVAILABLE', severity: 'warning', message: 'The registered workspace directory is unavailable. History is preserved; restore the directory and refresh synchronization before reviewing changes.' };
       this.state.state = 'unknown'; this.state.scanPending = true;
       this.state.diagnostics = [this.watchDiagnostic]; this.dirtyPaths.clear();
-      if (before !== this.facts()) this.persistObserved('source-root-unavailable');
+      if (before !== this.facts()) this.notifyObserved();
       return false;
     }
   }
@@ -324,13 +394,14 @@ export class FreshnessManager {
       const root = this.activeSkillsRoot;
       this.running = this.background(async () => { if (!this.closed) await this.observe(root); }).catch(() => undefined).finally(() => {
         this.running = undefined;
-        if (this.dirtyPaths.size) this.schedule();
+        if (this.dirtyPaths.size && !this.fullRequired) this.schedule();
       });
     }, milliseconds);
     this.debounce.unref();
   }
 
   private watchEvent(relative: string): void {
+    this.counters.nativeEvents++;
     if (prefix('.git', relative)) {
       // Git locks, reflogs and content-addressed object writes do not select the
       // current worktree version. HEAD, refs, index, config, ignore rules and
@@ -343,20 +414,27 @@ export class FreshnessManager {
     if (prefix('.harness', relative)) {
       if (relative === '.harness/project.json') { this.gap(); return; }
       if (prefix('.harness/model', relative) || ['.harness/evidence.json', '.harness/aliases.json'].includes(relative)) {
-        this.fullRequired = true; this.changeGeneration++; this.state.modelPending = true; this.state.modelState = 'parsing'; this.state.state = 'pending'; this.state.scanPending = true;
-        this.persistObserved('model-event'); this.schedule();
+        this.fullRequired = true; this.changeGeneration++; this.modelEventGeneration++; this.state.modelPending = true; this.state.modelState = 'parsing'; this.state.state = 'pending'; this.state.scanPending = true;
+        this.notifyObserved(); this.schedule();
       }
       return;
     }
     if (referenced) return;
     if (relative.split('/').at(-1) === '.gitignore' && (!relative.includes('/') || !this.lastScan?.policy || isSourcePathIncluded(relative.slice(0, relative.lastIndexOf('/')), this.lastScan.policy)) && !this.lastScan?.ignoredDirectoryPrefixes?.some(ignored => prefix(ignored, relative))) { this.fullRequired = true; this.markSource([relative]); return; }
     if (this.lastScan?.policy && !isSourcePathIncluded(relative, this.lastScan.policy)) return;
-    if (this.lastScan?.manifest?.content.entries.some(entry => prefix(relative, entry.path))) { this.markSource([relative]); return; }
+    if (this.hasManifestPath(relative)) { this.markSource([relative]); return; }
     // Keep native Git's last observed directory classification after deletion;
     // checking a missing `build` as a file loses a `build/` ignore rule.
     if (this.lastScan?.ignoredDirectoryPrefixes?.some(ignored => prefix(ignored, relative))) return;
-    const pending = this.classifyNewPath(relative).finally(() => this.classifiers.delete(pending));
-    this.classifiers.add(pending);
+    if (this.state.pendingWorkspace) { this.gap(); return; }
+    // One active classification covers a burst on the same unknown path. The
+    // classifier checks the path type again before accepting an ignored result
+    // so a directory/file replacement cannot invalidate that conclusion.
+    if (this.classifiers.has(relative)) return;
+    if (this.classifiers.size >= 32) { this.gap(); return; }
+    const pending = this.classifyNewPath(relative).finally(() => this.classifiers.delete(relative));
+    this.counters.classifiedPaths++;
+    this.classifiers.set(relative, pending);
     void pending.catch(() => {});
   }
 
@@ -369,21 +447,67 @@ export class FreshnessManager {
 
   private markSource(paths: Iterable<string>): void {
     if (this.closed) return;
-    if (this.state.sourceEpoch >= Number.MAX_SAFE_INTEGER) { this.state.state = 'unknown'; return; }
+    this.counters.sourceEvents++;
+    if (this.state.sourceEpoch >= Number.MAX_SAFE_INTEGER) { this.state.state = 'unknown'; this.state.scanPending = true; return; }
     this.changeGeneration++; this.state.sourceEpoch++; this.state.state = 'pending'; this.state.scanPending = true;
-    this.state.pendingPaths = sorted([...this.state.pendingPaths, ...paths]);
-    for (const relative of paths) this.dirtyPaths.add(relative);
-    this.persistObserved('source-event'); this.schedule();
+    const changes = [...paths];
+    if (!this.state.pendingWorkspace) {
+      this.mergePendingPaths(changes);
+      if (this.pendingSet.size > this.pendingLimit) this.gap();
+    }
+    if (!this.fullRequired) for (const relative of changes) {
+      if (this.dirtyPaths.size >= 4096) { this.gap(); break; }
+      this.dirtyPaths.add(relative);
+    }
+    this.notifyObserved(); this.schedule();
+  }
+
+  private mergePendingPaths(paths: Iterable<string>): void {
+    this.syncPendingSet();
+    for (const relative of paths) if (!this.pendingSet.has(relative)) { this.pendingSet.add(relative); this.pendingDirty = true; }
+  }
+
+  private syncPendingSet(): void {
+    if (this.pendingArray !== this.state.pendingPaths) {
+      this.pendingArray = this.state.pendingPaths;
+      this.pendingSet = new Set(this.pendingArray);
+      this.pendingDirty = false;
+      this.pendingLimit = Math.max(this.pendingSet.size, this.lastScan?.manifest?.content.entries.length ?? 0) + 4096;
+    }
+  }
+
+  private materializePending(): void {
+    this.syncPendingSet();
+    if (this.pendingDirty) {
+      this.pendingArray = this.state.pendingPaths = [...this.pendingSet].sort();
+      this.pendingDirty = false;
+    }
+  }
+
+  private hasManifestPath(relative: string): boolean {
+    if (this.manifestSource !== (this.lastScan ?? undefined)) {
+      this.manifestSource = this.lastScan ?? undefined;
+      this.manifestPaths = new Set();
+      for (const entry of this.lastScan?.manifest?.content.entries ?? []) {
+        const parts = entry.path.split('/');
+        for (let i = 1; i <= parts.length; i++) this.manifestPaths.add(parts.slice(0, i).join('/'));
+      }
+    }
+    return this.manifestPaths.has(relative);
   }
 
   private async classifyNewPath(relative: string): Promise<void> {
     try {
       await resolveInside(this.worktree.root, relative, { allowMissing: true });
-      let directory = false;
-      try { directory = (await lstat(path.join(this.worktree.root, ...relative.split('/')))).isDirectory(); }
-      catch (error) { if (!isErrno(error, 'ENOENT') && !isErrno(error, 'ENOTDIR')) throw error; }
+      const pathKind = async (): Promise<'directory' | 'file' | 'missing'> => {
+        try { return (await lstat(path.join(this.worktree.root, ...relative.split('/')))).isDirectory() ? 'directory' : 'file'; }
+        catch (error) { if (!isErrno(error, 'ENOENT') && !isErrno(error, 'ENOTDIR')) throw error; return 'missing'; }
+      };
+      const initialKind = await pathKind(), directory = initialKind === 'directory';
       if (this.worktree.kind === 'directory') {
         if (await isDirectoryPathIgnored(this.worktree.root, relative, directory)) {
+          const after = await pathKind();
+          if (after !== initialKind && after !== 'missing') { this.gap(); return; }
           if (directory && this.lastScan) this.lastScan.ignoredDirectoryPrefixes = sorted([...(this.lastScan.ignoredDirectoryPrefixes ?? []), relative]);
           return;
         }
@@ -394,6 +518,8 @@ export class FreshnessManager {
       for (const key of ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_NAMESPACE', 'GIT_CEILING_DIRECTORIES', 'GIT_DISCOVERY_ACROSS_FILESYSTEM']) delete environment[key];
       try {
         await execFile('git', ['-c', 'core.fsmonitor=false', '-c', 'core.untrackedCache=false', '-C', this.worktree.root, 'check-ignore', '--no-index', '--quiet', '--', relative + (directory ? '/' : '')], { env: environment, windowsHide: true });
+        const after = await pathKind();
+        if (after !== initialKind && after !== 'missing') { this.gap(); return; }
         if (directory && this.lastScan) this.lastScan.ignoredDirectoryPrefixes = sorted([...(this.lastScan.ignoredDirectoryPrefixes ?? []), relative]);
         return;
       } catch (error) {
@@ -404,24 +530,29 @@ export class FreshnessManager {
   }
 
   private gap(): void {
+    this.counters.coverageGaps++;
     this.fullRequired = true; this.changeGeneration++; this.state.scanPending = true;
     if (this.state.sourceEpoch < Number.MAX_SAFE_INTEGER) this.state.sourceEpoch++;
-    this.state.pendingPaths = sorted([...this.state.pendingPaths, ...(this.lastScan?.manifest?.content.entries.map(entry => entry.path) ?? [])]);
-    this.state.state = 'pending'; this.persistObserved('observation-gap'); this.schedule();
+    // Defer expansion of a whole-workspace gap until an explicit complete
+    // capture. Repeated ambiguous events cannot copy the entire path universe.
+    this.state.pendingWorkspace = true;
+    this.dirtyPaths.clear();
+    this.state.state = 'pending'; this.notifyObserved();
   }
 
   async observe(skillsRoot: string): Promise<FreshnessState> {
     await this.ready();
     if (this.closed) return this.currentState();
     if (!await this.sourceRootAvailable()) return this.currentState();
-    // Periodic full reconciliation compensates for missed native notifications.
-    // The two-second scheduler itself does no I/O when nothing needs updating.
-    if (this.fullRequired || !this.watchHealthy || performance.now() - this.lastFullCheck >= 60_000) return this.status(skillsRoot);
-    const paths = [...this.dirtyPaths];
+    // Coverage gaps require explicit full verification, never a background
+    // recursive scan. Keep the previous observed model and pending state.
+    if (this.fullRequired || !this.watchHealthy) return this.currentState();
+    const paths = [...this.dirtyPaths].slice(0, 128);
     if (!paths.length) return this.currentState();
     for (const relative of paths) this.dirtyPaths.delete(relative);
     const generation = this.changeGeneration;
     const selected = paths.filter(relative => this.lastScan?.policy && isSourcePathIncluded(relative, this.lastScan.policy));
+    this.counters.incrementalBatches++;
     const observation = await observeSourcePaths(this.worktree, selected, this.state.sourceEpoch);
     // Explicit evidence can be excluded from the source manifest but still needs validation.
     const modelNeeded = paths.some(relative => this.referencePaths.has(referenceKey(relative)));
@@ -435,16 +566,17 @@ export class FreshnessManager {
       this.state.sourceObservation = observation;
       this.state.scanPending = true; this.state.state = 'pending';
       if (model) {
-        this.observedModel = model; this.state.diagnostics = model.diagnostics;
-        this.state.lastValidModelSnapshotHash = await this.archive.snapshot('model-snapshot', model);
+        this.state.diagnostics = model.diagnostics;
+        // A transient observation does not publish an immutable model archive.
       } else if (modelNeeded) { this.fullRequired = true; this.state.modelState = 'unknown'; }
       if (observation.requiresFullScan) this.fullRequired = true;
-      await this.persist('incremental-observation');
+      this.notifyObserved();
       return this.currentState();
     });
   }
 
   private async capture(skillsRoot: string): Promise<Capture> {
+    this.counters.completeCaptures++;
     const epoch = this.state.sourceEpoch;
     const generation = this.changeGeneration;
     let source: SourceScan;
@@ -470,12 +602,14 @@ export class FreshnessManager {
     return { source, model, modelDiagnostics, attemptedModelRevision, epoch, generation };
   }
 
-  private facts(): string {
-    const { lastCheckedAt: _checked, ...content } = this.state;
+  private facts(state = this.state): string {
+    if (state === this.state) this.materializePending();
+    const { lastCheckedAt: _checked, ...content } = state;
     return canonicalJson(content);
   }
 
   private async apply(captured: Capture): Promise<void> {
+    this.materializePending();
     const next = captured.source;
     const previous = this.lastScan;
     this.state.lastCheckedAt = this.instant();
@@ -491,7 +625,11 @@ export class FreshnessManager {
         this.state.state = 'pending';
         this.state.pendingPaths = sorted([...this.state.pendingPaths, ...changes, ...(policyChanged || versionChanged ? [...(previous?.manifest?.content.entries.map(entry => entry.path) ?? []), ...next.manifest!.content.entries.map(entry => entry.path)] : [])]);
       }
-      const refs = await Promise.all([
+      if (this.state.pendingWorkspace) {
+        this.mergePendingPaths([...(previous?.manifest?.content.entries.map(entry => entry.path) ?? []), ...next.manifest!.content.entries.map(entry => entry.path)]);
+        this.materializePending();
+      }
+      const refs = this.stateStore ? Object.values(this.sourceReferences(next)) : await Promise.all([
         this.archive.snapshot('source-manifest', next.manifest!.content), this.archive.snapshot('source-scan-policy', next.policy!.content),
         this.archive.snapshot('git-ignore-rules', next.ignoreRules!.content), this.archive.snapshot('source-rule-bytes', next.ignoreRuleFiles),
       ]);
@@ -503,15 +641,25 @@ export class FreshnessManager {
     }
     if (captured.model) {
       this.observedModel = captured.model;
+      if (this.modelEpoch !== this.state.sourceEpoch) { this.modelEpoch = this.state.sourceEpoch; this.modelRevisions.clear(); }
+      const hadModel = this.state.modelRevision;
+      if (hadModel && ((this.modelEventGeneration !== this.capturedModelEvent && captured.model.revision === hadModel) || (captured.model.revision !== hadModel && this.modelRevisions.has(captured.model.revision)) || this.modelRevisions.size >= 128)) {
+        if (this.state.sourceEpoch < Number.MAX_SAFE_INTEGER) this.state.sourceEpoch++;
+        this.modelEpoch = this.state.sourceEpoch; this.modelRevisions.clear(); this.state.modelPending = true;
+      }
+      this.capturedModelEvent = this.modelEventGeneration;
+      this.modelRevisions.add(captured.model.revision);
       if (this.state.modelRevision !== captured.model.revision) { this.state.modelPending = true; if (validSource) this.state.state = 'pending'; }
       this.state.modelRevision = captured.model.revision;
-      this.state.lastValidModelSnapshotHash = await this.archive.snapshot('model-snapshot', captured.model);
+      this.state.lastValidModelSnapshotHash = this.stateStore ? digest('model-snapshot', captured.model) : await this.archive.snapshot('model-snapshot', captured.model);
       await this.rememberModel(captured.model);
     } else this.state.state = 'failed';
     this.state.scanPending = this.changeGeneration !== captured.generation;
+    if (validSource && !this.state.scanPending) delete this.state.pendingWorkspace;
     this.state.diagnostics = [...next.diagnostics, ...captured.modelDiagnostics, ...(this.watchDiagnostic ? [this.watchDiagnostic] : [])];
     if (captured.model) {
       const problems = referencedEvidenceProblems(captured.model);
+      this.materializePending();
       if (problems.length) {
         this.state.pendingPaths = sorted([...this.state.pendingPaths, ...problems.flatMap(item => item.file ? [item.file] : [])]);
         this.state.modelPending = true;
@@ -538,30 +686,34 @@ export class FreshnessManager {
     this.activate(skillsRoot);
     let captured = await this.capture(skillsRoot);
     return this.serial(async () => {
-      const before = this.facts();
       // A read may safely acquire a newer binding; an existing semantic proof
       // may not. Each retry repeats the complete scan, never just its epoch.
       for (let attempt = 0; attempt < 3; attempt++) {
-        await Promise.allSettled([...this.classifiers]);
+        await Promise.allSettled([...this.classifiers.values()]);
         if (captured.generation !== this.changeGeneration && attempt < 2) {
           captured = await this.capture(skillsRoot);
           continue;
         }
         await this.apply(captured);
-        await Promise.allSettled([...this.classifiers]);
+        await Promise.allSettled([...this.classifiers.values()]);
         if (captured.generation !== this.changeGeneration) this.state.scanPending = true;
         if (!this.state.scanPending || attempt === 2) break;
         captured = await this.capture(skillsRoot);
       }
       if (!this.state.scanPending && this.state.sourceVersion.status !== 'unknown') {
-        this.fullRequired = false; this.lastFullCheck = performance.now(); this.dirtyPaths.clear();
+        this.fullRequired = false; this.dirtyPaths.clear();
         delete this.state.sourceObservation;
       }
       if (this.state.scanPending && this.state.sourceVersion.status !== 'unknown') {
         this.state.diagnostics.push({ code: 'SOURCE_CHANGING', severity: 'warning', message: 'Files are still changing during synchronization checks. Changes are preserved as pending; wait for current edits or builds to finish, then refresh sync status before reviewing and submitting a new declaration.' });
       }
-      if (this.facts() !== before) await this.persist('reconciliation');
-      return this.currentState();
+      // The returned epoch must be a durable binding, not a newer epoch from
+      // a notification arriving while the checkpoint is being committed.
+      const issued = this.facts() !== this.lastPersistedFacts
+        ? (await this.persist('reconciliation')).receipt as FreshnessState
+        : this.currentState();
+      if (this.facts(issued) !== this.facts()) return { ...issued, state: 'pending', scanPending: true };
+      return issued;
     });
   }
 
@@ -612,7 +764,7 @@ export class FreshnessManager {
       const repeated = await this.archive.replay<VerifyReceipt>(scope, proof.requestId, proof);
       if (repeated) return this.outcome(repeated.receipt, true, repeated.seq);
       const current = await this.capture(skillsRoot);
-      await Promise.allSettled([...this.classifiers]);
+      await Promise.allSettled([...this.classifiers.values()]);
       await this.apply(current);
       let error: VerifyReceipt['error'] = null;
       const race = (): NonNullable<VerifyReceipt['error']> => {
@@ -648,7 +800,7 @@ export class FreshnessManager {
       const problemsInScope = () => evidenceProblems.filter(item => (item.file && pathInScope(item.file)) || scopedEvidence.has(item.evidenceId!));
       let scopedEvidenceProblems = problemsInScope();
       if (!current.model) error = { code: 'MODEL_INVALID', message: 'The current model is invalid; no successful verification was recorded.' };
-      else if (current.source.sourceVersion.status === 'unknown' || !current.source.sourceScanRevision) error = { code: 'SYNC_UNRESOLVED', message: 'The current source scope is unknown.' };
+      else if (current.source.sourceVersion.status === 'unknown' || !current.source.sourceScanRevision || this.state.sourceEpoch >= Number.MAX_SAFE_INTEGER) error = { code: 'SYNC_UNRESOLVED', message: 'The current source scope or invalidation epoch is unknown.' };
       else if (proof.sourceEpoch !== this.state.sourceEpoch || this.changeGeneration !== current.generation || preflight.generation !== current.generation || !same(proof.expectedSourceVersion, current.source.sourceVersion) || proof.expectedModelRevision !== current.model.revision || preflight.epoch !== current.epoch || !same(preflight.source.sourceVersion, current.source.sourceVersion) || preflight.source.sourceScanRevision !== current.source.sourceScanRevision || preflight.model?.revision !== current.model.revision) {
         error = race();
       } else {
@@ -661,6 +813,7 @@ export class FreshnessManager {
       const successful = error === null;
       this.state.proofId = randomUUID();
       if (successful) {
+        this.materializePending();
         this.state.pendingPaths = this.state.pendingPaths.filter(pending => !pathInScope(pending));
         this.state.modelPending = evidenceProblems.length > 0; this.state.scanPending = false;
         this.state.state = this.state.pendingPaths.length || this.state.modelPending ? 'pending' : 'verified';
@@ -682,12 +835,12 @@ export class FreshnessManager {
   close(): Promise<void> {
     return this.closing ??= (async () => {
       this.closed = true; this.watcher?.close();
-      if (this.timer) clearInterval(this.timer);
+      if (this.timer) clearTimeout(this.timer);
       if (this.debounce) clearTimeout(this.debounce);
-      await Promise.allSettled([...this.classifiers]);
+      if (this.observedNotification) clearTimeout(this.observedNotification);
+      await Promise.allSettled([...this.classifiers.values()]);
       await this.running;
       await Promise.allSettled([...this.refreshes.values()].map(refresh => refresh.pending));
-      await Promise.allSettled([...this.writes]);
       await this.serial(async () => undefined);
     })();
   }

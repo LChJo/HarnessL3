@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.56 defines independently issued reusable 24-hour loopback links, their restart behavior, and the current acceptance scope.",
+      "claim": "Baseline v0.57 records the approved runtime redesign and retained v0.56 link semantics; v0.57 is a target, not a deployed format.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "498ad8711ac12759ce200c26f9c132ea48653876f33e36773575f2111f028b9d",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "1da74ecf637e33de9459fdbdb6fc4c55372b8bd91f05bdd61b6f5a31c192a01e",
+      "observedAt": "2026-11-26T04:31:04.807Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -24,32 +24,32 @@
     {
       "id": "d6250000-0000-4000-8000-000000000003",
       "kind": "source-code",
-      "claim": "The loopback HTTP service authenticates and routes CLI/Web operations, validates each explicit link and target, enforces browser expiry, and reuses the saved port on normal restart.",
+      "claim": "Singleton loopback service initializes packed format only for new roots, preserves explicit v1 compatibility and rejects unpublished migration; authenticates CLI/Web and separately emits coalesced transient freshness events.",
       "location": {
         "path": "service/main.ts"
       },
-      "hash": "71e6863d187521b77249d2f1aaac4f9c678afd6df3a573f0fa2b8ba8b7f4da73",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "904db278aa08d11d568360342f75b952b92eb99287a2db05a89e7b9f2c7c4f95",
+      "observedAt": "2026-11-25T18:53:32.833Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime separates Web lists/views and SSE cursors from full task/source/index recovery, including in-flight full restore; cold observations remain pending/unknown.",
+      "claim": "Runtime uses operational scoped archive recovery, lazy search and observation resources, explicit independent full audit, bounded idle resource release and logical IO/runtime diagnostics.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "5aca9339f0cdd65a676d720a0eeb901c32bcc23d3b8bf831157fc82e06585fab",
-      "observedAt": "2026-11-16T06:36:24.859Z"
+      "hash": "f0f8d5eac37d2533c4a5848068e933f96d03ed1d6217e6db1175b96272fe8ebd",
+      "observedAt": "2026-11-25T18:53:32.834Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
       "kind": "source-code",
-      "claim": "Registry preserves stable shared project IDs, associates canonical Git origins/common directories and legacy config IDs only on explicit read-only registration, projects grouped entries, and rejects unrelated ownership/drift; worktree/archive IDs stay original.",
+      "claim": "Registry preserves project/worktree identity and Git compatibility; format v2 is accepted only with the packed marker, v1 remains readable without silent migration.",
       "location": {
         "path": "core/workspace.ts"
       },
-      "hash": "016e5321c036d2cdafb28db0a4b0c413f7ab52dd0117533f8baedef377f4367f",
-      "observedAt": "2026-11-16T05:48:47.405Z"
+      "hash": "0debfb8ef624c9e74a7199ad083e0e882211bbfde57680dabbb6cd816b76f401",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000006",
@@ -64,12 +64,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService emits skill-hub/3 stage, approval and adoption guidance from task start and prompt while preserving archived v1 receipts, exact recovery and retention.",
+      "claim": "TaskService preserves actual task bindings and receipts, uses per-task delta reconstruction in packed format, scopes archive closure and avoids cold search initialization for new entries.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "867c0a9c5eeadc521ce3b837a0c95655b438c338ae1244092f49f44729dd463c",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "372a843ebd37fa92ff86c5456c4532f7aa1a1a54d5c4360c32bbf21fbe5f2a6e",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -84,12 +84,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000009",
       "kind": "source-code",
-      "claim": "Archive keeps complete CLI recovery while a versioned, reconstructable browse locator reads actual journal records and requested immutable references; size/time only invalidate caches and do not attest to content.",
+      "claim": "Archive verifies original records and requested immutable references, uses transactional packed content when configured, preserves loose v1 strict reader, explicit full audit and canonical snapshot verification.",
       "location": {
         "path": "core/archive.ts"
       },
-      "hash": "4dbeea37de350a9ae927ad8865a98dc1c1275ebf67d243f0594c5e5689f1364d",
-      "observedAt": "2026-11-16T06:36:24.860Z"
+      "hash": "e6c91d3d9ad7b44ab63d018649514d02214891427cfe217285ec3aa14b8a426d",
+      "observedAt": "2026-11-25T18:53:32.836Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000a",
@@ -114,22 +114,22 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "Freshness releases unsafe watcher coverage, converges while a root is absent, retains pending/history and strict rollback/CAS, restores state with bounded reads in journal order and records scoped proof status separately from workspace state.",
+      "claim": "Native notifications update bounded in-memory pending state without history commits; explicit status checkpoints current state and only proof produces business archive. Lease expiry, rollback and strict CAS preserve invalidation.",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "bfc9f147dccd1cd582600cfb110815218c4eef52059eee87700d3bc15ad09494",
-      "observedAt": "2026-11-16T04:46:22.001Z"
+      "hash": "1240cde7fa74864e29190a39a5d581e2810f6ad7fa90b98a639f7ddd463684f6",
+      "observedAt": "2026-11-25T18:53:32.837Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
       "kind": "source-code",
-      "claim": "Read-only archived observation projection does not acquire log leases or start polling; explicit live bindings retain their original behavior.",
+      "claim": "Explicit live log binding retains read-only semantics; no active binding means no recurring polling, archived browsing acquires no leases.",
       "location": {
         "path": "core/observation.ts"
       },
-      "hash": "5c9f147ca9be52440649f0d965174fcc2ba36e34e2729f448279a84602d64aa1",
-      "observedAt": "2026-11-16T06:36:24.861Z"
+      "hash": "a7f81fa3e574120783b0b8d60a14d691417075db4041ba46fc82e384c68f15d1",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000e",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web project returns reuse bounded exact target/task/batch archives while refreshing; expired/invalid targets are evicted and stale responses stay isolated.",
+      "claim": "Web uses bounded archived target cache; ephemeral freshness updates never advance historical commit cursor or renew reads.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "feaf55d976c77a308dcd87cb7740602c0bf26e4e0a1f56ce667105742f21a25c",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "ba4a2125a1a4732218ccb98924ca846836d346f24f8df34649bb8e92da8a9380",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -184,12 +184,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000013",
       "kind": "source-code",
-      "claim": "Package 0.1.8 carries 24-hour local Web links and retains the Node 24 engine, runtime skill package and default skill distribution.",
+      "claim": "Candidate package ships explicit offline packed-storage migration alongside existing runtime, CLI and skill distribution; includes new long-run and scale test entry scripts.",
       "location": {
         "path": "package.json"
       },
-      "hash": "a896d0eccfb99528b2d2eb84762b833a6c5382252fd1de805070df76d7186cab",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "c0f53253e1473eb58c004f9d62cf7373c08fc66b6651d2baf4966e5680cbb204",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000014",
@@ -214,12 +214,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000016",
       "kind": "source-code",
-      "claim": "Service controller preserves bounded singleton recovery and filters the optional observation-subscriptions recovery scope without trusting unknown health metadata.",
+      "claim": "Authenticated local RPC uses caller wait budget without an independent fetch header deadline; short health/progress and known-before-dispatch retry rules remain separate.",
       "location": {
         "path": "service/controller.ts"
       },
-      "hash": "3de6613a6d7a472b9d3194322b304bab22bfa0446c03c1f3f205498f0c8a9c4a",
-      "observedAt": "2026-11-16T04:46:22.001Z"
+      "hash": "0c52573acc50fa95bba4b1d3c50a43739f22ef5148c3e642aad647cb4a0b2a6d",
+      "observedAt": "2026-11-25T18:53:32.842Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000017",
@@ -274,22 +274,22 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "Current synchronization contract preserves full proof checks and strict epochs while specifying missing-root convergence and independent scoped/global verification status.",
+      "claim": "v0.57 candidate specifies bounded pending state, leases, no background durable state, current checkpoint and retained explicit CAS plus legacy compatibility.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "d2dd528125e42971b3cc99da9e5b4c5fee5fcbcee843613123d084b5a793d4d0",
-      "observedAt": "2026-11-16T04:46:22.002Z"
+      "hash": "c8a069dd18275aa4cb3163dfb26de433b257dbcceaa2ad46dc59a3783cbd3a57",
+      "observedAt": "2026-11-26T04:31:04.835Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "Current storage contract retains original archive bytes, scopes startup recovery to explicit subscriptions and defers unnecessary source-state replay without weakening complete requested archive validation.",
+      "claim": "v0.57 candidate specifies packed SQLite raw bytes, content-defined blocks, per-worktree heads, delta tasks, current checkpoint, scoped audit and explicit lossless migration; legacy format remains a compatibility contract.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "de71cd8bd4bd38a0c5318a6c64afa0218dc34e1cdbf9709eb026b67aff6927fe",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "992977284bc16992ad3446f811c39f7ddbc18bee0835f81602ac79db0a7c80c6",
+      "observedAt": "2026-11-26T04:31:04.835Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -314,12 +314,12 @@
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
       "kind": "source-code",
-      "claim": "Static installed CLI help documents compact packet restoration and current input/recovery schemas without starting a service.",
+      "claim": "Static help documents new independent archive audit and runtime diagnostics alongside existing compact and original receipt recovery.",
       "location": {
         "path": "cli/help.ts"
       },
-      "hash": "e67d4983083a05395db5927b05895d9e8073ec4d5003f7406be631b382dd61c1",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "8e6099f082e74b5336f1f167fbcd48f0017898812011be968c07d9c356f69a4c",
+      "observedAt": "2026-11-25T18:53:32.847Z"
     },
     {
       "id": "fd73b46e-52f4-4779-9daf-314249502ea4",
@@ -364,22 +364,22 @@
     {
       "id": "1e950683-1469-49c8-9164-d439932a7bf2",
       "kind": "source-code",
-      "claim": "Isolated regressions reproduce removed-root notification storms, verify stationary convergence and restored coverage, reject old proofs/rollback and distinguish local scope success from remaining pending work.",
+      "claim": "Source regression fixtures include TC28 repeated and high-cardinality events, TC29 idle lease, TC30 restart/model rollback, ignored outputs, strict scoped proof and legacy archive compatibility.",
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "0490fffbffc16362171f6373b04fc2720016bd34b49b97d32e88013f5060f220",
-      "observedAt": "2026-11-16T04:46:22.003Z"
+      "hash": "75faeafb13216a9b8487b4000ab237db8ff6c4927cdca2ebe327e8e38e5b4e95",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Implementation status records the v0.56 Windows build, isolated deadlines, real Edge restart, package consumer and actual local 0.1.8 deployment evidence.",
+      "claim": "Records actual incident baseline, candidate stages, initial regression results, actual migration dry-run and still-draining old service. Does not assert actual full migration or three-platform acceptance.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "594442476f43cf2dfef80e0ee8508e633ce07b865826363c91f8a7c9584aa260",
-      "observedAt": "2026-11-23T05:41:31.012Z"
+      "hash": "70bc70edf8251a998fe2025e123354cf18c072570ee55b02311c7cd5532265ea",
+      "observedAt": "2026-11-26T04:31:04.839Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -394,22 +394,22 @@
     {
       "id": "1adbda54-d648-4a22-a7b0-cf7f7a7ad845",
       "kind": "source-code",
-      "claim": "The npm consumer smoke requires 27 packaged and discoverable method files and reports the actual catalog count while retaining existing service, archive and browser gates.",
+      "claim": "The actual npm consumer smoke requires 27 method files, migration and measurement tools, service build, archive roundtrip and real browser gates.",
       "location": {
         "path": "scripts/v1/package-smoke.mjs"
       },
-      "hash": "dd7561ce00d81e117091cd73479e457d3ec31554d31c2d3cbf7dbde8c40bd7f5",
-      "observedAt": "2026-11-23T05:33:46.327Z"
+      "hash": "832eb0177aaf9f42c0bea1a4fce20e191dc3c87dc5c809f530b1a70f77431630",
+      "observedAt": "2026-11-25T18:33:08.717Z"
     },
     {
       "id": "f3392c10-b6b2-4bfb-aa3a-e7860e44c55a",
       "kind": "source-code",
-      "claim": "Isolated HTTP/CLI regressions cover joining an existing startup owner, sanitized metadata and prior classified health, admission, endpoint rotation, death recovery and lost committed responses.",
+      "claim": "Real authenticated service transport and failure tests include local RPC without global fetch header deadline, lost response recovery and single-owner behavior.",
       "location": {
         "path": "tests/v1/service-stability.test.mjs"
       },
-      "hash": "b91643d58a35579e6df69b0c757530d12a9c87c7e1dc6decfd0f14fb7a546c03",
-      "observedAt": "2026-11-09T05:37:20.141Z"
+      "hash": "3402ad8211c74c44b6076a81eadcec6f7d055d7014da38b59fa8163fbf258f49",
+      "observedAt": "2026-11-25T18:53:32.850Z"
     },
     {
       "id": "b8b7071a-58e2-4eb5-b66e-72b0dcdf5e49",
@@ -484,12 +484,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000006",
       "kind": "source-code",
-      "claim": "Startup and public runtime checks defer unbound historical bodies and unnecessary snapshot/archive source-state replay while preserving full requested-target validation, identity invalidation and live/verified restoration.",
+      "claim": "Ordinary task entry and historical handoff avoid unrelated source or body recovery; explicit audit reports corruption or read-only cancellation separately and can be restarted.",
       "location": {
         "path": "tests/v1/history-recovery.test.mjs"
       },
-      "hash": "485cc456bc26388bfd34b2ffe178d292b84f3163304cc09264e2ec2be06ddf81",
-      "observedAt": "2026-11-16T06:00:42.886Z"
+      "hash": "5866293482d2f7d1e11af8c5ddfa22a520451e75c8b3aa27b3242ba34f2f6ceb",
+      "observedAt": "2026-11-25T18:53:32.855Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000007",
@@ -504,12 +504,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000008",
       "kind": "source-code",
-      "claim": "Isolated archive regressions cover bounded independent I/O, shared verification, immutable-read side effects, deferred journal routing, damaged references/chains and preserved historical bytes.",
+      "claim": "Existing archive transaction/fault tests retained; TC34 verifies canonical fast path still rejects duplicate, missing content and invalid Unicode and handles noncanonical original bytes.",
       "location": {
         "path": "tests/v1/archive.test.mjs"
       },
-      "hash": "6fbd77e1258261a164e025f6ae6898e23db2c8b08db23d42744d300c71e58c0e",
-      "observedAt": "2026-11-16T04:46:22.004Z"
+      "hash": "69c03777d0358c4a4928962191932eb159d57e014c075b425dca006a23b815b1",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000009",
@@ -534,52 +534,52 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC23 defines independent deadline, repeat access and same-root restart checks, including target and origin rejection. TC19/22/26/27 retain skill transport and real host scope.",
+      "claim": "TC28-35 add long-running resource, notification-storm, historical isolation and lossless migration acceptance; existing scenarios and observed-vs-unverified scope remain.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "5c8635659b25fc1c062382b033c2fa2504f6360d4b646d42eff3957d8a8e13f6",
-      "observedAt": "2026-11-23T05:33:46.327Z"
+      "hash": "a159be9e59cc58806e57efc1874a7bb2196541a608c7b27af0a6045674ab42f5",
+      "observedAt": "2026-11-26T04:31:04.850Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
       "kind": "document",
-      "claim": "Architecture separates preflight/control availability from background recovery while retaining singleton ownership, full target verification, explicit subscriptions and safe shutdown. Reviewed for v0.44 directory workspace support and retained compatibility boundaries.",
+      "claim": "Candidate architecture separates current state, packed history, task delta, migration and scoped audit while preserving singleton ownership and project text authority.",
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "0bf53a2e270643920b6221142ea087ccf0451a9c40e093e8594944b757e8acd3",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "7c7c12556afe5178aa9c841ec862caf6fe82cc50841e44d28ba3dc2589828c80",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "CLI v1 specifies reusable 24-hour link results alongside the original command envelope and archived router behavior.",
+      "claim": "Candidate CLI documents independent audit, diagnostics, metadata-only list scope and existing receipt/link compatibility.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "c83a058ec7eeb6f22521a74faa99b2cb7545c12b4a17a973b70e12513aa5d436",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "ac7715277ffe9ca8b3639ebf98357688c0e9531e48917b6c185ffd93374cb26d",
+      "observedAt": "2026-11-26T04:31:04.850Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "FR15 defines phase routing and approval before dependent changes in complex work, with reusable authorization, selected method adoption and original receipt and batch recovery.",
+      "claim": "Existing product semantics preserved; v0.57 adds long-term runtime capacity and I/O requirements, on-demand verification and lossless migration.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "fef8bc28651e669fda18f7e88cb27eb1962b30f2e14dc116e1900c28c7ac074a",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "4f95d5d6b8dcfff7a8c0ffb4c72c455bd28df51811225cebdf6bb09a637a9d0a",
+      "observedAt": "2026-11-26T04:31:04.850Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Current spec navigation includes the v0.56 Web and CLI contract and the approved skill adoption specification.",
+      "claim": "Current navigation links the v0.57 candidate format, phase gates and actual partial validation; prior v1 information is compatibility.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "08b04af2a8f28024c557125a025e830d9e761c3e88b39976a8ef8fc11c5ca8f0",
-      "observedAt": "2026-11-23T05:33:46.328Z"
+      "hash": "70c65cf9efd6f67846313aee6e46d7c5bee582406aeb808cb3a6824504223f29",
+      "observedAt": "2026-11-26T04:31:04.850Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Current agent rules retain phase approval and original receipt recovery, and require the original target when reissuing an expired Web link.",
+      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "97b99c66ba20e4f5e074b13a5153dc02edf9de2e26b53236b760a8d0144d54a6",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "ff08436557db33db164b5151633cd20c0a2b41b5c274996ebb44ece3b0e41e1d",
+      "observedAt": "2026-11-26T04:31:04.852Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -664,12 +664,12 @@
     {
       "id": "d6270000-0000-4000-8000-000000000002",
       "kind": "document",
-      "claim": "Usage documents reusable 24-hour local access, saving the original link, resetting browser authorization and reissuing the same task link.",
+      "claim": "User-facing instructions describe scoped archive checks, runtime diagnostics, explicit offline preview/apply/resume and target switching only after verification.",
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "f55dd31652b9939b02898174027ec176bd4711fe699d6ed1d79a903f69a10b09",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "dcd4c30b924f2107aca1abd86fd94d25165049c2911b49e37c682075e9ff0570",
+      "observedAt": "2026-11-25T18:53:32.863Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Current agent rules retain phase approval and original receipt recovery, and require the original target when reissuing an expired Web link.",
+      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "97b99c66ba20e4f5e074b13a5153dc02edf9de2e26b53236b760a8d0144d54a6",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "ff08436557db33db164b5151633cd20c0a2b41b5c274996ebb44ece3b0e41e1d",
+      "observedAt": "2026-11-26T04:31:04.862Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -794,12 +794,12 @@
     {
       "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
       "kind": "document",
-      "claim": "Project navigation links the current baseline, spec, implementation state and six-item usage optimization plan.",
+      "claim": "Project navigation links approved v0.57 redesign alongside current baseline, specifications and implementation status.",
       "location": {
         "path": "README.md"
       },
-      "hash": "7a0abc0c80fb3606d7daadc6a6386e0ec24c0e943f030f4ff06a0ac8ff3f3977",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "f02820bc218961954f469e96c7cc82cb7124e85d0db9bc130a6451cac8860589",
+      "observedAt": "2026-11-26T04:31:04.864Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -824,22 +824,22 @@
     {
       "id": "d6390000-0000-4000-8000-000000000001",
       "kind": "source-code",
-      "claim": "Browsing catalogs coalesce in-flight scans, invalidate native file changes, retain last checked times and support explicit refresh; strict task capture remains separate.",
+      "claim": "Browsing catalog caches coalesce, use native invalidation and bounded root/idle leases; strict task capture remains separate.",
       "location": {
         "path": "core/catalog.ts"
       },
-      "hash": "2fb529b4f76b48989c5645f4ed608483802b069c64601be49ed7638fd2565e77",
-      "observedAt": "2026-11-09T12:47:29.441720Z"
+      "hash": "da5610712bccec64cb1578becb370f52f986ed8445ee3e6ee02dbc68b45e7ff4",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000002",
       "kind": "source-code",
-      "claim": "Continuous catch-up validates its sequence range and commits document changes and the cursor in one transaction.",
+      "claim": "Derived worker commits cursor and changed documents transactionally, skips identical rows and unchanged FTS text.",
       "location": {
         "path": "core/index-worker.ts"
       },
-      "hash": "e97f163a656df1baaea4dce525bcd54a88e9108900501a4e99ee823a3c3b3284",
-      "observedAt": "2026-11-09T13:35:38.699Z"
+      "hash": "017a45262d4f134de231745990752f83a28a9c74554b9c38d78df676dc485a2e",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000003",
@@ -854,12 +854,12 @@
     {
       "id": "d6390000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime regressions cover no-scan browsing, pending or unknown current model status with an old snapshot, order-independent bounded background work, compact indexing and archive integrity.",
+      "claim": "Runtime regressions cover read-only views, bounded observation, compact index catch-up after explicit history discovery, and requested archive integrity.",
       "location": {
         "path": "tests/v1/web-service.test.mjs"
       },
-      "hash": "9c8fdc87f53104646b0e13ae97869d77aa10659b4d2904bca3544e811e548a4a",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "df9379bca59fa52042851a243563bc69e727d993902012aea5212c1146d35aca",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6390000-0000-4000-8000-000000000005",
@@ -974,12 +974,12 @@
     {
       "id": "116a4c91-d92b-427b-8016-2fcaca15b51d",
       "kind": "document",
-      "claim": "LF attributes keep newly referenced directory-workspace contract and verification files byte-stable across platform checkouts. Permission error mapping and its test are also fixed to LF for stable evidence bytes. The Web access source evidence uses the same LF policy.",
+      "claim": "Tracked evidence-referenced text uses LF across platforms, including current-state, packed archive, delta, migration and new acceptance fixtures.",
       "location": {
         "path": ".gitattributes"
       },
-      "hash": "df89c8a5a5a2dcf0577efeea69372e6278e8749049bead0d9e407397b4b1de4e",
-      "observedAt": "2026-11-23T10:22:58.661Z"
+      "hash": "d37e630d1e523d199e7ba7544223728c9c0fc655f053ce144e7b3891ee703ebe",
+      "observedAt": "2026-11-25T18:33:08.729Z"
     },
     {
       "id": "f9fd6a5e-1dc9-4263-94bd-68869da716e9",
@@ -1004,12 +1004,12 @@
     {
       "id": "0e67a30f-f14f-43b0-9fe7-9a7ab414c9d5",
       "kind": "source-code",
-      "claim": "RequestTracker exposes ephemeral per-request phases, joins matching in-flight requests and bounds completion/result retention without replacing durable journals.",
+      "claim": "Bounded ephemeral request progress and receipt tracking; only explicit read-only archive audit observes the caller cancellation signal.",
       "location": {
         "path": "core/progress.ts"
       },
-      "hash": "8dc7923cf7538740af2edce4dd72e8bf52df550a5e9baa35887ca438594e99f0",
-      "observedAt": "2026-11-10T14:27:25.196Z"
+      "hash": "36a0a882590c504cb9e589040b149509a315741645a58867f90c56ec1cdf0be5",
+      "observedAt": "2026-11-25T18:53:32.877Z"
     },
     {
       "id": "eacd2b8f-d6ba-4aa7-9d8a-1536b33662d9",
@@ -1074,12 +1074,12 @@
     {
       "id": "9d99fef9-ad18-475c-b541-12a01049e49c",
       "kind": "source-code",
-      "claim": "CLI validates existing target/identity repair flags and an explicit boolean task-select compact presentation option; existing schema, input and target guards remain.",
+      "claim": "CLI recognizes archive audit and runtime diagnostics without relaxing existing input, target, idempotence or identity guards.",
       "location": {
         "path": "cli/args.ts"
       },
-      "hash": "29ff61d6107101f575b877278b4545fa0f1f106718754c879ae1229319360768",
-      "observedAt": "2026-11-16T04:46:22.006Z"
+      "hash": "37e121682c961bf73763d32951fb8a1760c14e33493905264eba81bd8f998dd6",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "935b3fd1-92c7-4a66-ba57-119fcc15bc9a",
@@ -1134,12 +1134,12 @@
     {
       "id": "f325ad00-2760-4dfd-9214-b15df2ac8dec",
       "kind": "document",
-      "claim": "Selection response accepts exactly one full packet or compact packetRef; other required result/plan/binding and envelope contracts remain strict.",
+      "claim": "Response schema validates archive audit and runtime diagnostics result fields while preserving existing result envelope and model-maintenance contract.",
       "location": {
         "path": "docs/spec/contracts/response.schema.json"
       },
-      "hash": "b3391067bb063f34d0720045a7cc6aed412d09f1b7bef96b6aeefe77a9e1cf17",
-      "observedAt": "2026-11-16T04:46:22.007Z"
+      "hash": "36e96474769924cd6409c414ec50e60afdc59b4a36eec8e242f17e3cde74668b",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "d6480000-0000-4000-8000-000000000001",
@@ -1224,22 +1224,22 @@
     {
       "id": "a4f7e468-1d4f-453a-97c0-0c7ce70dfe28",
       "kind": "source-code",
-      "claim": "Isolated browser gates and same-origin legacy project grouping exercise cross-clone selection, back navigation and reload; reports record the actual platform separately.",
+      "claim": "Browser regression uses the runtime Archive record interface for commit-to-paint timing in packed or legacy format.",
       "location": {
         "path": "scripts/v1/browser-smoke.mjs"
       },
-      "hash": "8bfa84486eac53230cde586cbcb6c02ee36315a091e6200ef3117ec8178d2eee",
-      "observedAt": "2026-11-23T10:22:58.676Z"
+      "hash": "d19931a3e850d89f4aa4f8cc193e41eebc9e20e1b56852a2b63df1bd4f530d0d",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "e477f084-e25b-4733-a542-64986ce9f392",
       "kind": "source-code",
-      "claim": "Isolated browse regressions cover unrelated bytes, selected corruption, full CLI diagnostics, invalid locators, concurrent restore and appended journal/changed bytes.",
+      "claim": "Browsing and new tasks do not depend on unrelated old bodies or explicit audit; relevant damaged content rejects and metadata scope remains unknown.",
       "location": {
         "path": "tests/v1/browse.test.mjs"
       },
-      "hash": "212da96af2be746722f779a7d9880b24dc387ebae72c0bfff559ff13dfbb6f52",
-      "observedAt": "2026-11-16T06:36:24.869Z"
+      "hash": "622a3e5028584191870d8b1dffa3d5d1a977a80aba6f8b7851259f1b7baa4583",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     },
     {
       "id": "99c891dd-28b7-4f76-83e9-4709a6f6fc31",
@@ -1330,6 +1330,116 @@
       },
       "hash": "ac89da706e38c9dac7a916e3123e5fe40414875866ba2e2bf7a056ee99556224",
       "observedAt": "2026-11-23T05:24:43.005Z"
+    },
+    {
+      "id": "7fae5745-19e5-4a97-bc55-6512138ddf54",
+      "kind": "document",
+      "claim": "Approved v0.57 specification records incident, R01-R06, S0-S5 and TC28-35; target selected and candidate implemented in stages, actual migration and final acceptance not passed.",
+      "location": {
+        "path": "docs/implementation/ARCHITECTURE_REDESIGN_SPEC.md"
+      },
+      "hash": "0f0bd4cc940bc8cb6b0fc989c191516019db915168ff10125609096d04bf64c7",
+      "observedAt": "2026-11-26T04:31:04.893Z"
+    },
+    {
+      "id": "4a573c42-e1d3-4ca8-9d60-0a8b0e91a6a1",
+      "kind": "source-code",
+      "claim": "CurrentStateStore atomically replaces a single hashed state checkpoint; its format prevents missing issued bindings from silently becoming empty.",
+      "location": {
+        "path": "core/current-state.ts"
+      },
+      "hash": "ce6f51bebb8dd0cf4153961d40dde5002c13d769ec929282acc561354d3b9e0d",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "1fe2d2d4-20ef-40ae-b642-e9c9c30daf41",
+      "kind": "source-code",
+      "claim": "PackedArchiveStore preserves original bytes using compressed content blocks, logical worktree paths, transactional journal heads and request/target locators; new format initialization never rewrites a v1 registry.",
+      "location": {
+        "path": "core/packed-archive.ts"
+      },
+      "hash": "65655db8792ebff448c8866a67a1025e497a9d18e2d4943f7dae095f98a94f09",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "a857a5c6-bb0e-4fed-9ff2-efedb4729ff1",
+      "kind": "source-code",
+      "claim": "Task delta records changed mutable fields, appended batches and changed packet identities; encoding verifies exact reproduction of the original task.",
+      "location": {
+        "path": "core/task-delta.ts"
+      },
+      "hash": "7ccd16eb06f3f7d9d0bbd517fa81429b481ece73dfc0418e2dbcb371d07b1009",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "de36567a-6bed-40e3-bf15-acde3ca652fd",
+      "kind": "source-code",
+      "claim": "Explicit offline preview and conversion preserve source files, enforce source writer guard, verify raw contents/chain/closure/identity, and publish only verified target format.",
+      "location": {
+        "path": "scripts/v1/migrate-packed-storage.mjs"
+      },
+      "hash": "b05ff07aa6e9ccc6e77ac8a777c2b40626b9f868af22750d5d30e819546039bb",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "6cc01907-f72b-4c6e-86c4-1660bbabb93b",
+      "kind": "source-code",
+      "claim": "TC30/32 current-state replacement avoids immutable status snapshots, proof replay survives restart and corrupt checkpoint rejects.",
+      "location": {
+        "path": "tests/v1/current-state.test.mjs"
+      },
+      "hash": "f73a0f73d10f02977bb8b19e864d0bbc5db87fc548368b202a86b40e1e6c052b",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "2acb8f04-f0e6-4250-aabf-34f548b5daef",
+      "kind": "source-code",
+      "claim": "TC32/34 isolated default packed service, exact migrated bytes and receipts, delta records, block sharing, corrupted reference rejection and prepared migration resume fixtures.",
+      "location": {
+        "path": "tests/v1/packed-storage.test.mjs"
+      },
+      "hash": "9d60b1c043141bf47b58132b4ce9dbf01aeec1e9213ebb7ee19fd380f8a234fa",
+      "observedAt": "2026-11-25T18:33:08.735Z"
+    },
+    {
+      "id": "3fc94f45-8e43-4204-88e3-ad6962f39a5b",
+      "kind": "source-code",
+      "claim": "TC33 idle resource release preserves task archive and injected low disk capacity prevents new durable success.",
+      "location": {
+        "path": "tests/v1/runtime-budget.test.mjs"
+      },
+      "hash": "84e4d2582a5fcede1796368055742b6259d744cf3467c81c7df310c86d82bcab",
+      "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "d0f55078-08dc-44f1-9ff7-4586436177df",
+      "kind": "source-code",
+      "claim": "Actual isolated CLI/service 25-workspace long-run test measures passive data fingerprint and resources; script existence is not a passed 24-hour test.",
+      "location": {
+        "path": "scripts/v1/runtime-soak.mjs"
+      },
+      "hash": "891029e4514ac74cd7bfa63d22a8563e1f260415dd7d99b7cc90bf9cd9032bdc",
+      "observedAt": "2026-11-25T18:33:08.735Z"
+    },
+    {
+      "id": "e1b4afcb-242d-48f2-b321-8eaa2a2ecd41",
+      "kind": "source-code",
+      "claim": "Synthetic million-record scale benchmark mixes actual historic task selection records with old background records and measures real CLI cold/hot start, select and handoff with build fingerprint.",
+      "location": {
+        "path": "scripts/v1/packed-history-benchmark.mjs"
+      },
+      "hash": "3e69d8dcd3655b03a6c1344daac100d720451b2f40cc12ffc10a4b3dc8603b00",
+      "observedAt": "2026-11-25T18:33:08.735Z"
+    },
+    {
+      "id": "7bc4dfea-dd58-4099-8c85-91c2c3ee551d",
+      "kind": "source-code",
+      "claim": "Conservative actual write-capacity check reuses a bounded free-space estimate and rejects insufficient space before durable write; operating system errors remain authoritative.",
+      "location": {
+        "path": "core/io.ts"
+      },
+      "hash": "2a88cbfb31c2191080357b06bf432d8ee959d0532c56e747b40c2983e4253e14",
+      "observedAt": "2026-11-25T18:21:06.724Z"
     }
   ]
 }

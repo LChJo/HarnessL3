@@ -1,5 +1,9 @@
 # 本机存储、事务与历史恢复
 
+v0.57候选存储格式：现行兼容reader仍接受v1松散文件；新空数据根及已完整验证的显式迁移使用`runtime-format.json`（`packed-sqlite/1`）与`registry.json` schemaVersion 2。数据根`runtime-archive.sqlite`是事务性本机业务权威，存储原commit行、工作区独立事务头、请求/任务定位、原内容SHA256与逻辑文件映射；大内容以16–128 KiB内容定义块共享并压缩，小内容压缩整体，读取逐块/整文件重构并检查原字节哈希及原snapshot语义。旧数据原始JSON与journal行可精确复原，不复制源码；新任务增量存储（`task-delta/1`、前序commit seq/hash、可变化字段及packet增量、追加批次），旧完整记录兼容。任务/检查点物化输出不作为新格式权威。每worktree的`current-state.sqlite`是单行可替换状态（含实际源/模型数据及事务seq/指纹），`current-state.format`避免已有状态库丢失后默认为空；status只更新当前态，显式verify将必要依据及原核验回执持久提交。普通运行不承诺全档案核验，显式`archive audit`全检独立执行。搜索索引仍可重建。迁移工具和标记发布顺序见[重设计规格](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)，真实切换和验收状态以STATUS为准。
+
+v0.57（已确认目标、本机实际已落地）：[重设计规格 R01/R03/R04/R06](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)修订旧架构的高频状态归档及全历史恢复耦合，采用本机事务运行状态/业务历史及可验证紧凑内容。以下松散目录和协议是旧0.1.8运行格式及兼容依据；实际本机新格式迁移与默认入口验收见STATUS。旧档案原字节、ID、原回执、引用闭包及60天规则不改；不因压缩/清理建议直接删除历史。迁移、切换及回收以显式清单和验证为准。
+
 v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
 
 启动恢复的范围为显式日志订阅（recovery.scope=observation-subscriptions）。完整journal结构/哈希链检查可判定是否存在observation-state，并可生成可重建的浏览定位索引，不证明snapshot/blob完整；没有订阅的工作区不在后台预读全部历史正文。存在订阅或journal不能完整判定时，仍走原有完整档案恢复；CLI任务、管理、来源及同步请求照常核验完整日志及所有引用。Web浏览按v0.53独立核对所请求范围，不冒充已恢复完整Archive、当前来源核验或业务成功。

@@ -1,5 +1,6 @@
 import path from 'node:path'
-import { lstat, stat } from 'node:fs/promises'
+import { lstat, stat, statfs } from 'node:fs/promises'
+import { performance } from 'node:perf_hooks'
 import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { WorkspaceRegistry } from './workspace.js'
@@ -13,13 +14,16 @@ import { TaskService } from './context.js'
 import { scanSource } from './source.js'
 import { ObservationManager } from './observation.js'
 import { FreshnessManager } from './freshness.js'
+import { CurrentStateStore } from './current-state.js'
+import { closePackedArchive, packedArchiveMetrics } from './packed-archive.js'
 import { GarbageCollector, MigrationService } from './maintenance.js'
 import { asHarnessError, HarnessError } from './errors.js'
 import { canonicalPath, isWithin, samePath } from './paths.js'
 import { flag, validateUuid } from '../cli/args.js'
 import { validateContract } from './contract.js'
 import { isErrno } from './io.js'
-import { RequestTracker, reportProgress } from './progress.js'
+import { digest } from './json.js'
+import { RequestTracker, checkAuditCancellation, reportProgress } from './progress.js'
 import type { CommandRequest } from '../cli/args.js'
 import type { Envelope, FileReadRequest, ModelSnapshot, Target, WorktreeRecord } from './types.js'
 
@@ -37,6 +41,10 @@ export class Runtime extends EventEmitter {
   private readonly catalogs = new CatalogObserver()
   private readonly archives = new Map<string, Promise<Archive>>()
   private readonly lastValidModel = new Map<string, ModelSnapshot>()
+  private readonly lastAccess = new Map<string, number>()
+  private readonly releasing = new Map<string, Promise<void>>()
+  private readonly durations = new Map<string, number[]>()
+  private readonly idleTimer: NodeJS.Timeout
   private bindingQueue: Promise<unknown> = Promise.resolve()
   private backgroundQueue: Promise<unknown> = Promise.resolve()
   private gcApplying = false
@@ -45,7 +53,18 @@ export class Runtime extends EventEmitter {
   private closing = false
   private readonly recovery: RecoveryStatus = { state: 'not-started', totalWorktrees: 0, completedWorktrees: 0, failures: 0, scope: 'observation-subscriptions' }
   private bindingSerial<T>(operation: () => Promise<T>): Promise<T> { const next = this.bindingQueue.then(operation); this.bindingQueue = next.catch(() => {}); return next }
-  constructor(dataRoot: string) { super(); this.dataRoot = dataRoot }
+  constructor(dataRoot: string) { super(); this.dataRoot = dataRoot; this.idleTimer = setInterval(() => { void this.expireIdleResources().catch(() => {}) }, 60_000); this.idleTimer.unref() }
+  async expireIdleResources(now = performance.now()): Promise<void> {
+    if (this.closing || this.activeOperations || this.recovery.state === 'recovering' || this.gcApplying) return
+    const pending: Promise<void>[] = []
+    for (const [id, resource] of this.liveResources) {
+      if (now - (this.lastAccess.get(id) ?? now) < 5 * 60_000 || resource.freshness.metrics().activeLease || resource.observation.hasActiveBindings()) continue
+      this.resources.delete(id); this.liveResources.delete(id); this.archives.delete(id); this.lastValidModel.delete(id); this.lastAccess.delete(id)
+      const release = (async () => { await resource.observation.close(); await resource.freshness.close(); await resource.tasks.close() })().finally(() => { this.releasing.delete(id) })
+      this.releasing.set(id, release); pending.push(release)
+    }
+    await Promise.allSettled(pending)
+  }
   registry(request?: CommandRequest): WorkspaceRegistry { return new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot: request?.skillsRoot }) }
   async preflight(): Promise<WorktreeRecord[]> {
     const worktrees = await this.registry().worktrees()
@@ -79,7 +98,7 @@ export class Runtime extends EventEmitter {
         if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'The worktree archive requires recovery')
         if (!this.closing && archive.hasKind('observation-state')) await this.bindingSerial(async () => {
           const current = await this.registry().worktree(worktree.id)
-          if (!this.closing && current.active && current.available) await this.worktreeResources(current)
+          if (!this.closing && current.active && current.available) await (await this.worktreeResources(current, true)).observation.ready()
         })
       } catch (error) { this.recovery.failures++; this.emit('diagnostic', { worktreeId: worktree.id, code: asHarnessError(error).code }) }
       finally { this.recovery.completedWorktrees++ }
@@ -89,7 +108,7 @@ export class Runtime extends EventEmitter {
   private worktreeArchive(worktree: WorktreeRecord): Promise<Archive> {
     let pending = this.archives.get(worktree.id)
     if (!pending) {
-      const archive = new Archive(path.join(this.dataRoot, 'worktrees', worktree.id))
+      const archive = new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { verification: 'operational' })
       pending = archive.ready().then(() => archive)
       this.archives.set(worktree.id, pending)
       const captured = pending
@@ -105,6 +124,8 @@ export class Runtime extends EventEmitter {
   }
   async worktreeResources(worktree: WorktreeRecord, deferSourceState = false): Promise<WorktreeResources> {
     if (this.closing) throw new HarnessError('BUSY', 'The runtime is stopping', {}, true)
+    await this.releasing.get(worktree.id)
+    this.lastAccess.set(worktree.id, performance.now())
     let pending = this.resources.get(worktree.id)
     if (!pending) {
       if (this.gcApplying) throw new HarnessError('BUSY', 'GC is applying its verified plan; retry opening this worktree.', {}, true)
@@ -159,13 +180,14 @@ export class Runtime extends EventEmitter {
       externalDocuments: () => legacyDocuments,
     })
     migration = new MigrationService({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: async seq => { await refreshLegacyDocuments(); await index.rebuild(tasks.projection(), seq); this.emit('commit', { worktreeId: record.id, seq, kind: 'migration' }) } })
-    freshness = new FreshnessManager({ worktree: record, archive, serial: operation => tasks.serial(operation), background: operation => {
+    freshness = new FreshnessManager({ worktree: record, archive, stateStore: new CurrentStateStore(root), serial: operation => tasks.serial(operation), background: operation => {
       const pending = this.backgroundQueue.then(operation)
       this.backgroundQueue = pending.catch(() => {})
       return pending
-    }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) } })
+    }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) },
+      onObserved: () => { this.emit('freshness', { worktreeId: record.id }) } })
     const observation = new ObservationManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: () => { this.emit('commit', { worktreeId: record.id, seq: archive.seq, kind: 'observation' }) } })
-    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); await observation.ready(); const resource = { worktree: record, archive, index, tasks, observation, freshness, migration }; this.liveResources.set(record.id, resource); return resource }
+    try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); const resource = { worktree: record, archive, index, tasks, observation, freshness, migration }; this.liveResources.set(record.id, resource); return resource }
     catch (error) { await index.close().catch(() => {}); throw error }
   }
   private async browseResources(worktree: WorktreeRecord, taskId?: string): Promise<BrowseResources> {
@@ -286,9 +308,20 @@ export class Runtime extends EventEmitter {
     const task = archived?.task ?? null
     const live = this.liveResources.get(worktreeId)
     let observed = live?.freshness.currentState()
-    if (!observed && !task) {
-      const header = resource.archive.headers({ kind: 'freshness-state' }).at(-1)
-      if (header) {
+    let checkpointModel: ModelSnapshot | null = null
+    if ((!observed || observed.lastCheckedAt === null) && !task) {
+      const header = resource.archive.lastHeader({ kind: 'freshness-state' })
+      const checkpoint = await new CurrentStateStore(resource.archive.root).load()
+      if (checkpoint && checkpoint.seq > resource.archive.seq) throw new HarnessError('ARCHIVE_CORRUPT', 'Current state points past the committed archive.')
+      if (checkpoint && checkpoint.seq >= (header?.seq ?? 0)) {
+        const saved = checkpoint.state
+        if (saved.schemaVersion !== 1 || saved.target.projectId !== worktree.projectId || saved.target.worktreeId !== worktree.id || !Number.isSafeInteger(saved.sourceEpoch) || !Array.isArray(saved.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'The current synchronization identity is invalid.')
+        if (checkpoint.model) {
+          if (saved.lastValidModelSnapshotHash !== digest('model-snapshot', checkpoint.model)) throw new HarnessError('ARCHIVE_CORRUPT', 'The current model checkpoint fingerprint differs.')
+          checkpointModel = checkpoint.model
+        }
+        observed = { ...saved, state: 'pending', scanPending: true, modelState: 'unknown' }
+      } else if (header) {
         const record = await resource.archive.record(header.seq)
         const payload = record.payload as { state?: ReturnType<FreshnessManager['currentState']>; stateHash?: string }
         const saved = payload.state ?? (payload.stateHash ? await resource.archive.readSnapshot<ReturnType<FreshnessManager['currentState']>>(payload.stateHash) : undefined)
@@ -305,7 +338,7 @@ export class Runtime extends EventEmitter {
       modelState = { state: 'valid', currentRevision: null, displayRevision: model.revision, diagnostics: model.diagnostics }
     } else {
       try {
-        model = live?.freshness.currentModel() ?? null
+        model = live?.freshness.currentModel() ?? checkpointModel
         if (!model && observed?.lastValidModelSnapshotHash) model = await resource.archive.readSnapshot<ModelSnapshot>(observed.lastValidModelSnapshotHash)
         if (!model) {
           for (const saved of resource.tasks.tasks().reverse()) {
@@ -336,13 +369,17 @@ export class Runtime extends EventEmitter {
     const freshness = task ? { state: 'unknown', historical: true, sourceVersion: task.binding.sourceVersion } : observed ?? { state: 'unknown', scanPending: true }
     return { schemaVersion: 1, target: { projectId: worktree.projectId, worktreeId }, worktree, seq: viewSeq, historical: !!taskId, task, model, modelState, catalog, freshness, observation, archive: resource.tasks.status() }
   }
-  async execute(request: CommandRequest): Promise<Envelope> {
+  async execute(request: CommandRequest, auditSignal?: AbortSignal): Promise<Envelope> {
+    const start = performance.now()
     try {
       if (request.operation === 'request status') return await this.requestStatus(request)
-      return await this.requests.run(request, () => this.executeCommand(request))
+      return await this.requests.run(request, () => this.executeCommand(request), auditSignal)
     } catch (error) {
       const failure = asHarnessError(error)
       return { schemaVersion: 1, requestId: request.requestId, target: null, replayed: false, ok: false, error: { code: failure.code, message: failure.message, retryable: failure.retryable, details: failure.details } }
+    } finally {
+      const samples = this.durations.get(request.operation) ?? []
+      samples.push(performance.now() - start); if (samples.length > 256) samples.shift(); this.durations.set(request.operation, samples)
     }
   }
   private async requestStatus(request: CommandRequest): Promise<Envelope> {
@@ -353,11 +390,11 @@ export class Runtime extends EventEmitter {
     let result: Record<string, unknown>
     if (tracked?.status.state === 'running') result = { ...tracked.status }
     else {
-      const archive = this.archives.has(worktree.id) ? await this.archives.get(worktree.id)! : new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true })
+      const archive = this.archives.has(worktree.id) ? await this.archives.get(worktree.id)! : new Archive(path.join(this.dataRoot, 'worktrees', worktree.id), { readOnly: true, verification: 'operational' })
       await archive.ready()
       if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Request outcome cannot be determined from an unverified archive', { requestId: id, outcome: 'unknown', diagnostics: archive.diagnostics })
       const taskId = flag(request, 'task')
-      const matches = archive.headers(taskId ? { taskId } : {}).filter(header => header.requestId === id)
+      const matches = archive.headers({ ...(taskId ? { taskId } : {}), requestId: id })
       if (matches.length > 1) result = { requestId: id, state: 'ambiguous', outcome: 'unknown', nextAction: 'specify-task', taskIds: matches.map(header => header.taskId) }
       else if (matches.length === 1) {
         const match = matches[0], receipt = await archive.receipt(match.seq)
@@ -412,6 +449,43 @@ export class Runtime extends EventEmitter {
       const id = request.positionals[0]
       let result: unknown
       switch (request.operation) {
+        case 'runtime diagnostics': {
+          const memory = process.memoryUsage()
+          let freeBytes: number | null = null
+          try { const stats = await statfs(this.dataRoot, { bigint: true }); freeBytes = Number(stats.bavail * stats.bsize) } catch { /* Unknown on an unavailable filesystem. */ }
+          const latency = Object.fromEntries([...this.durations].map(([operation, samples]) => { const sorted = [...samples].sort((a, b) => a - b); return [operation, { samples: sorted.length, p50Ms: sorted[Math.floor((sorted.length - 1) * .5)], p95Ms: sorted[Math.floor((sorted.length - 1) * .95)] }] }))
+          result = { dataRoot: this.dataRoot, freeBytes, registeredWorktrees: (await registry.worktrees()).length, loadedWorktrees: this.liveResources.size, activeOperations: this.activeOperations, recovery: this.recoveryStatus(), memory, latency, packed: packedArchiveMetrics(this.dataRoot), worktrees: [...this.liveResources].map(([id, current]) => ({ worktreeId: id, archive: current.archive.metrics(), freshness: current.freshness.metrics(), observation: current.observation.metrics(), index: current.index.status })) }
+          break
+        }
+        case 'archive audit': {
+          const worktree = await this.resolve(request, true)
+          target = { projectId: worktree.projectId, worktreeId: worktree.id }
+          // Serialize against live writes for a stable closure. Do not create a
+          // new active resource merely to inspect an inactive history.
+          const audit = async () => {
+            const root = path.join(this.dataRoot, 'worktrees', worktree.id)
+            const stamp = async () => {
+              try { const info = await lstat(path.join(root, 'journal.jsonl')); return [info.dev, info.ino, info.size, info.mtimeMs, info.ctimeMs].join(':') }
+              catch (error) { if (isErrno(error, 'ENOENT')) return null; throw error }
+            }
+            const before = await stamp()
+            const archive = new Archive(root, { readOnly: true })
+            await archive.ready()
+            if (archive.status !== 'ready') throw new HarnessError('ARCHIVE_CORRUPT', 'Full archive audit found unverified data.', { diagnostics: archive.diagnostics, verifiedThrough: archive.seq })
+            const throughSeq = archive.seq
+            const tasks = new TaskService({ worktree, archive, index: new SearchIndex(path.join(root, 'index.sqlite')), source: async () => { throw new HarnessError('INTERNAL_ERROR', 'Audit cannot scan current source') } })
+            const freshness = new FreshnessManager({ worktree, archive, stateStore: new CurrentStateStore(root), serial: operation => operation() })
+            const observation = new ObservationManager({ worktree, archive, readOnly: true, pollIntervalMs: 0, serial: operation => operation() })
+            try {
+              const taskRecords = await tasks.auditHistory()
+              await freshness.ready(); await observation.ready(); checkAuditCancellation()
+              if (before !== await stamp() || throughSeq !== archive.seq) throw new HarnessError('BUSY', 'The archive changed while the full audit was running; repeat the audit after writes settle.', {}, true)
+              return { verificationScope: 'workspace', workspaceIntegrity: 'ready', seq: archive.seq, taskRecords, freshnessRecords: archive.headers({ kind: 'freshness-state' }).length, diagnostics: archive.diagnostics }
+            } finally { await freshness.close(); await observation.close(); await tasks.close() }
+          }
+          result = await audit()
+          break
+        }
         case 'gc': {
           if (request.flags.apply && this.recovery.state === 'recovering') throw new HarnessError('BUSY', 'Archive recovery is still in progress; retry cleanup after recovery', {}, true)
           const collector = new GarbageCollector({ dataRoot: this.dataRoot, worktrees: await registry.worktrees(), isLeased: file => {
@@ -498,6 +572,8 @@ export class Runtime extends EventEmitter {
   }
   async close(): Promise<void> {
     this.closing = true
+    clearInterval(this.idleTimer)
+    await Promise.allSettled([...this.releasing.values()])
     this.recovery.state = 'stopping'
     await this.startup?.catch(() => {})
     await this.bindingQueue.catch(() => {})
@@ -508,6 +584,7 @@ export class Runtime extends EventEmitter {
     this.resources.clear()
     this.liveResources.clear()
     await this.catalogs.close()
+    closePackedArchive(this.dataRoot)
     this.archives.clear()
   }
 }

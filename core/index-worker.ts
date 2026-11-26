@@ -100,14 +100,17 @@ async function openIndex(file: string): Promise<void> {
 
 function upsert(document: IndexDocument): void {
   const connection = database();
-  const prior = connection.prepare('SELECT rowid FROM documents WHERE kind=? AND id=?').get(document.kind, document.id);
-  if (prior) connection.prepare('DELETE FROM document_fts WHERE rowid=?').run(prior.rowid);
+  const title = document.title ?? '', text = document.text ?? '', activity = document.activityAt ?? null, expires = document.expiresAt ?? null, data = canonicalJson(document.data);
+  const prior = connection.prepare('SELECT rowid,title,text,activity_at,expires_at,data FROM documents WHERE kind=? AND id=?').get(document.kind, document.id);
+  if (prior && prior.title === title && prior.text === text && prior.activity_at === activity && prior.expires_at === expires && prior.data === data) return;
+  const changedText = !prior || prior.title !== title || prior.text !== text;
+  if (prior && changedText) connection.prepare('DELETE FROM document_fts WHERE rowid=?').run(prior.rowid);
   connection.prepare(`INSERT INTO documents(id,kind,title,text,activity_at,expires_at,data) VALUES(?,?,?,?,?,?,?)
     ON CONFLICT(kind,id) DO UPDATE SET title=excluded.title,text=excluded.text,activity_at=excluded.activity_at,expires_at=excluded.expires_at,data=excluded.data`).run(
-    document.id, document.kind, document.title ?? '', document.text ?? '', document.activityAt ?? null, document.expiresAt ?? null, canonicalJson(document.data),
+    document.id, document.kind, title, text, activity, expires, data,
   );
   const row = connection.prepare('SELECT rowid FROM documents WHERE kind=? AND id=?').get(document.kind, document.id)!;
-  connection.prepare('INSERT INTO document_fts(rowid,id,title,text) VALUES(?,?,?,?)').run(row.rowid, document.id, document.title ?? '', document.text ?? '');
+  if (changedText) connection.prepare('INSERT INTO document_fts(rowid,id,title,text) VALUES(?,?,?,?)').run(row.rowid, document.id, title, text);
 }
 function project(args: { documents: unknown; seq: unknown; inputRevisions?: unknown; fromSeq?: unknown }, replace: boolean): void {
   documents(args.documents); sequence(args.seq); revisions(args.inputRevisions);

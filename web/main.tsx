@@ -248,6 +248,12 @@ function App() {
       try { const message = JSON.parse(event.data) as { worktreeId?: string; seq: number; kind?: string }; if (message.worktreeId && message.worktreeId !== worktree || routeRef.current?.worktree !== worktree || !Number.isSafeInteger(message.seq) || message.seq <= (lastSeq.current.get(worktree) ?? 0)) return; refresh(message.seq, message.kind) } catch { setViewError('连接异常，请重试') }
     }
     stream.addEventListener('commit', commit as EventListener)
+    // Current-state notifications are not archived commits and do not advance
+    // a historical cursor. Coalescing lives on the server and in loadView.
+    stream.addEventListener('freshness', () => {
+      const current = routeRef.current
+      if (current?.worktree === worktree && !current.task && !current.frozen) void loadView()
+    })
     stream.addEventListener('ready', () => setConnected(true))
     stream.addEventListener('reset', event => { setConnected(true); commit(event as MessageEvent) })
     stream.onopen = () => setConnected(true)

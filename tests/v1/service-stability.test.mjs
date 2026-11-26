@@ -6,7 +6,8 @@ import { mkdir, realpath, readFile, writeFile, unlink } from 'node:fs/promises'
 import path from 'node:path'
 import { fixture } from './helpers.mjs'
 import { digest } from '../../build/core/json.js'
-import { ensureService } from '../../build/service/controller.js'
+import { ensureService, executeRpc } from '../../build/service/controller.js'
+import { setTimeout as delay } from 'node:timers/promises'
 
 test('TC23 startup callers wait for the existing owner without spawning another service', async t => {
   const f = await fixture(t)
@@ -56,6 +57,17 @@ async function command(request, response) {
   response.end(JSON.stringify({ schemaVersion: 1, requestId: supplied.requestId, target: null, replayed: false, ok: true, data: { kind: 'command-result', status: 'complete', operation: supplied.operation, result: { items: [] } } }))
   return supplied
 }
+
+test('TC23 authenticated local RPC waits on the caller signal rather than the global fetch response-header deadline', async t => {
+  const f = await fixture(t); await mkdir(f.dataRoot, { recursive: true }); const root = await realpath(f.dataRoot);
+  let accepted = 0;
+  await endpoint(t, f, async (request, response) => { assert.equal(request.url, '/rpc'); accepted++; await delay(100); await command(request, response); });
+  const nativeFetch = globalThis.fetch;
+  t.mock.method(globalThis, 'fetch', async (input, init) => { if (String(input).endsWith('/rpc')) throw new Error('RPC must not inherit fetch header deadlines'); return nativeFetch(input, init); });
+  const request = { operation: 'project list', requestId: randomUUID(), cwd: f.directory, positionals: [], flags: {} };
+  const result = await executeRpc(root, request, AbortSignal.timeout(5000));
+  assert.equal(result.response.ok, true); assert.equal(result.response.requestId, request.requestId); assert.equal(accepted, 1);
+});
 
 test('TC23 CLI reaches RPC when health is unavailable, including initialization', async t => {
   const f = await fixture(t)

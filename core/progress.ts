@@ -9,8 +9,13 @@ export interface RequestStatus {
   requestId: string; operation: string; state: 'running' | 'completed'; phase: string
   startedAt: string; updatedAt: string; target: Target | null; completed?: number; total?: number
 }
-const context = new AsyncLocalStorage<(progress: Progress) => void>()
-export function reportProgress(progress: Progress): void { context.getStore()?.(progress) }
+const context = new AsyncLocalStorage<{ report: (progress: Progress) => void; auditSignal?: AbortSignal }>()
+// Only an explicitly read-only audit may stop with the caller. Accepted
+// mutations retain the existing independent receipt/commit semantics.
+export function checkAuditCancellation(): void {
+  if (context.getStore()?.auditSignal?.aborted) throw new HarnessError('CANCELLED', 'The read-only archive audit was cancelled; no full verification result was issued.', { verificationScope: 'incomplete', nextAction: 'retry-audit' }, true)
+}
+export function reportProgress(progress: Progress): void { checkAuditCancellation(); context.getStore()?.report(progress) }
 interface Tracked { status: RequestStatus; cwd: string; hash: string; promise?: Promise<Envelope>; response?: string }
 const archivedOperation = (operation: string) => /^(?:task (?:start|select|read|close|prompt)|context query|sync verify|agent (?:bind|unbind))$/.test(operation)
 
@@ -29,7 +34,7 @@ export class RequestTracker {
     const record = matches[0]
     return { status: structuredClone(record.status), ...(record.response ? { receipt: JSON.parse(record.response) as Envelope } : {}) }
   }
-  async run(request: CommandRequest, operation: () => Promise<Envelope>): Promise<Envelope> {
+  async run(request: CommandRequest, operation: () => Promise<Envelope>, auditSignal?: AbortSignal): Promise<Envelope> {
     const flags = Object.fromEntries(Object.entries(request.flags).filter(([key]) => !['json', 'request-id', 'data-dir', 'file', 'timeout-ms', 'quiet-progress'].includes(key)))
     const hash = digest('rpc-request', { operation: request.operation, positionals: request.positionals, flags, cwd: request.cwd, input: request.input ?? null, skillsRoot: request.skillsRoot ?? null, source: request.source ?? 'cli' })
     const key = request.requestId + '\0' + request.cwd
@@ -46,13 +51,13 @@ export class RequestTracker {
     const record: Tracked = { cwd: request.cwd, hash, status: { requestId: request.requestId, operation: request.operation, state: 'running', phase: 'accepted', startedAt: at, updatedAt: at, target: null } }
     this.responseBytes -= previous?.response ? Buffer.byteLength(previous.response) : 0
     this.entries.set(key, record)
-    const promise = context.run(progress => {
+    const promise = context.run({ auditSignal: request.operation === 'archive audit' ? auditSignal : undefined, report: progress => {
       const { phase, completed, total, target } = progress
       record.status = { ...record.status, phase, updatedAt: new Date().toISOString(), ...(target ? { target } : {}) }
       delete record.status.completed; delete record.status.total
       if (completed !== undefined) record.status.completed = completed
       if (total !== undefined) record.status.total = total
-    }, operation)
+    } }, operation)
     record.promise = promise
     try {
       const response = await promise

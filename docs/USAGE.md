@@ -1,5 +1,19 @@
 # HarnessL3 CLI 使用
 
+### 本机历史与运行诊断（v0.57候选）
+
+普通新任务只读取当前模型、技能目录和必要事务绑定，历史详情核对实际所请求记录及引用；`task list`/`history list`是metadata查询，`workspaceIntegrity=unknown`不表示完整历史已经验证。需要全量核验已登记工作区时使用`harnessl3 archive audit --worktree <UUID> --json`（可加`--timeout-ms`）；该操作独立于新任务，不扫描当前源码，也不续期或修改历史。可取消这项只读审计，按原requestId查询取消结果；需要继续核验时使用新requestId重新执行。若档案在审计期间发生变化，应在当前写入结束后重新审计。`harnessl3 runtime diagnostics --json`返回本机数据根可用空间、活动工作区/监听/队列、逻辑归档读写、内存及近期延迟，逻辑字节不等于操作系统物理I/O。
+
+新空数据根使用紧凑事务格式；既有旧数据根不会因升级自动转换。转换旧数据根必须显式执行，下列路径均为实际绝对路径，目标与源码和原数据根不重叠：
+
+```text
+node <package-root>/scripts/v1/migrate-packed-storage.mjs --source <old-data-root> --target <new-data-root>
+harnessl3 serve stop --data-dir <old-data-root> --json
+node <package-root>/scripts/v1/migrate-packed-storage.mjs --source <old-data-root> --target <new-data-root> --apply
+```
+
+首条仅盘点，不改变源或创建目标。正常停止旧服务并确认原owner退出、目标空间及原服务锁已释放后执行apply；中途中断时保留目标和原档案，确认原owner停止后对同一源/目标加`--resume`。禁止在不明确来源和归属时移除锁。仅当迁移报告为`verified-copy`、目标格式标记已发布、实际服务/任务/历史已验证并具有回退安排，才通过`HARNESSL3_HOME`或显式`--data-dir`切换。原源档案不删除；新机器registry格式版本与旧程序不兼容。保留原始技能实体、原工作区/任务UUID及可复原历史原字节。真实发布状态见[实施状态](implementation/STATUS.md)。
+
 `task select --compact --json`保留当次result正文及skillPlan，以packetRef代替重复累计packet；默认输出和完整历史不变。需要累计内容时在相同目标执行`task handoff <taskId> --batch <packetRef.throughBatchId>`，其packet的`digest("context-packet", packet)`应等于packetRef.contentHash。compact不改变请求身份，同一requestId可取默认完整回执。`sync verify`新结果的scopeStatus表示声明范围，state/pendingPaths表示整个工作区；scopeStatus=passed且state=pending表示还有其他待核验范围。
 
 效果测量可运行随包`node <package-root>/scripts/v1/usage-report.mjs --manifest <samples.json> --out <new-report.json>`。工具仅读取清单指定的工件，新报告路径必须不存在。UTF-8清单为`{"schemaVersion":1,"samples":[{"pairId":"same-workload","condition":"baseline","operation":"task select","elapsedMs":123,"exitCode":0,"stdout":"baseline.stdout.json"}],"outcomes":[]}`；相对路径以清单目录为准，candidate使用同pairId和operation，调用条件由采样者控制。保存原始stdout/stderr、退出码与耗时，不把超时后的在途请求当作失败执行。可选outcomes填写pairId、condition、taskId、status（passed/failed/unknown）和evidence数组（path/sha256）；已知结果必须有匹配字节的验收工件。报告区分声明结果与因果关系，缺基线/日志/真实结果保持未知，字节量不等于token。已有明确日志授权时使用agent bind，不自动发现或猜测会话。

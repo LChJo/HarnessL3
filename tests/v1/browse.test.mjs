@@ -57,11 +57,14 @@ test('TC13/21 selected snapshot corruption is rejected even after a successful b
   await assert.rejects(f.runtime.view(f.id, f.taskId), { code: 'ARCHIVE_CORRUPT' })
 })
 
-test('TC13/17 unrelated damage stays outside browse scope and full CLI recovery still detects it', async t => {
+test('TC13/17 unrelated damage stays outside ordinary metadata reads and explicit CLI audit still detects it', async t => {
   const f = await setup(t)
   await writeFile(path.join(f.archiveRoot, 'snapshots', f.unrelated + '.json'), '{}')
   assert.equal((await f.runtime.view(f.id, f.taskId)).task.id, f.taskId)
-  const strict = await f.call('task list')
+  const listed = await f.call('task list')
+  assert.equal(listed.ok, true)
+  assert.equal(listed.data.result.workspaceIntegrity, 'unknown')
+  const strict = await f.call('archive audit')
   assert.equal(strict.ok, false)
   assert.ok(['ARCHIVE_CORRUPT', 'INDEX_UNAVAILABLE'].includes(strict.error.code), JSON.stringify(strict))
 })
@@ -79,7 +82,7 @@ test('TC16/21 a missing or malformed browse index is rebuilt from the journal wi
   await assert.rejects(f.runtime.view(f.id, f.taskId), error => ['NOT_FOUND', 'ARCHIVE_CORRUPT'].includes(error.code))
 })
 
-test('TC17/21 browsing does not wait for an in-flight full workspace restore', async t => {
+test('TC17/21 browsing and new tasks do not wait for an in-flight explicit full archive audit', async t => {
   const f = await setup(t)
   const original = Archive.prototype.readSnapshot
   let release, entered
@@ -89,12 +92,14 @@ test('TC17/21 browsing does not wait for an in-flight full workspace restore', a
     if (hash === f.unrelated && this.verificationScope === 'workspace') { entered(); await gate }
     return original.call(this, hash)
   })
-  const strict = f.call('task list')
+  const strict = f.call('archive audit')
   try {
     await Promise.race([started, strict.then(result => { throw Error('Full restore did not enter the held reference: ' + JSON.stringify(result)) }), new Promise((_, reject) => setTimeout(() => reject(Error('Reference gate was never reached')), 3000))])
     const view = await Promise.race([f.runtime.view(f.id, f.taskId), new Promise((_, reject) => setTimeout(() => reject(Error('Browsing waited for unrelated recovery')), 3000))])
     assert.equal(view.task.id, f.taskId)
     assert.equal(await f.runtime.browseSequence(f.id), view.seq)
+    const entry = await f.call('task start', [], { title: 'Independent new entry' })
+    assert.equal(entry.ok, true, JSON.stringify(entry))
   } finally { release(); await strict }
 })
 

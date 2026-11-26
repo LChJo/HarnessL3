@@ -2,12 +2,52 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
-import { realpath } from 'node:fs/promises'
+import { realpath, writeFile, mkdir, readFile } from 'node:fs/promises'
+import { setTimeout as delay } from 'node:timers/promises'
 import { fixture } from './helpers.mjs'
 import { Archive } from '../../build/core/archive.js'
 import { Runtime } from '../../build/core/runtime.js'
 import { FreshnessManager } from '../../build/core/freshness.js'
 import { startServer } from '../../build/service/main.js'
+
+test('TC31 cancelling a read-only full audit through the real HTTP service leaves history intact and a new audit can complete', async t => {
+  const f = await fixture(t, 'harnessl3-audit-cancel-', { legacy: false }), root = await f.repository();
+  assert.equal((await f.cli(['init'], { cwd: root })).code, 0);
+  assert.equal((await f.cli(['task', 'start', '--title', 'Audit cancellation fixture'], { cwd: root })).code, 0);
+  assert.equal((await f.cli(['serve', 'stop'])).code, 0);
+  const dataRoot = await realpath(f.dataRoot), file = path.join(dataRoot, 'runtime-archive.sqlite'), before = await readFile(file);
+  let entered, release; const blocked = new Promise(resolve => { entered = resolve }), gate = new Promise(resolve => { release = resolve });
+  const original = Archive.prototype.readSnapshot;
+  let hold = true;
+  t.mock.method(Archive.prototype, 'readSnapshot', async function (...args) {
+    if (hold && this.verificationScope === 'workspace') { hold = false; entered(); await gate; }
+    return original.apply(this, args);
+  });
+  let lifecycle; const ready = new Promise((resolve, reject) => { lifecycle = startServer(dataRoot, 0, resolve); lifecycle.catch(reject); });
+  const controller = new AbortController(), auditId = randomUUID();
+  try {
+    const record = await ready, headers = { authorization: 'Bearer ' + record.token, 'content-type': 'application/json' };
+    const rpc = (operation, positionals = [], requestId = randomUUID(), signal) => fetch(record.url + '/rpc', { method: 'POST', headers, signal, body: JSON.stringify({ operation, requestId, cwd: root, positionals, flags: {} }) }).then(response => response.json());
+    const pending = rpc('archive audit', [], auditId, controller.signal).catch(error => error);
+    const timeout = AbortSignal.timeout(10_000);
+    await Promise.race([blocked, new Promise((_, reject) => timeout.addEventListener('abort', () => reject(new Error('Audit did not reach the verification barrier')), { once: true }))]);
+    controller.abort(); assert.equal((await pending).name, 'AbortError');
+    await delay(100); release();
+    let receipt;
+    for (let i = 0; i < 50; i++) {
+      const status = await rpc('request status', [auditId]);
+      if (status.data?.result?.state === 'completed') { receipt = status.data.result.receipt; break; }
+      await delay(50);
+    }
+    assert.equal(receipt?.ok, false, 'Cancelled audit must return an explicit failure receipt');
+    assert.equal(receipt.error.code, 'CANCELLED');
+    const restarted = await rpc('archive audit'); assert.equal(restarted.ok, true, JSON.stringify(restarted));
+    assert.equal(restarted.data.result.workspaceIntegrity, 'ready');
+  } finally {
+    release(); const record = await ready; await fetch(record.url + '/stop', { method: 'POST', headers: { authorization: 'Bearer ' + record.token } }).then(response => response.arrayBuffer()); await lifecycle;
+  }
+  assert.deepEqual(await readFile(file), before);
+});
 
 test('TC17 snapshot entry and archived handoff do not wait for source-observation state restoration', async t => {
   const f = await fixture(t)
@@ -39,7 +79,7 @@ test('TC17 snapshot entry and archived handoff do not wait for source-observatio
   } finally { await request; await runtime.close() }
 })
 
-test('TC17 subscription resumption leaves unrelated snapshot recovery until its workspace is requested', async t => {
+test('TC31 subscription resumption and ordinary workspace access do not read unrelated historical snapshot bodies', async t => {
   const f = await fixture(t)
   const root = await f.repository()
   const initialized = await f.cli(['init'], { cwd: root })
@@ -56,8 +96,12 @@ test('TC17 subscription resumption leaves unrelated snapshot recovery until its 
   try {
     await runtime.ready()
     assert.equal(reads, 0, 'no explicit log binding needs this historical body at startup')
-    await runtime.worktreeResources(worktree)
-    assert.equal(reads, 1, 'target access still performs full reference validation')
+    const resource = await runtime.worktreeResources(worktree)
+    assert.equal(reads, 0, 'ordinary workspace access verifies journal structure, not unrelated bodies')
+    assert.equal(resource.tasks.status().archive.workspaceIntegrity, 'unknown')
+    const audit = await runtime.execute({ operation: 'archive audit', requestId: randomUUID(), cwd: root, positionals: [], flags: {} })
+    assert.equal(audit.ok, true, JSON.stringify(audit))
+    assert.equal(reads, 1, 'explicit full archive audit verifies the unrelated historical body')
   } finally { await runtime.close() }
 })
 
@@ -94,7 +138,7 @@ test('TC23 control readiness and RPC remain available while archive recovery is 
   }
 })
 
-test('TC17 startup and first worktree access recover the same committed archive once', async t => {
+test('TC31 ordinary workspace access does not eagerly recover any unrelated snapshot body', async t => {
   const f = await fixture(t)
   const root = await f.repository()
   const initialized = await f.cli(['init'], { cwd: root })
@@ -116,6 +160,33 @@ test('TC17 startup and first worktree access recover the same committed archive 
   try {
     await runtime.ready()
     await runtime.worktreeResources(worktree)
-    assert.equal(reads, 1, 'startup, task resources and legacy listing must share verified recovery')
+    assert.equal(reads, 0, 'startup and task resources must not eagerly verify unrelated historical content')
+  } finally { await runtime.close() }
+})
+
+test('TC31 a new snapshot task is independent of an unrelated damaged historical body; explicit audit still detects it', async t => {
+  const f = await fixture(t)
+  const root = await f.repository()
+  await mkdir(f.dataRoot, { recursive: true })
+  const runtime = new Runtime(await realpath(f.dataRoot))
+  const call = (operation, positionals = [], flags = {}) => runtime.execute({ operation, positionals, flags, cwd: root, requestId: randomUUID() })
+  try {
+    const initialized = await call('init')
+    assert.equal(initialized.ok, true)
+    const worktree = initialized.data.result.worktree
+    const archiveRoot = path.join(runtime.dataRoot, 'worktrees', worktree.id)
+    const writer = new Archive(archiveRoot)
+    const hash = await writer.snapshot('unrelated-old-state', { padding: 'a'.repeat(65536) })
+    await writer.commit({ scope: 'unrelated', requestId: randomUUID(), request: {}, payload: { kind: 'unrelated' }, receipt: {}, archives: [{ kind: 'snapshot', hash }] })
+    await writeFile(path.join(archiveRoot, 'snapshots', hash + '.json'), 'damaged')
+    const started = await call('task start', [], { title: 'No unrelated archive dependencies' })
+    assert.equal(started.ok, true, JSON.stringify(started))
+    const resource = await runtime.worktreeResources(worktree, true)
+    assert.equal(resource.tasks.status().archive.workspaceIntegrity, 'unknown')
+    const handoff = await call('task handoff', [started.data.taskId])
+    assert.equal(handoff.ok, true, JSON.stringify(handoff))
+    const audit = await call('archive audit')
+    assert.equal(audit.ok, false)
+    assert.equal(audit.error.code, 'ARCHIVE_CORRUPT')
   } finally { await runtime.close() }
 })

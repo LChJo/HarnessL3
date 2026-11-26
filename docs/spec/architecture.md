@@ -1,5 +1,9 @@
 # 架构与工程边界
 
+v0.57候选新增`current-state.ts`（每工作区事务当前值）、`packed-archive.ts`（机器级事务历史与原始压缩分块内容）、`task-delta.ts`（任务变化字段与实际追加批次）、`scripts/v1/migrate-packed-storage.mjs`（显式离线转换及校验）。`Archive`兼容旧格式、按操作范围核验和独立全量审计；`Runtime`按需加载、空闲释放，前台任务不依赖无关历史正文及冷搜索索引；`service`分开临时freshness和业务commit事件。运行诊断提供实际逻辑IO及容量/资源/延迟指标，空间不足在新写入前保守拒绝。现有Node/TS、本机单实例、项目文本和技能文件权威不变；实际迁移/跨平台状态另见STATUS。
+
+v0.57（已确认重设计方向、尚未实现）：[运行架构重设计规格](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)补充目标模块边界和阶段退出条件。以下v1架构为现有兼容格式；目标改为独立有界当前态、业务历史、按需完整审计及紧凑内容存储，单实例、项目文本权威和严格proof不变。实际切换以阶段验证为准。
+
 v0.53：Web列表/视图采用独立只读浏览资源，复用完整档案或可重建日志定位索引，按所请求范围核对原字节；不等待同目标在途完整恢复、同步初始化或SQLite追赶。SSE只取得提交游标；冷当前状态仅显示最近观测并保持unknown/pending。下面的完整业务恢复要求继续适用于CLI任务、同步、管理及显式订阅；浏览scope不构成全工作区完整性证明。
 
 v0.46（2026-11-10）：用户授权按可靠性审查充分修复。默认 task start 为 snapshot：捕获合法模型和技能目录，不扫描源码；binding.mode=snapshot、sourceVersion.status=unknown、sourceScanRevision=null，不声称当前源码已核验。显式 --mode verified 与 sync status/verify 保留完整双遍来源检查、严格代次及 CAS；旧无 mode 绑定仍按 verified 解释。请求进度写 stderr，CLI 等待有界且 request status 可找回原回执；超时不撤销服务已接受的工作。技能变化在同一任务以 --stage 追加，不改旧批次；仍可用且版本合适的正文跨轮复用。下列旧版本记录保留，相关当前要求以本版为准。

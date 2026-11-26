@@ -268,6 +268,8 @@ export class ObservationManager {
   private scope(): string { return `observation:${this.options.worktree.id}`; }
   private lease(binding: Pick<StoredBinding, 'agent' | 'sessionId' | 'logFile'>): string { return `${binding.agent}\0${binding.sessionId}\0${process.platform === 'win32' ? binding.logFile.toLowerCase() : binding.logFile}`; }
   ready(): Promise<void> { return this.initialized ??= this.load(); }
+  hasActiveBindings(): boolean { return [...this.bindings.values()].some(binding => binding.active && !binding.pauseReason); }
+  metrics() { return { activeBindings: [...this.bindings.values()].filter(binding => binding.active && !binding.pauseReason).length, recordedBindings: this.bindings.size, events: this.events.size, polling: !!this.timer, inFlight: !!this.polling }; }
   private async load(): Promise<void> {
     await this.options.archive.ready();
     for await (const record of this.options.archive.scanAsync({ kind: 'observation-state' })) {
@@ -286,7 +288,7 @@ export class ObservationManager {
   }
   private startTimer(): void {
     const interval = this.options.pollIntervalMs ?? 250;
-    if (!this.closed && interval > 0 && !this.timer) { this.timer = setInterval(() => { void this.poll().catch(() => {}); }, interval); this.timer.unref(); }
+    if (!this.closed && interval > 0 && !this.timer && this.hasActiveBindings()) { this.timer = setInterval(() => { void this.poll().catch(() => {}); }, interval); this.timer.unref(); }
   }
   private diagnostic(binding: StoredBinding, code: string, position: Position = { generation: binding.cursor.generation, start: binding.cursor.offset, end: binding.cursor.offset }, recordHash: string | null = null): void {
     const gap = { code, ...position, recordHash };
@@ -366,6 +368,7 @@ export class ObservationManager {
       await this.persist(binding, [], requestId, request);
       await this.handles.get(binding.id)?.file.close(); this.handles.delete(binding.id);
       if (leases.get(this.lease(binding))?.owner === this) leases.delete(this.lease(binding));
+      if (!this.hasActiveBindings() && this.timer) { clearInterval(this.timer); this.timer = undefined; }
       return { bindings: [publicBinding(binding)], replayed: false };
     });
   }
@@ -398,6 +401,7 @@ export class ObservationManager {
           all.push(...changed);
         }
       }
+      if (!this.hasActiveBindings() && this.timer) { clearInterval(this.timer); this.timer = undefined; }
       return all;
     });
   }

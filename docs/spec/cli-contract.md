@@ -1,5 +1,11 @@
 # CLI 与交换协议 v1
 
+v0.57候选新增无输入正文的两个命令：`archive audit [--worktree <UUID>] [global options]`，按目标对完整历史结构、原引用、任务/同步/观测记录进行独立核验，成功返回`verificationScope=workspace, workspaceIntegrity=ready, seq, taskRecords, freshnessRecords, diagnostics`；并发写入造成范围变化则BUSY，不扫描当前源码或改历史。仅该只读审计可在调用端取消/断开时协作停止，原requestId可查询取消结果，不标记完整核验或档案损坏，重新核验使用新requestId从头检查；业务写入不采用该取消语义。`runtime diagnostics [global options]`返回`dataRoot, freeBytes, registeredWorktrees, loadedWorktrees, activeOperations, recovery, memory, latency, packed, worktrees`，延迟基于最近最多256个样本，IO为逻辑归档负载非物理磁盘写入。`task list`及`history list`增加`verificationScope=metadata, workspaceIntegrity=unknown`，按目标详情核对原引用；旧格式和新packed格式公共任务ID/回执仍兼容。
+
+v0.57（已确认重设计目标、本机实际已落地）：[重设计规格 R03/R05/R06](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)分离普通操作和全量档案审计、维持原requestId与回复兼容；新增命令、运行格式/错误或回应字段在相应契约/Schema中定义。以下兼容旧CLI契约并标明新增命令，本机已安装范围和未正式发布/验收项见STATUS。
+
+长RPC的等待使用调用方实际`--timeout-ms`预算，认证后的本机请求不另设固定响应头等待门槛；进度查询仍有独立短超时。连接丢失不等于未执行，已受理写入仍按原requestId核对，不因等待预算延长而重复分派；只读审计取消语义见上。
+
 v0.52（2026-11-16）：用户确认采用稳定共享projectId、本机Git仓库关联及旧ID兼容。共享配置/模型随Git保存；已有上下文只执行register，无需init。显式登记以规范origin关联多个common-dir及旧配置ID，project list/Web归为一个项目；各工作区UUID、原任务绑定、历史字节与同步隔离保持。普通注册不改项目文件，缺失默认本机技能库时仅创建本机库。已知origin漂移、不同远端复用UUID及普通目录继续拒绝混用；列表读取不自动迁移。严格配置字节/来源/模型/epoch核验及pending保持。D05/06/08/15、FR01/12/15及TC01/02/08/21/22/27，实际验证见实施状态。
 
 v0.51：`task select --compact`是可选CLI显示投影，在同一target保留binding/result/skillPlan，把重复累计packet替换为packetRef={taskId,throughBatchId,contentHash,restoreOperation:"task handoff"}。contentHash为digest("context-packet",完整packet)，可用`task handoff <taskId> --batch <throughBatchId>`恢复核对。该选项不进入RPC业务请求、幂等指纹或完整归档；同requestId可获取默认完整回执，旧默认返回形状保持。选择Schema允许packet或packetRef二选一。新sync verify结果以scopeStatus表达声明范围是否通过；全局state/pendingPaths独立，旧历史回执不修改。

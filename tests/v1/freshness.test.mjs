@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, writeFile, rm, symlink, realpath, rename } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, symlink, realpath, rename, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFile as callbackExecFile } from 'node:child_process';
@@ -38,7 +38,7 @@ async function settle(manager, quietMs = 500, timeout = 15000) {
   throw new Error('Timed out waiting for watcher notifications to settle');
 }
 
-async function fixture(t, { extraSource = false, warm = false } = {}) {
+async function fixture(t, { extraSource = false, warm = false, leaseMs } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), 'harnessl3-freshness-'));
   const managers = [];
   t.after(async () => {
@@ -81,7 +81,7 @@ async function fixture(t, { extraSource = false, warm = false } = {}) {
   };
   const create = async ({ warm: prewarm = false } = {}) => {
     const archive = new Archive(archiveRoot);
-    const manager = new FreshnessManager({ worktree: initialized.worktree, archive, serial, pollIntervalMs: 60_000 });
+    const manager = new FreshnessManager({ worktree: initialized.worktree, archive, serial, ...(leaseMs === undefined ? {} : { leaseMs }) });
     managers.push(manager);
     await manager.ready();
     if (prewarm) { await manager.status(skillsRoot); await settle(manager); }
@@ -188,6 +188,62 @@ test('TC07 background observation hashes changed leaves without promoting its ba
   capture.mock.restore();
   const complete = await f.manager.status(f.skillsRoot);
   assert.notEqual(complete.sourceVersion.treeHash, baseline.sourceVersion.treeHash);
+});
+
+test('TC28 repeated notifications never append full synchronization history', async t => {
+  const f = await fixture(t);
+  // Drive the native notification boundary directly, without timing-dependent
+  // multiplicity from the host watcher. No actual source bytes are changed.
+  const paths = Array.from({ length: 8000 }, (_, i) => `src/feature-${String(i).padStart(5, '0')}/pending.ts`);
+  f.manager.state.pendingPaths = paths;
+  const before = f.archive.seq;
+  for (let i = 0; i < 10; i++) {
+    f.manager.markSource([paths[0]]);
+    await f.manager.observedWrite;
+  }
+  assert.equal(f.manager.currentState().sourceEpoch, 10);
+  assert.deepEqual(f.manager.currentState().pendingPaths, paths);
+  assert.equal(f.archive.seq, before, 'background events are not durable business commits');
+  for (let i = 0; i < 10000; i++) f.manager.markSource([paths[0]]);
+  await f.serial(async () => undefined);
+  assert.equal(f.manager.currentState().sourceEpoch, 10010);
+  assert.deepEqual(f.manager.currentState().pendingPaths, paths);
+  assert.equal(f.archive.seq, before);
+  assert.deepEqual(await readdir(path.join(f.archive.root, 'snapshots')), []);
+  for (let i = 0; i < 10000; i++) f.manager.markSource([`new/generated-${i}.ts`]);
+  const storm = f.manager.currentState();
+  assert.equal(storm.pendingWorkspace, true);
+  assert.ok(storm.pendingPaths.length <= paths.length + 4097, 'path storm degrades to whole-workspace pending rather than unbounded state');
+  assert.equal(f.archive.seq, before);
+});
+
+test('TC29 passive workspaces have no watcher and an idle lease expires without an archive commit or source scan', async t => {
+  const f = await fixture(t, { leaseMs: 3000 });
+  assert.equal(f.manager.watcher, undefined);
+  assert.equal(f.manager.timer, undefined);
+  const state = await f.manager.status(f.skillsRoot);
+  assert.ok(f.manager.watcher);
+  const archiveSeq = f.archive.seq;
+  const capture = t.mock.method(f.manager, 'capture', () => { throw new Error('Idle coverage must not scan source'); });
+  await until(() => !f.manager.watcher, 'lease expiration', 6000);
+  assert.equal(f.manager.timer, undefined);
+  assert.equal(f.manager.currentState().scanPending, true);
+  assert.ok(f.manager.currentState().sourceEpoch > state.sourceEpoch);
+  assert.equal(f.archive.seq, archiveSeq);
+  assert.equal(capture.mock.callCount(), 0);
+  capture.mock.restore();
+  await assert.rejects(f.manager.verify(proof(state, f.initialized.worktree), f.skillsRoot), { code: 'SYNC_RACE' });
+});
+
+test('TC30 restart invalidates an issued proof even when the source bytes never changed', async t => {
+  const f = await fixture(t);
+  const state = await f.manager.status(f.skillsRoot);
+  const issued = proof(state, f.initialized.worktree);
+  const baseline = await f.manager.verify(proof(state, f.initialized.worktree), f.skillsRoot);
+  await f.manager.close();
+  const reopened = await f.create();
+  assert.ok(reopened.manager.currentState().sourceEpoch > baseline.sourceEpoch);
+  await assert.rejects(reopened.manager.verify(issued, f.skillsRoot), { code: 'SYNC_RACE' });
 });
 
 test('TC07 concurrent status callers share one complete reconciliation but a later call rechecks bytes', async t => {
@@ -729,6 +785,24 @@ test('TC07 model-only changes return pending without advancing sourceEpoch', asy
   assert.equal(current.sourceEpoch, verified.sourceEpoch);
   assert.notEqual(current.modelRevision, verified.modelRevision);
   assert.equal(current.state, 'pending');
+});
+
+test('TC30 captured model rollback invalidates a declaration even when the original source and model bytes return', async t => {
+  const f = await fixture(t, { warm: true });
+  const baseline = await f.manager.status(f.skillsRoot);
+  const old = proof(baseline, f.initialized.worktree);
+  const modelFile = path.join(f.checkout, '.harness', 'model', 'main.c4');
+  const original = await readFile(modelFile, 'utf8');
+  await writeFile(modelFile, original.replace('Project boundary;', 'Rollback fixture changed boundary;'));
+  f.manager.watchEvent('.harness/model/main.c4');
+  const changed = await f.manager.status(f.skillsRoot);
+  assert.notEqual(changed.modelRevision, baseline.modelRevision);
+  await writeFile(modelFile, original);
+  f.manager.watchEvent('.harness/model/main.c4');
+  const restored = await f.manager.status(f.skillsRoot);
+  assert.equal(restored.modelRevision, baseline.modelRevision);
+  assert.ok(restored.sourceEpoch > baseline.sourceEpoch);
+  await assert.rejects(f.manager.verify(old, f.skillsRoot), { code: 'SYNC_RACE' });
 });
 
 test('TC08 verification rechecks source inside the shared commit queue', async (t) => {

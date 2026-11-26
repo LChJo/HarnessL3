@@ -1,5 +1,9 @@
 # 只读日志观测与源码同步
 
+v0.57候选：普通来源通知仅递增失效代次、合并内存待核验集合并发送限频临时freshness更新，不写不可变历史。无法确认/超限改为`pendingWorkspace:true`，仅显式完整捕获解析实际路径；分类最多32个在途，增量每批128路径，额外未知路径预算4096，超过保守pending。显式同步操作取得5分钟空闲租约，不周期完整扫描，覆盖失效或空闲释放后旧声明失效；当前状态由SQLite替换，状态库损坏不可清pending。verified/source/proof的完整原字节及CAS仍执行；`sync verify`保留原声明、回执与依据，status不是永久业务事件。无活动显式日志绑定不轮询；浏览不续期、不启动观察。具体测试及尚未通过范围见STATUS。
+
+v0.57（已确认目标、本机实际已落地）：[重设计规格 R01/R02](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)要求普通通知与当前状态更新不进入永久业务历史，工作区按需租约及合并观测、覆盖失效保守pending，取消无界后台全态归档与非必要全扫；显式verified/status/verify完整原字节和CAS不弱化。以下旧格式描述保留兼容依据，实际验收范围见STATUS。
+
 v0.51：原生通知缺少安全相对路径时释放该监听器并使覆盖失效，定期完整核对补偿；目录消失/替换为链接时释放监听、返回SOURCE_ROOT_UNAVAILABLE并保留历史与pending，静止的缺失状态不持续写档或推进代次。原路径恢复后重新挂载并完整核验，旧声明不能复用。新verify回执增加scopeStatus=passed/failed表示原声明范围；state继续表示整个工作区，局部passed可同时state=pending，旧回执不补写。
 
 v0.49：Git临时锁、reflog、已知内容寻址对象/pack写入及FETCH_HEAD/ORIG_HEAD/COMMIT_EDITMSG不代表当前来源切换；显式证据引用仍优先，HEAD/index/refs/配置/忽略规则、对象查找配置、聚合及未知通知继续失效。只读status可在有界次数内重做完整采集以吸收短时通知；持续变化保留scanPending及SOURCE_CHANGING，不把不稳定绑定用于声明。verify保持原有完整检查及严格CAS，不自动重基或重试语义声明。SYNC_RACE回执recovery增加cause、reviewRequired、reviewScope和current；这些是原尝试的快照，恢复先刷新事实并重新审查，再用新requestId提交。旧回执和所有未覆盖pending保留。

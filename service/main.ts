@@ -14,6 +14,7 @@ import { processAlive, removeOwnedFile, validateServiceFile, type ServiceDescrip
 import { resolveInside, safeRelative } from '../core/paths.js'
 import { validateUuid } from '../cli/args.js'
 import { linkTarget, loadWebAccess } from './web-access.js'
+import { initializeNewPackedRoot } from '../core/packed-archive.js'
 
 async function body(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = []
@@ -135,6 +136,13 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
           const command = validateRpcRequest(supplied)
           command.source = auth ? 'cli' : 'web'
           if (!auth && !/^(?:project list|worktree (?:list|show)|model validate|skills (?:list|refresh)|task (?:start|prompt|select|show|list|handoff|read|close)|context query|history (?:list|show)|agent status|sync status)$/.test(command.operation)) return json(response, { error: 'This operation requires the CLI' }, 403)
+          if (command.operation === 'archive audit') {
+            const audit = new AbortController()
+            const cancel = () => { if (!response.writableEnded) audit.abort() }
+            response.once('close', cancel)
+            try { const result = await runtime.execute(command, audit.signal); if (!response.destroyed) return json(response, result); return }
+            finally { response.removeListener('close', cancel) }
+          }
           return json(response, await runtime.execute(command))
         } finally { active--; if (!active) for (const waiter of drainWaiters.splice(0)) waiter() }
       }
@@ -162,13 +170,17 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
         streams.add(response)
         const send = (kind: string, data: { worktreeId: string; seq: number; kind?: string }) => { if (!response.destroyed && !response.writableEnded) response.write(`id: ${data.seq}\nevent: ${kind}\ndata: ${canonicalJson(data)}\n\n`) }
         const changed = (event: { worktreeId: string; seq: number; kind: string }) => { if (event.worktreeId === worktreeId) send('commit', event) }
+        const observed = (event: { worktreeId: string }) => {
+          if (event.worktreeId === worktreeId && !response.destroyed && !response.writableEnded && !response.writableNeedDrain) response.write(`event: freshness\ndata: ${canonicalJson(event)}\n\n`)
+        }
         runtime.on('commit', changed)
+        runtime.on('freshness', observed)
         send(Number(after) === seq ? 'ready' : 'reset', { worktreeId, seq })
         const deadline = auth ? undefined : setTimeout(() => response.end(), Math.max(0, cookieExpiry! - Date.now()))
         deadline?.unref()
         const heartbeat = setInterval(() => { if (!response.destroyed) response.write(': keep-alive\n\n') }, 15_000)
         heartbeat.unref()
-        response.once('close', () => { clearTimeout(deadline); clearInterval(heartbeat); runtime.off('commit', changed); streams.delete(response) })
+        response.once('close', () => { clearTimeout(deadline); clearInterval(heartbeat); runtime.off('commit', changed); runtime.off('freshness', observed); streams.delete(response) })
         return
       }
       if (request.method !== 'GET') return json(response, { error: 'Not found' }, 404)
@@ -199,6 +211,7 @@ export async function startServer(dataRoot: string, port = 0, onReady?: (record:
   const signal = () => { if (!record) cancelledBeforeReady = true; else void shutdown().catch(rejectFinish) }
   process.once('SIGINT', signal); process.once('SIGTERM', signal)
   try {
+    await initializeNewPackedRoot(dataRoot)
     await runtime.preflight()
     webAccess = await loadWebAccess(dataRoot)
     if (cancelledBeforeReady) throw new HarnessError('CANCELLED', 'Service startup cancelled before readiness')

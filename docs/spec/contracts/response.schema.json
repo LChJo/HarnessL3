@@ -127,7 +127,11 @@
         "kind": { "const": "command-result" }, "status": { "const": "complete" },
         "operation": { "type": "string", "minLength": 1 }, "result": { "type": "object" }
       },
-      "allOf": [{ "if": { "properties": { "operation": { "const": "model maintain" } } }, "then": { "properties": { "result": { "$ref": "model-maintenance.schema.json" } } } }]
+      "allOf": [
+        { "if": { "properties": { "operation": { "const": "model maintain" } } }, "then": { "properties": { "result": { "$ref": "model-maintenance.schema.json" } } } },
+        { "if": { "properties": { "operation": { "const": "archive audit" } } }, "then": { "properties": { "result": { "type": "object", "additionalProperties": false, "required": ["verificationScope", "workspaceIntegrity", "seq", "taskRecords", "freshnessRecords", "diagnostics"], "properties": { "verificationScope": { "const": "workspace" }, "workspaceIntegrity": { "const": "ready" }, "seq": { "type": "integer", "minimum": 0 }, "taskRecords": { "type": "integer", "minimum": 0 }, "freshnessRecords": { "type": "integer", "minimum": 0 }, "diagnostics": { "type": "array", "items": { "type": "object" } } } } } } },
+        { "if": { "properties": { "operation": { "const": "runtime diagnostics" } } }, "then": { "properties": { "result": { "type": "object", "additionalProperties": false, "required": ["dataRoot", "freeBytes", "registeredWorktrees", "loadedWorktrees", "activeOperations", "recovery", "memory", "latency", "packed", "worktrees"], "properties": { "dataRoot": { "type": "string", "minLength": 1 }, "freeBytes": { "type": ["integer", "null"], "minimum": 0 }, "registeredWorktrees": { "type": "integer", "minimum": 0 }, "loadedWorktrees": { "type": "integer", "minimum": 0 }, "activeOperations": { "type": "integer", "minimum": 0 }, "recovery": { "type": "object" }, "memory": { "type": "object" }, "latency": { "type": "object" }, "packed": { "type": ["object", "null"] }, "worktrees": { "type": "array", "items": { "type": "object" } } } } } } }
+      ]
     },
     "legacyArchive": {
       "type": "object", "additionalProperties": false,

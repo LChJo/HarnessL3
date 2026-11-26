@@ -1,5 +1,6 @@
 import { open, unlink, lstat } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
+import { request as httpRequest } from 'node:http'
 import { setTimeout } from 'node:timers/promises'
 import path from 'node:path'
 import { readJson, ensureDir, isErrno } from '../core/io.js'
@@ -200,10 +201,27 @@ export async function rpc(record: ServiceDescriptor, request: CommandRequest, si
   try { return await rpcOnce(record, request, signal) }
   finally { clearInterval(timer) }
 }
+// Global fetch has an independent fixed response-header deadline (approximately
+// five minutes). An explicit audit or cold recovery may legitimately exceed it.
+// The authenticated local RPC instead obeys the caller's bounded wait signal.
+function localRpc(record: ServiceDescriptor, request: CommandRequest, signal?: AbortSignal): Promise<{ status: number; bytes: Buffer }> {
+  const payload = Buffer.from(JSON.stringify(request), 'utf8')
+  return new Promise((resolve, reject) => {
+    const client = httpRequest(record.url + '/rpc', { method: 'POST', agent: false, signal: signal ?? AbortSignal.timeout(3_600_000), headers: { ...serviceHeaders(record), 'content-type': 'application/json', 'content-length': payload.length } }, response => {
+      const chunks: Buffer[] = []
+      response.on('data', chunk => { if (response.statusCode && response.statusCode >= 200 && response.statusCode < 300) chunks.push(Buffer.from(chunk)) })
+      response.once('error', reject)
+      response.once('aborted', () => reject(new Error('The local RPC response ended prematurely')))
+      response.once('end', () => resolve({ status: response.statusCode ?? 0, bytes: Buffer.concat(chunks) }))
+    })
+    client.once('error', reject)
+    client.end(payload)
+  })
+}
 async function rpcOnce(record: ServiceDescriptor, request: CommandRequest, signal?: AbortSignal): Promise<Envelope> {
   cancelled(signal)
-  let response: Response
-  try { response = await fetch(record.url + '/rpc', { method: 'POST', headers: { ...serviceHeaders(record), 'content-type': 'application/json' }, body: JSON.stringify(request), signal }) }
+  let response: Awaited<ReturnType<typeof localRpc>>
+  try { response = await localRpc(record, request, signal) }
   catch (error) {
     cancelled(signal)
     const permission = permissionError(error)
@@ -211,15 +229,14 @@ async function rpcOnce(record: ServiceDescriptor, request: CommandRequest, signa
     const code = systemCode(error), refused = code === 'ECONNREFUSED'
     throw new HarnessError(refused ? 'BUSY' : 'IO_ERROR', refused ? 'The local service is temporarily unreachable; retry this command' : 'The local service response was lost; check the request result before retrying', { requestId: request.requestId, reason: refused ? 'connection-refused' : 'response-lost', outcome: refused ? 'not-executed' : 'unknown', nextAction: refused ? 'retry-same-request' : 'query-request', ...(code ? { systemCode: code } : {}) }, refused)
   }
-  if (!response.ok) {
-    await response.body?.cancel()
+  if (response.status < 200 || response.status >= 300) {
     const temporary = response.status === 503
     const rejected = [401, 403, 409, 503].includes(response.status)
     const reason = temporary ? 'not-accepting-requests' : response.status === 409 ? 'protocol-or-identity-mismatch' : [401, 403].includes(response.status) ? 'authentication-rejected' : 'http-error'
     throw new HarnessError(temporary ? 'BUSY' : response.status === 409 ? 'VERSION_CONFLICT' : rejected ? 'SERVICE_CONFLICT' : 'IO_ERROR', temporary ? 'The local service is not accepting requests yet; retry this command' : rejected ? 'The local service rejected the request before execution' : 'The local service returned an unexpected HTTP error; check the request result before retrying', { requestId: request.requestId, httpStatus: response.status, reason, outcome: rejected ? 'not-executed' : 'unknown', nextAction: rejected ? 'resolve-admission' : 'query-request' }, temporary)
   }
   try {
-    const result = validateContract<Envelope>('response', await response.json())
+    const result = validateContract<Envelope>('response', JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(response.bytes)))
     if (result.requestId !== request.requestId) throw new Error('Mismatched requestId')
     return result
   } catch {

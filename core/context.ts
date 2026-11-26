@@ -5,6 +5,7 @@ import { SearchIndex, type IndexDocument } from './index.js'
 import { loadModel, modelBody, modelDirectory } from './model.js'
 import { captureSkills, scanSkills } from './skills.js'
 import { canonicalJson, digest, sha256 } from './json.js'
+import { applyTaskDelta, encodeTaskDelta, isTaskDelta, type TaskDelta } from './task-delta.js'
 import { HarnessError, asHarnessError } from './errors.js'
 import { validateContract } from './contract.js'
 import { reportProgress } from './progress.js'
@@ -15,12 +16,12 @@ import type { BatchResult, Binding, Envelope, FileReadRequest, ItemError, ModelS
 
 const RETENTION = 60 * 86400000
 const ROUTER_VERSION = 'skill-hub/3'
-const projectionRevisions = { eventProjection: 'compact-headers/1', taskProjection: 'compact-batches/1' }
+const projectionRevisions = { eventProjection: 'business-headers/2', taskProjection: 'compact-batches/1' }
 const hashPattern = /^[a-f0-9]{64}$/
 interface SourceState { sourceVersion: SourceVersion; sourceScanRevision: string | null; archives?: ArchiveReference[] }
 interface FrozenTask extends TaskRecord { sourceArchives?: ArchiveReference[] }
 interface FrozenBatch extends TaskBatch { binding: Binding; catalog: SkillBrief[] }
-interface TaskPayload { kind: 'task'; task: TaskRecord; operation?: string; source?: 'cli' | 'web' }
+interface TaskPayload { kind: 'task'; task: TaskRecord | TaskDelta; operation?: string; source?: 'cli' | 'web' }
 interface Options {
   worktree: WorktreeRecord; archive: Archive; index: SearchIndex
   source: (skillsRoot: string) => Promise<SourceState>
@@ -77,7 +78,7 @@ export class TaskService {
     return next
   }
   tasks(): TaskRecord[] { return [...this.latestTasks.keys()].map(id => this.task(id)) }
-  status() { return { archive: { state: this.archive.status, seq: this.archive.seq, diagnostics: this.archive.diagnostics, verificationScope: this.browsing ? 'requested' : this.archive.verificationScope, workspaceIntegrity: this.browsing ? 'unknown' : this.archive.status }, index: this.browsing ? { state: 'not-opened' } : this.index.status, indexError: this.indexProblem ? String(this.indexProblem) : null } }
+  status() { return { archive: { state: this.archive.status, seq: this.archive.seq, diagnostics: this.archive.diagnostics, verificationScope: this.browsing ? 'requested' : this.archive.verificationScope, workspaceIntegrity: this.browsing || this.archive.verificationScope !== 'workspace' ? 'unknown' : this.archive.status }, index: this.browsing ? { state: 'not-opened' } : this.index.status, indexError: this.indexProblem ? String(this.indexProblem) : null } }
 
   private target(): Target { return { projectId: this.worktree.projectId, worktreeId: this.worktree.id } }
   private instant(): Date {
@@ -97,6 +98,7 @@ export class TaskService {
     await this.restore()
     if (this.browsing) return
     if (this.archive.status !== 'ready') { this.indexProblem = new HarnessError('INDEX_UNAVAILABLE', 'The journal has an unverified region; history search is unavailable.', { diagnostics: this.archive.diagnostics }, true); return }
+    if (this.archive.verificationScope === 'operational') return
     try {
       await this.index.ready()
       await this.ensureIndex()
@@ -105,12 +107,16 @@ export class TaskService {
   private async restore(): Promise<void> {
     reportProgress({ phase: 'restoring-tasks' })
     this.latestTasks.clear(); this.records.clear(); this.cachedSizes.clear(); this.cachedBytes = 0
+    if (this.archive.verificationScope === 'operational' && !this.browsing) {
+      for (const header of this.archive.headers({ kind: 'task' })) if (header.taskId) this.latestTasks.set(header.taskId, header.seq)
+      return
+    }
     const latest = new Map<string, number>()
     if (this.browsing) for (const header of this.archive.headers({ kind: 'task', taskId: this.browseTaskId })) if (header.taskId) latest.set(header.taskId, header.seq)
     const records = this.browsing ? (async function* (archive: Archive) { for (const seq of latest.values()) yield await archive.record(seq) })(this.archive) : this.archive.scanAsync({ kind: 'task' })
     for await (const record of records) {
       const payload = record.payload as TaskPayload
-      const task = this.checkedTask(payload.task)
+      const task = this.decodeTaskRecord(record)
       this.latestTasks.set(task.id, record.seq)
       this.cacheTask(task)
     }
@@ -149,6 +155,22 @@ export class TaskService {
       return structuredClone(task)
     } catch (error) { throw new HarnessError('ARCHIVE_CORRUPT', 'The committed task payload does not match the v1 contract.', { cause: String(error) }) }
   }
+  private decodeTaskRecord(record: CommitRecord): TaskRecord {
+    const patches: TaskDelta[] = [];
+    let current = record;
+    let value = (current.payload as TaskPayload).task;
+    const taskId = value?.id;
+    while (isTaskDelta(value)) {
+      if (!Number.isSafeInteger(value.baseSeq) || value.baseSeq < 1 || value.baseSeq >= current.seq || !hashPattern.test(value.baseHash)) throw new HarnessError('ARCHIVE_CORRUPT', 'The task delta references an invalid preceding commit.');
+      patches.push(value);
+      current = this.archive.recordSync(value.baseSeq);
+      if (current.hash !== value.baseHash || (current.payload as TaskPayload).kind !== 'task' || (current.payload as TaskPayload).task?.id !== taskId) throw new HarnessError('ARCHIVE_CORRUPT', 'The task delta base is not the original task commit.');
+      value = (current.payload as TaskPayload).task;
+    }
+    let task = this.checkedTask(value);
+    for (const delta of patches.reverse()) task = applyTaskDelta(task, delta);
+    return patches.length ? this.checkedTask(task) : task;
+  }
   private checkPacket(packet: Packet): void {
     const entities = new Set<string>()
     const references = new Set<string>()
@@ -169,11 +191,20 @@ export class TaskService {
     for (const header of this.archive.headers({ kind: 'task' })) {
       if (header.operation === 'task read' && header.taskId) events.push({ seq: header.seq, document: this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web') })
     }
-    for (const header of this.archive.headers({ excludeKinds: ['task'] })) {
-      events.push({ seq: header.seq, document: this.eventDocument(header) })
+    for (const header of this.archive.headers({ excludeKinds: ['task'], businessOnly: true })) {
+      if (!this.transientHistory(header)) events.push({ seq: header.seq, document: this.eventDocument(header) })
     }
     documents.push(...events.sort((a, b) => a.seq - b.seq).map(event => event.document))
     return documents
+  }
+  private transientHistory(header: CommitHeader): boolean {
+    return header.kind === 'freshness-state' && header.scope.startsWith('freshness-state:')
+  }
+  /** Explicit full audit: validate every historical task shape without opening a search index. */
+  async auditHistory(): Promise<number> {
+    let count = 0
+    for await (const record of this.archive.scanAsync({ kind: 'task' })) { this.decodeTaskRecord(record); count++ }
+    return count
   }
   private eventDocument(header: CommitHeader): IndexDocument {
     return { id: header.operationId, kind: 'event', title: header.kind ?? 'committed-event', text: [header.kind, header.scope].filter(Boolean).join('\n'), activityAt: header.committedAt, data: { seq: header.seq, kind: header.kind, receiptHash: header.receiptHash, scope: header.scope } }
@@ -208,8 +239,8 @@ export class TaskService {
         await this.index.rebuild(this.projection(), this.archive.seq, projectionRevisions)
       } else if (this.index.status.seq < this.archive.seq) {
         const fromSeq = this.index.status.seq + 1
-        const headers = this.archive.headers({ afterSeq: fromSeq - 1 })
-        if (headers.length !== this.archive.seq - fromSeq + 1 || headers.some((header, i) => header.seq !== fromSeq + i)) throw new HarnessError('INDEX_SEQUENCE_GAP', 'The verified archive cannot cover the index cursor.')
+        const throughSeq = this.archive.seq
+        const headers = this.archive.headers({ afterSeq: fromSeq - 1, businessOnly: true })
         const documents = new Map<string, IndexDocument>()
         const add = (document: IndexDocument) => documents.set(document.kind + ':' + document.id, document)
         for (const header of headers) {
@@ -218,9 +249,9 @@ export class TaskService {
             const task = this.latestTasks.has(header.taskId) ? this.task(header.taskId) : undefined
             if (task) for (const document of this.taskDocuments(task)) add(document)
             if (header.operation === 'task read') add(this.fileReceiptDocument(header.taskId, header.requestId, header.receiptHash, (header.source ?? 'cli') as 'cli' | 'web'))
-          } else add(this.eventDocument(header))
+          } else if (!this.transientHistory(header)) add(this.eventDocument(header))
         }
-        await this.index.catchUp(fromSeq, headers.at(-1)!.seq, [...documents.values()])
+        await this.index.catchUp(fromSeq, throughSeq, [...documents.values()])
       }
       this.indexProblem = undefined
     } catch (error) { this.indexProblem = error; throw new HarnessError('INDEX_UNAVAILABLE', 'The derived history index is unavailable; tasks remain accessible by known ID.', { cause: String(error) }, true) }
@@ -231,19 +262,28 @@ export class TaskService {
     if (!task) {
       const seq = this.latestTasks.get(id)
       if (seq === undefined) throw new HarnessError('NOT_FOUND', 'No task with this ID is archived in the selected worktree.', { taskId: id })
-      task = this.checkedTask((this.archive.recordSync(seq).payload as TaskPayload).task)
+      task = this.decodeTaskRecord(this.archive.recordSync(seq))
       this.cacheTask(task)
     } else { this.records.delete(id); this.records.set(id, task) }
     return structuredClone(task)
   }
   private async verifyTask(task: TaskRecord): Promise<void> {
     const references = new Map<string, ArchiveReference>()
-    if (this.browsing) {
+    if (this.browsing || this.archive.verificationScope === 'operational') {
+      let previous: { record: CommitRecord; task: TaskRecord } | undefined;
       for (const header of this.archive.headers({ kind: 'task', taskId: task.id })) {
         const record = await this.archive.record(header.seq)
-        if ((record.payload as TaskPayload).task.id !== task.id) throw new HarnessError('ARCHIVE_CORRUPT', 'The task locator does not match its committed identity.')
+        const payload = (record.payload as TaskPayload).task;
+        let decoded: TaskRecord;
+        if (isTaskDelta(payload)) {
+          if (!previous || payload.baseSeq !== previous.record.seq || payload.baseHash !== previous.record.hash) throw new HarnessError('ARCHIVE_CORRUPT', 'Task delta does not follow the preceding committed task operation.');
+          decoded = applyTaskDelta(previous.task, payload);
+        } else decoded = this.checkedTask(payload);
+        if (decoded.id !== task.id) throw new HarnessError('ARCHIVE_CORRUPT', 'The task locator does not match its committed identity.')
+        previous = { record, task: decoded };
         for (const reference of record.archives) references.set(`${reference.kind}:${reference.hash}`, reference)
       }
+      if (previous && !same(this.checkedTask(previous.task), task)) throw new HarnessError('ARCHIVE_CORRUPT', 'Task reconstruction differs from its committed history.');
     } else for (const reference of this.archive.references({ kind: 'task', taskId: task.id })) references.set(`${reference.kind}:${reference.hash}`, reference)
     references.set(`snapshot:${task.modelSnapshotHash}`, { kind: 'snapshot', hash: task.modelSnapshotHash })
     for (const reference of references.values()) {
@@ -285,7 +325,7 @@ export class TaskService {
       const activity = item.retentionBasisAt as string | null, expires = item.expiresAt as string | null
       return activity && expires && now <= Date.parse(expires) && (!from || activity >= from) && (!to || activity <= (to.length === 10 ? to + 'T23:59:59.999Z' : to)) && (!query || [item.id, item.title, sessions.get(String(item.id)) ?? ('declaredSession' in item ? item.declaredSession : ''), item.binding.modelRevision].join(' ').toLocaleLowerCase().includes(query))
     }).sort((a, b) => String(b.retentionBasisAt).localeCompare(String(a.retentionBasisAt)) || String(a.id).localeCompare(String(b.id)))
-    return this.envelope(request, commandResult(request.operation, { items: items.slice(offset, offset + limit), total: items.length, limit, offset, hasMore: offset + limit < items.length, retentionDays: 60, seq: this.archive.seq }))
+    return this.envelope(request, commandResult(request.operation, { items: items.slice(offset, offset + limit), total: items.length, limit, offset, hasMore: offset + limit < items.length, retentionDays: 60, seq: this.archive.seq, verificationScope: 'metadata', workspaceIntegrity: 'unknown' }))
   }
   private atBatch(task: TaskRecord, batchId?: string): TaskRecord {
     if (!batchId) return structuredClone(task)
@@ -345,14 +385,20 @@ export class TaskService {
   }
   private async persist(request: CommandRequest, scope: string, normalized: unknown, task: TaskRecord, receipt: Envelope, references: ArchiveReference[] = []): Promise<Envelope> {
     const archives = new Map<string, ArchiveReference>(references.map(reference => [`${reference.kind}:${reference.hash}`, reference]))
-    for (const reference of (task as FrozenTask).sourceArchives ?? []) archives.set(`${reference.kind}:${reference.hash}`, reference)
-    archives.set(`snapshot:${task.modelSnapshotHash}`, { kind: 'snapshot', hash: task.modelSnapshotHash })
-    for (const skill of task.skillPlan?.skills ?? []) for (const file of skill.files) archives.set(`blob:${file.hash}`, { kind: 'blob', hash: file.hash })
+    const previousSeq = this.latestTasks.get(task.id)
+    const deltaCommit = this.archive.format === 'packed-sqlite/1' && previousSeq !== undefined
+    const scopedSkillRead = this.archive.verificationScope === 'operational' && request.operation === 'task read'
+    if (!deltaCommit && !scopedSkillRead) {
+      for (const reference of (task as FrozenTask).sourceArchives ?? []) archives.set(`${reference.kind}:${reference.hash}`, reference)
+      archives.set(`snapshot:${task.modelSnapshotHash}`, { kind: 'snapshot', hash: task.modelSnapshotHash })
+      for (const skill of task.skillPlan?.skills ?? []) for (const file of skill.files) archives.set(`blob:${file.hash}`, { kind: 'blob', hash: file.hash })
+    }
     let seq: number
     try {
       const lastAppliedSeq = this.archive.seq + 1
-      const materialized = { schemaVersion: 1, lastAppliedSeq, task, contentHash: digest('task-projection', { lastAppliedSeq, task }) }
-      const result = await this.archive.commit({ scope, requestId: request.requestId, request: normalized, payload: { kind: 'task', task, operation: request.operation, source: request.source ?? 'cli' } satisfies TaskPayload, receipt, archives: [...archives.values()], materializations: [{ path: `tasks/${task.id}.json`, content: materialized }] })
+      const materializations = this.archive.format === 'packed-sqlite/1' ? [] : [{ path: `tasks/${task.id}.json`, content: { schemaVersion: 1, lastAppliedSeq, task, contentHash: digest('task-projection', { lastAppliedSeq, task }) } }]
+      const encoded = deltaCommit ? encodeTaskDelta(this.task(task.id), task, previousSeq!, this.archive.recordSync(previousSeq!).hash) : task;
+      const result = await this.archive.commit({ scope, requestId: request.requestId, request: normalized, payload: { kind: 'task', task: encoded, operation: request.operation, source: request.source ?? 'cli' } satisfies TaskPayload, receipt, archives: [...archives.values()], materializations })
       seq = result.seq
       if (result.replayed) await this.restore()
       else { this.latestTasks.set(task.id, seq); this.cacheTask(this.checkedTask(task)) }
@@ -363,7 +409,10 @@ export class TaskService {
       throw error
     }
     try {
-      if (this.index.status.state !== 'ready' || this.index.status.seq + 1 !== seq) await this.ensureIndex()
+      if (this.archive.verificationScope === 'operational' && (this.index.status.state !== 'ready' || this.index.status.seq + 1 !== seq)) {
+        // Task commit must not pay for a cold or stale unrelated search index.
+        // The next explicit history-list request catches up from committed rows.
+      } else if (this.index.status.state !== 'ready' || this.index.status.seq + 1 !== seq) await this.ensureIndex()
       else await this.index.project(seq, [...this.taskDocuments(task), ...(request.operation === 'task read' ? [this.fileReceiptDocument(task.id, request.requestId, digest('receipt', receipt), request.source ?? 'cli')] : [])])
       this.indexProblem = undefined
     } catch (error) { this.indexProblem = error }
@@ -561,10 +610,14 @@ export class TaskService {
     const limit = Number(flag(request, 'limit') ?? (request.operation === 'task list' ? 50 : 20))
     const offset = Number(flag(request, 'offset') ?? 0)
     const results = await this.index.search({ kind: 'task', query: flag(request, 'query'), from: flag(request, 'from'), to: flag(request, 'to'), limit, offset, now: this.instant().toISOString() })
-    return this.envelope(request, commandResult(request.operation, { items: results.items.map(item => item.data), total: results.total, limit, offset, hasMore: results.hasMore, retentionDays: 60, seq: results.seq }))
+    return this.envelope(request, commandResult(request.operation, { items: results.items.map(item => item.data), total: results.total, limit, offset, hasMore: results.hasMore, retentionDays: 60, seq: results.seq, verificationScope: 'metadata', workspaceIntegrity: 'unknown' }))
   }
   private async readFiles(request: CommandRequest, normalized: ReturnType<TaskService['normalized']>, _skillsRoot: string): Promise<Envelope> {
     const original = this.task(request.positionals[0])
+    if (this.archive.verificationScope === 'operational') {
+      const seq = this.latestTasks.get(original.id)!;
+      if (!same(this.decodeTaskRecord(await this.archive.record(seq)), original)) throw new HarnessError('ARCHIVE_CORRUPT', 'The requested skill plan no longer matches its original task record.');
+    }
     // Archive reads do not require the live checkout, skill directory, or an active task.
     const input = normalized.input as FileReadRequest
     const task = this.atBatch(original, flag(request, 'batch') ?? input.throughBatchId)
@@ -590,7 +643,7 @@ export class TaskService {
       if (replay) return replay
       const latest = this.task(original.id)
       latest.updatedAt = this.instant().toISOString()
-      return this.persist(request, normalized.scope, normalized.value, latest, receipt)
+      return this.persist(request, normalized.scope, normalized.value, latest, receipt, files.map(item => ({ kind: 'blob', hash: item.file.hash })))
     })
   }
 }

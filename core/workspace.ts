@@ -10,6 +10,7 @@ import { parseJsonStrict, sha256 } from './json.js';
 import { canonicalPath, isWithin, samePath, resolveInside } from './paths.js';
 import { seedSkills } from './skills.js';
 import { SEED_ROOT } from './package.js';
+import { packedFormat } from './packed-archive.js';
 import type { ProjectConfig, ProjectRecord, WorktreeRecord } from './types.js';
 
 const execFile = promisify(callbackExecFile);
@@ -17,7 +18,7 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}
 const queues = new Map<string, Promise<unknown>>();
 
 interface RegistryFile {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   projects: ProjectRecord[];
   worktrees: WorktreeRecord[];
 }
@@ -213,15 +214,16 @@ export class WorkspaceRegistry {
 
   private async load(): Promise<RegistryFile> {
     const file = path.join(this.dataRoot, 'registry.json');
+    const schemaVersion = packedFormat(this.dataRoot) ? 2 : 1;
     let data: RegistryFile;
     try {
       await resolveInside(this.dataRoot, 'registry.json', { allowMissing: true, noSymlinks: true });
       data = await readJson<RegistryFile>(file);
     } catch (error) {
-      if (isErrno(error, 'ENOENT')) return { schemaVersion: 1, projects: [], worktrees: [] };
+      if (isErrno(error, 'ENOENT')) return { schemaVersion, projects: [], worktrees: [] };
       throw error;
     }
-    if (data?.schemaVersion !== 1 || !Array.isArray(data.projects) || !Array.isArray(data.worktrees)) {
+    if (data?.schemaVersion !== schemaVersion || !Array.isArray(data.projects) || !Array.isArray(data.worktrees)) {
       throw new HarnessError('ARCHIVE_CORRUPT', 'The machine registry has an unsupported or invalid shape.', { path: file });
     }
     const projects = new Map<string, ProjectRecord>();

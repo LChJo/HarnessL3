@@ -13,6 +13,8 @@ export const commands: Record<string, CommandDefinition> = {
   'task show': { count: 1, flags: ['batch'] }, 'task handoff': { count: 1, flags: ['batch'] }, 'task close': { count: 1 },
   'task list': { count: 0, flags: ['limit', 'offset'] }, 'context query': { count: 1, flags: ['file', 'read', 'expand'] },
   'request status': { count: 1, flags: ['task'] },
+  'archive audit': { count: 0 },
+  'runtime diagnostics': { count: 0 },
   'history list': { count: 0, flags: ['query', 'from', 'to', 'limit', 'offset'] }, 'history show': { count: 1, flags: ['batch'] },
   'skills list': { count: 0 }, 'skills refresh': { count: 0 },
   'agent bind': { count: 0, flags: ['agent', 'session', 'log-file', 'task'], required: ['agent', 'session', 'log-file'] },

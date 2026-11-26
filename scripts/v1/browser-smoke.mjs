@@ -7,6 +7,8 @@ import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { chromium } from 'playwright'
 import { createBrowserFixture, browserIds } from './browser-fixture.mjs'
+import { Archive } from '../../build/core/archive.js'
+import { closePackedArchive } from '../../build/core/packed-archive.js'
 
 const execFile = promisify(callbackExecFile)
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -29,8 +31,11 @@ try {
     await fixture.json('context query', entry.taskId, { schemaVersion: 1, requestId, expectedModelRevision: entry.binding.modelRevision, expand: [], read: [id], known: {} })
     await page.waitForFunction(count => Number(document.querySelector('[data-output-count]')?.getAttribute('data-output-count')) === count, index + 1)
     const paintedAt = await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(Date.now())))))
-    const commits = (await readFile(path.join(fixture.dataRoot, 'worktrees', fixture.target.worktreeId, 'journal.jsonl'), 'utf8')).trim().split('\n').map(line => JSON.parse(line))
-    const commit = commits.find(record => record.requestId === requestId)
+    const archive = new Archive(path.join(fixture.dataRoot, 'worktrees', fixture.target.worktreeId), { readOnly: true, verification: 'operational' })
+    await archive.ready()
+    const header = archive.lastHeader({ requestId })
+    const commit = header ? await archive.record(header.seq) : null
+    closePackedArchive(fixture.dataRoot)
     assert.ok(commit)
     samples.push({ requestId, committedAt: commit.committedAt, paintedAt: new Date(paintedAt).toISOString(), milliseconds: paintedAt - Date.parse(commit.committedAt) })
   }

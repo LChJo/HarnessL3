@@ -1,5 +1,70 @@
 # 正式首版实施状态
 
+## v0.57：运行架构重设计（2026-11-26，规格已确认，未完成）
+
+用户批准[实施规格](ARCHITECTURE_REDESIGN_SPEC.md)。现场文件逻辑长度约290.384 GiB，snapshots 284.387 GiB/约125万项；最大工作区随机100个快照皆后台freshness回执，pendingPaths样本字节占99.34%。安装0.1.8隔离夹具重复10次同路径通知产生10个完整快照、3,846,411字节，路径集合未变。真实snapshot task start在30秒内重放283,121,084字节journal并进入45,277条提交归档核验后超时，原requestId查询最终完成。原生事件风暴确切来源及物理IO仍待补证。
+
+S0：新增`tests/v1/freshness.test.mjs`的TC28重复通知回归，执行`node --test --test-name-pattern='TC28 repeated notifications' tests/v1/freshness.test.mjs`，退出1（实际新增10条业务提交，期望0），未修改产品代码。请求现有服务正常停止返回BUSY（仍排空accepted requests），后续`serve status`实测draining；不宣称已停，不强杀。全部原历史保持，未执行迁移、删除、发布或三平台验收；S1–S5待实施和验证。
+
+**本轮实施进展（候选源码，未部署）**：
+
+- S1：取消普通watch/增量全态历史提交；按5分钟租约释放、路径合并/未知范围pending与有界分类，原proof仍严格CAS。首轮隔离TC28–30通过（10,010次重复通知无新增业务提交或快照、租约到期、重启旧proof失效）；第一轮直接运行freshness、同步CLI、目录、Web、观测88项全通过。后续加入高基数路径与当前态、扩大回归，完整程序测试第一轮442项437通过/4跳过/1失败（原生忽略输出误被重复分类失效）；已针对重复路径合并与类型复核修补，最终结果须另测。
+- S2：旧journal结构和新packed事务头/目标定位与完整历史审计分离。普通task entry、handoff不读取无关snapshot/blob，不依赖冷派生索引；新`archive audit`检查全部历史，未请求完整性为unknown。TC31隔离损坏的无关旧正文不阻塞新任务，显式audit仍报ARCHIVE_CORRUPT；与原历史的交接/恢复测试和当前态隔离用例共5项通过。
+- S3：每工作区`current-state.sqlite`事务替换当前模型/来源/状态，显式status不保存独立完整快照或业务行；proof保留必要归档。新packed数据根SQLite保存原始记录/内容、独立事务头及可重构原字节，内容定义块共享；task-delta/1后续记录仅增量，不重复物化文件；派生索引忽略旧普通状态噪声，资源空闲释放与`runtime diagnostics`已入候选代码。配对迁移、原字节/回执、增量与分块去重隔离测试第二轮10项通过。效果需最终全量/长期及实际数据验收，不将前一构建的测试继承给后续修改。
+- S4：用户确认目标`I:\HarnessL3-data`。实际dry-run退出0，25工作区/1,254,578个文件/311,870,997,357逻辑字节，其中1,253,618个快照/305,431,685,947字节，目标卷可用1,529,677,729,792字节；未创建目标或修改源。隔离工具保留原journal/内容原字节、原ID与技能库，损坏引用阻止发布格式。旧已安装服务仍为draining；已通过真实status确认并请求用户决定是否允许针对该已核实旧实例终止，不据等待视为授权。在退出/无写者确认前不执行实际转换或切换，不删除C盘历史。
+
+  实际源只读压缩样本：`ai_mana_front` 最近300个不同freshness快照（平均8974条pending路径），原始155,411,400字节，分块压缩有效载荷3,484,038字节，完整SQLite容器4,120,576字节（较样本原大小减少97.35%）；300份内容哈希全部复核通过。工件`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-real-sample-20261126\report.json`与对应独立SQLite保留。仅为同一工作区最近连续样本，不将该降幅外推为整个档案的精确节省，未修改源或执行迁移。
+- S5：CLI/Web构建通过；候选定向回归17/17通过（含第一轮完整套件中的原生忽略输出回归）。Windows/Node v24.22.3、Edge 157.0.4341.60 的真实浏览器三组门禁均通过，3次提交到显示样本p50=599ms/p95=618ms；截图保存在`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-browser-20261126`，未回写项目历史图。隔离真实npm消费者验证173文件/27方法、两宿主各5份运行时文件、bin shim、真实服务构建/RPC、原任务交接、无Git目录及浏览器、compact和分发迁移工具，均通过；构建指纹`95a5007d2d67dd7b25f1ea3082981d5cb61436e6bf4c20f112cb76bd793afec9`，非全局安装。实际CLI/service两工作区短被动soak及1,000旧状态记录的混合真实任务start/select/handoff规模冒烟通过；25工作区激活→空闲→24h soak、百万合成元数据混合历史正在独立I盘夹具运行，报告分别为`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-soak-20261126-0227\soak-report.json`、`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-scale-20261126-0230\packed-history-benchmark.json`。最终完整程序、长时、三平台及真实安装迁移结果仍需逐一登记，尚未全部验收。
+
+同一候选最终完整程序回归（先前原生忽略输出修补、模型字节回退与迁移断点续传用例均包含）：`npm test`退出0，448项为444通过、4平台能力跳过、零失败，耗时484547.8ms；原始JUnit位于`.harness-local/validation/tests-win32.xml`。另补充TC32跨25个Git worktree的真实业务记录与20次增量批次专项用例，单独实跑1/1通过（45281.8ms），确认唯一项目ID、25工作区ID、70条业务提交、不可变内容共享、原批与重启后的交接字节语义一致；不将该用例计入此前448项。长时、百万规模完整运行、Linux/macOS、本机真实转换/切换及旧副本回收仍未标passed。
+
+Linux原生验证独立复制候选至现有WSL2 Ubuntu ext4夹具，以固定Node v24.12.0实跑现有`linux-full-verify.sh`；Windows checkout的shell脚本CRLF导致首次命令失败，已固定`*.sh`为LF并重新运行，CLI/Web构建、完整程序、真实浏览器及隔离包验收均退出0；不等同macOS或GitHub三平台CI。
+
+TC31百万规模实际Windows测试已退出0：在与业务任务混合的1,000,000条合成旧背景状态历史上实际CLI冷start 1947.4ms，四次热start 551.1–583.8ms，五次select 532.3–544.9ms，五次handoff 367.8–390.0ms，跨越全部噪声历史的原任务handoff 405.8ms。最终1,000,012条commit，归档诊断共读取58快照/24记录/0 blob、逻辑读802,028字节；10次新业务提交逻辑写245,260字节。合成库初始物理文件1,867,546,624字节，服务RSS 375,173,120字节（单次样本）；生成时间567442.8ms不计入任务延迟。实际服务构建指纹与上述Windows候选一致。此为共享小状态的元数据规模实验，不是现场305GB原始内容的迁移、配对耗时或全量审计。
+
+TC29 25工作区长时Windows实测已进入被动阶段（2026-11-26 02:32:16 +08），首5个分钟采样均为109个运行文件、635,849字节、相同全文件指纹、0加载工作区；同一服务进程跨一次采样窗口的OS I/O计数增量为68次读、40,994字节及0次写、0字节（进程I/O不等于磁盘物理量），服务日志长度0。短时阶段结果不替代24小时最终报告。Linux完整套件449项443通过、6平台能力跳过、零失败（153639.6ms）；Chromium 156三组真实门禁通过，3次提交显示样本224/258ms。Linux真实隔离npm消费者173文件/27方法、双宿主运行时复制、实际服务/RPC/原交接匹配、无Git目录及浏览器全部通过，运行构建指纹与Windows一致（`95a5007d...`）；完整报告在`.harness-local/validation/native-linux/`，不是全局安装或macOS验收。
+
+最后R03复盘补齐仅只读`archive audit`的协作取消：真实HTTP连接断开会停止审计、按原requestId返回CANCELLED而非ARCHIVE_CORRUPT，不修改原packed数据库，不影响已受理的写事务；重新审计使用新ID全量核对。新专门回归TC31实际1/1通过（5027.8ms），并增加长循环事件循环让渡。旧构建24h soak在12个相同指纹分钟采样/725939ms后按新构建替代而正常停止独立fixture服务，原报告及`superseded.json`保留，不计为24h通过。最新构建`e5559d43995703722fb457741b8a2efaa2f9d4fe1580a358da4e540f121ae11b`完成CLI/Web构建；重新运行Windows/Linux全量、包和浏览器门禁，最新25工作区24h报告`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-final-soak-20261126-0246\soak-report.json`。先前`95a5007d...`结果仅对其构建适用，不继承为最新结果。真实C旧服务仍draining，尚未执行迁移或处置旧档案。
+
+进一步对百万合成库实际显式全量审计（旧`95a5007d...`）在约308秒收到`UND_ERR_HEADERS_TIMEOUT`，即使CLI设置3600000ms；原requestId `f24b52fa-b7ec-438d-b3a9-04aaeb14cf5f`结果未能立即查询，保留独立`full-audit*.json*`原件，不盲重发。修复认证RPC使用Node内置HTTP与调用方显式取消/等待预算，短健康/进度仍用短超时；旧操作的原requestId/响应丢失分类不变。新增TC23实际传输门禁，最新候选构建`9652f69a0c45daeae8c03265959f2e1d2020df1745f50912837099f3b2305f5e`；`e5559d...`的长时独立fixture在被动基线前正常停止并保留状态，不混用旧运行证据。最新24h报告`I:\HarnessL3-validation-v057-verified-soak-20261126-0252\soak-report.json`；最终各门禁与长审计结果另行登记。
+
+原失响应审计随后按原requestId查回实际完成回执，服务耗时889650ms、seq=1000012、freshnessRecords=1000000、taskRecords=12、workspaceIntegrity=ready、零诊断；原始丢响应结果与恢复回执独立保存在规模夹具`full-audit.recovered-receipt.json`等文件，正常停该独立测试服务。最新`9652f69a...`定向服务/历史17/17通过（82740ms）。将同一合成库的registry、格式和SQLite原字节（1,867,673,600字节，SHA256核对）复制至另一独立I盘夹具，不复制服务描述或凭证，最新构建以一小时等待预算重新实跑完整审计，测试期间实际原历史handoff在726.9ms成功；完整最终结果待记录。报告`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-audit-final-20261126-0256\full-audit-status.json`。真实现场C盘历史与此合成副本无关。
+
+最新`9652f69a...` Windows真实Edge157三组门禁、3样本p50=658ms/p95=745ms，真实npm消费者173文件/27方法及服务指纹/原交接全部通过；工件`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-9652f69a-artifacts-20261126`。Linux最新完整程序451项445通过、6平台能力跳过、零失败（217217.2ms），浏览器/包消费待该轮完成。在重新审计的百万记录完整链检查结束后、同步态检查阶段，原任务handoff实际5994.9ms仍可返回，不能将一次并行负载延迟样本作为SLA。最新24h被动基线起于2026-11-26 02:58:41 +08，最新4个分钟采样均109文件、636299字节、相同指纹、0已加载工作区；按足24小时验收。旧构建和中途构建变化的全量结果分别保留，不作为最新Windows全量结论；稳定`9652f69a...`全量重跑进行中。
+
+同一最新构建Linux实际Chromium 156三组门禁通过（3样本345/389ms），真实隔离npm消费者、原交接、服务指纹、无Git目录与包复制全部通过，`linux-full-verify.sh`退出0。额外使用已验收Linux tarball及固定Node 24.12.0，在同一WSL2原生ext4的独立小型25工作区fixture启动24h测试；首次wrapper BOM提示已纠正，npm离线安装65项成功、实际soak进入初始化。实时报告`/root/.cache/harnessl3-validation/runs/v057-long-native-fixture-20261126-0306/soak-report.json`，完成后复制至`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-linux-soak-20261126-0306`。只有测试原生文件系统的小型独立fixture位于WSL ext4，不迁移或复制真实C盘档案；连续24h结果及采样覆盖尚未完成。
+
+**截至2026-11-26 03:10 +08 最新稳定候选 `9652f69a...` 验收**：
+
+- Windows完整程序451项447通过、4平台能力跳过、零失败，`npm test`退出0，耗时441896.6ms；Linux完整程序451项445通过、6平台能力跳过、零失败。两平台实际浏览器、173文件/27方法真实独立包消费者及服务/旧交接验证全部通过，原始报告分别在`.harness-local/validation/tests-win32.xml`及`.harness-local/validation/native-linux/`，不是全局安装。
+- 当前候选实际百万记录显式审计退出0，正确执行710012ms（超过旧5分钟固定响应头期限），结果seq=1000012、freshnessRecords=1000000、taskRecords=12、workspaceIntegrity=ready、diagnostics=[]；阶段进度可读、并发只读handoff返回，测试服务正常停止，审计前后1,867,673,600字节SQLite原文件SHA256完全一致（`375d29fedca2b1d02924b51648663b0fbebf1c3d5be69f040e29dce039190787`）。报告见上述独立audit fixture，非现场全档案验证。
+- 最新候选复用原合成百万库、实际新建及选择五个任务，最终1,000,022条提交；冷start 1681.1ms，热start 485.4–596.4ms，select 457.3–497.3ms，handoff 327.7–364.2ms、原任务handoff 335.9ms；只读取58个快照、无关历史正文未全重放。实际报告`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-scale-20261126-0230\latest-build-benchmark.json`，不是现场305GB完整迁移/配对性能。
+- 仍待实际验收：Windows/Linux各25工作区完整24小时采样（独立进程运行中）、macOS/真实三平台、真实C→I全量转换/逐字节核验/原任务回放、全局安装和切换及经授权的旧副本回收。没有Git提交、推送或npm发布。不能把候选程序通过表述为真实部署完成。
+
+**真实迁移已开始（2026-11-26 03:11 +08）**：旧生产服务在03:01仍draining，03:10再次真实`serve status`返回stopped，已核实旧PID 47176退出、原service.lock/service.json均不存在、最后journal实测写入03:01:54，原registry v1、目标不存在、I盘可用1,525,909,458,944字节。未强杀。依已确认目标`I:\HarnessL3-data`运行`migrate-packed-storage.mjs --source <原LOCALAPPDATA/HarnessL3> --target I:\HarnessL3-data --apply`，实际迁移PID 53240占有原根独占临时guard，目标已创建但未发布新格式。首个工作区原内容、3,782行journal及语义核验通过，下一工作区进行中；报告/实际进度`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\run-status.json`、`migration.stdout.jsonl`、`migration.stderr.jsonl`。原C盘完整保留，待所有验证完成才安装切换。原已装包实际重新打包备份、旧/新构建指纹核对及原任务`966f7fcd...`之前真实selection/skill读取回执保存在同运行目录`rollback/`；原环境HARNESSL3_HOME未设置。原selection不是完整handoff，不冒称`verify-install --handoff-before`结果，切换后按原批实际对照其packet/plan/binding及原技能字节另留证。
+
+04:05 +08实际迁移阶段检查：10/25工作区完成各自内容、journal及语义核验，累计原快照105,326,332,510字节、目标SQLite约3,084,374,016字节（含下一工作区开始转换），迁移错误日志0字节。此不是最终体积或切换通过，后续结果仍以全量报告为准。Windows和Linux最新候选被动样本分别持续至67/52个，均保持各自基线不变，尚未足24小时。
+
+用户后续明确本轮仅Windows本机验证、暂不提交/推送或触发GitHub CI；保留已取得Linux程序/浏览器/包消费者实测作为补充，macOS及正式三平台验收延后，不标passed。05:41停止Linux独立24h驱动并正常停止其fixture服务，已完成142个被动样本、8895785ms、原指纹保持，报告和scope-change留在`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311\validation-evidence\HarnessL3-validation-v057-linux-soak-20261126-0306`，不计24h通过。Windows独立24h仍继续。用户也补充授权旧PID终止，但该实例早已自行正常退出，未执行终止生产进程。
+
+**真实迁移与全局切换已成功（06:15–06:19 +08）**：`--apply`退出0，耗时11059169ms；`I:\HarnessL3-data/migration-report.json`状态verified-copy，25/25工作区、1,254,119个原内容逻辑文件、1,253,920个独立原内容逐字节复核、1,253,706条原commit；原始内容305,455,039,500字节、journal 3,753,314,727字节，未知/未归属异常0。复制必要文件、保留原registry和历史，排除43个可重建派生文件（原件仍在C盘）。实际源清单逻辑311,894,257,636字节（290.474 GiB）、约1,254,948个文件，迁移时目标15,293,574,749字节（14.243 GiB）、767个文件；逻辑容量减少95.097%（276.231 GiB），不是已释放C盘空间或物理写入量。报告原字节与日志均保留。
+
+切换期间另有独占源guard（PID 12128）保护旧档案；候选预验收与实际全局安装后均重新核对25工作区UUID/原registry、所有原journal SHA256、活动技能实体和55个文件、原任务`966f7fcd...`指定批次packet/plan/binding、原selection及两份技能文件回执，全部通过。首次预验收读取旧PowerShell回执时发现UTF-16LE BOM，保留原失败报告/原字节并按真实编码解码后通过。已正常停止候选预验收服务，以实际已核验候选tgz全局安装（65包更新），PATH版本0.1.8、运行指纹`9652f69a...`；Codex/Claude各5运行时文件均unchanged。实际全局`verify-install`以迁移后、全局安装前的真实目标handoff比较成功（matched-before-update，5083ms），原C回执另有独立原/目标精确对照。当前用户持久环境`HARNESSL3_HOME=I:\HarnessL3-data`，实际PATH默认诊断已指向I盘25工作区、服务实际实例`f781d4de-d7b1-4bda-be21-95ad92be58b2`、15个显式观测订阅恢复零失败。已启动的新宿主继承新环境；本轮旧宿主仍须显式`--data-dir`或刷新/重启宿主，不能声称所有既有进程环境都自动更新。原C数据仍完整，等待实际新任务/Web验证和独立回收授权；Windows24h测试继续。
+
+实际全局I盘当前项目新任务`d72ea56c-9a4d-47a2-998c-11d1e916e800`：model validate有效（27对象/39关系、仅新Spec未跟踪提示），start=966.6ms且来源unknown/scanRevision=null，select=711.9ms，handoff=444.6ms、原选择packet/binding一致。真实Edge157分别在独立无Cookie会话打开新任务和原历史任务，认证及首屏1630.1/3569.2ms，输出节点各1、刷新成功、零页面异常，截图及完整RPC留证于迁移运行目录。I盘切换与真实新旧任务/Web验收通过；已向用户请求对具体C盘已核实冗余副本的独立回收授权，尚未删除。实际释放C盘字节与新运行空间增长须按后续实测报告。
+
+**S4实际回收通过（07:50–07:55 +08）**：用户明确授权仅回收已核实的C盘旧冗余副本。源guard正常释放后再独占取得原源所有权，原根转为独立退役目录，并建立`C:\Users\Bry\AppData\Local\HarnessL3` → `I:\HarnessL3-data` Windows junction；实际未设置HARNESSL3_HOME的CLI仍解析为I盘同一服务、25工作区。只删除经路径边界检查的退役物理目录，1个旧junction单独不跟随目标移除，32组已核实目录/文件逐项回收，退役路径不存在，I盘原档案未删。实际C卷可用空间由87,928,090,624→403,500,449,792字节（81.9→375.789 GiB），回收窗口观察增加315,572,359,168字节（293.900 GiB，包含卷分配开销及窗口内其它变化，不等于逻辑文件长度）。回收报告`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311/old-replica-reclamation.json`；回收后再次通过原历史任务packet/plan/binding、旧技能回执、新任务handoff及真实默认入口诊断、同一已装服务指纹，报告`after-reclaim-check.json`。目标保持实际1,253,706条旧commit加4条本轮真实新增业务记录，没有永久清除历史。旧包、原回执与迁移报告仍在I盘独立回退目录；旧程序不能直接打开v2格式，回退需按实际已验证归档和原包兼容边界执行，不宣称C盘原松散物理副本还存在。
+
+实际本轮源码/模型局部校验先收到observation-changed的SYNC_RACE，保留原回执，随后按原声明范围重新读53个文件、144个证据指纹、模型与来源版本，用新requestId获得proof `ecfaafc7-37c0-4141-aaff-72762be8a7c1`，53路径/19模型对象声明范围全部通过；原486条其它待核验路径保留。此proof对应当时字节，回收/长时结果后的文档更新仍重新核验。当前唯一未到时的本轮Windows门禁为25工作区24小时连续采样；用户明确不推送，macOS正式验收延期。
+
+08:03 +08收尾：I盘原15个已完成隔离夹具、已停止的旧soak及临时产物，经检查无服务锁/进程，逐份保留报告及截图并校验SHA256，集中至`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311/validation-evidence/<原目录名>`；上文对应的原验证夹具报告现从此归档路径读取，原始路径留作当时实际运行记录。最大的两个合成百万记录数据库已回收，原真实压缩样本4.12MB完整保留。净去除3,745,090,067逻辑字节（3.488 GiB），I卷观察增加3.49 GiB；清单`validation-cleanup-report.json`。I盘根目录只余生产`HarnessL3-data`、迁移回退/验证证据目录、仍运行的Windows24h夹具；生产及活跃测试未刪。原物理副本回收后再证明全部1,254,119原始逻辑文件仍按原清单哈希精确匹配（`rollback-original-mapping-check.json`），760个非packed原始文件与原registry共35,310,105字节另做逐字节回退备份，单一原link描述保留。不是已执行完整v1反向解包。
+
+真实I盘工作负载额外观察：06:28→08:03间当前数据根仍为771文件、15,294,107,902字节（含服务临时件），SQLite 15,258,312,704字节未增长；08:03实际诊断25登记工作区、0加载/租约/显式轮询、1,253,710提交（原记录加本轮4条业务提交）、RSS 136,945,664字节。隔离Windows 24h约5小时、300个采样均无文件指纹变化，最终24小时尚未到时。Windows普通安装默认`%LOCALAPPDATA%/HarnessL3`；用户明确确认仅恢复默认逻辑入口、物理留I。已移除本机用户`HARNESSL3_HOME`设置，用户/机器/当前进程覆盖均为空；实际PATH命令未显式指定数据根仍经原默认junction解析`I:\HarnessL3-data`，确认同一服务实例/25工作区/1,253,710提交与原运行指纹，未重新复制或迁回C盘。报告`restored-default-entry.json`。后续正常安装无需额外环境变量；显式--data-dir仍优先，普通新Windows安装没有本机此junction时物理数据按平台默认目录保存。
+
+用户进一步要求必要运维工件不放卷根。I盘根原`HarnessL3-migration-run-20261126-0311`为本次人工迁移/验收的独立工件，不是新运行机制自动生成；检查无活跃写者后同卷移动到`I:\AI\HarnessL3-local\maintenance\migration-v057-20261126-0311`，913文件/42,836,503字节的全文件路径及SHA256指纹前后一致，`evidence-relocation.json`留证。本轮未来本机验收统一在`I:\AI\HarnessL3-local\validation`（生产根和源码之外）按明确scope创建，迁移/回退工件统一maintenance子目录，不在盘符根产生新的工程产物。现在I根仅已确认的生产`HarnessL3-data`和活跃Windows24h临时夹具；该夹具结束后归档报告并回收，不搬移运行中根而损害连续验收。正常用户日常新任务仅使用解析后的生产根，不自动产生上述外部人工验证目录。
+
+**本轮用户确认按当前实测基准收尾（12:26 +08）**：用户明确“以当前数据做基准收尾吧”，不再等待完整24h。实际Windows被动连续34,033,123ms（9小时27分13秒）、563次有效采样，最大采样间隔60,966ms；109文件、636,299字节、同一全文件指纹、0加载工作区全程保持，实际时长内通过。完整24小时未执行完，保留为正式规格后续可独立复验门禁，**不标作24h passed**；macOS/正式三平台与发布按用户选择延期。准确停止独立测试驱动和收尾辅助进程、正常停止隔离fixture服务，原running报告原字节SHA256 `5b9bc8e518f676a61483d0ae42767ca5c0de4a0b272a484c6985dbfdc0b5bfe0`及用户收尾状态归档`I:\AI\HarnessL3-local\validation\v057-windows-24h/soak-report.json`和`finalization-status.json`，清理最后I卷根隔离夹具（913,000逻辑字节）。I卷根现在仅保留用户确认的生产`HarnessL3-data`，运维证据均在非卷根目录。S0–S4、本轮Windows已实际执行的功能、真实迁移、部署、性能、回退证据及收尾均完成；S5按本轮用户确认范围收尾，不声称原完整24h或三平台/发布门禁已全过。最终本机生产数据根保持I盘、默认逻辑入口保持C盘junction、无自定义环境变量，无Git暂存/提交/推送或npm发布。
+
 ## v0.56：本机24小时访问链接（2026-11-23）
 
 `web open` 签发可重复使用的本机链接，每条从签发起独立计时，到期不接受该链接，清除Cookie可再用原始链接建立会话。持久化的签名密钥和首选本机端口支持正常重启；签发目标和期限均验签。浏览器保留临时故障与Cookie未保存时可重试的链接，拒绝后保留目标并清除无效凭证。
