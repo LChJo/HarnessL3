@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { WorkspaceRegistry } from './workspace.js'
 import { SEED_ROOT } from './package.js'
-import { loadModel } from './model.js'
+import { clearSharedModels, loadModel, modelSharingMetrics } from './model.js'
 import { MODEL_GUIDANCE_VERSION, maintenanceCommand, modelGuidance, modelMaintenance, modelMaintenanceHint, type MaintenanceMode } from './model-maintenance.js'
 import { CatalogObserver } from './catalog.js'
 import { Archive, type ArchiveReference } from './archive.js'
@@ -46,7 +46,9 @@ export class Runtime extends EventEmitter {
   private readonly durations = new Map<string, number[]>()
   private readonly idleTimer: NodeJS.Timeout
   private bindingQueue: Promise<unknown> = Promise.resolve()
-  private backgroundQueue: Promise<unknown> = Promise.resolve()
+  private readonly backgroundPending = new Map<string, Array<{ operation: () => Promise<void>; resolve: () => void; reject: (error: unknown) => void }>>()
+  private backgroundOrder: string[] = []
+  private backgroundRunning = false
   private gcApplying = false
   private activeOperations = 0
   private startup?: Promise<void>
@@ -64,6 +66,39 @@ export class Runtime extends EventEmitter {
       this.releasing.set(id, release); pending.push(release)
     }
     await Promise.allSettled(pending)
+    if (!this.activeOperations && !this.liveResources.size) clearSharedModels()
+  }
+  /** One background observation runs at a time (the frozen TC17 resource
+   * budget), but the single slot rotates round-robin across worktrees: one
+   * workspace's burst cannot queue ahead of another workspace's pending work.
+   * Foreground requests never enter this queue. */
+  private backgroundOperation(worktreeId: string, operation: () => Promise<void>): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const queue = this.backgroundPending.get(worktreeId) ?? []
+      queue.push({ operation, resolve, reject })
+      this.backgroundPending.set(worktreeId, queue)
+      if (!this.backgroundOrder.includes(worktreeId)) this.backgroundOrder.push(worktreeId)
+      void this.drainBackground()
+    })
+  }
+  private async drainBackground(): Promise<void> {
+    if (this.backgroundRunning) return
+    this.backgroundRunning = true
+    try {
+      for (;;) {
+        let next: string | undefined
+        while (this.backgroundOrder.length) {
+          const id = this.backgroundOrder.shift()!
+          if ((this.backgroundPending.get(id)?.length ?? 0) > 0) { next = id; this.backgroundOrder.push(id); break }
+          this.backgroundPending.delete(id)
+        }
+        if (!next) break
+        const queue = this.backgroundPending.get(next)!
+        const item = queue.shift()!
+        if (!queue.length) { this.backgroundPending.delete(next); this.backgroundOrder = this.backgroundOrder.filter(id => id !== next) }
+        try { await item.operation(); item.resolve() } catch (error) { item.reject(error) }
+      }
+    } finally { this.backgroundRunning = false }
   }
   registry(request?: CommandRequest): WorkspaceRegistry { return new WorkspaceRegistry(this.dataRoot, { seedRoot: SEED_ROOT, skillsRoot: request?.skillsRoot }) }
   async preflight(): Promise<WorktreeRecord[]> {
@@ -180,11 +215,7 @@ export class Runtime extends EventEmitter {
       externalDocuments: () => legacyDocuments,
     })
     migration = new MigrationService({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: async seq => { await refreshLegacyDocuments(); await index.rebuild(tasks.projection(), seq); this.emit('commit', { worktreeId: record.id, seq, kind: 'migration' }) } })
-    freshness = new FreshnessManager({ worktree: record, archive, stateStore: new CurrentStateStore(root), serial: operation => tasks.serial(operation), background: operation => {
-      const pending = this.backgroundQueue.then(operation)
-      this.backgroundQueue = pending.catch(() => {})
-      return pending
-    }, onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) },
+    freshness = new FreshnessManager({ worktree: record, archive, stateStore: new CurrentStateStore(root), serial: operation => tasks.serial(operation), background: operation => this.backgroundOperation(record.id, operation), onCommit: seq => { this.emit('commit', { worktreeId: record.id, seq, kind: 'freshness' }) },
       onObserved: () => { this.emit('freshness', { worktreeId: record.id }) } })
     const observation = new ObservationManager({ worktree: record, archive, serial: operation => tasks.serial(operation), onCommit: () => { this.emit('commit', { worktreeId: record.id, seq: archive.seq, kind: 'observation' }) } })
     try { await archive.ready(); await refreshLegacyDocuments(); await tasks.ready(); const resource = { worktree: record, archive, index, tasks, observation, freshness, migration }; this.liveResources.set(record.id, resource); return resource }
@@ -328,6 +359,14 @@ export class Runtime extends EventEmitter {
         if (saved) {
           if (saved.schemaVersion !== 1 || saved.target.projectId !== worktree.projectId || saved.target.worktreeId !== worktree.id || !Number.isSafeInteger(saved.sourceEpoch) || !Array.isArray(saved.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'The recorded synchronization identity is invalid.')
           observed = { ...saved, state: 'pending', scanPending: true, modelState: 'unknown' }
+          if (checkpoint) {
+            // An older writer on a loose-format root can append a lower
+            // generation after this checkpoint. Never project an epoch below
+            // the one issued bindings were bound to.
+            const savedCheckpoint = checkpoint.state
+            if (!savedCheckpoint || savedCheckpoint.schemaVersion !== 1 || savedCheckpoint.target.projectId !== worktree.projectId || savedCheckpoint.target.worktreeId !== worktree.id || !Number.isSafeInteger(savedCheckpoint.sourceEpoch) || !Array.isArray(savedCheckpoint.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'The current synchronization identity is invalid.')
+            if (savedCheckpoint.sourceEpoch > observed.sourceEpoch) observed = { ...observed, sourceEpoch: savedCheckpoint.sourceEpoch, diagnostics: [...observed.diagnostics, { code: 'CURRENT_STATE_EPOCH_REGRESSED', severity: 'warning', message: 'The journal advanced past the current checkpoint with a lower generation; an older writer may have appended to this loose-format root. Synchronization stays pending until a fresh declaration.' }] }
+          }
         }
       }
     }
@@ -454,7 +493,7 @@ export class Runtime extends EventEmitter {
           let freeBytes: number | null = null
           try { const stats = await statfs(this.dataRoot, { bigint: true }); freeBytes = Number(stats.bavail * stats.bsize) } catch { /* Unknown on an unavailable filesystem. */ }
           const latency = Object.fromEntries([...this.durations].map(([operation, samples]) => { const sorted = [...samples].sort((a, b) => a - b); return [operation, { samples: sorted.length, p50Ms: sorted[Math.floor((sorted.length - 1) * .5)], p95Ms: sorted[Math.floor((sorted.length - 1) * .95)] }] }))
-          result = { dataRoot: this.dataRoot, freeBytes, registeredWorktrees: (await registry.worktrees()).length, loadedWorktrees: this.liveResources.size, activeOperations: this.activeOperations, recovery: this.recoveryStatus(), memory, latency, packed: packedArchiveMetrics(this.dataRoot), worktrees: [...this.liveResources].map(([id, current]) => ({ worktreeId: id, archive: current.archive.metrics(), freshness: current.freshness.metrics(), observation: current.observation.metrics(), index: current.index.status })) }
+          result = { dataRoot: this.dataRoot, freeBytes, registeredWorktrees: (await registry.worktrees()).length, loadedWorktrees: this.liveResources.size, activeOperations: this.activeOperations, background: { slotLimit: 1, inFlight: this.backgroundRunning ? 1 : 0, queuedOperations: [...this.backgroundPending.values()].reduce((sum, queue) => sum + queue.length, 0), worktreeQueues: this.backgroundPending.size }, recovery: this.recoveryStatus(), memory, latency, modelSharing: modelSharingMetrics(), packed: packedArchiveMetrics(this.dataRoot), worktrees: [...this.liveResources].map(([id, current]) => ({ worktreeId: id, archive: current.archive.metrics(), freshness: current.freshness.metrics(), observation: current.observation.metrics(), index: current.index.status })) }
           break
         }
         case 'archive audit': {
@@ -583,6 +622,7 @@ export class Runtime extends EventEmitter {
     await Promise.all(settled.flatMap(result => result.status === 'fulfilled' ? [result.value.tasks.close()] : []))
     this.resources.clear()
     this.liveResources.clear()
+    clearSharedModels()
     await this.catalogs.close()
     closePackedArchive(this.dataRoot)
     this.archives.clear()

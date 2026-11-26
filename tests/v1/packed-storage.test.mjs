@@ -10,6 +10,7 @@ import { Archive } from '../../build/core/archive.js';
 import { PackedArchiveStore, PACK_FILE, PACK_FORMAT_FILE, PACK_FORMAT } from '../../build/core/packed-archive.js';
 import { canonicalJson, sha256 } from '../../build/core/json.js';
 import { fixture } from './helpers.mjs';
+import { spaceDecision } from '../../scripts/v1/migrate-packed-storage.mjs';
 
 const exec = promisify(execFile);
 const migration = path.resolve('scripts/v1/migrate-packed-storage.mjs');
@@ -56,12 +57,23 @@ test('TC34 verified offline migration preserves original record and content byte
     const registry = await readFile(path.join(f.dataRoot, 'registry.json'));
     const target = path.join(path.dirname(f.dataRoot), 'converted store');
     const preview = await run(f.dataRoot, target);
-    assert.equal(JSON.parse(preview.stdout.trim()).mode, 'dry-run');
+    const previewBody = JSON.parse(preview.stdout.trim());
+    assert.equal(previewBody.mode, 'dry-run');
+    assert.equal(previewBody.totals.journal.files, worktrees.length, 'inventory layers business journals');
+    assert.ok(previewBody.totals.snapshots.files > 0);
+    assert.ok(previewBody.totals.tasks.files >= worktrees.length, 'inventory layers task materializations');
+    assert.equal(previewBody.spaceSufficient, true);
     await assert.rejects(lstat(target), { code: 'ENOENT' });
     const converted = await run(f.dataRoot, target, '--apply');
     assert.equal(JSON.parse(converted.stdout.trim().split('\n').at(-1)).status, 'verified-copy');
     const report = JSON.parse(await readFile(path.join(target, 'migration-report.json'), 'utf8'));
     assert.ok(report.packedCounts.uniqueContents < report.packedCounts.files);
+    for (const item of report.worktrees) {
+      assert.equal(item.semantic.retention.windowMs, 60 * 86400000, 'the 60-day boundary is checked on converted records');
+      assert.ok(item.semantic.retention.checked >= 1);
+      assert.ok(item.semantic.retention.withinWindow >= 1);
+      assert.equal(item.semantic.retention.checked, item.semantic.retention.withinWindow + item.semantic.retention.expired);
+    }
     assert.deepEqual(await readFile(path.join(f.dataRoot, 'registry.json')), registry);
     const packed = new PackedArchiveStore(path.join(target, PACK_FILE));
     try {
@@ -212,4 +224,38 @@ test('TC34 explicit resume verifies prepared mappings and preserves an incomplet
   const report = JSON.parse(await readFile(path.join(target, 'migration-report.json'), 'utf8'));
   assert.equal(report.worktrees[0].journal.tail.hash, sha256(tail));
   assert.equal(report.worktrees[0].journal.hash, sha256(Buffer.concat([complete, tail])));
+});
+
+test('TC34 migration space gate refuses an undersized destination and stays unknown without a probe', async () => {
+  assert.deepEqual(spaceDecision(1000, 500), { status: 'sufficient', freeBytes: 1000, sourceBytes: 500 });
+  assert.deepEqual(spaceDecision(500, 500), { status: 'sufficient', freeBytes: 500, sourceBytes: 500 });
+  assert.deepEqual(spaceDecision(499, 500), { status: 'insufficient', freeBytes: 499, sourceBytes: 500 });
+  assert.deepEqual(spaceDecision(null, 500), { status: 'unknown', freeBytes: null, sourceBytes: 500 });
+  assert.equal(spaceDecision(-1, 500).status, 'invalid');
+  assert.equal(spaceDecision(1000, -5).status, 'invalid');
+});
+
+test('TC32 long task delta chains are re-baselined periodically and stay exactly reconstructable', async t => {
+  const f = await fixture(t, 'harnessl3-packed-baseline-', { legacy: false }); const root = await f.repository();
+  const init = await f.cli(['init'], { cwd: root }); assert.equal(init.code, 0, init.stdout + init.stderr);
+  const started = await f.cli(['task', 'start', '--title', 'Long chain'], { cwd: root }); assert.equal(started.code, 0, started.stdout + started.stderr);
+  const taskId = started.body.data.taskId, directoryId = started.body.data.directory.items[0].id;
+  const query = () => f.cli(['context', 'query', taskId, '--file', '-'], { cwd: root, input: JSON.stringify({ schemaVersion: 1, requestId: randomUUID(), expand: [directoryId], read: [], known: {} }) });
+  for (let i = 0; i < 40; i++) { const queried = await query(); assert.equal(queried.code, 0, queried.stdout + queried.stderr); }
+  const before = await f.cli(['task', 'handoff', taskId], { cwd: root }); assert.equal(before.code, 0, before.stdout + before.stderr);
+  assert.equal((await f.cli(['serve', 'stop'])).code, 0);
+  const store = new PackedArchiveStore(path.join(f.dataRoot, PACK_FILE));
+  try {
+    const id = init.body.target.worktreeId;
+    const encodings = [];
+    for (const header of store.headers(id, { kind: 'task', taskId })) encodings.push(store.record(id, header.seq).payload.task.encoding ?? 'full');
+    assert.ok(encodings.length >= 41);
+    assert.equal(encodings[0], 'full');
+    let run = 0, maxRun = 0, fulls = 0;
+    for (const encoding of encodings) { if (encoding === 'full') { fulls++; run = 0; } else { run++; maxRun = Math.max(maxRun, run); } }
+    assert.ok(fulls >= 2, 'a long chain must contain a periodic full baseline');
+    assert.ok(maxRun <= 32, `delta runs stay bounded, saw ${maxRun}`);
+  } finally { store.close(); }
+  const after = await f.cli(['task', 'handoff', taskId], { cwd: root }); assert.equal(after.code, 0, after.stdout + after.stderr);
+  assert.deepEqual(after.body.data.packet, before.body.data.packet);
 });

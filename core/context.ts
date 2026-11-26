@@ -15,6 +15,9 @@ import { SCHEMA_ROOT } from './package.js'
 import type { BatchResult, Binding, Envelope, FileReadRequest, ItemError, ModelSnapshot, Packet, ProjectConfig, QueryFields, QueryRequest, SelectionRequest, SkillBrief, SkillCatalog, SourceVersion, Target, TaskBatch, TaskRecord, WorktreeRecord } from './types.js'
 
 const RETENTION = 60 * 86400000
+// A delta chain is replayed synchronously on read. Periodic full baselines keep
+// that replay (and full-audit reconstruction) bounded regardless of task age.
+const TASK_DELTA_BASELINE_INTERVAL = 32
 const ROUTER_VERSION = 'skill-hub/3'
 const projectionRevisions = { eventProjection: 'business-headers/2', taskProjection: 'compact-batches/1' }
 const hashPattern = /^[a-f0-9]{64}$/
@@ -51,6 +54,7 @@ export class TaskService {
   private queue: Promise<unknown> = Promise.resolve()
   private records = new Map<string, TaskRecord>()
   private readonly latestTasks = new Map<string, number>()
+  private readonly deltaDepth = new Map<string, number>()
   private readonly cachedSizes = new Map<string, number>()
   private cachedBytes = 0
   private indexProblem: unknown
@@ -106,7 +110,7 @@ export class TaskService {
   }
   private async restore(): Promise<void> {
     reportProgress({ phase: 'restoring-tasks' })
-    this.latestTasks.clear(); this.records.clear(); this.cachedSizes.clear(); this.cachedBytes = 0
+    this.latestTasks.clear(); this.records.clear(); this.cachedSizes.clear(); this.cachedBytes = 0; this.deltaDepth.clear()
     if (this.archive.verificationScope === 'operational' && !this.browsing) {
       for (const header of this.archive.headers({ kind: 'task' })) if (header.taskId) this.latestTasks.set(header.taskId, header.seq)
       return
@@ -169,6 +173,7 @@ export class TaskService {
     }
     let task = this.checkedTask(value);
     for (const delta of patches.reverse()) task = applyTaskDelta(task, delta);
+    if (typeof taskId === 'string') this.deltaDepth.set(taskId, patches.length);
     return patches.length ? this.checkedTask(task) : task;
   }
   private checkPacket(packet: Packet): void {
@@ -386,7 +391,11 @@ export class TaskService {
   private async persist(request: CommandRequest, scope: string, normalized: unknown, task: TaskRecord, receipt: Envelope, references: ArchiveReference[] = []): Promise<Envelope> {
     const archives = new Map<string, ArchiveReference>(references.map(reference => [`${reference.kind}:${reference.hash}`, reference]))
     const previousSeq = this.latestTasks.get(task.id)
-    const deltaCommit = this.archive.format === 'packed-sqlite/1' && previousSeq !== undefined
+    const packedFormat = this.archive.format === 'packed-sqlite/1'
+    // Materialize the prior state first so the chain depth is known even after
+    // an operational (headers-only) restore or a cache eviction.
+    if (packedFormat && previousSeq !== undefined) this.task(task.id)
+    const deltaCommit = packedFormat && previousSeq !== undefined && (this.deltaDepth.get(task.id) ?? 0) < TASK_DELTA_BASELINE_INTERVAL
     const scopedSkillRead = this.archive.verificationScope === 'operational' && request.operation === 'task read'
     if (!deltaCommit && !scopedSkillRead) {
       for (const reference of (task as FrozenTask).sourceArchives ?? []) archives.set(`${reference.kind}:${reference.hash}`, reference)
@@ -401,7 +410,7 @@ export class TaskService {
       const result = await this.archive.commit({ scope, requestId: request.requestId, request: normalized, payload: { kind: 'task', task: encoded, operation: request.operation, source: request.source ?? 'cli' } satisfies TaskPayload, receipt, archives: [...archives.values()], materializations })
       seq = result.seq
       if (result.replayed) await this.restore()
-      else { this.latestTasks.set(task.id, seq); this.cacheTask(this.checkedTask(task)) }
+      else { this.latestTasks.set(task.id, seq); this.cacheTask(this.checkedTask(task)); this.deltaDepth.set(task.id, deltaCommit ? (this.deltaDepth.get(task.id) ?? 0) + 1 : 0) }
       receipt = validateContract<Envelope>('response', { ...result.receipt, replayed: result.replayed })
     } catch (error) {
       // Commit may be durable even when replacing its derived task file failed.

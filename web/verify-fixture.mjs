@@ -105,6 +105,9 @@ try {
   assert.equal(await page.locator('[data-output-count]').getAttribute('data-output-count'), frozenOutput)
   results.push({ historyBatch: 'fixed-across-real-commit', retentionBasis: 'unchanged' })
 
+  const branchGroups = await page.getByTestId('worktree-select').locator('optgroup').evaluateAll(groups => groups.map(group => ({ branch: group.label, worktrees: [...group.children].map(option => option.value) })))
+  assert.ok(branchGroups.some(group => group.branch === 'main' && group.worktrees.includes(fixture.target.worktreeId)))
+  assert.ok(branchGroups.some(group => group.branch === 'parallel' && group.worktrees.includes(fixture.linked.worktreeId)))
   await page.getByRole('combobox', { name: '选择工作区', exact: true }).selectOption(fixture.linked.worktreeId)
   await page.waitForFunction(id => document.querySelector('[data-testid="app-shell"]')?.getAttribute('data-route-worktree') === id && !document.querySelector('.view-loading'), fixture.linked.worktreeId)
   let delayed = false

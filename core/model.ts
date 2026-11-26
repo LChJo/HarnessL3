@@ -156,20 +156,19 @@ async function evidencePath(root: string, path: string): Promise<string> {
 /** Parse precisely the captured bytes. No workspace config or source-generating script is loaded. */
 export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
   reportProgress({ phase: 'loading-model' })
-  let parser: LikeC4 | undefined
-  let sources: CapturedSource[] = []
+  const localDiagnostics: Diagnostic[] = []
   let attemptedModelRevision: string | null = null
   try {
     const root = await realpath(worktreeRoot)
     const captured = await Promise.all([modelSources(root, false), trackedBytes(root, 'evidence'), trackedBytes(root, 'aliases')])
-    sources = captured[0]
+    const sources = captured[0]
     attemptedModelRevision = revisionFor(sources, captured[1], captured[2])
-    let firstLine = 0
-    for (const source of sources) { source.text = decode(source.bytes, source.path); source.firstLine = firstLine; firstLine += source.text.split('\n').length }
+    capturedModelBytes += sources.reduce((sum, source) => sum + source.bytes.byteLength, captured[1].byteLength + captured[2].byteLength)
     const evidenceJson = trackedJson<{ schemaVersion: 1; evidence: Evidence[] }>('evidence', captured[1])
     const aliasesJson = trackedJson<{ schemaVersion: 1; aliases: Record<string, string> }>('aliases', captured[2])
-    const diagnostics: Diagnostic[] = []
+    const diagnostics = localDiagnostics
     const proofIds = new Set<string>()
+    const checkedEvidence = new Map<string, { hash: string } | { code: string }>()
     for (const proof of evidenceJson.value.evidence) {
       if (proofIds.has(proof.id)) diagnostics.push({ code: 'EVIDENCE_DUPLICATE', severity: 'error', file: '.harness/evidence.json', line: 1, column: 1, message: `Duplicate evidence UUID: ${proof.id}` })
       proofIds.add(proof.id)
@@ -179,14 +178,50 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
         continue
       }
       const path = await evidencePath(root, proof.location.path)
-      try {
-        const bytes = await readFile(path)
-        if (proof.hash && sha256(bytes) !== proof.hash) diagnostics.push({ code: 'EVIDENCE_CHANGED', severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file bytes changed: ${proof.id}` })
-      } catch (error) {
-        diagnostics.push({ code: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'EVIDENCE_MISSING' : 'EVIDENCE_UNREADABLE', severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file is ${(error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'unreadable'}: ${proof.id}` })
+      let checked = checkedEvidence.get(path)
+      if (!checked) {
+        try {
+          const bytes = await readFile(path)
+          evidenceReadBytes += bytes.byteLength
+          evidenceReads++
+          checked = { hash: sha256(bytes) }
+        } catch (error) {
+          checked = { code: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'EVIDENCE_MISSING' : 'EVIDENCE_UNREADABLE' }
+        }
+        checkedEvidence.set(path, checked)
+      }
+      if ('hash' in checked) {
+        if (proof.hash && checked.hash !== proof.hash) diagnostics.push({ code: 'EVIDENCE_CHANGED', severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file bytes changed: ${proof.id}` })
+      } else {
+        diagnostics.push({ code: checked.code, severity: 'warning', file: proof.location.path, evidenceId: proof.id, message: `Evidence file is ${checked.code === 'EVIDENCE_MISSING' ? 'missing' : 'unreadable'}: ${proof.id}` })
       }
     }
     diagnostics.push(...await documentGitDiagnostics(root, evidenceJson.value.evidence))
+    // Capture the actual worktree bytes and recheck its evidence on every call.
+    // Only the path-independent, successfully parsed structure can be shared.
+    const revision = attemptedModelRevision
+    const parse = () => parseModel(revision, sources, evidenceJson.value.evidence, aliasesJson.value.aliases, proofIds)
+    const structure = diagnostics.some(item => item.severity === 'error')
+      ? await parseModel(revision, sources, evidenceJson.value.evidence, aliasesJson.value.aliases, proofIds, diagnostics)
+      : await sharedModel(revision, parse)
+    return { ...structure, diagnostics: [...diagnostics, ...structure.diagnostics] }
+  } catch (error) {
+    const permission = permissionError(error)
+    if (permission) throw permission
+    if (error instanceof HarnessError && error.code === 'MODEL_INVALID') {
+      const diagnostics = [...new Set([...localDiagnostics, ...(error.details.diagnostics as Diagnostic[] ?? [])])]
+      throw new HarnessError('MODEL_INVALID', error.message, { ...error.details, diagnostics, attemptedModelRevision })
+    }
+    throw new HarnessError('MODEL_INVALID', 'The current LikeC4 model or its tracked references are invalid.', { attemptedModelRevision, diagnostics: [{ code: 'MODEL_LOAD', severity: 'error', file: '.harness/model', line: 1, column: 1, message: error instanceof Error ? error.message : String(error) }] })
+  }
+}
+
+async function parseModel(revision: string, sources: CapturedSource[], evidence: Evidence[], aliases: Record<string, string>, proofIds: Set<string>, diagnostics: Diagnostic[] = []): Promise<ModelSnapshot> {
+  let parser: LikeC4 | undefined
+  parses++
+  try {
+    let firstLine = 0
+    for (const source of sources) { source.text = decode(source.bytes, source.path); source.firstLine = firstLine; firstLine += source.text.split('\n').length }
     parser = await LikeC4.fromSource(sources.map(source => source.text).join('\n'), { logger: false, printErrors: false, watch: false })
     for (const error of parser.getErrors()) diagnostics.push({ code: 'LIKEC4_INVALID', severity: 'error', message: error.message, ...position(sources, error.range.start.line, error.range.start.character) })
     if (diagnostics.some(item => item.severity === 'error')) invalid(diagnostics)
@@ -218,7 +253,6 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
       const specification = data.elements[item.id] ? data.specification.elements : data.specification.relationships
       if (!item.kind || !Object.hasOwn(specification, item.kind)) fail(`${item.id}: kind must be declared in the LikeC4 specification. ${data.elements[item.id] ? 'Declare an element kind and use it on the object.' : 'For example, declare relationship calls and use source -[calls]-> target; a bare -> has no kind.'}`)
     }
-    const aliases = aliasesJson.value.aliases
     for (const [locator, target] of Object.entries(aliases)) {
       if (!byLocator.has(locator) && !Object.values(data.elements).some(item => item.metadata?.harness_id === target)) diagnostics.push({ code: 'ALIAS_TARGET', severity: 'error', file: '.harness/aliases.json', line: 1, column: 1, message: `Alias target does not exist as a current object: ${locator} -> ${target}.` })
       else if (byLocator.has(locator) && byLocator.get(locator) !== target) diagnostics.push({ code: 'ALIAS_AMBIGUOUS', severity: 'error', file: '.harness/aliases.json', line: 1, column: 1, message: `Alias locator is occupied by a different current UUID: ${locator}.` })
@@ -246,7 +280,6 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
       entities.push(entity)
     }
     canonicalJson(entities)
-    const revision = attemptedModelRevision
     const namedViews = new Set(Object.entries(data.views).filter(([, view]) => view.sourcePath).map(([id]) => id))
     const relationIds = new Map(Object.values(data.relations).map(item => [item.id, item.metadata!.harness_id as string]))
     const views = namedViews.size ? Object.values((await parser.layoutedModel()).$data.views).filter(view => namedViews.has(view.id)).map(view => ({
@@ -254,19 +287,70 @@ export async function loadModel(worktreeRoot: string): Promise<ModelSnapshot> {
       nodes: view.nodes.map(node => ({ ...JSON.parse(JSON.stringify(node)), harnessId: byLocator.get(String(node.modelRef ?? node.id)) ?? null })),
       edges: view.edges.map(edge => ({ ...JSON.parse(JSON.stringify(edge)), harnessIds: edge.relations.map(id => relationIds.get(id)).filter((id): id is string => !!id) })),
     })) : []
-    return { revision, entities, evidence: evidenceJson.value.evidence, aliases, views, diagnostics }
-  } catch (error) {
-    const permission = permissionError(error)
-    if (permission) throw permission
-    if (error instanceof HarnessError && error.code === 'MODEL_INVALID') throw new HarnessError('MODEL_INVALID', error.message, { ...error.details, attemptedModelRevision })
-    throw new HarnessError('MODEL_INVALID', 'The current LikeC4 model or its tracked references are invalid.', { attemptedModelRevision, diagnostics: [{ code: 'MODEL_LOAD', severity: 'error', file: '.harness/model', line: 1, column: 1, message: error instanceof Error ? error.message : String(error) }] })
+    return { revision, entities, evidence, aliases, views, diagnostics }
   } finally { await parser?.dispose() }
 }
 
+// The cache owns only successful immutable structures, bounded by both count
+// and estimated serialized size. Concurrent reads of identical bytes share a parse.
+const maxSharedModels = 16
+const maxSharedBytes = 32 * 1024 * 1024
+const sharedModels = new Map<string, { model: ModelSnapshot; bytes: number }>()
+const parsingModels = new Map<string, Promise<ModelSnapshot>>()
+let sharedBytes = 0
+let parses = 0, hits = 0, joined = 0
+let capturedModelBytes = 0, evidenceReadBytes = 0, evidenceReads = 0
+
+function freezeModel<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) freezeModel(child)
+    Object.freeze(value)
+  }
+  return value
+}
+
+async function sharedModel(revision: string, parse: () => Promise<ModelSnapshot>): Promise<ModelSnapshot> {
+  const cached = sharedModels.get(revision)
+  if (cached) {
+    hits++
+    sharedModels.delete(revision)
+    sharedModels.set(revision, cached)
+    return cached.model
+  }
+  const pending = parsingModels.get(revision)
+  if (pending) { joined++; return pending }
+  const operation = (async () => {
+    const model = freezeModel(await parse())
+    const bytes = Buffer.byteLength(JSON.stringify(model))
+    if (bytes <= maxSharedBytes) {
+      sharedModels.set(revision, { model, bytes })
+      sharedBytes += bytes
+      while (sharedModels.size > maxSharedModels || sharedBytes > maxSharedBytes) {
+        const oldest = sharedModels.keys().next().value!
+        sharedBytes -= sharedModels.get(oldest)!.bytes
+        sharedModels.delete(oldest)
+      }
+    }
+    return model
+  })()
+  parsingModels.set(revision, operation)
+  try { return await operation }
+  finally { parsingModels.delete(revision) }
+}
+
+export function clearSharedModels(): void {
+  sharedModels.clear()
+  sharedBytes = 0
+}
+
+export function modelSharingMetrics() {
+  return { parses, hits, joined, capturedModelBytes, evidenceReads, evidenceReadBytes, retainedVersions: sharedModels.size, estimatedSerializedBytes: sharedBytes }
+}
+
 interface ModelIndex { byId: Map<string, Entity>; children: Map<string | null, Entity[]>; boundaries: Map<string, Entity[]> }
-const indexes = new WeakMap<ModelSnapshot, ModelIndex>()
+const indexes = new WeakMap<Entity[], ModelIndex>()
 function modelIndex(snapshot: ModelSnapshot): ModelIndex {
-  const retained = indexes.get(snapshot)
+  const retained = indexes.get(snapshot.entities)
   if (retained) return retained
   const index: ModelIndex = { byId: new Map(), children: new Map(), boundaries: new Map() }
   for (const entity of snapshot.entities) {
@@ -283,7 +367,7 @@ function modelIndex(snapshot: ModelSnapshot): ModelIndex {
       }
     }
   }
-  indexes.set(snapshot, index)
+  indexes.set(snapshot.entities, index)
   return index
 }
 

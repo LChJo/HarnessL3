@@ -191,6 +191,17 @@ $cliCode = $LASTEXITCODE
 node $readerFile $cliCode $responseFile
 ```
 
+Windows PowerShell 5.1还有一类与CLI本身无关的假失败：把原生命令输出pipe给`Select-Object -First/-Last N`会在取够N个对象后提前停止管道，原生进程若仍在写stdout则管道被断、进程以-1结束，`$LASTEXITCODE=-1`、powershell.exe整体报exit 255——即使命令本身成功。已用node复现：与是否`2>&1`无关；完整消费输出（赋值变量、`| Out-String`）则exit 0。L3退出码契约只有0/4/1/2/3/130，见到255先怀疑调用写法而非L3故障。因此展示截断只能发生在全量捕获之后，`-First`绝不与原生命令同管道。同理，warning级diagnostics（如`EVIDENCE_CHANGED`）不是命令失败：它只表示证据字节落后于当前文件，在证据修复且scope内verify成功后清除。
+
+```powershell
+$out  = harnessl3 model validate --json --quiet-progress   # stdout全量进变量；stderr保持独立
+$code = $LASTEXITCODE
+$r    = $out | ConvertFrom-Json
+if (-not $r.ok) { $r.error.code; $r.error.details | ConvertTo-Json -Depth 6 }
+else { $r.data.result.diagnostics | Where-Object { $_.severity -eq 'error' } }
+# 展示截断只在捕获之后：($out -join "`n").Substring(0, 1500)
+```
+
 失败按错误字段修正请求；响应缺失、损坏或取消则先核对原requestId回执，不由解析失败推断写入未执行。
 
 ## 更新上下文与关闭阶段

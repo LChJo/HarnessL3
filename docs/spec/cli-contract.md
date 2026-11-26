@@ -1,5 +1,7 @@
 # CLI 与交换协议 v1
 
+v0.58：runtime diagnostics新增modelSharing对象，记录当前进程解析次数、已缓存命中、并发合并、实际模型输入捕获字节、成功证据读取次数/字节、保留版本数及估算序列化字节。均为运行指标，原归档和来源核验范围保持独立。
+
 v0.57候选新增无输入正文的两个命令：`archive audit [--worktree <UUID>] [global options]`，按目标对完整历史结构、原引用、任务/同步/观测记录进行独立核验，成功返回`verificationScope=workspace, workspaceIntegrity=ready, seq, taskRecords, freshnessRecords, diagnostics`；并发写入造成范围变化则BUSY，不扫描当前源码或改历史。仅该只读审计可在调用端取消/断开时协作停止，原requestId可查询取消结果，不标记完整核验或档案损坏，重新核验使用新requestId从头检查；业务写入不采用该取消语义。`runtime diagnostics [global options]`返回`dataRoot, freeBytes, registeredWorktrees, loadedWorktrees, activeOperations, recovery, memory, latency, packed, worktrees`，延迟基于最近最多256个样本，IO为逻辑归档负载非物理磁盘写入。`task list`及`history list`增加`verificationScope=metadata, workspaceIntegrity=unknown`，按目标详情核对原引用；旧格式和新packed格式公共任务ID/回执仍兼容。
 
 v0.57（已确认重设计目标、本机实际已落地）：[重设计规格 R03/R05/R06](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)分离普通操作和全量档案审计、维持原requestId与回复兼容；新增命令、运行格式/错误或回应字段在相应契约/Schema中定义。以下兼容旧CLI契约并标明新增命令，本机已安装范围和未正式发布/验收项见STATUS。

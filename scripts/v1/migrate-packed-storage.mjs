@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs';
 import { copyFile, lstat, mkdir, open, readFile, readdir, readlink, realpath, rename, statfs, symlink, unlink } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { PackedArchiveStore, PACK_FILE, PACK_FORMAT, PACK_FORMAT_FILE } from '../../build/core/packed-archive.js';
 import { Archive, validateCommitRecord, verifySnapshotBytes } from '../../build/core/archive.js';
 import { TaskService } from '../../build/core/context.js';
@@ -75,15 +76,42 @@ async function copyTree(sourceRoot, targetRoot, input, output, rows) {
   if (!info.isFile()) abort(`Unsupported source entry: ${input}`);
   rows.push({ path: path.relative(sourceRoot, input), kind: 'file', ...await copyVerified(input, output) });
 }
-async function scanMetadata(root, dir, totals) {
+async function scanMetadata(root, dir, totals, classify = false) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const file = path.join(dir, entry.name); if (entry.isSymbolicLink()) { totals.links++; continue; }
-    if (entry.isDirectory()) { await scanMetadata(root, file, totals); continue; }
+    if (entry.isDirectory()) { await scanMetadata(root, file, totals, classify); continue; }
     if (!entry.isFile()) { totals.other++; continue; }
     const s = await lstat(file); totals.files++; totals.bytes += s.size;
-    const category = path.relative(root, file).split(path.sep)[1];
-    if (category === 'snapshots' || category === 'skill-blobs') { totals[category] ??= { files: 0, bytes: 0 }; totals[category].files++; totals[category].bytes += s.size; }
+    if (!classify) continue;
+    // Layer the source inventory by data value so the operator can see business
+    // history, rebuildable projections and unknown content before converting.
+    const segments = path.relative(root, file).split(path.sep);
+    const name = segments.at(-1), category = segments[1];
+    const bucket = name === 'journal.jsonl' ? 'journal'
+      : ['index.sqlite', 'browse-index.json'].includes(name) ? 'derivedIndex'
+      : ['snapshots', 'skill-blobs', 'tasks', 'checkpoints'].includes(category) ? category
+      : 'unknown';
+    totals[bucket] ??= { files: 0, bytes: 0 }; totals[bucket].files++; totals[bucket].bytes += s.size;
   }
+}
+async function sourceInventory(source, worktreeRoot) {
+  const totals = { files: 0, bytes: 0, links: 0, other: 0 };
+  if (await exists(worktreeRoot)) await scanMetadata(worktreeRoot, worktreeRoot, totals, true);
+  for (const entry of await readdir(source, { withFileTypes: true })) {
+    if (entry.name === 'worktrees' || !entry.isFile()) continue;
+    totals.files++; totals.bytes += (await lstat(path.join(source, entry.name))).size;
+  }
+  return totals;
+}
+async function targetFreeBytes(target) {
+  try { const stat = await statfs(path.dirname(target), { bigint: true }); return Number(stat.bavail * stat.bsize); } catch { return null; }
+}
+/** Pure space gate so the refusal decision is executable in isolation. An
+ * unavailable probe stays unknown; OS write errors still guard the copy. */
+export function spaceDecision(freeBytes, sourceBytes) {
+  if (freeBytes === null || freeBytes === undefined) return { status: 'unknown', freeBytes: null, sourceBytes };
+  if (!Number.isSafeInteger(freeBytes) || freeBytes < 0 || !Number.isSafeInteger(sourceBytes) || sourceBytes < 0) return { status: 'invalid', freeBytes, sourceBytes };
+  return { status: freeBytes >= sourceBytes ? 'sufficient' : 'insufficient', freeBytes, sourceBytes };
 }
 async function* lines(file) {
   let pending = Buffer.alloc(0);
@@ -108,10 +136,9 @@ async function main() {
   for (const w of registry.worktrees) if (!UUID.test(w.id) || !path.isAbsolute(w.root) || isWithin(await canonicalPath(w.root), target) || isWithin(target, await canonicalPath(w.root))) abort(`Data destination overlaps a registered worktree: ${w.id}`);
   const worktreeRoot = path.join(source, 'worktrees');
   if (!apply) {
-    const totals = { files: 0, bytes: 0, links: 0, other: 0 };
-    if (await exists(worktreeRoot)) await scanMetadata(worktreeRoot, worktreeRoot, totals);
-    let freeBytes = null; try { const stat = await statfs(path.dirname(target), { bigint: true }); freeBytes = Number(stat.bavail * stat.bsize); } catch { /* The actual free-space check remains deployment evidence. */ }
-    emit({ mode: 'dry-run', source, target, registryHash, registeredWorktrees: registry.worktrees.length, totals, targetFreeBytes: freeBytes, sourceModified: false, targetCreated: false }); return;
+    const totals = await sourceInventory(source, worktreeRoot);
+    const freeBytes = await targetFreeBytes(target);
+    emit({ mode: 'dry-run', source, target, registryHash, registeredWorktrees: registry.worktrees.length, totals, targetFreeBytes: freeBytes, spaceSufficient: freeBytes === null ? null : freeBytes >= totals.bytes, sourceModified: false, targetCreated: false }); return;
   }
   await serviceStopped(source);
   const sourceGuardFile = path.join(source, 'service.lock'), guardId = randomUUID();
@@ -120,6 +147,15 @@ async function main() {
   try { await sourceGuard.writeFile(canonicalJson({ schemaVersion: 1, pid: process.pid, instanceId: guardId, startedAt: new Date().toISOString() }) + '\n'); await sourceGuard.sync(); }
   finally { await sourceGuard.close(); }
   try { await serviceStopped(source, guardId);
+  // R06 step 2: refuse to start a conversion the destination cannot hold.
+  // The full source logical volume is the conservative upper bound; packed
+  // output is smaller, but no partial conversion may begin on a tight volume.
+  const sourceTotals = await sourceInventory(source, worktreeRoot);
+  const applyFreeBytes = await targetFreeBytes(target);
+  const decision = spaceDecision(applyFreeBytes, sourceTotals.bytes);
+  if (decision.status === 'insufficient') abort(`Insufficient target free space: ${applyFreeBytes} bytes available, source logical volume ${sourceTotals.bytes} bytes. Choose a larger destination before converting.`);
+  if (decision.status === 'invalid') abort('Invalid free-space measurement; refusing to convert.');
+  if (decision.status === 'unknown') emit({ phase: 'space-check', status: 'unknown', reason: 'statfs unavailable on this platform; OS write errors still guard the conversion' });
   const prior = await exists(target);
   if (!prior) await mkdir(target, { recursive: false });
   else if (!prior.isDirectory() || prior.isSymbolicLink() || !resume) abort('Target exists; only use --resume for the same verified prepared migration.');
@@ -152,6 +188,8 @@ async function main() {
     await copyVerified(path.join(source, 'registry.json'), path.join(target, 'migration-original', 'registry.json'));
     const dirs = await exists(worktreeRoot) ? (await readdir(worktreeRoot, { withFileTypes: true })).sort((a, b) => compare(a.name, b.name)) : [];
     for (const entry of dirs) {
+      const loopFree = await targetFreeBytes(target);
+      if (loopFree !== null && loopFree < 1024 * 1024) abort(`Target volume nearly full (${loopFree} bytes free); stopping before worktree ${entry.name}. Resume after freeing space.`);
       const id = entry.name, input = path.join(worktreeRoot, id), output = path.join(target, 'worktrees', id);
       if (!entry.isDirectory() || entry.isSymbolicLink() || !UUID.test(id)) { await copyTree(source, target, input, path.join(target, 'migration-original', 'worktrees', id), copies); continue; }
       await mkdir(output, { recursive: true });
@@ -228,7 +266,17 @@ async function main() {
         const tasks = new TaskService({ worktree: registered, archive, index: new SearchIndex(path.join(output, 'index.sqlite')), source: async () => abort('Migration cannot scan current source') });
         const freshness = new FreshnessManager({ worktree: registered, archive, stateStore: new CurrentStateStore(output), serial: fn => fn() });
         const observation = new ObservationManager({ worktree: registered, archive, readOnly: true, pollIntervalMs: 0, serial: fn => fn() });
-        try { const taskRecords = await tasks.auditHistory(); await freshness.ready(); await observation.ready(); semantic = { status: 'checked-task-state-observation', taskRecords }; }
+        try {
+          await tasks.ready();
+          const taskRecords = await tasks.auditHistory();
+          // R06 step 4: report the 60-day discovery boundary on the converted
+          // records. checkedTask already rejects any shifted retention basis or
+          // expiry; the counts prove the window survived the conversion.
+          const now = Date.now(), all = tasks.tasks();
+          const withinWindow = all.filter(task => Date.parse(task.expiresAt) > now).length;
+          semantic = { status: 'checked-task-state-observation', taskRecords, retention: { checked: all.length, withinWindow, expired: all.length - withinWindow, windowMs: 60 * 86400000 } };
+          await freshness.ready(); await observation.ready();
+        }
         finally { await freshness.close(); await observation.close(); await tasks.close(); }
       }
       const summary = { worktree: id, manifests, journal: { seq, bytes: journalBytes, hash: journalHash, tail }, semantic, unreferencedOrUnknown: [...invalid].sort(compare) };
@@ -262,4 +310,7 @@ async function main() {
     if (owner.pid === process.pid && owner.instanceId === guardId) await unlink(sourceGuardFile);
   }
 }
-main().catch(error => { console.error(JSON.stringify({ status: 'failed', code: error?.code ?? 'MIGRATION_FAILED', message: error?.message, details: error?.details })); process.exitCode = 1; });
+// Direct execution only; importing the module exposes the pure gate for tests.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(error => { console.error(JSON.stringify({ status: 'failed', code: error?.code ?? 'MIGRATION_FAILED', message: error?.message, details: error?.details })); process.exitCode = 1; });
+}

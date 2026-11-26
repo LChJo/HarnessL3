@@ -8,14 +8,14 @@ specification {
 }
 model {
   app = system "HarnessL3" {
-    description "面向现有agent的项目上下文CLI，LikeC4文本、项目证据与文件型技能仍是权威。默认snapshot不全扫源码，verified/proof严格核验。v0.57事故确认后台全态归档写放大；本机已实施按需同步租约、内存失效、SQLite当前态、操作级归档核验、显式全量审计、压缩分块事务历史和增量任务记录，以及离线迁移工具。旧格式保留兼容；本机25工作区真实迁移、默认入口切换及旧冗余副本回收核验通过，用户确认当前Windows 9小时27分13秒实测基准收尾。7a3d2f5的GitHub原生三平台构建、完整程序、Web和包验收通过；完整24h及发布仍延期，实际范围以STATUS为准。"
+    description "面向现有agent的项目上下文CLI，LikeC4文本、项目证据与文件型技能仍是权威。默认snapshot不全扫源码，verified/proof严格核验。v0.58按实际模型revision共享不可变结构和布局，重复证据路径合并读取，Web按分支分组，工作区核验和历史独立。v0.57事故确认后台全态归档写放大；本机已实施按需同步租约、内存失效、SQLite当前态、操作级归档核验、显式全量审计、压缩分块事务历史和增量任务记录，以及离线迁移工具。旧格式保留兼容；本机25工作区真实迁移、默认入口切换及旧冗余副本回收核验通过，用户确认当前Windows 9小时27分13秒实测基准收尾。7a3d2f5的GitHub原生三平台构建、完整程序、Web和包验收通过；完整24h及发布仍延期，实际范围以STATUS为准。"
     metadata {
       harness_id "ad94bb95-82f8-4485-b9ac-e1064fcdfa36"
       brief "以LikeC4文本组织项目上下文与文件型技能，通过CLI交接并在Web追溯任务。"
       source "fact"
       status "verified"
       evidence "d6250000-0000-4000-8000-000000000001 d6360000-0000-4000-8000-00000000000b d6360000-0000-4000-8000-00000000000c d6360000-0000-4000-8000-00000000000d d6360000-0000-4000-8000-00000000000e d6360000-0000-4000-8000-00000000000f d6360000-0000-4000-8000-000000000011 4b7bd625-f0d0-4cab-b25c-415b29b9b6f0 580a91f2-72da-4c49-938c-ef31d15863f5 5c648b0f-ccb6-4f46-b367-39c74a3ce972 7fae5745-19e5-4a97-bc55-6512138ddf54 d0f55078-08dc-44f1-9ff7-4586436177df e1b4afcb-242d-48f2-b321-8eaa2a2ecd41"
-      version "15"
+      version "16"
     }
     cli = component "CLI入口 · cli/" {
       description "解析参数并输出单个结果封套；stderr先报告requestId及阶段，总等待预算可配置，超时/取消不撤销已接受工作。request status找回原回执，unknown不自动重发。默认snapshot与显式verified分开；资源快捷参数及可省略绑定/哈希由任务记录解析，显式字段继续严格检查。静态帮助提供真实Schema路径，中文JSON优先UTF-8文件；宿主创建进程失败与CLI内权限错误分开。 model maintain支持supplement/revise/rebuild，返回当前agent指引、实际视图覆盖和最近来源观测，不改文件或请求来源全扫。 已有共享上下文只注册，本机仓库关联不改项目文件；旧配对配置修复仍要求已登记项目UUID与原配置哈希。 task select --compact只精简客户端显示，保留当次正文和技能方案，以packetRef恢复完整累计packet；不改变原请求、默认回执或归档。"
@@ -61,14 +61,14 @@ model {
         version "2"
       }
       runtime = component "用例编排 · runtime.ts" {
-        description "Runtime按真实目标装配任务、当前同步态与明确日志订阅。普通snapshot/handoff不读取无关历史正文；旧格式先核对journal结构，新压缩格式按事务头及目标定位。archive audit独立检查全部历史和引用，仅只读审计接受协作取消且不伪报完整性。runtime diagnostics返回有界逻辑IO、资源/内存和最近延迟。闲置资源释放、后台合并队列及当前态SSE与业务提交游标分开。保留requestId、目标隔离、身份修复前持久pending、原回执和未知范围。"
+        description "Runtime按真实目标装配任务、当前同步态与明确日志订阅。普通snapshot/handoff不读取无关历史正文；旧格式先核对journal结构，新压缩格式按事务头及目标定位。archive audit独立检查全部历史和引用，仅只读审计接受协作取消且不伪报完整性。runtime diagnostics返回逻辑IO、资源/内存、最近延迟、模型共享及后台队列计数。闲置资源释放、共享模型缓存清理、当前态SSE与业务提交游标分开；后台观测保持全局单飞并按工作区轮转公平调度，前台请求不进入后台队列。loose兼容根上journal代次落后于checkpoint时，状态投影取已签发最高代次并保守pending。保留requestId、目标隔离、身份修复前持久pending、原回执和未知范围。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000012"
           brief "按需资源与操作级档案核验、显式全量审计及当前态投影。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000004 0e67a30f-f14f-43b0-9fe7-9a7ab414c9d5 47a9761c-8c69-4907-926f-744ddf8e6ce5 d6360000-0000-4000-8000-000000000006 3fc94f45-8e43-4204-88e3-ad6962f39a5b"
-          version "12"
+          version "14"
         }
       }
       workspace = component "项目身份 · workspace.ts" {
@@ -83,14 +83,14 @@ model {
         }
       }
       model = component "文本模型 · model.ts" {
-        description "loadModel读取.harness中的LikeC4、证据与别名，检查身份/引用和元数据，并保留带evidenceId的内容异常及本地文档Git归属诊断，再形成目录/正文/C4共用的快照；不改写人工知识状态。 证据格式先校验再解析引用，避免逗号串伪报ID缺失；未声明关系类型给准确DSL修正方式。"
+        description "loadModel读取目标worktree中LikeC4、证据和别名的实际字节，校验身份、元数据及引用；同revision跨工作区共享不可变解析结构、布局与目录索引，同版本并发合并，有界缓存随空闲资源释放。每次独立校验实际证据及Git归属，同次重复证据路径只读一次，诊断按evidenceId生成；不改变原快照或来源核验。证据格式先校验再解析引用，未声明关系类型给准确DSL修正方式。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000005"
           brief "解析LikeC4与证据/别名，校验稳定身份并生成目录、正文和结构视图。"
           source "fact"
           status "verified"
-          evidence "d6250000-0000-4000-8000-000000000006"
-          version "3"
+          evidence "d6250000-0000-4000-8000-000000000006 1e8f0d15-2ab8-4996-82e4-6ad105e1f040"
+          version "4"
         }
       }
       modelMaintenance = component "模型演进 · model-maintenance.ts" {
@@ -116,14 +116,14 @@ model {
         }
       }
       context = component "任务上下文 · context.ts" {
-        description "TaskService默认snapshot捕获模型与技能目录，来源unknown；verified保持完整来源核验。联合选择、精准读取、阶段追加、60天活动及原回执幂等保持。旧格式完整任务记录兼容；packed后续任务提交由task-delta记录变化字段、packet增量及新批次，按原前序提交重构，业务回执原字节由内容存储保留。冷入口按头定位，不先打开无关正文或派生搜索；历史列表仅metadata核验，显式请求严格核对原记录与相关引用。"
+        description "TaskService默认snapshot捕获模型与技能目录，来源unknown；verified保持完整来源核验。联合选择、精准读取、阶段追加、60天活动及原回执幂等保持。旧格式完整任务记录兼容；packed后续任务提交由task-delta记录变化字段、packet增量及新批次，按原前序提交重构，业务回执原字节由内容存储保留；delta链每32次操作落一次全量基线，读取与全量审计重构成本有界。冷入口按头定位，不先打开无关正文或派生搜索；历史列表仅metadata核验，显式请求严格核对原记录与相关引用。"
         metadata {
           harness_id "c6250000-0000-4000-8000-000000000006"
           brief "绑定当前模型、精确上下文与增量任务记录，按目标重建原回执。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-000000000007 eacd2b8f-d6ba-4aa7-9d8a-1536b33662d9 aa0b2a7a-539a-423c-9775-d95d64f6dc52 18e28937-86a0-4c30-82c1-f350b72a342b 9a41ca91-cf24-42ec-8d0c-a9a9af21cf73"
-          version "14"
+          version "15"
         }
       }
       skills = component "技能文件 · skills/catalog" {
@@ -171,25 +171,25 @@ model {
         }
       }
       taskDelta = component "任务增量 · task-delta.ts" {
-        description "encodeTaskDelta/applyTaskDelta只记录改变的允许字段、packet按ID增量、追加批次及继承相同绑定/技能目录/计划，不重复保存前序累积task。写入前核对重构等于原task，读时校验原前序commit及任务身份；旧完整记录作为向后兼容基线。"
+        description "encodeTaskDelta/applyTaskDelta只记录改变的允许字段、packet按ID增量、追加批次及继承相同绑定/技能目录/计划，不重复保存前序累积task。写入前核对重构等于原task，读时校验原前序commit及任务身份；旧完整记录作为向后兼容基线。链深由TaskService跟踪，周期全量基线限制同步重放长度。"
         metadata {
           harness_id "6be4449f-65a7-4222-997d-bf42c205c9c4"
           brief "以前一提交及变化字段编码增量，精确重构任务或批次。"
           source "fact"
           status "verified"
           evidence "a857a5c6-bb0e-4fed-9ff2-efedb4729ff1 2acb8f04-f0e6-4250-aabf-34f548b5daef"
-          version "1"
+          version "2"
         }
       }
       storageMigration = component "离线存储迁移 · migrate-packed-storage.mjs" {
-        description "工具显式dry-run或apply/resume，验证源服务停止并取得临时单写guard。流式原快照/技能、journal及源/目标指纹和引用闭包，保留原registry、机器技能文件、未知内容及未提交尾；派生索引不复制。验证任务和同步/观测记录后才发布目标marker，失败不切换，工具本身不删除源。实际本机25工作区无损转换及原任务/技能/安装复核通过后，按单独授权回收旧重复物理副本并验证默认路径junction；迁移证据不在卷根持续增加。"
+        description "工具显式dry-run或apply/resume，验证源服务停止并取得临时单写guard。apply前核对目标可用空间不低于源逻辑体量，不足拒绝开始；dry-run清单按journal/快照/技能/任务/派生索引/未知分层。流式原快照/技能、journal及源/目标指纹和引用闭包，保留原registry、机器技能文件、未知内容及未提交尾；派生索引不复制。验证任务和同步/观测记录并逐工作区报告60天窗口计数后才发布目标marker，转换中目标卷近满停止并可续传，失败不切换，工具本身不删除源。实际本机25工作区无损转换及原任务/技能/安装复核通过后，按单独授权回收旧重复物理副本并验证默认路径junction；迁移证据不在卷根持续增加。"
         metadata {
           harness_id "f9c19641-a033-4db5-83e8-c3c0b4f9f223"
           brief "独立目标无损转换、原字节/引用/身份校验后发布格式。"
           source "fact"
           status "verified"
           evidence "de36567a-6bed-40e3-bf15-acde3ca652fd 2acb8f04-f0e6-4250-aabf-34f548b5daef 45053a0a-4b0c-446a-b495-f43b34a6486c"
-          version "2"
+          version "3"
         }
       }
       index = component "派生索引 · index.ts" {
@@ -204,14 +204,14 @@ model {
         }
       }
       source = component "源码与同步 · source/freshness" {
-        description "FreshnessManager即时保守标pending，普通后台通知、合并增量观测不创建业务快照或Journal。按需租约、分类与路径批次有界，未知覆盖/过量路径标整工作区待核验，空闲释放监听，不周期全扫。显式status执行完整双遍原字节/策略/模型检查并替换SQLite当前态；显式verify保留严格CAS、字节回退、局部scopeStatus、原失败回执。重启与覆盖缺口推进失效代次，旧proof不可复用；明确证据引用、链接/大小写、忽略规则、普通目录和Git隔离保留。"
+        description "FreshnessManager即时保守标pending，普通后台通知、合并增量观测不创建业务快照或Journal。按需租约、分类与路径批次有界，未知覆盖/过量路径标整工作区待核验，空闲释放监听，不周期全扫。显式status执行完整双遍原字节/策略/模型检查并替换SQLite当前态；显式verify保留严格CAS、字节回退、局部scopeStatus、原失败回执。重启与覆盖缺口推进失效代次，旧proof不可复用；loose兼容根上旧写者追加更低代次journal时，restore取checkpoint已签发最高代次并保守失效（CURRENT_STATE_EPOCH_REGRESSED）。明确证据引用、链接/大小写、忽略规则、普通目录和Git隔离保留。"
         metadata {
           harness_id "c6250000-0000-4000-8000-00000000000a"
           brief "原生通知只失效当前态，按需租约和显式严格源码/模型核验。"
           source "fact"
           status "verified"
           evidence "d6250000-0000-4000-8000-00000000000b d6250000-0000-4000-8000-00000000000c e94d7f43-9e04-4d1d-872f-b8125998f02e bf342397-819c-4a86-8c9c-1b9686af9b17 b8983113-8884-4915-a339-4106142e7407 9a02944d-cbb2-46da-b77f-9c0182486781 ff040559-643c-4bfd-8584-d507e92d0bdf f11ba75e-586a-4e73-916f-a588e214dc8a 9a41ca91-cf24-42ec-8d0c-a9a9af21cf73"
-          version "13"
+          version "14"
         }
       }
       observation = component "只读观测 · observation.ts" {
@@ -238,14 +238,14 @@ model {
       }
     }
     web = component "可视化工作台 · web/" {
-      description "React工作台通过同源服务展示原任务、五类脑图、技能Hub和C4。逐层披露、搜索分页、项目切换、历史60天与固定批次、原内容缓存及24小时链接保持。实时业务commit序号和临时freshness事件独立；当前态只显示实际最近观测，历史不因浏览续期、触发源码扫描或产生agent读取。"
+      description "React工作台通过同源服务展示原任务、五类脑图、技能Hub和C4。逐层披露、搜索分页、项目及分支分组的worktree切换、历史60天与固定批次、原内容缓存及24小时链接保持。实时业务commit序号和临时freshness事件独立；当前态只显示实际最近观测，历史不因浏览续期、触发源码扫描或产生agent读取。"
       metadata {
         harness_id "c6250000-0000-4000-8000-00000000000d"
         brief "24小时任务链接、只读历史与合并的当前态更新。"
         source "fact"
         status "verified"
         evidence "d6250000-0000-4000-8000-00000000000f d6250000-0000-4000-8000-000000000010 d6250000-0000-4000-8000-000000000018 d6250000-0000-4000-8000-000000000019 d6250000-0000-4000-8000-00000000001a fd73b46e-52f4-4779-9daf-314249502ea4 0e16b65c-8bb4-4dc2-be03-cc93b19fe707 b35d98f4-6a6c-47eb-b2eb-b3152bf7c34d a4f7e468-1d4f-453a-97c0-0c7ce70dfe28"
-        version "15"
+        version "16"
       }
     }
     runtimeSkill = artifact "Agent入口 · agent-skills/" {

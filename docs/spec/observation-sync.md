@@ -1,6 +1,6 @@
 # 只读日志观测与源码同步
 
-v0.57候选：普通来源通知仅递增失效代次、合并内存待核验集合并发送限频临时freshness更新，不写不可变历史。无法确认/超限改为`pendingWorkspace:true`，仅显式完整捕获解析实际路径；分类最多32个在途，增量每批128路径，额外未知路径预算4096，超过保守pending。显式同步操作取得5分钟空闲租约，不周期完整扫描，覆盖失效或空闲释放后旧声明失效；当前状态由SQLite替换，状态库损坏不可清pending。verified/source/proof的完整原字节及CAS仍执行；`sync verify`保留原声明、回执与依据，status不是永久业务事件。无活动显式日志绑定不轮询；浏览不续期、不启动观察。具体测试及尚未通过范围见STATUS。
+v0.57（本机已实施）：普通来源通知仅递增失效代次、合并内存待核验集合并发送限频临时freshness更新，不写不可变历史。无法确认/超限改为`pendingWorkspace:true`，仅显式完整捕获解析实际路径；分类最多32个在途，增量每批128路径，额外未知路径预算4096，超过保守pending。显式同步操作取得5分钟空闲租约，不周期完整扫描，覆盖失效或空闲释放后旧声明失效；当前状态由SQLite替换，状态库损坏不可清pending。loose兼容根上若旧写者在本程序checkpoint之后追加更低代次的journal，restore与状态投影取已签发的最高代次并保守失效（CURRENT_STATE_EPOCH_REGRESSED），不回滚核验义务。verified/source/proof的完整原字节及CAS仍执行；`sync verify`保留原声明、回执与依据，status不是永久业务事件。无活动显式日志绑定不轮询；浏览不续期、不启动观察。具体测试及尚未通过范围见STATUS。
 
 v0.57（已确认目标、本机实际已落地）：[重设计规格 R01/R02](../implementation/ARCHITECTURE_REDESIGN_SPEC.md)要求普通通知与当前状态更新不进入永久业务历史，工作区按需租约及合并观测、覆盖失效保守pending，取消无界后台全态归档与非必要全扫；显式verified/status/verify完整原字节和CAS不弱化。以下旧格式描述保留兼容依据，实际验收范围见STATUS。
 

@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.57 records the approved redesign, completed local migration and current measured closure, plus successful native three-platform CI for 7a3d2f5; full 24-hour gate and publication remain outstanding.",
+      "claim": "Baseline v0.58 records approved model revision sharing, branch grouping and worktree-isolated verification; prior v0.57 migration and native CI evidence remain recorded.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "db82bc4fb5ed5046066edc5796b0c2921dd1176ccfb2ddfbe31bcb6e729c42b7",
-      "observedAt": "2026-11-26T04:51:57.452Z"
+      "hash": "861e4a8edc6392f599bb46c4a606db63445ae3d69c68fee2edcddb09bf9bd645",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -34,12 +34,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000004",
       "kind": "source-code",
-      "claim": "Runtime uses operational scoped archive recovery, lazy search and observation resources, explicit independent full audit, bounded idle resource release and logical IO/runtime diagnostics.",
+      "claim": "Runtime retains isolated worktree resources and scoped archive recovery, exposes model sharing and logical IO metrics, and clears shared model retention on idle resource release. Background observation keeps the single-flight budget and rotates round-robin across worktree queues; diagnostics exposes queue metrics and the status projection clamps regressed epochs from the checkpoint.",
       "location": {
         "path": "core/runtime.ts"
       },
-      "hash": "f0f8d5eac37d2533c4a5848068e933f96d03ed1d6217e6db1175b96272fe8ebd",
-      "observedAt": "2026-11-25T18:53:32.834Z"
+      "hash": "0d398363ac8c54e2aef330b5698cc1b6a41ee9c20c6b72328f7cdd97c47ec4ab",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000005",
@@ -54,22 +54,22 @@
     {
       "id": "d6250000-0000-4000-8000-000000000006",
       "kind": "source-code",
-      "claim": "Model validation checks evidence-list syntax before resolving IDs and gives declared-relationship DSL guidance while preserving identity and reference constraints.",
+      "claim": "Model loading captures actual bytes and local evidence diagnostics, deduplicates repeated evidence reads per capture, shares immutable parsed structure and indexes by revision, and bounds retained versions.",
       "location": {
         "path": "core/model.ts"
       },
-      "hash": "ed24311f3c46101acf06ac92bf9a24111fcb04e30247c195b4b0fd68b8888a2a",
-      "observedAt": "2026-11-10T14:07:55.587Z"
+      "hash": "355d17dfdbeef23d8c70e2e6a27e823eb72f516f79ef85b87770fa5e56b35a71",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000007",
       "kind": "source-code",
-      "claim": "TaskService preserves actual task bindings and receipts, uses per-task delta reconstruction in packed format, scopes archive closure and avoids cold search initialization for new entries.",
+      "claim": "TaskService preserves actual task bindings and receipts, uses per-task delta reconstruction in packed format, scopes archive closure and avoids cold search initialization for new entries. Delta chains write a full baseline every 32 operations so read and full-audit reconstruction stays bounded.",
       "location": {
         "path": "core/context.ts"
       },
-      "hash": "372a843ebd37fa92ff86c5456c4532f7aa1a1a54d5c4360c32bbf21fbe5f2a6e",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "c46fc2bae5734672eaa320bec2ca102ffdb6b72e11f9dc23e35929709302fcbd",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000008",
@@ -114,12 +114,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000c",
       "kind": "source-code",
-      "claim": "Native notifications update bounded in-memory pending state without history commits; explicit status checkpoints current state and only proof produces business archive. Lease expiry, rollback and strict CAS preserve invalidation.",
+      "claim": "Native notifications update bounded in-memory pending state without history commits; explicit status checkpoints current state and only proof produces business archive. Lease expiry, rollback and strict CAS preserve invalidation. On loose roots a journal append below the checkpoint generation keeps the highest issued epoch and stays pending (CURRENT_STATE_EPOCH_REGRESSED).",
       "location": {
         "path": "core/freshness.ts"
       },
-      "hash": "1240cde7fa74864e29190a39a5d581e2810f6ad7fa90b98a639f7ddd463684f6",
-      "observedAt": "2026-11-25T18:53:32.837Z"
+      "hash": "41ffddfe1e29d79d2a0e010794f3206deafcc0be329081bcd45baec0a91063d9",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6250000-0000-4000-8000-00000000000d",
@@ -144,12 +144,12 @@
     {
       "id": "d6250000-0000-4000-8000-00000000000f",
       "kind": "source-code",
-      "claim": "Web uses bounded archived target cache; ephemeral freshness updates never advance historical commit cursor or renew reads.",
+      "claim": "Web groups project worktrees by actual branch and retains exact target identity, bounded archived target cache and independent freshness updates.",
       "location": {
         "path": "web/main.tsx"
       },
-      "hash": "ba4a2125a1a4732218ccb98924ca846836d346f24f8df34649bb8e92da8a9380",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "303093a4fbcab3c6a798ecd486aad65e1d86b73c4665cedf243fe2f9230a3d87",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000010",
@@ -208,8 +208,8 @@
       "location": {
         "path": "docs/spec/model-context.md"
       },
-      "hash": "405c0a919456eddf997d3185ac81f6097e3c4ee070bd8d8a238d758bab786e7b",
-      "observedAt": "2026-11-17T07:09:25.693Z"
+      "hash": "0f563a7916050c139a06e46dcff15f455edf7b82d40162385b05bbbcffc4921d",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000016",
@@ -274,22 +274,22 @@
     {
       "id": "e94d7f43-9e04-4d1d-872f-b8125998f02e",
       "kind": "document",
-      "claim": "v0.57 candidate specifies bounded pending state, leases, no background durable state, current checkpoint and retained explicit CAS plus legacy compatibility.",
+      "claim": "v0.57 specifies bounded pending state, leases, no background durable state, current checkpoint and retained explicit CAS plus legacy compatibility. Loose-root journal appends below the checkpoint generation keep the highest issued epoch and conservative pending.",
       "location": {
         "path": "docs/spec/observation-sync.md"
       },
-      "hash": "c8a069dd18275aa4cb3163dfb26de433b257dbcceaa2ad46dc59a3783cbd3a57",
-      "observedAt": "2026-11-26T04:31:04.835Z"
+      "hash": "ca6076ceca8b3b0f90995b9d3e2a4872ed0213690d573cfaa0bcdf1cea3a7bdb",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "e553d996-f21a-4af0-bc7c-eec02753f102",
       "kind": "document",
-      "claim": "v0.57 candidate specifies packed SQLite raw bytes, content-defined blocks, per-worktree heads, delta tasks, current checkpoint, scoped audit and explicit lossless migration; legacy format remains a compatibility contract.",
+      "claim": "v0.57 specifies packed SQLite raw bytes, content-defined blocks, per-worktree heads, delta tasks, current checkpoint, scoped audit and explicit lossless migration; legacy format remains a compatibility contract. Delta chains re-baseline every 32 operations; migration gates target space, layers the dry-run inventory and reports the 60-day window.",
       "location": {
         "path": "docs/spec/storage.md"
       },
-      "hash": "992977284bc16992ad3446f811c39f7ddbc18bee0835f81602ac79db0a7c80c6",
-      "observedAt": "2026-11-26T04:31:04.835Z"
+      "hash": "e49a442a3a696f1b6780782a4891439f24f943b26065e58dc35bf291586687f5",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "04fbf739-c340-4ea7-9b55-80a266ca4b00",
@@ -308,8 +308,8 @@
       "location": {
         "path": "agent-skills/harnessl3/references/runtime.md"
       },
-      "hash": "60925bade1990b76498ab447624191873d17ce4d6e106460b1e4b4ebe5b0069d",
-      "observedAt": "2026-11-21T17:31:31.598Z"
+      "hash": "a8917acf4783f573bf6444a39e30f3a2e2474b49028ab023a6ac13ebd0bbbb6d",
+      "observedAt": "2026-11-26T10:55:31.813Z"
     },
     {
       "id": "2f63b728-1e83-4ac8-aff3-bd766333ee5e",
@@ -364,22 +364,22 @@
     {
       "id": "1e950683-1469-49c8-9164-d439932a7bf2",
       "kind": "source-code",
-      "claim": "Source regression fixtures include TC28 repeated and high-cardinality events, TC29 idle lease, TC30 restart/model rollback, ignored outputs, strict scoped proof and legacy archive compatibility.",
+      "claim": "Source regression fixtures include TC28 repeated and high-cardinality events, TC29 idle lease, TC30 restart/model rollback, ignored outputs, strict scoped proof and legacy archive compatibility. TC30 also covers an older writer appending below the checkpoint generation.",
       "location": {
         "path": "tests/v1/freshness.test.mjs"
       },
-      "hash": "75faeafb13216a9b8487b4000ab237db8ff6c4927cdca2ebe327e8e38e5b4e95",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "82128ee8d5d09a81738f3b8498d91c937296dca20e280d63ce4e5a6064929c79",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Records actual incident, local deployment, migration, measured closure, and successful GitHub native matrix build, complete tests, browser and package checks on 7a3d2f5; full 24-hour and publication remain outstanding.",
+      "claim": "Records v0.58 measured multi-worktree reuse, validation and verified local global CLI upgrade, as well as v0.57 incident, migration and previously executed native CI.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "4df81eb3805d417bdfa80929ad1f0edc71d5577c2ecfb09c76b41667120c171d",
-      "observedAt": "2026-11-26T04:51:57.452Z"
+      "hash": "fca94dbda4439b679dbf1be8a8dcfb1704cf5c7e7779379a629ce49153e37f0e",
+      "observedAt": "2026-11-26T08:35:19.429Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -534,42 +534,42 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000b",
       "kind": "document",
-      "claim": "TC28-35 add long-running resource, notification-storm, historical isolation and lossless migration acceptance; existing scenarios and observed-vs-unverified scope remain.",
+      "claim": "TC28-35 add long-running resource, notification-storm, historical isolation and lossless migration acceptance; existing scenarios and observed-vs-unverified scope remain. Native three-platform functional/install CI is recorded separately from the deferred full 24h gate.",
       "location": {
         "path": "docs/spec/acceptance.md"
       },
-      "hash": "a159be9e59cc58806e57efc1874a7bb2196541a608c7b27af0a6045674ab42f5",
-      "observedAt": "2026-11-26T04:31:04.850Z"
+      "hash": "aa543882867e79dc7aec36aafce2b99acdd6523950282f17afcb8e65abd8708e",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000c",
       "kind": "document",
-      "claim": "Candidate architecture separates current state, packed history, task delta, migration and scoped audit while preserving singleton ownership and project text authority.",
+      "claim": "Architecture specifies bounded shared immutable model structures alongside isolated worktree state and the v0.57 packed history and scoped audit. Background observation keeps single-flight and rotates fairly per worktree.",
       "location": {
         "path": "docs/spec/architecture.md"
       },
-      "hash": "7c7c12556afe5178aa9c841ec862caf6fe82cc50841e44d28ba3dc2589828c80",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "2fb3e15e010c06f60db66007bc667b98865915e4bc49f61f2e5f90b13715549f",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000d",
       "kind": "document",
-      "claim": "Candidate CLI documents independent audit, diagnostics, metadata-only list scope and existing receipt/link compatibility.",
+      "claim": "CLI documents model sharing metrics, independent audit, metadata-only list scope and existing receipt/link compatibility.",
       "location": {
         "path": "docs/spec/cli-contract.md"
       },
-      "hash": "ac7715277ffe9ca8b3639ebf98357688c0e9531e48917b6c185ffd93374cb26d",
-      "observedAt": "2026-11-26T04:31:04.850Z"
+      "hash": "cc96b193c0954a0022766a0b64b3eb21a223a0eb80733ce84f22b886d4ba01f8",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000e",
       "kind": "document",
-      "claim": "Existing product semantics preserved; v0.57 adds long-term runtime capacity and I/O requirements, on-demand verification and lossless migration.",
+      "claim": "Product specifies measured multi-worktree model sharing and branch grouping; previous runtime capacity, I/O and migration requirements remain.",
       "location": {
         "path": "docs/spec/product.md"
       },
-      "hash": "4f95d5d6b8dcfff7a8c0ffb4c72c455bd28df51811225cebdf6bb09a637a9d0a",
-      "observedAt": "2026-11-26T04:31:04.850Z"
+      "hash": "dd889dc445ca2d3da6396ee8f1a75884f7eb0e604759230f77f01ba0efa269ce",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
@@ -578,8 +578,8 @@
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "e1e8ace4a797c4d80597a987b1716244b35791f8a6ee8c841cd4dd7e84aa0b79",
-      "observedAt": "2026-11-26T04:51:57.452Z"
+      "hash": "cc8ac4b56082c0deef1f2afb57110496b6775d000a5bbd03ac9c8cf4113434da",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -594,12 +594,12 @@
     {
       "id": "d6360000-0000-4000-8000-000000000011",
       "kind": "document",
-      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules.",
+      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules. Acceptance wording distinguishes passed native three-platform functional CI from the deferred full 24h gate.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "ff08436557db33db164b5151633cd20c0a2b41b5c274996ebb44ece3b0e41e1d",
-      "observedAt": "2026-11-26T04:31:04.852Z"
+      "hash": "b06c22531d77afbd6afbadc07310182ff7e30f889bd0651936917886e3c58b2f",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000012",
@@ -648,8 +648,8 @@
       "location": {
         "path": "docs/spec/web.md"
       },
-      "hash": "0368484c9c0623c154fc9a7dea653868b6cd279b0273fda4846b1af60d551c55",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "b005d89fe67c4ecf523efb447473d500384e82230c3365dc70bea0d775fb9a02",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000001",
@@ -668,8 +668,8 @@
       "location": {
         "path": "docs/USAGE.md"
       },
-      "hash": "dcd4c30b924f2107aca1abd86fd94d25165049c2911b49e37c682075e9ff0570",
-      "observedAt": "2026-11-25T18:53:32.863Z"
+      "hash": "2232ca326146f33f35d664c7ad4943b539165cebaf995b5fa25f8991abcc1446",
+      "observedAt": "2026-11-26T10:55:31.813Z"
     },
     {
       "id": "d6270000-0000-4000-8000-000000000003",
@@ -764,12 +764,12 @@
     {
       "id": "d6370000-0000-4000-8000-000000000005",
       "kind": "document",
-      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules.",
+      "claim": "Current agent rules include v0.57 stage gates and evidence, preserve phase approval, original receipts, migration protection and existing web access rules. Acceptance wording distinguishes passed native three-platform functional CI from the deferred full 24h gate.",
       "location": {
         "path": "AGENTS.md"
       },
-      "hash": "ff08436557db33db164b5151633cd20c0a2b41b5c274996ebb44ece3b0e41e1d",
-      "observedAt": "2026-11-26T04:31:04.862Z"
+      "hash": "b06c22531d77afbd6afbadc07310182ff7e30f889bd0651936917886e3c58b2f",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "c5cfe9cf-9cd7-47e0-9b89-7942dff8db74",
@@ -798,8 +798,8 @@
       "location": {
         "path": "README.md"
       },
-      "hash": "872c85a623912142601ad1d5cede58978ec8287e53142da081c43535e50ad0e0",
-      "observedAt": "2026-11-26T04:51:57.452Z"
+      "hash": "17e18135817337d13104e85a4cda0a84282a6c8cc5937ad8ff95a428e5b250a7",
+      "observedAt": "2026-11-26T08:27:06.578Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -1134,12 +1134,12 @@
     {
       "id": "f325ad00-2760-4dfd-9214-b15df2ac8dec",
       "kind": "document",
-      "claim": "Response schema validates archive audit and runtime diagnostics result fields while preserving existing result envelope and model-maintenance contract.",
+      "claim": "Response schema validates archive audit and runtime diagnostics result fields while preserving existing result envelope and model-maintenance contract. Runtime diagnostics also exposes bounded background queue metrics.",
       "location": {
         "path": "docs/spec/contracts/response.schema.json"
       },
-      "hash": "36e96474769924cd6409c414ec50e60afdc59b4a36eec8e242f17e3cde74668b",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "76bb0435cd10ebc077bce4624bfea8f985d521743ad53ca436094b4a9ae2ddcd",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d6480000-0000-4000-8000-000000000001",
@@ -1248,8 +1248,8 @@
       "location": {
         "path": "web/verify-fixture.mjs"
       },
-      "hash": "09466be845dc6699f3a67e6ba49bc49ebb9003fcbded536800a3dce7be886271",
-      "observedAt": "2026-11-23T05:24:43.005Z"
+      "hash": "d2b55457816ef6255496c18d8c0b31de84ef903154a539d1cf612e19b612a0e7",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     },
     {
       "id": "b34c74e1-cdf9-44c7-8faa-206148cf3c0e",
@@ -1374,42 +1374,42 @@
     {
       "id": "de36567a-6bed-40e3-bf15-acde3ca652fd",
       "kind": "source-code",
-      "claim": "Explicit offline preview and conversion preserve source files, enforce source writer guard, verify raw contents/chain/closure/identity, and publish only verified target format.",
+      "claim": "Explicit offline preview and conversion preserve source files, enforce source writer guard, verify raw contents/chain/closure/identity, and publish only verified target format. Apply refuses an undersized target volume, dry-run layers the inventory by data value, and verification reports the 60-day retention window per worktree.",
       "location": {
         "path": "scripts/v1/migrate-packed-storage.mjs"
       },
-      "hash": "b05ff07aa6e9ccc6e77ac8a777c2b40626b9f868af22750d5d30e819546039bb",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "756f19aa593a6f790bafe6bb5589b3568f8f66518f9439745d6a361803ac751e",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "6cc01907-f72b-4c6e-86c4-1660bbabb93b",
       "kind": "source-code",
-      "claim": "TC30/32 current-state replacement avoids immutable status snapshots, proof replay survives restart and corrupt checkpoint rejects.",
+      "claim": "TC30/32 current-state replacement avoids immutable status snapshots, proof replay survives restart and corrupt checkpoint rejects. TC30 also covers runtime projection after a lower-generation journal append.",
       "location": {
         "path": "tests/v1/current-state.test.mjs"
       },
-      "hash": "f73a0f73d10f02977bb8b19e864d0bbc5db87fc548368b202a86b40e1e6c052b",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "71271dba3a7e5d76f381d1d83aeedb6881d431824ec3b63491e8baae881f438c",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "2acb8f04-f0e6-4250-aabf-34f548b5daef",
       "kind": "source-code",
-      "claim": "TC32/34 isolated default packed service, exact migrated bytes and receipts, delta records, block sharing, corrupted reference rejection and prepared migration resume fixtures.",
+      "claim": "TC32/34 isolated default packed service, exact migrated bytes and receipts, delta records, block sharing, corrupted reference rejection and prepared migration resume fixtures. TC34 also covers the space gate, layered inventory and retention report; TC32 covers periodic delta re-baselining.",
       "location": {
         "path": "tests/v1/packed-storage.test.mjs"
       },
-      "hash": "9d60b1c043141bf47b58132b4ce9dbf01aeec1e9213ebb7ee19fd380f8a234fa",
-      "observedAt": "2026-11-25T18:33:08.735Z"
+      "hash": "2af6e47157e2bc5f7bac80fe31e5a7a743243b35a916fab70489d4acf7ef1f25",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "3fc94f45-8e43-4204-88e3-ad6962f39a5b",
       "kind": "source-code",
-      "claim": "TC33 idle resource release preserves task archive and injected low disk capacity prevents new durable success.",
+      "claim": "TC33 idle resource release preserves task archive and injected low disk capacity prevents new durable success. TC33 also covers cross-worktree round-robin fairness under the single-flight budget.",
       "location": {
         "path": "tests/v1/runtime-budget.test.mjs"
       },
-      "hash": "84e4d2582a5fcede1796368055742b6259d744cf3467c81c7df310c86d82bcab",
-      "observedAt": "2026-11-25T18:21:06.724Z"
+      "hash": "6ca870d89bc317f01fca1596cbcb64f6694d6bc1cc5180ff5bafb75ee2208dc2",
+      "observedAt": "2026-11-26T09:27:41.794Z"
     },
     {
       "id": "d0f55078-08dc-44f1-9ff7-4586436177df",
@@ -1440,6 +1440,16 @@
       },
       "hash": "2a88cbfb31c2191080357b06bf432d8ee959d0532c56e747b40c2983e4253e14",
       "observedAt": "2026-11-25T18:21:06.724Z"
+    },
+    {
+      "id": "1e8f0d15-2ab8-4996-82e4-6ad105e1f040",
+      "kind": "source-code",
+      "claim": "Native Git worktree fixture exercises identical model revisions, local evidence, edits, concurrent parsing, bounded retention and actual task entry with independent bindings.",
+      "location": {
+        "path": "tests/v1/model-sharing.test.mjs"
+      },
+      "hash": "454df315a570bf5bbca6d46ca44791388550e9b09c6def59c8c4b5dfb7341ad5",
+      "observedAt": "2026-11-26T08:24:51.983Z"
     }
   ]
 }

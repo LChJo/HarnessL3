@@ -2,7 +2,7 @@
 
 **架构整改（v0.57）**：已按[运行架构重设计规格](docs/implementation/ARCHITECTURE_REDESIGN_SPEC.md)完成本机实际整改及迁移、安装和用户确认的当前Windows实测基准收尾；[原生三平台CI](https://github.com/LChJo/HarnessL3/actions/runs/45756492421) 已通过，完整24h及发布仍单独延期。实测容量、性能、默认入口和实际验收见[实施状态](docs/implementation/STATUS.md)。
 
-面向现有agent的项目上下文CLI：以LikeC4文本为主模型，复用稳定简述批量选择上下文和技能，Web显示可追溯的输入到上下文包组织。
+面向现有agent的项目上下文CLI：以LikeC4文本为主模型，复用稳定简述批量选择上下文和技能，Web显示可追溯的输入到上下文包组织。多worktree可按实际分支定位，同模型版本共享解析结构及布局，各工作区独立核对来源、证据并保留任务历史。
 
 结构模型可随项目实现逐步补全：agent使用 `harnessl3 model maintain --mode supplement|revise|rebuild` 获取维护指引与视图覆盖提示（选择一种模式，默认supplement），再通过文件工具补充、修订或重组模型及证据。源码变化保持待核验，阶段结束检查结构与同步范围；相同实体身份和历史图保留。
 

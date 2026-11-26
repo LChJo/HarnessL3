@@ -10,6 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { WorkspaceRegistry } from '../../build/core/workspace.js';
 import { Archive } from '../../build/core/archive.js';
 import { FreshnessManager } from '../../build/core/freshness.js';
+import { CurrentStateStore } from '../../build/core/current-state.js';
 import { sha256 } from '../../build/core/json.js';
 
 const execFile = promisify(callbackExecFile);
@@ -79,9 +80,9 @@ async function fixture(t, { extraSource = false, warm = false, leaseMs } = {}) {
     queue = next.catch(() => {});
     return next;
   };
-  const create = async ({ warm: prewarm = false } = {}) => {
+  const create = async ({ warm: prewarm = false, stateStore = false } = {}) => {
     const archive = new Archive(archiveRoot);
-    const manager = new FreshnessManager({ worktree: initialized.worktree, archive, serial, ...(leaseMs === undefined ? {} : { leaseMs }) });
+    const manager = new FreshnessManager({ worktree: initialized.worktree, archive, serial, ...(stateStore ? { stateStore: new CurrentStateStore(archiveRoot) } : {}), ...(leaseMs === undefined ? {} : { leaseMs }) });
     managers.push(manager);
     await manager.ready();
     if (prewarm) { await manager.status(skillsRoot); await settle(manager); }
@@ -347,6 +348,29 @@ test('TC16 compact state references share receipt bytes and restore alongside un
   assert.deepEqual(restored.manager.currentState().sourceVersion, baseline.sourceVersion);
   assert.equal(restored.manager.currentState().scanPending, true);
   assert.deepEqual(await readFile(path.join(f.archive.root, 'journal.jsonl')), before);
+});
+
+test('TC30 an older writer appending below the checkpoint generation cannot roll back conservative invalidation', async t => {
+  const f = await fixture(t);
+  const first = await f.create({ stateStore: true });
+  first.manager.markSource(['README.md']);
+  const baseline = await first.manager.status(f.skillsRoot);
+  const checkpointEpoch = first.manager.currentState().sourceEpoch;
+  assert.ok(checkpointEpoch > 0);
+  assert.equal(first.archive.seq, 0, 'status persists a checkpoint, not a journal commit');
+  await first.manager.close();
+  // Simulate an older version on the same loose root: it never saw the
+  // checkpoint and appends a lower-generation freshness record. Its early
+  // pending state carries no complete-source references of its own.
+  const regressed = { ...baseline, sourceEpoch: 0, lastCompleteSource: null, lastValidModelSnapshotHash: null, proofId: null, verifiedAt: null };
+  const old = await f.archive.commit({ scope: 'old-inline-state', requestId: randomUUID(), request: {}, payload: { kind: 'freshness-state', state: regressed }, receipt: regressed, archives: f.archive.references() });
+  assert.ok(old.seq > 0);
+  const restored = await f.create({ stateStore: true });
+  const current = restored.manager.currentState();
+  assert.ok(current.sourceEpoch > checkpointEpoch, 'the issued generation must never regress');
+  assert.equal(current.state, 'pending');
+  assert.equal(current.scanPending, true);
+  assert.ok(current.diagnostics.some(item => item.code === 'CURRENT_STATE_EPOCH_REGRESSED'));
 });
 
 test('TC07 watcher failure invalidates the old epoch and a complete status can restore coverage', async t => {

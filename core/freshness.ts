@@ -185,6 +185,18 @@ export class FreshnessManager {
         if (!state || state.schemaVersion !== 1 || !same(state.target, this.state.target) || !Number.isSafeInteger(state.sourceEpoch) || state.sourceEpoch < this.state.sourceEpoch || !Array.isArray(state.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'Current synchronization checkpoint has an invalid identity or epoch.');
         this.state = structuredClone(state);
         currentCheckpoint = true;
+      } else {
+        // A loose-format root stays writable by older versions that never see
+        // this checkpoint. If the journal advanced past it carrying a lower
+        // generation, an external writer regressed the epoch. Keep the highest
+        // generation already bound to issued declarations; the closing gap()
+        // then invalidates every restored proof conservatively.
+        const state = checkpoint.state;
+        if (!state || state.schemaVersion !== 1 || !same(state.target, this.state.target) || !Number.isSafeInteger(state.sourceEpoch) || !Array.isArray(state.pendingPaths)) throw new HarnessError('ARCHIVE_CORRUPT', 'Current synchronization checkpoint has an invalid identity or epoch.');
+        if (state.sourceEpoch > this.state.sourceEpoch) {
+          this.state.sourceEpoch = state.sourceEpoch;
+          this.state.diagnostics = [...this.state.diagnostics, { code: 'CURRENT_STATE_EPOCH_REGRESSED', severity: 'warning', message: 'The journal advanced past the current checkpoint with a lower generation; an older writer may have appended to this loose-format root. Synchronization stays pending until a fresh declaration.' }];
+        }
       }
     }
     this.lastPersistedFacts = this.facts();
