@@ -1,6 +1,6 @@
 # HarnessL3
 
-**架构整改（v0.57）**：已按[运行架构重设计规格](docs/implementation/ARCHITECTURE_REDESIGN_SPEC.md)完成本机实际整改及迁移、安装和用户确认的当前Windows实测基准收尾；完整24h、正式三平台和发布仍单独延期。实测容量、性能、默认入口和实际验收见[实施状态](docs/implementation/STATUS.md)。
+**架构整改（v0.57）**：已按[运行架构重设计规格](docs/implementation/ARCHITECTURE_REDESIGN_SPEC.md)完成本机实际整改及迁移、安装和用户确认的当前Windows实测基准收尾；[原生三平台CI](https://github.com/LChJo/HarnessL3/actions/runs/45756492421) 已通过，完整24h及发布仍单独延期。实测容量、性能、默认入口和实际验收见[实施状态](docs/implementation/STATUS.md)。
 
 面向现有agent的项目上下文CLI：以LikeC4文本为主模型，复用稳定简述批量选择上下文和技能，Web显示可追溯的输入到上下文包组织。
 

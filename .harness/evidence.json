@@ -4,12 +4,12 @@
     {
       "id": "d6250000-0000-4000-8000-000000000001",
       "kind": "document",
-      "claim": "Baseline v0.57 records the approved runtime redesign and retained v0.56 link semantics; v0.57 is a target, not a deployed format.",
+      "claim": "Baseline v0.57 records the approved redesign, completed local migration and current measured closure, plus successful native three-platform CI for 7a3d2f5; full 24-hour gate and publication remain outstanding.",
       "location": {
         "path": "docs/PROJECT_BASELINE.md"
       },
-      "hash": "1da74ecf637e33de9459fdbdb6fc4c55372b8bd91f05bdd61b6f5a31c192a01e",
-      "observedAt": "2026-11-26T04:31:04.807Z"
+      "hash": "db82bc4fb5ed5046066edc5796b0c2921dd1176ccfb2ddfbe31bcb6e729c42b7",
+      "observedAt": "2026-11-26T04:51:57.452Z"
     },
     {
       "id": "d6250000-0000-4000-8000-000000000002",
@@ -374,12 +374,12 @@
     {
       "id": "45053a0a-4b0c-446a-b495-f43b34a6486c",
       "kind": "document",
-      "claim": "Records actual incident baseline, candidate stages, initial regression results, actual migration dry-run and still-draining old service. Does not assert actual full migration or three-platform acceptance.",
+      "claim": "Records actual incident, local deployment, migration, measured closure, and successful GitHub native matrix build, complete tests, browser and package checks on 7a3d2f5; full 24-hour and publication remain outstanding.",
       "location": {
         "path": "docs/implementation/STATUS.md"
       },
-      "hash": "70bc70edf8251a998fe2025e123354cf18c072570ee55b02311c7cd5532265ea",
-      "observedAt": "2026-11-26T04:31:04.839Z"
+      "hash": "4df81eb3805d417bdfa80929ad1f0edc71d5577c2ecfb09c76b41667120c171d",
+      "observedAt": "2026-11-26T04:51:57.452Z"
     },
     {
       "id": "c0bf2ca0-ae94-4381-9c25-b72abe3b2f30",
@@ -574,12 +574,12 @@
     {
       "id": "d6360000-0000-4000-8000-00000000000f",
       "kind": "document",
-      "claim": "Current navigation links the v0.57 candidate format, phase gates and actual partial validation; prior v1 information is compatibility.",
+      "claim": "Current navigation links v0.57 implementation and actual local and native matrix results, with remaining 24-hour and publication boundaries.",
       "location": {
         "path": "docs/spec/README.md"
       },
-      "hash": "70c65cf9efd6f67846313aee6e46d7c5bee582406aeb808cb3a6824504223f29",
-      "observedAt": "2026-11-26T04:31:04.850Z"
+      "hash": "e1e8ace4a797c4d80597a987b1716244b35791f8a6ee8c841cd4dd7e84aa0b79",
+      "observedAt": "2026-11-26T04:51:57.452Z"
     },
     {
       "id": "d6360000-0000-4000-8000-000000000010",
@@ -794,12 +794,12 @@
     {
       "id": "4b7bd625-f0d0-4cab-b25c-415b29b9b6f0",
       "kind": "document",
-      "claim": "Project navigation links approved v0.57 redesign alongside current baseline, specifications and implementation status.",
+      "claim": "Project navigation links approved v0.57 redesign, completed local migration and native three-platform CI run 45756492421; long soak and publication remain separate.",
       "location": {
         "path": "README.md"
       },
-      "hash": "f02820bc218961954f469e96c7cc82cb7124e85d0db9bc130a6451cac8860589",
-      "observedAt": "2026-11-26T04:31:04.864Z"
+      "hash": "872c85a623912142601ad1d5cede58978ec8287e53142da081c43535e50ad0e0",
+      "observedAt": "2026-11-26T04:51:57.452Z"
     },
     {
       "id": "f0aebaaa-4e29-4f81-90e2-ce786eb7ee3d",
@@ -1334,12 +1334,12 @@
     {
       "id": "7fae5745-19e5-4a97-bc55-6512138ddf54",
       "kind": "document",
-      "claim": "Approved v0.57 specification records incident, R01-R06, S0-S5 and TC28-35; target selected and candidate implemented in stages, actual migration and final acceptance not passed.",
+      "claim": "Approved v0.57 R01-R06, S0-S5 and TC28-35 with completed local deployment/migration and native matrix CI; full 24-hour gate remains untested and npm unpublished.",
       "location": {
         "path": "docs/implementation/ARCHITECTURE_REDESIGN_SPEC.md"
       },
-      "hash": "0f0bd4cc940bc8cb6b0fc989c191516019db915168ff10125609096d04bf64c7",
-      "observedAt": "2026-11-26T04:31:04.893Z"
+      "hash": "ac77c396f425ee536cac67f8328869c10dd5d82423ff7c86fd409c9a92157972",
+      "observedAt": "2026-11-26T04:51:57.452Z"
     },
     {
       "id": "4a573c42-e1d3-4ca8-9d60-0a8b0e91a6a1",
